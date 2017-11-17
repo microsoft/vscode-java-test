@@ -37,6 +37,8 @@ javaConfig.json
 target/
 bin/
 **/lib/
+out/
+server/
 
 jdtls/
 
