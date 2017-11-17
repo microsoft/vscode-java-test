@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.codelens.CodeLensContext;
 import org.eclipse.jdt.ls.core.internal.codelens.CodeLensProvider;
 import org.eclipse.jdt.ls.core.internal.preferences.PreferenceManager;
 import org.eclipse.jdt.ls.core.internal.preferences.Preferences;
@@ -25,6 +26,7 @@ import org.eclipse.lsp4j.Command;
 
 public abstract class JUnitCodeLensProviderImpl implements CodeLensProvider {
 	private PreferenceManager preferenceManager;
+	private final String annotation = "org.junit.Test";
 	
 	public abstract String commandLabel();
 	
@@ -35,14 +37,6 @@ public abstract class JUnitCodeLensProviderImpl implements CodeLensProvider {
 	@Override
 	public void setPreferencesManager(PreferenceManager pm) {
 		this.preferenceManager = pm;
-	}
-	
-	@Override
-	public List<CodeLens> collectCodeLenses(ITypeRoot root, IProgressMonitor monitor) throws JavaModelException {
-		IJavaElement[] elements = root.getChildren();
-		ArrayList<CodeLens> lenses = new ArrayList<>(elements.length);
-		collectCodeLensesCore(root, elements, lenses, monitor);
-		return lenses;
 	}
 
 	@Override
@@ -74,31 +68,38 @@ public abstract class JUnitCodeLensProviderImpl implements CodeLensProvider {
 		}
 		return lens;
 	}
-	
-	private boolean collectCodeLensesCore(ITypeRoot root, IJavaElement[] elements, ArrayList<CodeLens> lenses, IProgressMonitor monitor) throws JavaModelException {
+
+	@Override
+	public int visit(IType type, CodeLensContext context, IProgressMonitor monitor) throws JavaModelException {
 		if (!isJunitCodeLensEnabled()) {
-			return false;
+			return 0;
 		}
-		boolean hasTests = false;
-		for (IJavaElement element : elements) {
-			if (monitor.isCanceled()) {
-				return false;
-			}
-			if (element.getElementType() == IJavaElement.TYPE && ((IType) element).isClass()) {
-				boolean res = collectCodeLensesCore(root, ((IType) element).getChildren(), lenses, monitor);
-				if (res) {
-					lenses.add(createCodeLens(element, root));
-					hasTests = true;
-				}
-			} else if (element.getElementType() == IJavaElement.METHOD && !JDTUtils.isHiddenGeneratedElement(element)) {
-				IMethod method = (IMethod) element;
-				if (JUnitUtility.isTestMethod(method, "org.junit.Test")) {
-					lenses.add(createCodeLens(element, root));
-					hasTests = true;
-				}
-			}
+
+		if (!type.isClass()) {
+			return 0;
 		}
-		return hasTests;
+		
+		if (!JUnitUtility.isTestClass(type, annotation)) {
+			return 0;
+		}
+		CodeLens lens = createCodeLens(type, context.getRoot());
+		context.addCodeLens(lens);
+		return 1;
+	}
+
+	@Override
+	public int visit(IMethod method, CodeLensContext context, IProgressMonitor monitor) throws JavaModelException {
+		if (!isJunitCodeLensEnabled()) {
+			return 0;
+		}
+		
+		if (!JUnitUtility.isTestMethod(method, annotation)) {
+			return 0;
+		}
+
+		CodeLens lens = createCodeLens(method, context.getRoot());
+		context.addCodeLens(lens);
+		return 1;
 	}
 	
 	private boolean isJunitCodeLensEnabled() {
@@ -106,7 +107,11 @@ public abstract class JUnitCodeLensProviderImpl implements CodeLensProvider {
 		if (!prefs.isCodeLensEnabled()) {
 			return false;
 		}
+		boolean defaultValue = true;
 		Map<String, Object> config = prefs.asMap();
-		return getBoolean(config, codeLensEnableKey(), true);
+		if (config == null) {
+			return defaultValue;
+		}
+		return getBoolean(config, codeLensEnableKey(), defaultValue);
 	}
 }

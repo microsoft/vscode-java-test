@@ -1,7 +1,12 @@
 package com.java.junit.plugin.internal;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
 public class JUnitUtility {
@@ -15,5 +20,15 @@ public class JUnitUtility {
 			// ignore
 			return false;
 		}
+	}
+	
+	public static boolean isTestClass(IType type, String annotation) {
+		try {
+			List<IMethod> tests = Arrays.stream(type.getMethods()).filter(m -> isTestMethod(m, annotation)).collect(Collectors.toList());
+			return tests.size() > 0;
+		} catch (JavaModelException e) {
+			return false;
+		}
+		
 	}
 }
