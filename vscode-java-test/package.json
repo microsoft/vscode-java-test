@@ -1,0 +1,62 @@
+{
+    "name": "vscode-java-test",
+    "displayName": "vscode-java-test",
+    "description": "A Java Test Runner/Debugger for Visual Studio Code",
+    "version": "0.0.1",
+    "publisher": "xuanz",
+    "engines": {
+        "vscode": "^1.17.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onLanguage:java",
+        "onCommand:java.run.test",
+        "onCommand:java.debug.test"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "javaExtensions": [
+            "./server/java.junit.plugin-0.1.0.jar"
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Java configuration",
+            "properties": {
+                "java.runTestsCodeLens.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable/disable the run test code lens."
+                },
+                "java.debugTestsCodeLens.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable/disable the debug test code lens."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
+    "extensionDependencies": [
+        "vscjava.vscode-java-debug"
+    ],
+    "devDependencies": {
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0",
+        "mocha": "^2.3.3",
+        "@types/node": "^6.0.40",
+        "@types/mocha": "^2.2.32",
+        "gulp": "^3.9.1"
+    },
+    "dependencies": {
+        "path-exists": "^3.0.0",
+        "expand-home-dir": "^0.0.3",
+        "glob": "^7.1.1"
+    }
+}

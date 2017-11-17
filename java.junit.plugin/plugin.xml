@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.jdt.ls.core.internal.codelens.codeLensProvider">
+      <codeLensProvider class="com.java.junit.plugin.internal.JUnitDebugTestCodeLensProvider" order="500" />
+      <codeLensProvider class="com.java.junit.plugin.internal.JUnitRunTestCodeLensProvider" order="400" />
+   </extension>
+</plugin>
