@@ -36,7 +36,7 @@ import org.eclipse.lsp4j.Command;
 
 public abstract class JUnitCodeLensProviderImpl implements CodeLensProvider {
 	private PreferenceManager preferenceManager;
-	private final String annotation = "org.junit.Test";
+	private final String annotation = "Test";
 	
 	public abstract String commandLabel();
 	
