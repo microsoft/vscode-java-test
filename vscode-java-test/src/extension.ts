@@ -4,13 +4,14 @@
 
 import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
+import * as fs from 'fs';
 import * as glob from 'glob';
 import * as net from 'net';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
 import * as vscode from 'vscode';
 
-import { Commands } from './commands';
+import { Commands, Configs } from './commands';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows?'.exe':'');
@@ -22,9 +23,9 @@ export function activate(context: vscode.ExtensionContext) {
         let outputChannel = vscode.window.createOutputChannel('JUnit Test Result');
         
 		vscode.commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (uri: string, classpaths: string[], suites: string[]) =>
-		 runTest(javaHome, outputChannel, classpaths, suites));           
+		 runTest(javaHome, outputChannel, uri, classpaths, suites, context.storagePath, false));           
 		vscode.commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (uri: string, classpaths: string[], suites: string[]) =>
-		 debugTest(javaHome, outputChannel, uri, classpaths, suites));
+		 runTest(javaHome, outputChannel, uri, classpaths, suites, context.storagePath, true));
     }).catch((err) => {
         vscode.window.showErrorMessage("couldn't find Java home...");
     });
@@ -63,36 +64,45 @@ function readJavaConfig() : string {
     return config.get<string>('java.home',null);
 }
 
-function runTest(javaHome: string, outputChannel: vscode.OutputChannel, classpaths: string[], suites: string[]) {
-	let params = parseParams(javaHome, classpaths, suites);
+function runTest(javaHome: string, outputChannel: vscode.OutputChannel, uri: string, classpaths: string[], suites: string[], storagePath: string, debug: boolean) {
+	let params = parseParams(javaHome, classpaths, suites, debug);
 	if (params === null) {
 		return null;
 	}
 	outputChannel.clear();
 	outputChannel.show(true);
-	outputChannel.append(cp.execSync(params.join(' ')).toString());
+	let tempFile = path.resolve(storagePath + '/'+ new Date().getTime() + '.bat');
+	fs.mkdir(path.dirname(tempFile), (err) => {
+		if (!err || err.code === 'EEXIST') {
+			fs.writeFile(tempFile, params.join(' '), (err) => {
+				if (!err) {
+					const process = cp.execFile(tempFile);
+					process.stderr.on('data', (data) => {
+						outputChannel.append(data.toString());
+					});
+					process.stdout.on('data', (data) => {
+						outputChannel.append(data.toString());
+					})
+					process.on('close', () => {
+						fs.unlink(tempFile);
+					});
+					if (debug) {
+						const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(vscode.Uri.parse(uri).fsPath));
+						vscode.debug.startDebugging(rootDir, {
+							'name': 'Debug Junit Test',
+							'type': 'java',
+							'request': 'attach',
+							'hostName': 'localhost',
+							'port': Configs.JAVA_TEST_PORT
+						});
+					}
+				}
+			});
+		}
+	})
 }
 
-async function debugTest(javaHome: string, outputChannel: vscode.OutputChannel, uri: string, classpaths: string[], suites: string[]) {
-	let port = await generatePort();
-	let params = parseParams(javaHome, classpaths, suites, port);
-	if (params === null) {
-		return null;
-	}
-	const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(vscode.Uri.parse(uri).fsPath));
-	const process = cp.exec(params.join(' '), (err, stdout) => {
-		outputChannel.append(stdout);
-	});
-	return vscode.debug.startDebugging(rootDir, {
-		'name': 'Debug Junit Test',
-		'type': 'java',
-		'request': 'attach',
-		'hostName': 'localhost',
-		'port': port
-	});
-}
-
-function parseParams(javaHome: string, classpaths: string[], suites: string[], port: string = null): string[] {
+function parseParams(javaHome: string, classpaths: string[], suites: string[], debug: boolean): string[] {
 	let params = [];
 	params.push('"' + path.resolve(javaHome + '/bin/java') + '"');
 	let server_home: string = path.resolve(__dirname, '../../server');
@@ -109,7 +119,8 @@ function parseParams(javaHome: string, classpaths: string[], suites: string[], p
 		return null;
 	}
 
-	if (port !== null) {
+	if (debug) {
+		const port = Configs.JAVA_TEST_PORT;
 		const debugParams = [];
 		debugParams.push('-Xdebug');
 		debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);

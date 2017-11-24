@@ -9,3 +9,7 @@ export namespace Commands {
      */
     export const JAVA_DEBUG_TEST_COMMAND = 'java.debug.test';
 }
+
+export namespace Configs {
+    export const JAVA_TEST_PORT = 5555;
+}
