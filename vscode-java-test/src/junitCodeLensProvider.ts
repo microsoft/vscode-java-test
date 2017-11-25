@@ -20,6 +20,7 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
             return getCodeLens(testsFromCache.tests);
         }
         return fetchTests(document).then((tests: TestSuite[]) => {
+            this.transformIndex(tests);
             if (testsFromCache) {
                 this.mergeTestResult(testsFromCache.tests, tests);
             }
@@ -41,6 +42,17 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
                 testSuite.status = dict.get(testSuite.test);
             }
         });
+    }
+
+    private transformIndex(tests: TestSuite[]): void {
+        tests.map((t) => {
+            if (t.parentIndex) {
+                t.parent = tests[t.parentIndex];
+            }
+            if (t.childrenIndices) {
+                t.children = t.childrenIndices.map(i => tests[i]);
+            }
+        })
     }
 }
 

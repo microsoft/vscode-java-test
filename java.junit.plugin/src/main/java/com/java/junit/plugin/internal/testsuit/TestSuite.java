@@ -11,9 +11,9 @@ public class TestSuite {
 	
 	private String test;
 	
-	private List<TestSuite> children;
+	private List<Integer> childrenIndices;
 	
-	private TestSuite parent;
+	private Integer parentIndex;
 	
 	private String packageName;
 	
@@ -43,12 +43,12 @@ public class TestSuite {
 		this.test = test;
 	}
 	
-	public List<TestSuite> getChildren() {
-		return children;
+	public List<Integer> getChildren() {
+		return childrenIndices;
 	}
 
-	public void setChildren(List<TestSuite> children) {
-		this.children = children;
+	public void setChildren(List<Integer> children) {
+		this.childrenIndices = children;
 	}
 
 	public String getPackageName() {
@@ -67,12 +67,12 @@ public class TestSuite {
 		this.level = level;
 	}
 	
-	public TestSuite getParent() {
-		return parent;
+	public Integer getParent() {
+		return parentIndex;
 	}
 
-	public void setParent(TestSuite parent) {
-		this.parent = parent;
+	public void setParent(Integer parent) {
+		this.parentIndex = parent;
 	}
 
 	public TestSuite(Range range, String uri, String test, String packageName, TestLevel level) {
