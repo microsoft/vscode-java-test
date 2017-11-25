@@ -13,6 +13,7 @@ Require-Bundle: org.eclipse.jdt.core,
  org.eclipse.lsp4j,
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ls.core,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources
 Bundle-ClassPath: .,
  lib/gson-2.7.jar

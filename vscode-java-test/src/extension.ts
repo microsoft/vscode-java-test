@@ -12,13 +12,20 @@ import * as pathExists from 'path-exists';
 import * as vscode from 'vscode';
 
 import { Commands, Configs } from './commands';
+import { JUnitCodeLensProvider } from './junitCodeLensProvider';
+import { TestResourceManager } from './testResourcemanager';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows?'.exe':'');
+const onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+const testResourceManager: TestResourceManager = new TestResourceManager();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
+	context.subscriptions.push(vscode.languages.registerCodeLensProvider('java', codeLensProvider));
+	
     return checkJavaHome().then(javaHome => {
         let outputChannel = vscode.window.createOutputChannel('JUnit Test Result');
         
