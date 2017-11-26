@@ -1,7 +1,7 @@
 import { CodeLensProvider, Event, EventEmitter, TextDocument, CancellationToken, CodeLens, ProviderResult } from "vscode";
 import { TestResourceManager } from './testResourcemanager';
 import { Commands } from './commands';
-import { TestSuite, TestStatus } from './protocols';
+import { TestSuite, TestStatus, TestResult } from './protocols';
 
 'use strict';
 
@@ -36,10 +36,10 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
     }
 
     private mergeTestResult(cache: TestSuite[], cur: TestSuite[]): void {
-        const dict = new Map(cache.map((t): [string, TestStatus | undefined] => [t.test, t.status]));
+        const dict = new Map(cache.map((t): [string, TestResult | undefined] => [t.test, t.result]));
         cur.map((testSuite) => {
-            if (!testSuite.status && dict.has(testSuite.test)) {
-                testSuite.status = dict.get(testSuite.test);
+            if (!testSuite.result && dict.has(testSuite.test)) {
+                testSuite.result = dict.get(testSuite.test);
             }
         });
     }
@@ -81,7 +81,7 @@ function getCodeLens(tests: TestSuite[]) : CodeLens[] {
     return tests.map(test => {
         return [
             new CodeLens(test.range, {
-                title: getTestStatusIcon(test.status),
+                title: getTestStatusIcon(test.result? test.result.status : undefined),
                 command: Commands.JAVA_TEST_SHOW_DETAILS,
                 arguments: [test]
             }),

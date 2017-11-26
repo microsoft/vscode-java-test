@@ -15,8 +15,15 @@ export type TestSuite = {
     children: TestSuite[];
     packageName: string;
     level: TestLevel;
+    result?: TestResult;
+}
+
+export type TestResult = {
     status?: TestStatus;
     details: string;
+    message: string;
+    duration?: string;
+    summary: string;
 }
 
 export enum TestStatus {

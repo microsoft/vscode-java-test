@@ -17,6 +17,7 @@ import { TestResourceManager } from './testResourcemanager';
 import { OutputChannel } from 'vscode';
 import { TestSuite } from './protocols';
 import { ClassPathManager } from './classPathManager';
+import { TestResultAnalyzer } from './testResultAnalyzer';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -84,9 +85,9 @@ function readJavaConfig(): string {
 }
 
 function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
-    tests = Array.isArray(tests) ? tests : [tests];
-    const suites = tests.map((s) => s.test);
-    const uri = vscode.Uri.parse(tests[0].uri);
+    const testList = Array.isArray(tests) ? tests : [tests];
+    const suites = testList.map((s) => s.test);
+    const uri = vscode.Uri.parse(testList[0].uri);
     const classpaths = classPathManager.getClassPath(uri);
     let params = parseParams(javaHome, classpaths, suites, debug);
     if (params === null) {
@@ -99,14 +100,19 @@ function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: 
         if (!err || err.code === 'EEXIST') {
             fs.writeFile(tempFile, params.join(' '), (err) => {
                 if (!err) {
+                    const testResultAnalyzer = new TestResultAnalyzer(testList);
                     const process = cp.execFile(tempFile);
                     process.stderr.on('data', (data) => {
                         outputChannel.append(data.toString());
+                        testResultAnalyzer.sendData(data.toString());
                     });
                     process.stdout.on('data', (data) => {
                         outputChannel.append(data.toString());
+                        testResultAnalyzer.sendData(data.toString());
                     })
                     process.on('close', () => {
+                        testResultAnalyzer.feedBack();
+                        onDidChange.fire();
                         fs.unlink(tempFile);
                     });
                     if (debug) {
