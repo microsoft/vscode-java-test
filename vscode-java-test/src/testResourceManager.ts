@@ -29,8 +29,4 @@ export class TestResourceManager {
     public dispose() {
         this.testsIndexedByFileUri.clear();
     }
-    private getWorkspaceFolderPath(resource: Uri): string | undefined {
-        const folder = workspace.getWorkspaceFolder(resource);
-        return folder ? folder.uri.path : undefined;
-    }
 }

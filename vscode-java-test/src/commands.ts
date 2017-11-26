@@ -15,12 +15,19 @@ export namespace Commands {
 
     export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
 
+    export const JAVA_CALCULATE_CLASS_PATH = 'vscode.java.test.runtime.classpath';
+
     export const JAVA_EXECUTE_WORKSPACE_COMMAND = "java.execute.workspaceCommand";
 
     export function executeJavaLanguageServerCommand(...rest) {
         // TODO: need to handle error and trace telemetry
         return vscode.commands.executeCommand(JAVA_EXECUTE_WORKSPACE_COMMAND, ...rest);
     }
+}
+
+export namespace Constants {
+    export const Language = 'java';
+    export const TEST_OUTPUT_SCHEME = 'test-output';
 }
 
 export namespace Configs {

@@ -4,6 +4,7 @@
    <extension point="org.eclipse.jdt.ls.core.delegateCommandHandler">
       <delegateCommandHandler class="com.java.junit.plugin.internal.TestDelegateCommandHandler">
             <command id="vscode.java.test.fetch"/>
+            <command id="vscode.java.test.runtime.classpath" />
        </delegateCommandHandler>
    </extension>
 </plugin>
