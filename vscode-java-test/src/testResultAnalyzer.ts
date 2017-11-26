@@ -15,7 +15,7 @@ export class TestResultAnalyzer {
     }
 
     public sendData(data:string): void {
-        let regex = /@@<([^>@]*)>/gm;
+        let regex = /@@<([^@]*)>/gm;
         let match;
         do {
             match = regex.exec(data);
@@ -30,15 +30,10 @@ export class TestResultAnalyzer {
         this._testSuites.forEach((t) => {
             if (t.level === TestLevel.Class) {
                 toAggregate.add(t);
+                t.children.forEach((c) => this.processMethod(c));
             } else {
                 toAggregate.add(t.parent);
-                if (!this._testResults.has(t.test)) {
-                    t.result = {
-                        status: TestStatus.Skipped
-                    } as TestResult;
-                } else {
-                    t.result = this._testResults.get(t.test);
-                }
+                this.processMethod(t);
             }
         })
         toAggregate.forEach((t) => this.processClass(t));
@@ -106,6 +101,16 @@ export class TestResultAnalyzer {
             summary: `Total tests run: ${passNum + failNum}, Failures: ${failNum}, Skips: ${skipNum}.`,
             duration: notRun ? undefined : duration.toString(),
         } as TestResult;
+    }
+
+    private processMethod(t: TestSuite): void {
+        if (!this._testResults.has(t.test)) {
+            t.result = {
+                status: TestStatus.Skipped
+            } as TestResult;
+        } else {
+            t.result = this._testResults.get(t.test);
+        }
     }
 }
 

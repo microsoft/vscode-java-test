@@ -27,9 +27,9 @@ export type TestResult = {
 }
 
 export enum TestStatus {
-    Pass,
-    Fail,
-    Skipped,
+    Pass = 'Pass',
+    Fail = 'Fail',
+    Skipped = 'Skipped',
 }
 
 export enum TestLevel {

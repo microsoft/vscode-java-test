@@ -24,15 +24,10 @@
             "type": "object",
             "title": "Java configuration",
             "properties": {
-                "java.runTestsCodeLens.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable/disable the run test code lens."
-                },
-                "java.debugTestsCodeLens.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable/disable the debug test code lens."
+                "java.test.port": {
+                    "type": "number",
+                    "default": 5555,
+                    "description": "Test server port."
                 }
             }
         }

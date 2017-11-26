@@ -14,8 +14,8 @@ import * as vscode from 'vscode';
 import { Commands, Configs, Constants } from './commands';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { TestResourceManager } from './testResourcemanager';
-import { OutputChannel } from 'vscode';
-import { TestSuite } from './protocols';
+import { OutputChannel, SnippetString } from 'vscode';
+import { TestSuite, TestLevel } from './protocols';
 import { ClassPathManager } from './classPathManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 
@@ -89,7 +89,8 @@ function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: 
     const suites = testList.map((s) => s.test);
     const uri = vscode.Uri.parse(testList[0].uri);
     const classpaths = classPathManager.getClassPath(uri);
-    let params = parseParams(javaHome, classpaths, suites, debug);
+    const port = readPortConfig();
+    let params = parseParams(javaHome, classpaths, suites, port, debug);
     if (params === null) {
         return null;
     }
@@ -122,7 +123,7 @@ function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: 
                             'type': 'java',
                             'request': 'attach',
                             'hostName': 'localhost',
-                            'port': Configs.JAVA_TEST_PORT
+                            'port': port
                         });
                     }
                 }
@@ -133,13 +134,36 @@ function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: 
 
 function showDetails(test: TestSuite) {
     const editor = vscode.window.activeTextEditor;
-    const uri = vscode.Uri.parse(`${Constants.TEST_OUTPUT_SCHEME}: ${test.test}`);
+    const uri = vscode.Uri.parse(`${Constants.TEST_OUTPUT_SCHEME}: test-result-${test.test}`);
     return vscode.workspace.openTextDocument(uri).then(doc => {
-        return vscode.window.showTextDocument(doc, editor.viewColumn + 1);
+        return vscode.window.showTextDocument(doc, editor.viewColumn + 1).then(edit => {
+            edit.insertSnippet(new SnippetString(getTestReport(test)), new vscode.Position(0, 0));
+        });
     });
 }
 
-function parseParams(javaHome: string, classpaths: string[], suites: string[], debug: boolean): string[] {
+function getTestReport(test: TestSuite): string {
+    let report = test.test + ':\n';
+    if (!test.result) {
+        return report + "Not run...";
+    }
+    report += JSON.stringify(test.result, null, 4);
+    if (test.level === TestLevel.Method) {
+        return report;
+    }
+    report += '\n';
+    for (const child of test.children) {
+        report += getTestReport(child) + '\n';
+    }
+    return report;
+}
+
+function readPortConfig(): Number {
+    const config = vscode.workspace.getConfiguration();
+    return config.get<Number>('java.test.port', Configs.JAVA_TEST_PORT);
+}
+
+function parseParams(javaHome: string, classpaths: string[], suites: string[], port: Number, debug: boolean): string[] {
     let params = [];
     params.push('"' + path.resolve(javaHome + '/bin/java') + '"');
     let server_home: string = path.resolve(__dirname, '../../server');
@@ -157,7 +181,6 @@ function parseParams(javaHome: string, classpaths: string[], suites: string[], d
     }
 
     if (debug) {
-        const port = Configs.JAVA_TEST_PORT;
         const debugParams = [];
         debugParams.push('-Xdebug');
         debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);
@@ -167,28 +190,4 @@ function parseParams(javaHome: string, classpaths: string[], suites: string[], d
     params.push('com.java.junit.runner.JUnitLauncher');
     params = [...params, ...suites];
     return params;
-}
-
-async function generatePort() {
-    while (true) {
-        const port = Math.floor(Math.random() * 65535);
-        const valid = await checkPortInUse(port);
-        if (valid) {
-            return port.toString();
-        }
-    }
-}
-
-function checkPortInUse(port) {
-    return new Promise((resolve, reject) => {
-        const server = net.createServer(socket => {
-            socket.pipe(socket);
-        });
-        server.listen(port, '127.0.0.1');
-        server.on('error', e => reject(false));
-        server.on('listening', e => {
-            resolve(true);
-            server.close();
-        });
-    });
 }
