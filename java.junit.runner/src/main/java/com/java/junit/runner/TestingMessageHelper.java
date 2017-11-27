@@ -275,6 +275,10 @@ public class TestingMessageHelper {
                 return 'n';
             case '\r':
                 return 'r';
+            case '\b':
+                return 'b';
+            case '\t':
+                return 't';
             case '\u0085':
                 return 'x';
             case '\u2028':
