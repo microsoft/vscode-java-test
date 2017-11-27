@@ -57,7 +57,7 @@ export class TestResultAnalyzer {
             case TEST_FAIL:
                 res = this._testResults.get(this._suiteName + "#" + info.attributes.name);
                 if (!res) {
-                    throw 'test info corrupted!';
+                    return;
                 }
                 res.status = TestStatus.Fail;
                 res.message = info.attributes.message;
@@ -66,7 +66,7 @@ export class TestResultAnalyzer {
             case TEST_FINISH:
                 res = this._testResults.get(this._suiteName + "#" + info.attributes.name);
                 if (!res) {
-                    throw 'test info corrupted!';
+                    return;
                 }
                 if (!res.status) {
                     res.status = TestStatus.Pass;
