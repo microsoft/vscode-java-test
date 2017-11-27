@@ -63,16 +63,16 @@ function fetchTests(document: TextDocument) {
 function getTestStatusIcon(status?: TestStatus): string {
     switch (status) {
         case TestStatus.Pass: {
-            return '✔ ';
+            return '✔️ ';
         }
         case TestStatus.Fail: {
-            return '✘ ';
+            return '❌ ';
         }
         case TestStatus.Skipped: {
-            return '⃠ ';
+            return '❗ ';
         }
         default: {
-            return '';
+            return '🔨 ';
         }
     }
 }
@@ -83,16 +83,19 @@ function getCodeLens(tests: TestSuite[]) : CodeLens[] {
             new CodeLens(test.range, {
                 title: getTestStatusIcon(test.result? test.result.status : undefined),
                 command: Commands.JAVA_TEST_SHOW_DETAILS,
+                tooltip: 'Show Details',
                 arguments: [test]
             }),
             new CodeLens(test.range, {
                 title: 'Run Test',
                 command: Commands.JAVA_RUN_TEST_COMMAND,
+                tooltip: 'Run Test',
                 arguments: [test]
             }),
             new CodeLens(test.range, {
                 title: 'Debug Test',
                 command: Commands.JAVA_DEBUG_TEST_COMMAND,
+                tooltip: 'Debug Test',
                 arguments: [test]
             })
         ];
