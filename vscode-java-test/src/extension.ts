@@ -13,7 +13,7 @@ import * as vscode from 'vscode';
 
 import { Commands, Configs, Constants } from './commands';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
-import { TestResourceManager } from './testResourcemanager';
+import { TestResourceManager } from './testResourceManager';
 import { OutputChannel, SnippetString } from 'vscode';
 import { TestSuite, TestLevel } from './protocols';
 import { ClassPathManager } from './classPathManager';

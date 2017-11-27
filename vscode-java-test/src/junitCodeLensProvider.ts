@@ -1,5 +1,5 @@
 import { CodeLensProvider, Event, EventEmitter, TextDocument, CancellationToken, CodeLens, ProviderResult } from "vscode";
-import { TestResourceManager } from './testResourcemanager';
+import { TestResourceManager } from './testResourceManager';
 import { Commands } from './commands';
 import { TestSuite, TestStatus, TestResult } from './protocols';
 
