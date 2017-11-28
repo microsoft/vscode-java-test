@@ -1,5 +1,6 @@
 const gulp = require('gulp');
 const cp = require('child_process');
+const tslint = require("gulp-tslint");
 const server_dir = '../';
 gulp.task('build_server', ()=>
 {
@@ -8,6 +9,12 @@ gulp.task('build_server', ()=>
         .pipe(gulp.dest('./server'));
     gulp.src(server_dir + '/java.junit.runner/target/*.jar')
 		.pipe(gulp.dest('./server'))
+});
+
+gulp.task("tslint", () => {
+	return gulp.src(["**/*.ts", "!**/*.d.ts", "!node_modules/**", "!./src/views/node_modules/**"])
+		.pipe(tslint())
+		.pipe(tslint.report());
 });
 
 function isWin() {

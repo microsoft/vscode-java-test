@@ -48,7 +48,9 @@
         "@types/node": "^6.0.40",
         "@types/mocha": "^2.2.32",
         "@types/lodash": "^4.14.74",
-        "gulp": "^3.9.1"
+        "gulp": "^3.9.1",
+        "tslint": "^5.7.0",
+        "gulp-tslint": "^8.1.2"
     },
     "dependencies": {
         "path-exists": "^3.0.0",

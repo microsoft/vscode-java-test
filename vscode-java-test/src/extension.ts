@@ -30,7 +30,7 @@ const outputChannel: OutputChannel = vscode.window.createOutputChannel('JUnit Te
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(Constants.Language, codeLensProvider));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(Constants.LANGUAGE, codeLensProvider));
 
     vscode.workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;

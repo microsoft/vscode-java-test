@@ -14,7 +14,7 @@ export class TestResultAnalyzer {
     constructor(private _testSuites: TestSuite[]) {
     }
 
-    public sendData(data:string): void {
+    public sendData(data: string): void {
         let regex = /@@<([^@]*)>/gm;
         let match;
         do {

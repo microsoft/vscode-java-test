@@ -1,4 +1,4 @@
-import { Uri, workspace, CancellationToken } from 'vscode';
+import { CancellationToken, Uri, workspace } from 'vscode';
 import { Commands } from './commands';
 
 export class ClassPathManager {
@@ -9,7 +9,7 @@ export class ClassPathManager {
             return calculateClassPath(wkspace.uri).then((classpath: string[]) => {
                 this.storeClassPath(wkspace.uri, classpath);
             },
-            reason => {
+            (reason) => {
                 if (token.isCancellationRequested) {
                     return;
                 }

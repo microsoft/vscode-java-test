@@ -1,9 +1,9 @@
+'use strict';
+
 import { CodeLensProvider, Event, EventEmitter, TextDocument, CancellationToken, CodeLens, ProviderResult } from "vscode";
 import { TestResourceManager } from './testResourceManager';
 import { Commands } from './commands';
 import { TestSuite, TestStatus, TestResult } from './protocols';
-
-'use strict';
 
 export class JUnitCodeLensProvider implements CodeLensProvider {
     constructor(private _onDidChange: EventEmitter<void>,
@@ -81,7 +81,7 @@ function getCodeLens(tests: TestSuite[]) : CodeLens[] {
     return tests.map(test => {
         return [
             new CodeLens(test.range, {
-                title: getTestStatusIcon(test.result? test.result.status : undefined),
+                title: getTestStatusIcon(test.result ? test.result.status : undefined),
                 command: Commands.JAVA_TEST_SHOW_DETAILS,
                 tooltip: 'Show Details',
                 arguments: [test]

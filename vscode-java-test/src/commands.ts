@@ -26,7 +26,7 @@ export namespace Commands {
 }
 
 export namespace Constants {
-    export const Language = 'java';
+    export const LANGUAGE = 'java';
     export const TEST_OUTPUT_SCHEME = 'untitled';
 }
 
