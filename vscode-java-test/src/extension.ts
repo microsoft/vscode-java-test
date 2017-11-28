@@ -2,13 +2,16 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 
+import * as archiver from 'archiver';
 import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as net from 'net';
+import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
+import * as rimraf from 'rimraf';
 import * as vscode from 'vscode';
 
 import { Commands, Configs, Constants } from './commands';
@@ -84,52 +87,59 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
+async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
     const testList = Array.isArray(tests) ? tests : [tests];
     const suites = testList.map((s) => s.test);
     const uri = vscode.Uri.parse(testList[0].uri);
     const classpaths = classPathManager.getClassPath(uri);
     const port = readPortConfig();
-    let params = parseParams(javaHome, classpaths, suites, port, debug);
+    const storageForThisRun = path.join(storagePath, new Date().getTime().toString());
+    let params;
+    try {
+        params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, debug);
+    } catch (ex) {
+        console.log(ex);
+        rimraf(storageForThisRun, (err) => {
+            if (err) {
+                console.log(err);
+            }
+        });
+        return null;
+    }
     if (params === null) {
         return null;
     }
     outputChannel.clear();
     outputChannel.show(true);
-    let tempFile = path.resolve(storagePath + '/' + new Date().getTime() + '.bat');
-    fs.mkdir(path.dirname(tempFile), (err) => {
-        if (!err || err.code === 'EEXIST') {
-            fs.writeFile(tempFile, params.join(' '), (err) => {
-                if (!err) {
-                    const testResultAnalyzer = new TestResultAnalyzer(testList);
-                    const process = cp.execFile(tempFile);
-                    process.stderr.on('data', (data) => {
-                        outputChannel.append(data.toString());
-                        testResultAnalyzer.sendData(data.toString());
-                    });
-                    process.stdout.on('data', (data) => {
-                        outputChannel.append(data.toString());
-                        testResultAnalyzer.sendData(data.toString());
-                    })
-                    process.on('close', () => {
-                        testResultAnalyzer.feedBack();
-                        onDidChange.fire();
-                        fs.unlink(tempFile);
-                    });
-                    if (debug) {
-                        const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
-                        vscode.debug.startDebugging(rootDir, {
-                            'name': 'Debug Junit Test',
-                            'type': 'java',
-                            'request': 'attach',
-                            'hostName': 'localhost',
-                            'port': port
-                        });
-                    }
-                }
-            });
-        }
+    const testResultAnalyzer = new TestResultAnalyzer(testList);
+    const process = cp.exec(params.join(' '));
+    process.stderr.on('data', (data) => {
+        outputChannel.append(data.toString());
+        testResultAnalyzer.sendData(data.toString());
+    });
+    process.stdout.on('data', (data) => {
+        outputChannel.append(data.toString());
+        testResultAnalyzer.sendData(data.toString());
     })
+    process.on('close', () => {
+        testResultAnalyzer.feedBack();
+        onDidChange.fire();
+        rimraf(storageForThisRun, (err) => {
+            if (err) {
+                console.log(err);
+            }
+        });
+    });
+    if (debug) {
+        const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
+        vscode.debug.startDebugging(rootDir, {
+            'name': 'Debug Junit Test',
+            'type': 'java',
+            'request': 'attach',
+            'hostName': 'localhost',
+            'port': port
+        });
+    }
 }
 
 function showDetails(test: TestSuite) {
@@ -143,7 +153,7 @@ function showDetails(test: TestSuite) {
 }
 
 function getTestReport(test: TestSuite): string {
-    let report = test.test + ':\n';
+    let report = test.test + ':' + os.EOL;
     if (!test.result) {
         return report + "Not run...";
     }
@@ -151,9 +161,9 @@ function getTestReport(test: TestSuite): string {
     if (test.level === TestLevel.Method) {
         return report;
     }
-    report += '\n';
+    report += os.EOL;
     for (const child of test.children) {
-        report += getTestReport(child) + '\n';
+        report += getTestReport(child) + os.EOL;
     }
     return report;
 }
@@ -163,7 +173,14 @@ function readPortConfig(): Number {
     return config.get<Number>('java.test.port', Configs.JAVA_TEST_PORT);
 }
 
-function parseParams(javaHome: string, classpaths: string[], suites: string[], port: Number, debug: boolean): string[] {
+async function parseParams(
+    javaHome: string,
+    classpaths: string[],
+    suites: string[],
+    storagePath: string,
+    port: Number,
+    debug: boolean): Promise<string[]> {
+
     let params = [];
     params.push('"' + path.resolve(javaHome + '/bin/java') + '"');
     let server_home: string = path.resolve(__dirname, '../../server');
@@ -175,7 +192,8 @@ function parseParams(javaHome: string, classpaths: string[], suites: string[], p
         if (process.platform === 'darwin' || process.platform === 'linux') {
             separator = ':';
         }
-        params.push('"' + classpaths.join(separator) + '"');
+        const classpathStr = await processLongClassPath(classpaths, separator, storagePath);
+        params.push('"' + classpathStr + '"');
     } else {
         return null;
     }
@@ -190,4 +208,42 @@ function parseParams(javaHome: string, classpaths: string[], suites: string[], p
     params.push('com.java.junit.runner.JUnitLauncher');
     params = [...params, ...suites];
     return params;
+}
+
+function processLongClassPath(classpaths: string[], separator: string, storagePath: string): Promise<string> {
+    const concated = classpaths.join(separator);
+    if (concated.length <= Constants.MAX_CLASS_PATH_LENGTH) {
+        return Promise.resolve(concated);
+    }
+    let tempFile = path.join(storagePath, 'path.jar');
+    return new Promise((resolve, reject) => {
+        fs.mkdir(path.dirname(tempFile), (err) => {
+            if (err && err.code !== 'EEXIST') {
+                reject(err);
+            }
+            const output = fs.createWriteStream(tempFile);
+            output.on('close', () => {
+                resolve(tempFile);
+            })
+            const jarfile = archiver('zip');
+            jarfile.on('error', function (err) {
+                reject(err);
+            });
+            // pipe archive data to the file
+            jarfile.pipe(output);
+            jarfile.append(constructManifestFile(classpaths), { name: 'META-INF/MANIFEST.MF' });
+            jarfile.finalize();
+        });
+    });
+}
+
+function constructManifestFile(classpaths: string[]): string {
+    let content = "";
+    let extended = ["Class-Path:", ...classpaths.map((c) => {
+        const path = '\\' + c;
+        return path.endsWith('.jar') ? path : path + '/';
+    })];
+    content += extended.join(` ${os.EOL} `);
+    content += os.EOL;
+    return content;
 }
