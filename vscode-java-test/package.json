@@ -2,6 +2,9 @@
     "name": "vscode-java-test",
     "displayName": "vscode-java-test",
     "description": "A Java Test Runner/Debugger for Visual Studio Code",
+    "repository": {
+        "url": "https://github.com/Microsoft/vscode-java-test/tree/newdesign/vscode-java-test"
+    },
     "version": "0.0.1",
     "publisher": "xuanz",
     "engines": {
