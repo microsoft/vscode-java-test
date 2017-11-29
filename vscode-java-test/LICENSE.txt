@@ -1,6 +1,6 @@
 ------------------------------------------ START OF LICENSE -----------------------------------------
 
-vscode-arduino
+vscode-java-test
 
 Copyright (c) Microsoft Corporation
 
