@@ -116,6 +116,10 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     
     const testResultAnalyzer = new TestResultAnalyzer(testList);
     const process = cp.exec(params.join(' '));
+    process.on('error', (err) => {
+        outputChannel.append(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
+        throw err;
+    })
     process.stderr.on('data', (data) => {
         outputChannel.append(data.toString());
         testResultAnalyzer.sendData(data.toString());
@@ -123,7 +127,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     process.stdout.on('data', (data) => {
         outputChannel.append(data.toString());
         testResultAnalyzer.sendData(data.toString());
-    })
+    });
     process.on('close', () => {
         testResultAnalyzer.feedBack();
         onDidChange.fire();
