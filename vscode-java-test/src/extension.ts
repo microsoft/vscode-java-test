@@ -5,6 +5,7 @@
 import * as archiver from 'archiver';
 import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
+import * as fileUrl from 'file-url';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as mkdirp from 'mkdirp';
@@ -241,7 +242,7 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
 function constructManifestFile(classpaths: string[]): string {
     let content = "";
     let extended = ["Class-Path:", ...classpaths.map((c) => {
-        const path = '\\' + c;
+        const path = fileUrl(c);
         return path.endsWith('.jar') ? path : path + '/';
     })];
     content += extended.join(` ${os.EOL} `);
