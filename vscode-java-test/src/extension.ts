@@ -29,7 +29,7 @@ const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 const testResourceManager: TestResourceManager = new TestResourceManager();
 const classPathManager: ClassPathManager = new ClassPathManager();
-const outputChannel: OutputChannel = vscode.window.createOutputChannel('JUnit Test Result');
+const outputChannel: OutputChannel = vscode.window.createOutputChannel('Test Output');
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -90,6 +90,8 @@ function readJavaConfig(): string {
 }
 
 async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
+    outputChannel.clear();
+    outputChannel.show(true);
     const testList = Array.isArray(tests) ? tests : [tests];
     const suites = testList.map((s) => s.test);
     const uri = vscode.Uri.parse(testList[0].uri);
@@ -100,10 +102,10 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     try {
         params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, debug);
     } catch (ex) {
-        console.log(ex);
+        outputChannel.append(`Exception occers while  parsing params. Details: ${ex}`);
         rimraf(storageForThisRun, (err) => {
             if (err) {
-                console.log(err);
+                outputChannel.append(`Fail to delete storage for this run. Storage path: ${err}`);
             }
         });
         return null;
@@ -111,8 +113,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     if (params === null) {
         return null;
     }
-    outputChannel.clear();
-    outputChannel.show(true);
+    
     const testResultAnalyzer = new TestResultAnalyzer(testList);
     const process = cp.exec(params.join(' '));
     process.stderr.on('data', (data) => {
@@ -128,7 +129,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         onDidChange.fire();
         rimraf(storageForThisRun, (err) => {
             if (err) {
-                console.log(err);
+                outputChannel.append(`Failed to delete storage for this run. Storage path: ${err}`);
             }
         });
     });
@@ -197,6 +198,7 @@ async function parseParams(
         const classpathStr = await processLongClassPath(classpaths, separator, storagePath);
         params.push('"' + classpathStr + '"');
     } else {
+        outputChannel.append('Failed to locate test server runtime!');
         return null;
     }
 
@@ -221,6 +223,7 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
     return new Promise((resolve, reject) => {
         mkdirp(path.dirname(tempFile), (err) => {
             if (err && err.code !== 'EEXIST') {
+                outputChannel.append(`Failed to create sub directory for this run. Storage path: ${err}`);
                 reject(err);
             }
             const output = fs.createWriteStream(tempFile);
@@ -229,6 +232,7 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
             })
             const jarfile = archiver('zip');
             jarfile.on('error', function (err) {
+                outputChannel.append(`Failed to process too long class path issue. Error: ${err}`);
                 reject(err);
             });
             // pipe archive data to the file
