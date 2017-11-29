@@ -151,7 +151,8 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
 
 function showDetails(test: TestSuite) {
     const editor = vscode.window.activeTextEditor;
-    const uri = vscode.Uri.parse(`${Constants.TEST_OUTPUT_SCHEME}: test-result-${test.test}`);
+    const dir = path.dirname(editor.document.uri.fsPath);
+    const uri = vscode.Uri.parse(`${Constants.TEST_OUTPUT_SCHEME}:${path.join(dir,'test-result-' + test.test)}`);
     return vscode.workspace.openTextDocument(uri).then(doc => {
         return vscode.window.showTextDocument(doc, editor.viewColumn + 1).then(edit => {
             edit.insertSnippet(new SnippetString(getTestReport(test)), new vscode.Position(0, 0));
