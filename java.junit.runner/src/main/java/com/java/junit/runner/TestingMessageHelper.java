@@ -23,7 +23,6 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 public class TestingMessageHelper {
-    private static final char ESCAPE_SEPARATOR = '!';
     private static final String TEST_REPORTER_ATTACHED = "testReporterAttached";
     private static final String ROOT_NAME = "rootName";
     private static final String NAME = "name";
@@ -229,65 +228,47 @@ public class TestingMessageHelper {
         builder.append("}>");
         return builder.toString();
     }
-
+    
     private static String escape(String str) {
-        if (str == null) {
-            return null;
-        }
-
-        int escapeLength = calculateEscapedStringLength(str);
-        if (escapeLength == str.length()) {
-            return str;
-        }
-
-        char[] chars = new char[escapeLength];
-        int currentOffset = 0;
-        for (int i = 0; i < str.length(); i++) {
+    	if (str == null) {
+    		return str;
+    	}
+        int len = str.length();
+        StringBuilder sb = new StringBuilder(len);
+        String t;
+        for (int i = 0; i < len; i += 1) {
             char c = str.charAt(i);
-            char escape = escapeChar(c);
-            if (escape != 0) {
-                chars[currentOffset++] = ESCAPE_SEPARATOR;
-                chars[currentOffset++] = escape;
-            } else {
-                chars[currentOffset++] = c;
-            }
-        }
-
-        return new String(chars);
-    }
-
-    private static int calculateEscapedStringLength(String string) {
-        int result = 0;
-        for (int i = 0; i < string.length(); i++) {
-            char c = string.charAt(i);
-            if (escapeChar(c) != 0) {
-                result += 2;
-            } else {
-                result++;
-            }
-        }
-        return result;
-    }
-
-    private static char escapeChar(char c) {
-        switch (c) {
-            case '\n':
-                return 'n';
-            case '\r':
-                return 'r';
+            switch (c) {
+            case '\\':
+            case '\"':
+                sb.append('\\');
+                sb.append(c);
+                break;
             case '\b':
-                return 'b';
+                sb.append("\\b");
+                break;
             case '\t':
-                return 't';
-            case '\u0085':
-                return 'x';
-            case '\u2028':
-                return 'l';
-            case '\u2029':
-                return 'p';
+                sb.append("\\t");
+                break;
+            case '\n':
+                sb.append("\\n");
+                break;
+            case '\f':
+                sb.append("\\f");
+                break;
+            case '\r':
+               sb.append("\\r");
+               break;
             default:
-                return 0;
+                if (c < ' ') {
+                    t = "000" + Integer.toHexString(c);
+                    sb.append("\\u" + t.substring(t.length() - 4));
+                } else {
+                    sb.append(c);
+                }
+            }
         }
+        return sb.toString();
     }
 
     private static class Pair {
