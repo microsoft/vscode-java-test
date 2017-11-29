@@ -7,6 +7,7 @@ import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
 import * as fs from 'fs';
 import * as glob from 'glob';
+import * as mkdirp from 'mkdirp';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
@@ -94,7 +95,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     const classpaths = classPathManager.getClassPath(uri);
     const port = readPortConfig();
     const storageForThisRun = path.join(storagePath, new Date().getTime().toString());
-    let params;
+    let params: string[];
     try {
         params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, debug);
     } catch (ex) {
@@ -217,7 +218,7 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
     }
     let tempFile = path.join(storagePath, 'path.jar');
     return new Promise((resolve, reject) => {
-        fs.mkdir(path.dirname(tempFile), (err) => {
+        mkdirp(path.dirname(tempFile), (err) => {
             if (err && err.code !== 'EEXIST') {
                 reject(err);
             }
