@@ -6,7 +6,14 @@
         "url": "https://github.com/Microsoft/vscode-java-test/tree/newdesign/vscode-java-test"
     },
     "version": "0.0.1",
-    "publisher": "xuanz",
+    "publisher": "Microsoft",
+    "preview": true,
+    "icon": "logo.png",
+    "keywords": [
+        "java",
+        "junit",
+        "test"
+    ],
     "engines": {
         "vscode": "^1.17.0"
     },
