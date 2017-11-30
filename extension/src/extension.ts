@@ -238,7 +238,7 @@ async function parseParams(
         params = [...params, ...debugParams];
     }
 
-    params.push('com.java.junit.runner.JUnitLauncher');
+    params.push('com.microsoft.java.test.runner.JUnitLauncher');
     params = [...params, ...suites];
     return params;
 }
