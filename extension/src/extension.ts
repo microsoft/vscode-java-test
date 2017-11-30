@@ -216,7 +216,7 @@ async function parseParams(
     let params = [];
     params.push('"' + path.resolve(javaHome + '/bin/java') + '"');
     let server_home: string = path.resolve(__dirname, '../../server');
-    let launchersFound: Array<string> = glob.sync('**/java.junit.runner-*.jar', { cwd: server_home });
+    let launchersFound: Array<string> = glob.sync('**/com.microsoft.java.test.runner-*.jar', { cwd: server_home });
     if (launchersFound.length) {
         params.push('-cp');
         classpaths = [path.resolve(server_home, launchersFound[0]), ...classpaths];

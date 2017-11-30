@@ -24,13 +24,13 @@
     ],
     "activationEvents": [
         "onLanguage:java",
-        "onCommand:java.run.test",
-        "onCommand:java.debug.test"
+        "onCommand:java.test.run",
+        "onCommand:java.test.debug"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "javaExtensions": [
-            "./server/java.junit.plugin-0.1.0.jar"
+            "./server/com.microsoft.java.test.plugin-0.1.0.jar"
         ],
         "configuration": {
             "type": "object",
