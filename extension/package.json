@@ -7,6 +7,10 @@
     },
     "version": "0.0.1",
     "publisher": "vscjava",
+    "bugs": {
+        "url": "https://github.com/Microsoft/vscode-java-test/issues"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-java-test/blob/master/extension/README.md",
     "preview": true,
     "icon": "logo.png",
     "keywords": [
