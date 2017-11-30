@@ -1,12 +1,20 @@
 {
     "name": "vscode-java-test",
-    "displayName": "vscode-java-test",
-    "description": "A Java Test Runner/Debugger for Visual Studio Code",
+    "displayName": "Java Test Runner",
+    "description": "Run and debug JUnit test cases.",
     "repository": {
-        "url": "https://github.com/Microsoft/vscode-java-test/tree/newdesign/vscode-java-test"
+        "url": "https://github.com/Microsoft/vscode-java-test"
     },
     "version": "0.0.1",
-    "publisher": "xuanz",
+    "publisher": "vscjava",
+    "preview": true,
+    "icon": "logo.png",
+    "keywords": {
+        "java",
+        "test",
+        "junit",
+        "debug"
+    },
     "engines": {
         "vscode": "^1.17.0"
     },
@@ -15,8 +23,8 @@
     ],
     "activationEvents": [
         "onLanguage:java",
-        "onCommand:java.run.test",
-        "onCommand:java.debug.test"
+        "onCommand:java.test.run",
+        "onCommand:java.test.debug"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -25,7 +33,7 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "Java configuration",
+            "title": "Java Test Configuration",
             "properties": {
                 "java.test.port": {
                     "type": "number",
