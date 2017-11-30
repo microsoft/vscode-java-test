@@ -1,0 +1,78 @@
+{
+    "name": "vscode-java-test",
+    "displayName": "Java Test Runner",
+    "description": "Run and debug JUnit test cases.",
+    "repository": {
+        "url": "https://github.com/Microsoft/vscode-java-test"
+    },
+    "version": "0.0.1",
+    "publisher": "vscjava",
+    "preview": true,
+    "icon": "logo.png",
+    "keywords": [
+        "java",
+        "test",
+        "junit",
+        "debug"
+    ],
+    "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
+    "engines": {
+        "vscode": "^1.17.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onLanguage:java",
+        "onCommand:java.run.test",
+        "onCommand:java.debug.test"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "javaExtensions": [
+            "./server/java.junit.plugin-0.1.0.jar"
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Java Test Configuration",
+            "properties": {
+                "java.test.port": {
+                    "type": "number",
+                    "default": 5555,
+                    "description": "Test server port."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
+    "extensionDependencies": [
+        "vscjava.vscode-java-debug"
+    ],
+    "devDependencies": {
+        "typescript": "^2.5.2",
+        "vscode": "^1.0.0",
+        "mocha": "^2.3.3",
+        "@types/node": "^6.0.40",
+        "@types/mocha": "^2.2.32",
+        "@types/lodash": "^4.14.74",
+        "gulp": "^3.9.1",
+        "tslint": "^5.7.0",
+        "gulp-tslint": "^8.1.2"
+    },
+    "dependencies": {
+        "archiver": "^2.1.0",
+        "expand-home-dir": "^0.0.3",
+        "file-url": "^2.0.2",
+        "glob": "^7.1.1",
+        "lodash": "^4.17.4",
+        "mkdirp": "^0.5.1",
+        "path-exists": "^3.0.0",
+        "rimraf": "^2.6.2",
+        "vscode-extension-telemetry": "0.0.8"
+    }
+}
