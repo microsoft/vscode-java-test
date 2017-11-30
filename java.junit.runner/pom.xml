@@ -2,13 +2,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-  	<groupId>java.junit</groupId>
+  	<groupId>com.microsoft.java.test</groupId>
     <artifactId>parent</artifactId>
     <version>0.1.0</version>
   </parent>
-  <artifactId>java.junit.runner</artifactId>
+  <artifactId>com.microsoft.java.test.runner</artifactId>
   <packaging>jar</packaging>
-  <name>${base.name} :: java.junit.runner</name>
+  <name>${base.name} :: Runner</name>
   <url>http://maven.apache.org</url>
   <dependencies>
     <dependency>
