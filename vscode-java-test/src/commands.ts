@@ -29,6 +29,10 @@ export namespace Constants {
     export const LANGUAGE = 'java';
     export const TEST_OUTPUT_SCHEME = 'untitled';
     export const MAX_CLASS_PATH_LENGTH = 4096;
+    export const TELEMETRY_ACTIVATION_SCOPE = 'activateExtension';
+    export const TELEMETRY_EXCEPTION_SCOPE = 'exception';
+    export const TELEMETRY_INFO_SCOPE = 'info';
+    export const TELEMETRY_USAGEDATA_SCOPE = 'usageData';
 }
 
 export namespace Configs {

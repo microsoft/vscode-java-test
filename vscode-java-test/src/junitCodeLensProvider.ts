@@ -4,10 +4,12 @@ import { CodeLensProvider, Event, EventEmitter, TextDocument, CancellationToken,
 import { TestResourceManager } from './testResourceManager';
 import { Commands } from './commands';
 import { TestSuite, TestStatus, TestResult } from './protocols';
+import { Logger } from "./logger";
 
 export class JUnitCodeLensProvider implements CodeLensProvider {
     constructor(private _onDidChange: EventEmitter<void>,
-        private _testCollectionStorage: TestResourceManager) {
+        private _testCollectionStorage: TestResourceManager,
+        private _logger: Logger) {
     }
 
     get onDidChangeCodeLenses(): Event<void> {
@@ -29,8 +31,10 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
         },
         reason => {
             if (token.isCancellationRequested) {
+                this._logger.logError('test codelens request is cancelled.');
                 return [];
             }
+            this._logger.logError(`Failed to get test codelens. Details: ${reason}.`);
             return Promise.reject(reason);
         });
     }
