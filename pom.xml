@@ -12,8 +12,8 @@
         <tycho-version>1.0.0</tycho-version>
     </properties>
     <modules>
-        <module>java.junit.plugin</module>
-        <module>java.junit.runner</module>
+        <module>com.microsoft.java.test.plugin</module>
+        <module>com.microsoft.java.test.runner</module>
     </modules>
     <build>
         <pluginManagement>
