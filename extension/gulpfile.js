@@ -7,7 +7,7 @@ gulp.task('build_server', ()=>
 	cp.execSync(mvnw()+ ' clean package', {cwd:server_dir, stdio:[0,1,2]} );
 	gulp.src(server_dir + '/com.microsoft.java.test.plugin/target/*.jar')
         .pipe(gulp.dest('./server'));
-    gulp.src(server_dir + '/com.microsoft.java.test.runner/*.jar')
+    gulp.src(server_dir + '/com.microsoft.java.test.runner/target/*.jar')
 		.pipe(gulp.dest('./server'))
 });
 
