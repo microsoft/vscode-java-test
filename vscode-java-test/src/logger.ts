@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import { OutputChannel } from "vscode";
 import { Constants } from "./commands";
 import TelemetryReporter from "vscode-extension-telemetry";

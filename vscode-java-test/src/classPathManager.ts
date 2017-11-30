@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import { CancellationToken, Uri, workspace } from 'vscode';
 import { Commands } from './commands';
 
