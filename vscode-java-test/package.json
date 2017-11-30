@@ -24,8 +24,8 @@
     ],
     "activationEvents": [
         "onLanguage:java",
-        "onCommand:java.test.run",
-        "onCommand:java.test.debug"
+        "onCommand:java.run.test",
+        "onCommand:java.debug.test"
     ],
     "main": "./out/src/extension",
     "contributes": {
