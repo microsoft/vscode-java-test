@@ -14,6 +14,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 ## Use
 
 ![Run/debug JUnit test](https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/extension/demo/junit-demo.gif)
+
 ## Settings
 
 - `java.test.port`： Test server port, defaults to 5555.
