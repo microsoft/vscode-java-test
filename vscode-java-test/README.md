@@ -17,6 +17,7 @@ A lightweight test runner/debugger which depends on [Language Support for Java b
 - VS Code (version 1.17.0 or later)
 - [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) (version 0.14.0 or later)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
+- JUnit4: 4.8.0 or later
 
 ## Use
 
