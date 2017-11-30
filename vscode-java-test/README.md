@@ -34,3 +34,7 @@ You can find the full list of issues at [Issue Tracker](https://github.com/Micro
 ## License
 
 This extension is licensed under [MIT License](LICENSE.txt).
+
+## Data/Telemetry
+
+Test Runner/Debugger for Java collects usage data and sends it to Microsoft to help improve our products and services. Read our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839) to learn more. 

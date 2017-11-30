@@ -15,6 +15,7 @@
         "junit",
         "debug"
     },
+    "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
         "vscode": "^1.17.0"
     },
@@ -71,6 +72,7 @@
         "lodash": "^4.17.4",
         "mkdirp": "^0.5.1",
         "path-exists": "^3.0.0",
-        "rimraf": "^2.6.2"
+        "rimraf": "^2.6.2",
+        "vscode-extension-telemetry": "0.0.8"
     }
 }
