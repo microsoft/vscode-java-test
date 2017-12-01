@@ -153,38 +153,43 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     }
     
     const testResultAnalyzer = new TestResultAnalyzer(testList);
-    const process = cp.exec(params.join(' '));
-    process.on('error', (err) => {
-        logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
-        throw err;
-    })
-    process.stderr.on('data', (data) => {
-        logger.logError(`Error occured: ${data.toString()}`);
-        testResultAnalyzer.sendData(data.toString());
-    });
-    process.stdout.on('data', (data) => {
-        logger.logInfo(data.toString());
-        testResultAnalyzer.sendData(data.toString());
-    });
-    process.on('close', () => {
-        testResultAnalyzer.feedBack();
-        onDidChange.fire();
-        rimraf(storageForThisRun, (err) => {
-            if (err) {
-                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
-            }
+    await new Promise((resolve, reject) => {
+        const process = cp.exec(params.join(' '));
+        process.on('error', (err) => {
+            logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
+            reject(err);
+        })
+        process.stderr.on('data', (data) => {
+            logger.logError(`Error occured: ${data.toString()}`);
+            testResultAnalyzer.sendData(data.toString());
         });
-    });
-    if (debug) {
-        const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
-        vscode.debug.startDebugging(rootDir, {
-            'name': 'Debug Junit Test',
-            'type': 'java',
-            'request': 'attach',
-            'hostName': 'localhost',
-            'port': port
+        process.stdout.on('data', (data) => {
+            logger.logInfo(data.toString());
+            testResultAnalyzer.sendData(data.toString());
         });
-    }
+        process.on('close', () => {
+            testResultAnalyzer.feedBack();
+            onDidChange.fire();
+            rimraf(storageForThisRun, (err) => {
+                if (err) {
+                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
+                }
+            });
+        });
+        process.on('exit', () => {
+            resolve();
+        })
+        if (debug) {
+            const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
+            vscode.debug.startDebugging(rootDir, {
+                'name': 'Debug Junit Test',
+                'type': 'java',
+                'request': 'attach',
+                'hostName': 'localhost',
+                'port': port
+            });
+        }
+    });
 }
 
 async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
