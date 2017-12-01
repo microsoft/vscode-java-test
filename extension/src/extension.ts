@@ -36,6 +36,7 @@ const testResourceManager: TestResourceManager = new TestResourceManager();
 const classPathManager: ClassPathManager = new ClassPathManager();
 const outputChannel: OutputChannel = vscode.window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel);
+let running: boolean = false;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -52,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     checkJavaHome().then(javaHome => {
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runTest(javaHome, suites, context.storagePath, false), "Run Test")));
+            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), "Run Test")));
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             withScopeAsync(() => runTest(javaHome, suites, context.storagePath, true), "Debug Test")));
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
@@ -183,6 +184,21 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
             'hostName': 'localhost',
             'port': port
         });
+    }
+}
+
+async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
+
+    if (running) {
+        window.showInformationMessage('Can only run one instance at the same time');
+        logger.logInfo('Slip this run cause we only support running one instance at the same time');
+        return;
+    }
+    running = true;
+    try {
+        await runTest(javaHome, tests, storagePath, debug);
+    } finally {
+        running = false;
     }
 }
 
