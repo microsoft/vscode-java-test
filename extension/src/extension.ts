@@ -36,6 +36,7 @@ const testResourceManager: TestResourceManager = new TestResourceManager();
 const classPathManager: ClassPathManager = new ClassPathManager();
 const outputChannel: OutputChannel = vscode.window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel);
+let running: boolean = false;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -52,9 +53,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     checkJavaHome().then(javaHome => {
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runTest(javaHome, suites, context.storagePath, false), "Run Test")));
+            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), "Run Test")));
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runTest(javaHome, suites, context.storagePath, true), "Debug Test")));
+            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), "Debug Test")));
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
             withScopeAsync(() => showDetails(test), "Show Test details")));
         classPathManager.refresh();
@@ -152,37 +153,57 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     }
     
     const testResultAnalyzer = new TestResultAnalyzer(testList);
-    const process = cp.exec(params.join(' '));
-    process.on('error', (err) => {
-        logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
-        throw err;
-    })
-    process.stderr.on('data', (data) => {
-        logger.logError(`Error occured: ${data.toString()}`);
-        testResultAnalyzer.sendData(data.toString());
-    });
-    process.stdout.on('data', (data) => {
-        logger.logInfo(data.toString());
-        testResultAnalyzer.sendData(data.toString());
-    });
-    process.on('close', () => {
-        testResultAnalyzer.feedBack();
-        onDidChange.fire();
-        rimraf(storageForThisRun, (err) => {
-            if (err) {
-                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
-            }
+    await new Promise((resolve, reject) => {
+        const process = cp.exec(params.join(' '));
+        process.on('error', (err) => {
+            logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
+            reject(err);
+        })
+        process.stderr.on('data', (data) => {
+            logger.logError(`Error occured: ${data.toString()}`);
+            testResultAnalyzer.sendData(data.toString());
         });
-    });
-    if (debug) {
-        const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
-        vscode.debug.startDebugging(rootDir, {
-            'name': 'Debug Junit Test',
-            'type': 'java',
-            'request': 'attach',
-            'hostName': 'localhost',
-            'port': port
+        process.stdout.on('data', (data) => {
+            logger.logInfo(data.toString());
+            testResultAnalyzer.sendData(data.toString());
         });
+        process.on('close', () => {
+            testResultAnalyzer.feedBack();
+            onDidChange.fire();
+            rimraf(storageForThisRun, (err) => {
+                if (err) {
+                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
+                }
+            });
+        });
+        process.on('exit', () => {
+            resolve();
+        })
+        if (debug) {
+            const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
+            vscode.debug.startDebugging(rootDir, {
+                'name': 'Debug Junit Test',
+                'type': 'java',
+                'request': 'attach',
+                'hostName': 'localhost',
+                'port': port
+            });
+        }
+    });
+}
+
+async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
+
+    if (running) {
+        window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
+        logger.logInfo('Skip this run cause we only support running one session at the same time');
+        return;
+    }
+    running = true;
+    try {
+        await runTest(javaHome, tests, storagePath, debug);
+    } finally {
+        running = false;
     }
 }
 
