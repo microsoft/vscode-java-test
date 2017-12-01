@@ -72,6 +72,7 @@
         "archiver": "^2.1.0",
         "expand-home-dir": "^0.0.3",
         "file-url": "^2.0.2",
+        "find-java-home": "^0.2.0",
         "glob": "^7.1.1",
         "lodash": "^4.17.4",
         "mkdirp": "^0.5.1",

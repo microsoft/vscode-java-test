@@ -6,6 +6,7 @@
 import * as archiver from 'archiver';
 import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
+import * as findJavaHome from 'find-java-home';
 import * as fileUrl from 'file-url';
 import * as fs from 'fs';
 import * as glob from 'glob';
@@ -94,17 +95,18 @@ function checkJavaHome(): Promise<string> {
                 javaHome = process.env['JAVA_HOME'];
             }
         }
-        if (!javaHome) {
-            reject();
+        if (javaHome) {
+            javaHome = expandHomeDir(javaHome);
+            if (pathExists.sync(javaHome) && pathExists.sync(path.resolve(javaHome, 'bin', JAVAC_FILENAME))) {
+                resolve(javaHome);
+            }
         }
-        javaHome = expandHomeDir(javaHome);
-        if (!pathExists.sync(javaHome)) {
-            reject();
-        }
-        if (!pathExists.sync(path.resolve(javaHome, 'bin', JAVAC_FILENAME))) {
-            reject();
-        }
-        return resolve(javaHome);
+        findJavaHome((err, home) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(javaHome);
+        })
     });
 }
 
