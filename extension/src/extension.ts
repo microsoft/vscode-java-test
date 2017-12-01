@@ -105,7 +105,7 @@ function checkJavaHome(): Promise<string> {
             if (err) {
                 reject(err);
             }
-            resolve(javaHome);
+            resolve(home);
         })
     });
 }
