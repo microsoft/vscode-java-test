@@ -9,6 +9,7 @@ import * as expandHomeDir from 'expand-home-dir';
 import * as findJavaHome from 'find-java-home';
 import * as fileUrl from 'file-url';
 import * as fs from 'fs';
+import * as getPort from "get-port";
 import * as glob from 'glob';
 import * as mkdirp from 'mkdirp';
 import * as net from 'net';
@@ -21,13 +22,12 @@ import * as vscode from 'vscode';
 import { Commands, Configs, Constants } from './commands';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { TestResourceManager } from './testResourceManager';
-import { OutputChannel, SnippetString, ExtensionContext } from 'vscode';
+import { OutputChannel, SnippetString, ExtensionContext, window } from 'vscode';
 import { TestSuite, TestLevel } from './protocols';
 import { ClassPathManager } from './classPathManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { Logger, LogLevel } from './logger';
-import { Utility } from './utility';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -126,9 +126,11 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     let port;
     if (debug) {
         try {
-            port = await Utility.getFreePort();
+            port = await getPort();
         } catch (ex) {
-            logger.logError(`Failed to get free port for debugging. Details: ${ex}.`);
+            const message = `Failed to get free port for debugging. Details: ${ex}.`;
+            window.showErrorMessage(message);
+            logger.logError(message);
             throw ex;
         }
     }
