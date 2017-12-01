@@ -181,13 +181,16 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         })
         if (debug) {
             const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
-            vscode.debug.startDebugging(rootDir, {
-                'name': 'Debug Junit Test',
-                'type': 'java',
-                'request': 'attach',
-                'hostName': 'localhost',
-                'port': port
-            });
+            setTimeout(() => {
+                vscode.debug.startDebugging(rootDir, {
+                    'name': 'Debug Junit Test',
+                    'type': 'java',
+                    'request': 'attach',
+                    'hostName': 'localhost',
+                    'port': port
+                });
+            }, 500);
+            
         }
     });
 }
