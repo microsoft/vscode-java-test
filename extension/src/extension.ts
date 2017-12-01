@@ -98,7 +98,7 @@ function checkJavaHome(): Promise<string> {
         if (javaHome) {
             javaHome = expandHomeDir(javaHome);
             if (pathExists.sync(javaHome) && pathExists.sync(path.resolve(javaHome, 'bin', JAVAC_FILENAME))) {
-                resolve(javaHome);
+                return resolve(javaHome);
             }
         }
         findJavaHome((err, home) => {
