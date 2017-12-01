@@ -55,7 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), "Run Test")));
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runTest(javaHome, suites, context.storagePath, true), "Debug Test")));
+            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), "Debug Test")));
         context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
             withScopeAsync(() => showDetails(test), "Show Test details")));
         classPathManager.refresh();
