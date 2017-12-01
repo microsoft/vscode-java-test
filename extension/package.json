@@ -35,18 +35,7 @@
     "contributes": {
         "javaExtensions": [
             "./server/com.microsoft.java.test.plugin-0.1.0.jar"
-        ],
-        "configuration": {
-            "type": "object",
-            "title": "Java Test Configuration",
-            "properties": {
-                "java.test.port": {
-                    "type": "number",
-                    "default": 5555,
-                    "description": "Test server port."
-                }
-            }
-        }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",

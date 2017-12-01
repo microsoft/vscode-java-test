@@ -27,6 +27,7 @@ import { ClassPathManager } from './classPathManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { Logger, LogLevel } from './logger';
+import { Utility } from './utility';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -122,7 +123,15 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     const suites = testList.map((s) => s.test);
     const uri = vscode.Uri.parse(testList[0].uri);
     const classpaths = classPathManager.getClassPath(uri);
-    const port = readPortConfig();
+    let port;
+    if (debug) {
+        try {
+            port = await Utility.getFreePort();
+        } catch (ex) {
+            logger.logError(`Failed to get free port for debugging. Details: ${ex}.`);
+            throw ex;
+        }
+    }
     const storageForThisRun = path.join(storagePath, new Date().getTime().toString());
     let params: string[];
     try {
@@ -131,10 +140,10 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         logger.logError(`Exception occers while parsing params. Details: ${ex}`);
         rimraf(storageForThisRun, (err) => {
             if (err) {
-                logger.logError(`Fail to delete storage for this run. Storage path: ${err}`);
+                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
             }
         });
-        return null;
+        throw ex;
     }
     if (params === null) {
         return null;
@@ -200,11 +209,6 @@ function getTestReport(test: TestSuite): string {
         report += getTestReport(child) + os.EOL;
     }
     return report;
-}
-
-function readPortConfig(): Number {
-    const config = vscode.workspace.getConfiguration();
-    return config.get<Number>('java.test.port', Configs.JAVA_TEST_PORT);
 }
 
 async function parseParams(
