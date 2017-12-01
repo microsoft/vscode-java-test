@@ -195,8 +195,8 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
 async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
 
     if (running) {
-        window.showInformationMessage('Can only run one instance at the same time');
-        logger.logInfo('Slip this run cause we only support running one instance at the same time');
+        window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
+        logger.logInfo('Skip this run cause we only support running one session at the same time');
         return;
     }
     running = true;
