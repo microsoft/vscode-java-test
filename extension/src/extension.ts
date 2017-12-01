@@ -28,6 +28,7 @@ import { ClassPathManager } from './classPathManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { Logger, LogLevel } from './logger';
+import { setTimeout } from 'timers';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -181,13 +182,16 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         })
         if (debug) {
             const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
-            vscode.debug.startDebugging(rootDir, {
-                'name': 'Debug Junit Test',
-                'type': 'java',
-                'request': 'attach',
-                'hostName': 'localhost',
-                'port': port
-            });
+            setTimeout(() => {
+                vscode.debug.startDebugging(rootDir, {
+                    'name': 'Debug Junit Test',
+                    'type': 'java',
+                    'request': 'attach',
+                    'hostName': 'localhost',
+                    'port': port
+                });
+            }, 500);
+            
         }
     });
 }
