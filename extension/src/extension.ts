@@ -123,7 +123,15 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     const suites = testList.map((s) => s.test);
     const uri = vscode.Uri.parse(testList[0].uri);
     const classpaths = classPathManager.getClassPath(uri);
-    const port = await Utility.getFreePort();
+    let port;
+    if (debug) {
+        try {
+            port = await Utility.getFreePort();
+        } catch (ex) {
+            logger.logError(`Failed to get free port for debugging. Details: ${ex}.`);
+            throw ex;
+        }
+    }
     const storageForThisRun = path.join(storagePath, new Date().getTime().toString());
     let params: string[];
     try {
@@ -132,10 +140,10 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         logger.logError(`Exception occers while parsing params. Details: ${ex}`);
         rimraf(storageForThisRun, (err) => {
             if (err) {
-                logger.logError(`Fail to delete storage for this run. Storage path: ${err}`);
+                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
             }
         });
-        return null;
+        throw ex;
     }
     if (params === null) {
         return null;
