@@ -154,12 +154,14 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     
     const testResultAnalyzer = new TestResultAnalyzer(testList);
     await new Promise((resolve, reject) => {
+        let error: string = '';
         const process = cp.exec(params.join(' '));
         process.on('error', (err) => {
             logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
             reject(err);
         })
         process.stderr.on('data', (data) => {
+            error += data.toString();
             logger.logError(`Error occured: ${data.toString()}`);
             testResultAnalyzer.sendData(data.toString());
         });
@@ -177,8 +179,12 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
             });
         });
         process.on('exit', () => {
-            resolve();
-        })
+            if (error !== '') {
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
         if (debug) {
             const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
             setTimeout(() => {
