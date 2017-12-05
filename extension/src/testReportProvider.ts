@@ -1,10 +1,10 @@
+import { TestLevel, TestSuite } from "./protocols";
 import { TestResourceManager } from "./testResourceManager";
-import { TestSuite, TestLevel } from "./protocols";
-import { TextDocumentContentProvider, Uri } from "vscode";
 
 import * as os from 'os';
+import { TextDocumentContentProvider, Uri } from "vscode";
 
-export default class TestReportProvider implements TextDocumentContentProvider {
+export class TestReportProvider implements TextDocumentContentProvider {
 
     static scheme = 'test-report';
 
@@ -52,6 +52,6 @@ export function encodeTestSuite(uri: Uri, test: TestSuite): Uri {
 }
 
 export function decodeTestSuite(uri: Uri): [Uri, string] {
-    let [target, test] = <[string, string]>JSON.parse(uri.query);
+    const [target, test] = <[string, string]>JSON.parse(uri.query);
     return [Uri.parse(target), test.replace('%23', '#')];
 }

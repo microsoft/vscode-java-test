@@ -6,8 +6,8 @@
 import * as archiver from 'archiver';
 import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
-import * as findJavaHome from 'find-java-home';
 import * as fileUrl from 'file-url';
+import * as findJavaHome from 'find-java-home';
 import * as fs from 'fs';
 import * as getPort from "get-port";
 import * as glob from 'glob';
@@ -17,25 +17,25 @@ import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
 import * as rimraf from 'rimraf';
-import * as vscode from 'vscode';
+import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri } from 'vscode';
+import TelemetryReporter from 'vscode-extension-telemetry';
 
+import { ClassPathManager } from './classPathManager';
 import { Commands, Configs, Constants } from './commands';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
-import { TestResourceManager } from './testResourceManager';
-import { OutputChannel, ExtensionContext, Uri } from 'vscode';
-import { TestSuite, TestLevel } from './protocols';
-import { ClassPathManager } from './classPathManager';
-import { TestResultAnalyzer } from './testResultAnalyzer';
-import TelemetryReporter from 'vscode-extension-telemetry';
 import { Logger, LogLevel } from './logger';
-import TestReportProvider, { encodeTestSuite } from './testReportProvider';
+import { TestLevel, TestSuite } from './protocols';
+import { encodeTestSuite, TestReportProvider } from './testReportProvider';
+import { TestResourceManager } from './testResourceManager';
+import { TestResultAnalyzer } from './testResultAnalyzer';
+
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
-const onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+const onDidChange: EventEmitter<void> = new EventEmitter<void>();
 const testResourceManager: TestResourceManager = new TestResourceManager();
 const classPathManager: ClassPathManager = new ClassPathManager();
-const outputChannel: OutputChannel = vscode.window.createOutputChannel('Test Output');
+const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel);
 let running: boolean = false;
 
@@ -44,26 +44,26 @@ let running: boolean = false;
 export function activate(context: ExtensionContext) {
     activateTelemetry(context);
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(Constants.LANGUAGE, codeLensProvider));
+    context.subscriptions.push(languages.registerCodeLensProvider(Constants.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(testResourceManager);
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
+    context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
 
-    vscode.workspace.onDidChangeTextDocument((event) => {
+    workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
         testResourceManager.setDirty(uri);
         //onDidChange.fire();
     });
 
     checkJavaHome().then(javaHome => {
-        context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), "Run Test")));
-        context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), "Debug Test")));
-        context.subscriptions.push(vscode.commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
             withScopeAsync(() => showDetails(test), "Show Test details")));
         classPathManager.refresh();
     }).catch((err) => {
-        vscode.window.showErrorMessage("couldn't find Java home...");
+        window.showErrorMessage("couldn't find Java home...");
     });
 }
 
@@ -111,29 +111,29 @@ function checkJavaHome(): Promise<string> {
                 reject(err);
             }
             resolve(home);
-        })
+        });
     });
 }
 
 function readJavaConfig(): string {
-    const config = vscode.workspace.getConfiguration();
+    const config = workspace.getConfiguration();
     return config.get<string>('java.home', null);
 }
 
-async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
+async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
     outputChannel.clear();
     outputChannel.show(true);
     const testList = Array.isArray(tests) ? tests : [tests];
     const suites = testList.map((s) => s.test);
-    const uri = vscode.Uri.parse(testList[0].uri);
+    const uri = Uri.parse(testList[0].uri);
     const classpaths = classPathManager.getClassPath(uri);
     let port;
-    if (debug) {
+    if (isDebugMode) {
         try {
             port = await getPort();
         } catch (ex) {
             const message = `Failed to get free port for debugging. Details: ${ex}.`;
-            vscode.window.showErrorMessage(message);
+            window.showErrorMessage(message);
             logger.logError(message);
             throw ex;
         }
@@ -141,7 +141,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     const storageForThisRun = path.join(storagePath, new Date().getTime().toString());
     let params: string[];
     try {
-        params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, debug);
+        params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, isDebugMode);
     } catch (ex) {
         logger.logError(`Exception occers while parsing params. Details: ${ex}`);
         rimraf(storageForThisRun, (err) => {
@@ -162,7 +162,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         process.on('error', (err) => {
             logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
             reject(err);
-        })
+        });
         process.stderr.on('data', (data) => {
             error += data.toString();
             logger.logError(`Error occured: ${data.toString()}`);
@@ -188,10 +188,10 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
                 resolve();
             }
         });
-        if (debug) {
-            const rootDir = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
+        if (isDebugMode) {
+            const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));
             setTimeout(() => {
-                vscode.debug.startDebugging(rootDir, {
+                debug.startDebugging(rootDir, {
                     'name': 'Debug Junit Test',
                     'type': 'java',
                     'request': 'attach',
@@ -206,7 +206,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
 async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
 
     if (running) {
-        vscode.window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
+        window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
         logger.logInfo('Skip this run cause we only support running one session at the same time');
         return;
     }
@@ -219,11 +219,9 @@ async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, st
 }
 
 function showDetails(test: TestSuite) {
-    const editor = vscode.window.activeTextEditor;
+    const editor = window.activeTextEditor;
     const uri: Uri = encodeTestSuite(editor.document.uri, test);
-    return vscode.workspace.openTextDocument(uri).then(doc => {
-        return vscode.window.showTextDocument(doc, editor.viewColumn + 1);
-    });
+    return workspace.openTextDocument(uri).then((doc) => window.showTextDocument(doc, editor.viewColumn + 1));
 }
 
 async function parseParams(
@@ -279,7 +277,7 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
             const output = fs.createWriteStream(tempFile);
             output.on('close', () => {
                 resolve(tempFile);
-            })
+            });
             const jarfile = archiver('zip');
             jarfile.on('error', function (err) {
                 logger.logError(`Failed to process too long class path issue. Error: ${err}`);

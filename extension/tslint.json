@@ -1,10 +1,12 @@
 {
+    //to-do: make it strict later in a new pr
     //"extends": "tslint:latest",
     "rules": {
-        "variable-name": [
+        /* "variable-name": [
             true,
             "allow-leading-underscore"
-        ],
+        ], */
+        "variable-name": false,
         "no-unused-expression": true,
         "no-duplicate-variable": true,
         "max-classes-per-file": [
@@ -24,16 +26,22 @@
             "check-separator",
             "check-type"
         ],
-        "semicolon": [
-            "always"
-        ],
+        /* "semicolon": [
+            true, "always"
+        ], */
         "triple-equals": true,
         "max-line-length": [
             true,
             150
         ], 
         "no-angle-bracket-type-assertion": false,
-        "no-console": ["log","error"],
-        "variable-name": false
+        /* "ordered-imports": [
+            true,
+            {
+                "import-sources-order": "lowercase-first",
+                "named-imports-order": "lowercase-first"
+            }
+        ], */
+        "no-console": [true, "log","error"]
     }
 }
