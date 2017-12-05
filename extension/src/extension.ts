@@ -22,12 +22,13 @@ import * as vscode from 'vscode';
 import { Commands, Configs, Constants } from './commands';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { TestResourceManager } from './testResourceManager';
-import { OutputChannel, SnippetString, ExtensionContext, window } from 'vscode';
+import { OutputChannel, ExtensionContext, Uri } from 'vscode';
 import { TestSuite, TestLevel } from './protocols';
 import { ClassPathManager } from './classPathManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { Logger, LogLevel } from './logger';
+import TestReportProvider, { encodeTestSuite } from './testReportProvider';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -40,10 +41,12 @@ let running: boolean = false;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ExtensionContext) {
     activateTelemetry(context);
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(vscode.languages.registerCodeLensProvider(Constants.LANGUAGE, codeLensProvider));
+    const testReportProvider: TestReportProvider = new TestReportProvider(testResourceManager);
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
 
     vscode.workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
@@ -130,7 +133,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
             port = await getPort();
         } catch (ex) {
             const message = `Failed to get free port for debugging. Details: ${ex}.`;
-            window.showErrorMessage(message);
+            vscode.window.showErrorMessage(message);
             logger.logError(message);
             throw ex;
         }
@@ -196,7 +199,6 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
                     'port': port
                 });
             }, 500);
-            
         }
     });
 }
@@ -204,7 +206,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
 async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
 
     if (running) {
-        window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
+        vscode.window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
         logger.logInfo('Skip this run cause we only support running one session at the same time');
         return;
     }
@@ -218,29 +220,10 @@ async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, st
 
 function showDetails(test: TestSuite) {
     const editor = vscode.window.activeTextEditor;
-    const dir = path.dirname(editor.document.uri.fsPath);
-    const uri = vscode.Uri.parse(`${Constants.TEST_OUTPUT_SCHEME}:${path.join(dir, 'test-result-' + test.test)}`);
+    const uri: Uri = encodeTestSuite(editor.document.uri, test);
     return vscode.workspace.openTextDocument(uri).then(doc => {
-        return vscode.window.showTextDocument(doc, editor.viewColumn + 1).then(edit => {
-            edit.insertSnippet(new SnippetString(getTestReport(test)), new vscode.Position(0, 0));
-        });
+        return vscode.window.showTextDocument(doc, editor.viewColumn + 1);
     });
-}
-
-function getTestReport(test: TestSuite): string {
-    let report = test.test + ':' + os.EOL;
-    if (!test.result) {
-        return report + "Not run...";
-    }
-    report += JSON.stringify(test.result, null, 4);
-    if (test.level === TestLevel.Method) {
-        return report;
-    }
-    report += os.EOL;
-    for (const child of test.children) {
-        report += getTestReport(child) + os.EOL;
-    }
-    return report;
 }
 
 async function parseParams(
