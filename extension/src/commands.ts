@@ -3,40 +3,25 @@
 
 import * as vscode from 'vscode';
 
-export namespace Commands {
-    /**
-     * Run test
-     */
-    export const JAVA_RUN_TEST_COMMAND = 'java.test.run';
-    
-    /**
-     * Debug test
-     */
-    export const JAVA_DEBUG_TEST_COMMAND = 'java.test.debug';
+/**
+ * Run test
+ */
+export const JAVA_RUN_TEST_COMMAND = 'java.test.run';
 
-    export const JAVA_TEST_SHOW_DETAILS = 'java.test.show.detail';
+/**
+ * Debug test
+ */
+export const JAVA_DEBUG_TEST_COMMAND = 'java.test.debug';
 
-    export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
+export const JAVA_TEST_SHOW_DETAILS = 'java.test.show.detail';
 
-    export const JAVA_CALCULATE_CLASS_PATH = 'vscode.java.test.runtime.classpath';
+export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
 
-    export const JAVA_EXECUTE_WORKSPACE_COMMAND = "java.execute.workspaceCommand";
+export const JAVA_CALCULATE_CLASS_PATH = 'vscode.java.test.runtime.classpath';
 
-    export function executeJavaLanguageServerCommand(...rest) {
-        // TODO: need to handle error and trace telemetry
-        return vscode.commands.executeCommand(JAVA_EXECUTE_WORKSPACE_COMMAND, ...rest);
-    }
-}
+export const JAVA_EXECUTE_WORKSPACE_COMMAND = "java.execute.workspaceCommand";
 
-export namespace Constants {
-    export const LANGUAGE = 'java';
-    export const MAX_CLASS_PATH_LENGTH = 4096;
-    export const TELEMETRY_ACTIVATION_SCOPE = 'activateExtension';
-    export const TELEMETRY_EXCEPTION_SCOPE = 'exception';
-    export const TELEMETRY_INFO_SCOPE = 'info';
-    export const TELEMETRY_USAGEDATA_SCOPE = 'usageData';
-}
-
-export namespace Configs {
-    export const JAVA_TEST_PORT = 5555;
+export function executeJavaLanguageServerCommand(...rest) {
+    // TODO: need to handle error and trace telemetry
+    return vscode.commands.executeCommand(JAVA_EXECUTE_WORKSPACE_COMMAND, ...rest);
 }

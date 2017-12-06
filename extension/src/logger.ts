@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import { OutputChannel } from "vscode";
-import { Constants } from "./commands";
 import TelemetryReporter from "vscode-extension-telemetry";
+
+import * as Constants from "./constants";
 
 export class Logger {
     private _telemetryReporter: TelemetryReporter;
@@ -20,8 +21,8 @@ export class Logger {
         this._channel.append(errorMessage);
         if (this._telemetryReporter && this._telemetryReportThreshold >= LogLevel.Error) {
             this._telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_EXCEPTION_SCOPE, {
-                "error": errorMessage,
-                "stack": stack,
+                error: errorMessage,
+                stack,
             });
         }
     }
@@ -30,7 +31,7 @@ export class Logger {
         this._channel.append(message);
         if (this._telemetryReporter && this._telemetryReportThreshold >= LogLevel.Info) {
             this._telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_INFO_SCOPE, {
-                "info": message
+                info: message,
             });
         }
     }

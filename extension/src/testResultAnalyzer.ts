@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestSuite, TestStatus, TestResult, TestLevel } from "./protocols";
+import { TestLevel, TestResult, TestStatus, TestSuite  } from "./protocols";
 
 const SUITE_START: string = 'testSuiteStarted';
 const SUITE_FINISH: string = 'testSuiteFinished';
@@ -18,7 +18,7 @@ export class TestResultAnalyzer {
     }
 
     public sendData(data: string): void {
-        let regex = /@@<([^@]*)>/gm;
+        const regex = /@@<([^@]*)>/gm;
         let match;
         do {
             match = regex.exec(data);
@@ -29,7 +29,7 @@ export class TestResultAnalyzer {
     }
 
     public feedBack(): void {
-        let toAggregate = new Set();
+        const toAggregate = new Set();
         this._testSuites.forEach((t) => {
             if (t.level === TestLevel.Class) {
                 toAggregate.add(t);
@@ -38,7 +38,7 @@ export class TestResultAnalyzer {
                 toAggregate.add(t.parent);
                 this.processMethod(t);
             }
-        })
+        });
         toAggregate.forEach((t) => this.processClass(t));
     }
 
@@ -54,8 +54,8 @@ export class TestResultAnalyzer {
                 break;
             case TEST_START:
                 this._testResults.set(this._suiteName + "#" + info.attributes.name, {
-                    status: undefined
-                } as TestResult);
+                    status: undefined,
+                });
                 break;
             case TEST_FAIL:
                 res = this._testResults.get(this._suiteName + "#" + info.attributes.name);
@@ -80,8 +80,12 @@ export class TestResultAnalyzer {
     }
 
     private processClass(t: TestSuite): void {
-        let passNum = 0, failNum = 0, skipNum = 0, duration = 0, notRun = false;
-        for (let child of t.children) {
+        let passNum: number = 0;
+        let failNum: number = 0;
+        let skipNum: number = 0;
+        let duration: number = 0;
+        let notRun: boolean = false;
+        for (const child of t.children) {
             if (!child.result) {
                 notRun = true;
                 continue;
@@ -99,18 +103,19 @@ export class TestResultAnalyzer {
                     break;
             }
         }
+
         t.result = {
             status: notRun ? undefined : (skipNum === t.children.length ? TestStatus.Skipped : (failNum > 0 ? TestStatus.Fail : TestStatus.Pass)),
             summary: `Total tests run: ${passNum + failNum}, Failures: ${failNum}, Skips: ${skipNum}.`,
             duration: notRun ? undefined : duration.toString(),
-        } as TestResult;
+        };
     }
 
     private processMethod(t: TestSuite): void {
         if (!this._testResults.has(t.test)) {
             t.result = {
-                status: TestStatus.Skipped
-            } as TestResult;
+                status: TestStatus.Skipped,
+            };
         } else {
             t.result = this._testResults.get(t.test);
         }
@@ -120,7 +125,7 @@ export class TestResultAnalyzer {
 export type TestResultInfo = {
     name: string;
     attributes: TestAttributes;
-}
+};
 
 export type TestAttributes = {
     name: string;
@@ -128,4 +133,4 @@ export type TestAttributes = {
     location: string;
     message: string;
     details: string;
-}
+};
