@@ -6,7 +6,7 @@ import { Range } from 'vscode';
 export type Test = {
     tests: TestSuite[];
     dirty: boolean;
-}
+};
 
 export type TestSuite = {
     range: Range;
@@ -19,15 +19,15 @@ export type TestSuite = {
     packageName: string;
     level: TestLevel;
     result?: TestResult;
-}
+};
 
 export type TestResult = {
     status?: TestStatus;
-    details: string;
-    message: string;
+    details?: string;
+    message?: string;
     duration?: string;
-    summary: string;
-}
+    summary?: string;
+};
 
 export enum TestStatus {
     Pass = 'Pass',

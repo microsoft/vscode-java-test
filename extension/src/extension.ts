@@ -21,14 +21,15 @@ import { commands, debug, languages, window, workspace, EventEmitter, ExtensionC
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { ClassPathManager } from './classPathManager';
-import { Commands, Configs, Constants } from './commands';
+import * as Commands from './commands';
+import * as Configs from './configs';
+import * as Constants from './constants';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { Logger, LogLevel } from './logger';
 import { TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
-
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -44,17 +45,17 @@ let running: boolean = false;
 export function activate(context: ExtensionContext) {
     activateTelemetry(context);
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
-    context.subscriptions.push(languages.registerCodeLensProvider(Constants.LANGUAGE, codeLensProvider));
+    context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(testResourceManager);
     context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
 
     workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
         testResourceManager.setDirty(uri);
-        //onDidChange.fire();
+        // onDidChange.fire();
     });
 
-    checkJavaHome().then(javaHome => {
+    checkJavaHome().then((javaHome) => {
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), "Run Test")));
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
@@ -92,12 +93,11 @@ function activateTelemetry(context: ExtensionContext) {
 
 function checkJavaHome(): Promise<string> {
     return new Promise((resolve, reject) => {
-        let source: string;
         let javaHome: string = readJavaConfig();
         if (!javaHome) {
-            javaHome = process.env['JDK_HOME'];
+            javaHome = process.env[Constants.JDK_HOME];
             if (!javaHome) {
-                javaHome = process.env['JAVA_HOME'];
+                javaHome = process.env[Constants.JAVA_HOME];
             }
         }
         if (javaHome) {
@@ -154,7 +154,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     if (params === null) {
         return null;
     }
-    
+
     const testResultAnalyzer = new TestResultAnalyzer(testList);
     await new Promise((resolve, reject) => {
         let error: string = '';
@@ -192,18 +192,18 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
             const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));
             setTimeout(() => {
                 debug.startDebugging(rootDir, {
-                    'name': 'Debug Junit Test',
-                    'type': 'java',
-                    'request': 'attach',
-                    'hostName': 'localhost',
-                    'port': port
+                    name: 'Debug Junit Test',
+                    type: 'java',
+                    request: 'attach',
+                    hostName: 'localhost',
+                    port,
                 });
             }, 500);
         }
     });
 }
 
-async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, debug: boolean) {
+async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
 
     if (running) {
         window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
@@ -212,7 +212,7 @@ async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, st
     }
     running = true;
     try {
-        await runTest(javaHome, tests, storagePath, debug);
+        await runTest(javaHome, tests, storagePath, isDebugMode);
     } finally {
         running = false;
     }
@@ -229,16 +229,16 @@ async function parseParams(
     classpaths: string[],
     suites: string[],
     storagePath: string,
-    port: Number,
-    debug: boolean): Promise<string[]> {
+    port: number | undefined,
+    isDebugMode: boolean): Promise<string[]> {
 
     let params = [];
     params.push('"' + path.resolve(javaHome + '/bin/java') + '"');
-    let server_home: string = path.resolve(__dirname, '../../server');
-    let launchersFound: Array<string> = glob.sync('**/com.microsoft.java.test.runner-*.jar', { cwd: server_home });
+    const serverHome: string = path.resolve(__dirname, '../../server');
+    const launchersFound: string[] = glob.sync('**/com.microsoft.java.test.runner-*.jar', { cwd: serverHome });
     if (launchersFound.length) {
         params.push('-cp');
-        classpaths = [path.resolve(server_home, launchersFound[0]), ...classpaths];
+        classpaths = [path.resolve(serverHome, launchersFound[0]), ...classpaths];
         let separator = ';';
         if (process.platform === 'darwin' || process.platform === 'linux') {
             separator = ':';
@@ -250,7 +250,7 @@ async function parseParams(
         return null;
     }
 
-    if (debug) {
+    if (isDebugMode) {
         const debugParams = [];
         debugParams.push('-Xdebug');
         debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);
@@ -264,10 +264,10 @@ async function parseParams(
 
 function processLongClassPath(classpaths: string[], separator: string, storagePath: string): Promise<string> {
     const concated = classpaths.join(separator);
-    if (concated.length <= Constants.MAX_CLASS_PATH_LENGTH) {
+    if (concated.length <= Configs.MAX_CLASS_PATH_LENGTH) {
         return Promise.resolve(concated);
     }
-    let tempFile = path.join(storagePath, 'path.jar');
+    const tempFile = path.join(storagePath, 'path.jar');
     return new Promise((resolve, reject) => {
         mkdirp(path.dirname(tempFile), (err) => {
             if (err && err.code !== 'EEXIST') {
@@ -279,9 +279,9 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
                 resolve(tempFile);
             });
             const jarfile = archiver('zip');
-            jarfile.on('error', function (err) {
+            jarfile.on('error', (jarErr) => {
                 logger.logError(`Failed to process too long class path issue. Error: ${err}`);
-                reject(err);
+                reject(jarErr);
             });
             // pipe archive data to the file
             jarfile.pipe(output);
@@ -293,9 +293,9 @@ function processLongClassPath(classpaths: string[], separator: string, storagePa
 
 function constructManifestFile(classpaths: string[]): string {
     let content = "";
-    let extended = ["Class-Path:", ...classpaths.map((c) => {
-        const path = fileUrl(c);
-        return path.endsWith('.jar') ? path : path + '/';
+    const extended = ["Class-Path:", ...classpaths.map((c) => {
+        const p = fileUrl(c);
+        return p.endsWith('.jar') ? p : p + '/';
     })];
     content += extended.join(` ${os.EOL} `);
     content += os.EOL;
@@ -305,22 +305,23 @@ function constructManifestFile(classpaths: string[]): string {
 async function withScopeAsync(action, eventType) {
     const start = new Date();
     const eventId: string = start.getTime().toString();
-    let props = {
-        'eventId': eventId,
-        'type': eventType,
+    const props = {
+        eventId,
+        type: eventType,
     };
+    // tslint:disable-next-line
     let measures = {};
     try {
         const res = await action();
-        props['status'] = 'success';
+        props[Constants.TELEMETRY_PROPS_STATUS] = 'success';
         return res;
     } catch (ex) {
-        props['status'] = 'fail';
-        props['exception'] = ex.toString();
+        props[Constants.TELEMETRY_PROPS_STATUS] = 'fail';
+        props[Constants.TELEMETRY_PROPS_EXCEPTION] = ex.toString();
     } finally {
         const end = new Date();
         const duration: number = end.getTime() - start.getTime();
-        measures['duration'] = duration;
+        measures[Constants.TELEMETRY_MEASURES_DURATION] = duration;
         logger.logUsage(props, measures);
     }
 }

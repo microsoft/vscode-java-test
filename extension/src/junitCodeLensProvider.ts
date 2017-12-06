@@ -3,14 +3,16 @@
 
 'use strict';
 
-import { CodeLensProvider, Event, EventEmitter, TextDocument, CancellationToken, CodeLens, ProviderResult } from "vscode";
-import { TestResourceManager } from './testResourceManager';
-import { Commands } from './commands';
-import { TestSuite, TestStatus, TestResult } from './protocols';
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from "vscode";
+
+import * as Commands from './commands';
 import { Logger } from "./logger";
+import { TestResult, TestStatus, TestSuite } from './protocols';
+import { TestResourceManager } from './testResourceManager';
 
 export class JUnitCodeLensProvider implements CodeLensProvider {
-    constructor(private _onDidChange: EventEmitter<void>,
+    constructor(
+        private _onDidChange: EventEmitter<void>,
         private _testCollectionStorage: TestResourceManager,
         private _logger: Logger) {
     }
@@ -20,7 +22,7 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
-        let testsFromCache = this._testCollectionStorage.getTests(document.uri);
+        const testsFromCache = this._testCollectionStorage.getTests(document.uri);
         if (testsFromCache && !testsFromCache.dirty) {
             return getCodeLens(testsFromCache.tests);
         }
@@ -32,7 +34,7 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
             this._testCollectionStorage.storeTests(document.uri, tests);
             return getCodeLens(tests);
         },
-        reason => {
+        (reason) => {
             if (token.isCancellationRequested) {
                 this._logger.logError('test codelens request is cancelled.');
                 return [];
@@ -57,9 +59,9 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
                 t.parent = tests[t.parentIndex];
             }
             if (t.childrenIndices) {
-                t.children = t.childrenIndices.map(i => tests[i]);
+                t.children = t.childrenIndices.map((i) => tests[i]);
             }
-        })
+        });
     }
 }
 
@@ -85,21 +87,21 @@ function getTestStatusIcon(status?: TestStatus): string {
     }
 }
 
-function getCodeLens(tests: TestSuite[]) : CodeLens[] {
-    return tests.map(test => {
+function getCodeLens(tests: TestSuite[]): CodeLens[] {
+    return tests.map((test) => {
         const codeLenses = [
             new CodeLens(test.range, {
                 title: 'Run Test',
                 command: Commands.JAVA_RUN_TEST_COMMAND,
                 tooltip: 'Run Test',
-                arguments: [test]
+                arguments: [test],
             }),
             new CodeLens(test.range, {
                 title: 'Debug Test',
                 command: Commands.JAVA_DEBUG_TEST_COMMAND,
                 tooltip: 'Debug Test',
-                arguments: [test]
-            })
+                arguments: [test],
+            }),
         ];
 
         if (test.result) {
@@ -107,7 +109,7 @@ function getCodeLens(tests: TestSuite[]) : CodeLens[] {
                 title: getTestStatusIcon(test.result.status),
                 command: Commands.JAVA_TEST_SHOW_DETAILS,
                 tooltip: 'Show Details',
-                arguments: [test]
+                arguments: [test],
             }));
         }
 

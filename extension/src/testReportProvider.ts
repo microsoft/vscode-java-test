@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import { TestLevel, TestSuite } from "./protocols";
 import { TestResourceManager } from "./testResourceManager";
 
@@ -6,7 +9,7 @@ import { TextDocumentContentProvider, Uri } from "vscode";
 
 export class TestReportProvider implements TextDocumentContentProvider {
 
-    static scheme = 'test-report';
+    public static scheme = 'test-report';
 
     constructor(private _testResourceProvider: TestResourceManager) {
     }
