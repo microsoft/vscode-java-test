@@ -3,9 +3,13 @@
 
 import { workspace, CancellationToken, Uri } from 'vscode';
 import * as Commands from './commands';
+import { Logger } from './logger';
 
 export class ClassPathManager {
     private classPathCache = new Map<string, string[]>();
+
+    constructor(private _logger: Logger) {
+    }
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
@@ -16,6 +20,7 @@ export class ClassPathManager {
                 if (token.isCancellationRequested) {
                     return;
                 }
+                this._logger.logError(`Failed to refresh class path. Details: ${reason}.`);
                 return Promise.reject(reason);
             });
         }));
