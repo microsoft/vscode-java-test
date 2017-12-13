@@ -51,55 +51,99 @@ export class TestReportProvider implements TextDocumentContentProvider {
     }
 
     private classSnippet(test: TestSuite): string {
-        const passCount: number = test.children.filter((c) => c.result && c.result.status === TestStatus.Pass).length
-                                  * 100.0 / test.children.length;
-        const failCount: number = test.children.filter((c) => c.result && c.result.status === TestStatus.Fail).length
-                                  * 100.0 / test.children.length;
-        const skipCount: number = test.children.filter((c) => c.result && c.result.status === TestStatus.Skipped).length
-                                  * 100.0 / test.children.length;
+        const totalCount: number = test.children.length;
+        const passCount: number = test.children.filter((c) => c.result && c.result.status === TestStatus.Pass).length;
+        const failCount: number = test.children.filter((c) => c.result && c.result.status === TestStatus.Fail).length;
+        const skipCount: number = test.children.filter((c) => c.result && c.result.status === TestStatus.Skipped).length;
+        const allTestsSnippet: string = test.children.map((c) => this.methodSnippetInTable(c)).join(' ');
+        const passedTestsSnippet: string = test.children.filter((c) => c.result && c.result.status === TestStatus.Pass)
+                                                        .map((c) => this.methodSnippetInTable(c)).join(' ');
+        const failedTestsSnippet: string = test.children.filter((c) => c.result && c.result.status === TestStatus.Fail)
+                                                        .map((c) => this.methodSnippetInTable(c)).join(' ');
+        const tableHeaderString: string = `
+            <tr>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Duration(ms)</th>
+                <th>Message</th>
+                <th>StackTrace</th>
+            </tr>`;
         return `
             <head>
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; style-src 'self'; script-src 'nonce-chart';">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; style-src 'nonce-self'; script-src 'nonce-check';">
+                <style nonce="self">
+                    .run {
+                        width:33%;
+                        float:left;
+                    }
+                    .failed {
+                        width:33%;
+                        float:left;
+                    }
+                    .passed {
+                        width:33%;
+                        float:left;
+                    }
+                    #status div span {
+                        display: table-cell;
+                    }
+                    #status div .counter {
+                        background-color:rgb(200,200,200);
+                        color:black;
+                        width:100%;
+                    }
+                    #color-status {
+                        background-color: ${failCount > 0 ? "red" : (passCount + skipCount === totalCount ? "green" : "orange")};
+                        height: 15px;
+                        float:left;
+                        width:100%;
+                    }
+                </style>
             </head>
             <body>
                 <div>Test report of class: ${test.test}</div>
                 <hr/>
-                <div id="status style='width:80%'">
-                    ${test.result ? '<canvas id="chart-area"/>' : '<span>Status: Not run</span>'}
+                <div id="status">
+                    <div class="run">
+                        <span class="label">Run:</span><span class="counter">${passCount + failCount + skipCount}/${totalCount}</span>
+                    </div>
+                    <div class="passed"><span class="label">Passed:</span><span class="counter">${passCount}</span></div>
+                    <div class="failed"><span class="label">Failed:</span><span class="counter">${failCount}</span></div>
+                </div>
+                <div id="color-status">
+                    &nbsp;
                 </div>
                 <div id="summary">
                     <span>${test.result && test.result.summary ? "Summary: " + test.result.summary : ""}</span>
                 </div>
+                <div id="filter">
+                    <label><input type="radio" name="test" value="all" checked ="checked"> All tests</label>
+                    <label><input type="radio" name="test" value="passed"> Passed</label>
+                    <label><input type="radio" name="test" value="failed"> Failed</label>
+                </div>
                 <div id="children">
                     <table border="1">
-                        <tr>
-                            <th>Method</th>
-                            <th>Status</th>
-                            <th>Duration(ms)</th>
-                            <th>Message</th>
-                            <th>StackTrace</th>
-                        </tr>
-                        ${test.children.map((c) => this.methodSnippetInTable(c)).join(' ')}
+                        ${tableHeaderString}
+                        ${allTestsSnippet}
                     </table>
                 </div>
-                <script nonce="chart" src="${this.getResourcePath('Chart.js')}"></script>
-                <script nonce="chart">
-                    const config = {
-                        type: 'pie',
-                        data: {
-                            datasets: [{
-                                data: [${passCount}, ${failCount}, ${skipCount}],
-                                backgroundColor: ['rgb(0, 255, 0)', 'rgb(255, 0, 0)', 'rgb(255, 140, 0)'],
-                                label: 'Tests status percentage'
-                            }],
-                            labels: ["Pass", "Fail", "Skip"]
-                        },
-                        options: {responsive: true}
-                    };
-                    window.onload = function() {
-                        const ctx = document.getElementById("chart-area").getContext("2d");
-                        window.myPie = new Chart(ctx, config);
-                    };
+                <script nonce="check">
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const elements = [...document.getElementsByTagName("input")];
+                        elements.forEach((element) => element.addEventListener('change', check));
+                    });
+                    function check(event) {
+                        const radio = event.target;
+                        const v = radio.value;
+                        const table = document.getElementById("children").getElementsByTagName("table")[0];
+                        if (v === 'all') {
+                            table.innerHTML = ${'`' + tableHeaderString + allTestsSnippet + '`'};
+                        } else if (v === 'passed') {
+                            table.innerHTML = ${'`' + tableHeaderString + passedTestsSnippet + '`'};
+                        } else if (v === 'failed') {
+                            table.innerHTML = ${'`' + tableHeaderString + failedTestsSnippet + '`'};
+                        }
+                    }
                 </script>
             </body>`;
     }
@@ -107,9 +151,9 @@ export class TestReportProvider implements TextDocumentContentProvider {
     private methodSnippetInTable(test: TestSuite): string {
         let content: string = `<tr><td>${test.test.replace('#', '.')}</td>`;
         content += `<td>${test.result ? test.result.status : "Not run"}</td>`;
-        content += `<td>${test.result && test.result.duration ? test.result.duration : ""}</td>`;
-        content += `<td>${test.result && test.result.message ?  test.result.message : ""}</td>`;
-        content += `<td>${test.result && test.result.details ? test.result.details : "N/A"}</td></tr>`;
+        content += `<td>${test.result && test.result.duration ? test.result.duration : "N/A"}</td>`;
+        content += `<td>${test.result && test.result.message ?  test.result.message : "N/A"}</td>`;
+        content += `<td>${test.result && test.result.details ? "<pre><code>" + test.result.details + "</code></pre>" : "N/A"}</td></tr>`;
         return content;
     }
 
@@ -122,19 +166,15 @@ export class TestReportProvider implements TextDocumentContentProvider {
                     <span>Status:    ${test.result ? test.result.status : "Not run"}</span>
                 </div>
                 <div id="duration">
-                    <span>${test.result && test.result.duration ? "Duration: " + test.result.duration + " milliseconds" : ""}</span>
+                    <span>${test.result && test.result.duration ? "Duration: " + test.result.duration + " milliseconds" : "N/A"}</span>
                 </div>
                 <div id="message">
-                    <span>${test.result && test.result.message ? "Message: " + test.result.message : ""}</span>
+                    <span>${test.result && test.result.message ? "Message: " + test.result.message : "N/A"}</span>
                 </div>
                 <div id="callstack">
-                    <div>${test.result && test.result.details ? "CallStack: " + test.result.details : ""}</div>
+                    <div>${test.result && test.result.details ? "CallStack: <pre><code>" + test.result.details + "</code></pre>" : "N/A"}</div>
                 </div>
             </body>`;
-    }
-
-    private getResourcePath(file: string): string {
-        return this._context.asAbsolutePath(path.join("resource", file));
     }
 }
 
