@@ -106,7 +106,7 @@ export class TestResultAnalyzer {
 
         t.result = {
             status: notRun ? undefined : (skipNum === t.children.length ? TestStatus.Skipped : (failNum > 0 ? TestStatus.Fail : TestStatus.Pass)),
-            summary: `Total tests run: ${passNum + failNum}, Failures: ${failNum}, Skips: ${skipNum}.`,
+            summary: `Total tests: ${t.children.length}. Runs: ${passNum + failNum}, Failures: ${failNum}, Skips: ${skipNum}.`,
             duration: notRun ? undefined : duration.toString(),
         };
     }
