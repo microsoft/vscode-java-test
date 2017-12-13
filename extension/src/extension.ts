@@ -34,10 +34,10 @@ import { TestResultAnalyzer } from './testResultAnalyzer';
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
-const testResourceManager: TestResourceManager = new TestResourceManager();
-const classPathManager: ClassPathManager = new ClassPathManager();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
-const logger: Logger = new Logger(outputChannel);
+const logger: Logger = new Logger(outputChannel); // TO-DO: refactor Logger. Make logger stateless and no need to pass the instance.
+const testResourceManager: TestResourceManager = new TestResourceManager(logger);
+const classPathManager: ClassPathManager = new ClassPathManager(logger);
 let running: boolean = false;
 
 // this method is called when your extension is activated

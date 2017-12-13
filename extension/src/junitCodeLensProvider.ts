@@ -6,6 +6,7 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from "vscode";
 
 import * as Commands from './commands';
+import * as FetchTestsUtility from './fetchTestUtility';
 import { Logger } from "./logger";
 import { TestResult, TestStatus, TestSuite } from './protocols';
 import { TestResourceManager } from './testResourceManager';
@@ -22,12 +23,16 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
-        const testsFromCache = this._testCollectionStorage.getTests(document.uri);
+        let testsFromCache = this._testCollectionStorage.getTests(document.uri);
         if (testsFromCache && !testsFromCache.dirty) {
             return getCodeLens(testsFromCache.tests);
         }
-        return fetchTests(document).then((tests: TestSuite[]) => {
-            this.transformIndex(tests);
+        return FetchTestsUtility.fetchTests(document).then((tests: TestSuite[]) => {
+            // check again in case the storage updated during fetching
+            testsFromCache = this._testCollectionStorage.getTests(document.uri);
+            if (testsFromCache && !testsFromCache.dirty) {
+                return getCodeLens(testsFromCache.tests);
+            }
             if (testsFromCache) {
                 this.mergeTestResult(testsFromCache.tests, tests);
             }
@@ -52,21 +57,6 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
             }
         });
     }
-
-    private transformIndex(tests: TestSuite[]): void {
-        tests.map((t) => {
-            if (t.parentIndex) {
-                t.parent = tests[t.parentIndex];
-            }
-            if (t.childrenIndices) {
-                t.children = t.childrenIndices.map((i) => tests[i]);
-            }
-        });
-    }
-}
-
-function fetchTests(document: TextDocument) {
-    return Commands.executeJavaLanguageServerCommand(Commands.JAVA_FETCH_TEST, document.uri.toString());
 }
 
 function getTestStatusIcon(status?: TestStatus): string {

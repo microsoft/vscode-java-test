@@ -12,9 +12,9 @@ export type TestSuite = {
     range: Range;
     uri: string;
     test: string;
-    parentIndex: number; // local per file
+    parentIndex?: number; // local per file
     parent: TestSuite;
-    childrenIndices: number[]; // local per file
+    childrenIndices?: number[]; // local per file
     children: TestSuite[];
     packageName: string;
     level: TestLevel;
