@@ -35,7 +35,16 @@
     "contributes": {
         "javaExtensions": [
             "./server/com.microsoft.java.test.plugin-0.1.0.jar"
-        ]
+        ],
+        "views": {
+            "explorer": [
+              {
+                "id": "testExplorer",
+                "name": "Test Explorer",
+                "when": "resourceLangId == 'java'"
+              }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",

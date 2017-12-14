@@ -15,6 +15,16 @@ export function fetchTests(document: TextDocument): Thenable<TestSuite[]> {
     });
 }
 
+export function searchAllTests(): Thenable<any> {
+    return Commands.executeJavaLanguageServerCommand(Commands.JAVA_SEARCH_ALL_TESTS).then((tests: TestSuite[]) => {
+        transformIndex(tests);
+        return tests;
+    },
+    (reason) => {
+        return Promise.reject(reason);
+    });
+}
+
 function transformIndex(tests: TestSuite[]): void {
     tests.map((t) => {
         if (t.parentIndex !== undefined) {

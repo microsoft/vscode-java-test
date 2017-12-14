@@ -30,6 +30,8 @@ import { TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
+import { TestExplorer } from './Explorer/testExplorer';
+import { TestTreeNode } from './Explorer/testTreeNode';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -44,15 +46,27 @@ let running: boolean = false;
 // your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext) {
     activateTelemetry(context);
+    testResourceManager.refresh();
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
     context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
+    const testExplorer = new TestExplorer(context, testResourceManager);
+    context.subscriptions.push(window.registerTreeDataProvider(Constants.TEST_EXPLORER_VIEW_ID, testExplorer));
+    testResourceManager.onDidChangeTestStorage((e) => {
+        testExplorer.refresh();
+    });
 
     workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
         testResourceManager.setDirty(uri);
         // onDidChange.fire();
+    });
+
+    workspace.onDidSaveTextDocument((document) => {
+        const uri = document.uri;
+        testResourceManager.setDirty(uri);
+        onDidChange.fire();
     });
 
     checkJavaHome().then((javaHome) => {
@@ -62,6 +76,8 @@ export function activate(context: ExtensionContext) {
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), "Debug Test")));
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
             withScopeAsync(() => showDetails(test), "Show Test details")));
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
+            withScopeAsync(() => testExplorer.select(node), "Select node in Test Explorer")));
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
