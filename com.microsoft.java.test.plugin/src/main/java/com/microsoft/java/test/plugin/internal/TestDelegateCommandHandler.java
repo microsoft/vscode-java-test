@@ -20,6 +20,7 @@ import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     public static String FETCH_TEST = "vscode.java.test.fetch";
+    public static String SEARCH_ALL_TEST = "vscode.java.test.search.all";
     public static String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
 
     @Override
@@ -28,6 +29,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
             return new JUnitTestFetcher().fetchTests(arguments, monitor);
         } else if (COMPUTE_RUNTIME_CLASSPATH.equals(commandId)) {
         	return new RuntimeClassPathResolver().resolveRunTimeClassPath(arguments);
+        } else if (SEARCH_ALL_TEST.equals(commandId)) {
+        	return new JUnitTestSearcher().searchAllTests(monitor);
         }
         throw new UnsupportedOperationException(String.format("Java test plugin doesn't support the command '%s'.", commandId));
     }
