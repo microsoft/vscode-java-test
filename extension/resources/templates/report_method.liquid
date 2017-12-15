@@ -1,0 +1,36 @@
+<body>
+    <div>Test report of method: {{ test | replace: "#", "." }}</div>
+    <hr/>
+    <div id="status">
+        <span>Status: </span>
+        {% if result %}
+            <span>{{ result.status }}</span>
+        {% else %}
+            <span>Not run</span>
+        {% endif %}
+    </div>
+    <div id="duration">
+        <span>Duration: </span>
+        {% if result and result.duration %}
+            <span>{{ result.duration }} milliseconds</span>
+        {% else %}
+            <span>N/A</span>
+        {% endif %}
+    </div>
+    <div id="message">
+        <span>Message: </span>
+        {% if result and result.message %}
+            <span>{{ result.message }}</span>
+        {% else %}
+            <span>N/A</span>
+        {% endif %}
+    </div>
+    <div id="callstack">
+        <span>CallStack: </span>
+        {% if result and result.details %}
+            <div><pre><code>{{ result.details }}</code></pre></div>
+        {% else %}
+            <span>N/A</span>
+        {% endif %}
+    </div>
+</body>
