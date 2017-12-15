@@ -53,13 +53,6 @@ export class TestReportProvider implements TextDocumentContentProvider {
         return report;
     }
 
-    private errorSnippet(error: string): string {
-        return `
-            <body>
-                ${error}
-            </body>`;
-    }
-
     private reportSnippet(test: TestSuite): string | Promise<string> {
         switch (test.level) {
             case TestLevel.Class:
@@ -93,12 +86,13 @@ export class TestReportProvider implements TextDocumentContentProvider {
         return this.renderSnippet(test, 'report_method');
     }
 
-    private async renderSnippet(test: TestSuite, templateName: string): Promise<string> {
+    private errorSnippet(error: string): Promise<string> {
+        return this.renderSnippet(error, 'report_error');
+    }
+
+    private async renderSnippet(content: any, templateName: string): Promise<string> {
         return this._engine.fileSystem.readTemplateFile(templateName).then((template) => {
-            return this._engine.parseAndRender(template, test);
-        },
-        (reason) => {
-            return Promise.reject(reason);
+            return this._engine.parseAndRender(template, content);
         });
     }
 }
