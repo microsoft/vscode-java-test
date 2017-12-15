@@ -17,7 +17,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
 import * as rimraf from 'rimraf';
-import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri } from 'vscode';
+import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { ClassPathManager } from './classPathManager';
@@ -46,7 +46,7 @@ export function activate(context: ExtensionContext) {
     activateTelemetry(context);
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
-    const testReportProvider: TestReportProvider = new TestReportProvider(testResourceManager);
+    const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
     context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
 
     workspace.onDidChangeTextDocument((event) => {
@@ -221,7 +221,7 @@ async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, st
 function showDetails(test: TestSuite) {
     const editor = window.activeTextEditor;
     const uri: Uri = encodeTestSuite(editor.document.uri, test);
-    return workspace.openTextDocument(uri).then((doc) => window.showTextDocument(doc, editor.viewColumn + 1));
+    return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, 'Test Report');
 }
 
 async function parseParams(

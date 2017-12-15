@@ -1,17 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestSuite } from "./protocols";
+import { TestLevel, TestStatus, TestSuite } from "./protocols";
 import { TestResourceManager } from "./testResourceManager";
 
+import * as liquid from 'liquid-node';
 import * as os from 'os';
-import { TextDocumentContentProvider, Uri } from "vscode";
+import * as path from 'path';
+import { window, ExtensionContext, TextDocumentContentProvider, Uri } from "vscode";
 
 export class TestReportProvider implements TextDocumentContentProvider {
 
     public static scheme = 'test-report';
+    private _engine: liquid.Engine;
 
-    constructor(private _testResourceProvider: TestResourceManager) {
+    constructor(private _context: ExtensionContext, private _testResourceProvider: TestResourceManager) {
+        this._engine = new liquid.Engine();
+        this._engine.registerFileSystem(new liquid.LocalFileSystem(this._context.asAbsolutePath(path.join('resources', 'templates')), 'liquid'));
     }
 
     public provideTextDocumentContent(uri: Uri): string {
@@ -46,6 +51,49 @@ export class TestReportProvider implements TextDocumentContentProvider {
             report += this.getTestReport(child) + os.EOL;
         }
         return report;
+    }
+
+    private reportSnippet(test: TestSuite): string | Promise<string> {
+        switch (test.level) {
+            case TestLevel.Class:
+                return this.classSnippet(test);
+            case TestLevel.Method:
+                return this.methodSnippet(test);
+            default:
+                return this.errorSnippet('Not supported test level. Currently support class level and method level.');
+        }
+    }
+
+    private classSnippet(test: TestSuite): Promise<string> {
+        const passedTests: TestSuite[] = test.children.filter((c) => c.result && c.result.status === TestStatus.Pass);
+        const failedTests: TestSuite[] = test.children.filter((c) => c.result && c.result.status === TestStatus.Fail);
+        const skippedTests: TestSuite[] = test.children.filter((c) => c.result && c.result.status === TestStatus.Skipped);
+        const extraInfo = {
+            allTests: test.children,
+            passedTests,
+            failedTests,
+            skippedTests,
+            totalCount: test.children.length,
+            passCount: passedTests.length,
+            failedCount: failedTests.length,
+            skippedCount: skippedTests.length,
+        };
+        const copied = {...test, ...extraInfo};
+        return this.renderSnippet(copied, 'report_class');
+    }
+
+    private methodSnippet(test: TestSuite): Promise<string> {
+        return this.renderSnippet(test, 'report_method');
+    }
+
+    private errorSnippet(error: string): Promise<string> {
+        return this.renderSnippet(error, 'report_error');
+    }
+
+    private async renderSnippet(content: any, templateName: string): Promise<string> {
+        return this._engine.fileSystem.readTemplateFile(templateName).then((template) => {
+            return this._engine.parseAndRender(template, content);
+        });
     }
 }
 
