@@ -4,19 +4,25 @@
 import { TestLevel, TestStatus, TestSuite } from "./protocols";
 import { TestResourceManager } from "./testResourceManager";
 
-import * as liquid from 'liquid-node';
 import * as os from 'os';
 import * as path from 'path';
+import * as pug from 'pug';
 import { window, ExtensionContext, TextDocumentContentProvider, Uri } from "vscode";
 
 export class TestReportProvider implements TextDocumentContentProvider {
 
     public static scheme = 'test-report';
-    private _engine: liquid.Engine;
+    private static compiledClassTemplate: (any) => string;
+    private static compiledErrorTemplate: (any) => string;
+    private static compiledMethodTemplate: (any) => string;
 
     constructor(private _context: ExtensionContext, private _testResourceProvider: TestResourceManager) {
-        this._engine = new liquid.Engine();
-        this._engine.registerFileSystem(new liquid.LocalFileSystem(this._context.asAbsolutePath(path.join('resources', 'templates')), 'liquid'));
+        TestReportProvider.compiledClassTemplate =
+            pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_class.pug')));
+        TestReportProvider.compiledErrorTemplate =
+            pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_error.pug')));
+        TestReportProvider.compiledMethodTemplate =
+            pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_method.pug')));
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
@@ -62,21 +68,19 @@ export class TestReportProvider implements TextDocumentContentProvider {
             skippedCount: skippedTests.length,
         };
         const copied = {...test, ...extraInfo};
-        return this.renderSnippet(copied, 'report_class');
+        return this.renderSnippet(copied, TestReportProvider.compiledClassTemplate);
     }
 
     private methodSnippet(test: TestSuite): Promise<string> {
-        return this.renderSnippet(test, 'report_method');
+        return this.renderSnippet(test, TestReportProvider.compiledMethodTemplate);
     }
 
     private errorSnippet(error: string): Promise<string> {
-        return this.renderSnippet({message: error}, 'report_error');
+        return this.renderSnippet({message: error}, TestReportProvider.compiledErrorTemplate);
     }
 
-    private async renderSnippet(content: any, templateName: string): Promise<string> {
-        return this._engine.fileSystem.readTemplateFile(templateName).then((template) => {
-            return this._engine.parseAndRender(template, content);
-        });
+    private async renderSnippet(content: any, template: (any) => string): Promise<string> {
+        return template(content);
     }
 }
 
