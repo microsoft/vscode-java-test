@@ -10,7 +10,7 @@ export class TestTreeNode {
         private _range?: Range,
         private _parent?: TestTreeNode,
         private _children?: TestTreeNode[],
-        private _level: TestTreeNodeLevel = TestTreeNodeLevel.Method) {
+        private _level: TestTreeNodeType = TestTreeNodeType.Method) {
     }
 
     public get name(): string {
@@ -18,7 +18,7 @@ export class TestTreeNode {
     }
 
     public get fullName(): string {
-        return (this._parent ? `${this._parent.fullName}` + (this.level === TestTreeNodeLevel.Method ? "#" : ".") : "") + this._name;
+        return (this._parent ? `${this._parent.fullName}` + (this.level === TestTreeNodeType.Method ? "#" : ".") : "") + this._name;
     }
 
     public get uri(): string {
@@ -30,7 +30,7 @@ export class TestTreeNode {
     }
 
     public get isFolder(): boolean {
-        return this.level !== TestTreeNodeLevel.Method;
+        return this.level !== TestTreeNodeType.Method;
     }
 
     public get children(): TestTreeNode[] {
@@ -49,12 +49,12 @@ export class TestTreeNode {
         this._parent = c;
     }
 
-    public get level(): TestTreeNodeLevel {
+    public get level(): TestTreeNodeType {
         return this._level;
     }
 }
 
-export enum TestTreeNodeLevel {
+export enum TestTreeNodeType {
     Method,
     Class,
     Package,

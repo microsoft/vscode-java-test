@@ -7,7 +7,7 @@ import { window, workspace, Event, EventEmitter, ExtensionContext, TreeDataProvi
 import * as Commands from '../commands';
 import { TestLevel, TestSuite } from '../protocols';
 import { TestResourceManager } from '../testResourceManager';
-import { TestTreeNode, TestTreeNodeLevel } from "./testTreeNode";
+import { TestTreeNode, TestTreeNodeType } from "./testTreeNode";
 
 export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     private _onDidChangeTreeData: EventEmitter<TestTreeNode | undefined> = new EventEmitter<TestTreeNode | undefined>();
@@ -38,7 +38,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             return element.children;
         }
         const tests: TestSuite[] = this._testCollectionStorage.getAll().filter((t) => t.level === TestLevel.Method);
-        return this.createTestTreeNode(tests, undefined, TestTreeNodeLevel.Folder);
+        return this.createTestTreeNode(tests, undefined, TestTreeNodeType.Folder);
     }
 
     public select(element: TestTreeNode) {
@@ -55,8 +55,8 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     private createTestTreeNode(
         tests: TestSuite[],
         parent: TestTreeNode,
-        level: TestTreeNodeLevel): TestTreeNode[] {
-        if (level === TestTreeNodeLevel.Method) {
+        level: TestTreeNodeType): TestTreeNode[] {
+        if (level === TestTreeNodeType.Method) {
             return tests.map((t) => new TestTreeNode(this.getShortName(t), t.uri, t.range, parent, undefined));
         }
         const keyFunc: (_: TestSuite) => string = this.getGroupKeyFunc(level);
@@ -71,7 +71,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             }
         });
         const children = [...map.entries()].map((value) => {
-            const uri: string = level === TestTreeNodeLevel.Class ? value[1][0].uri : undefined;
+            const uri: string = level === TestTreeNodeType.Class ? value[1][0].uri : undefined;
             const c: TestTreeNode = new TestTreeNode(value[0], uri, undefined, parent, undefined, level);
             c.children = this.createTestTreeNode(value[1], c, level - 1);
             return c;
@@ -79,13 +79,13 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return children;
     }
 
-    private getGroupKeyFunc(level: TestTreeNodeLevel): ((_: TestSuite) => string) {
+    private getGroupKeyFunc(level: TestTreeNodeType): ((_: TestSuite) => string) {
         switch (level) {
-            case TestTreeNodeLevel.Folder:
+            case TestTreeNodeType.Folder:
                 return (_) => this.getWorkspaceFolder(_);
-            case TestTreeNodeLevel.Package:
+            case TestTreeNodeType.Package:
                 return (_) => _.packageName;
-            case TestTreeNodeLevel.Class:
+            case TestTreeNodeType.Class:
                 return (_) => this.getShortName(_.parent);
             default:
                 throw new Error('Not supported group level');
@@ -110,17 +110,17 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
 
     private getIconPath(element: TestTreeNode): string | Uri | {dark: string | Uri, light: string | Uri} {
         switch (element.level) {
-            case TestTreeNodeLevel.Method:
+            case TestTreeNodeType.Method:
             return {
                 dark: this._context.asAbsolutePath(path.join("resources", "media", "dark", "method.svg")),
                 light: this._context.asAbsolutePath(path.join("resources", "media", "light", "method.svg")),
             };
-            case TestTreeNodeLevel.Class:
+            case TestTreeNodeType.Class:
             return {
                 dark: this._context.asAbsolutePath(path.join("resources", "media", "dark", "class.svg")),
                 light: this._context.asAbsolutePath(path.join("resources", "media", "light", "class.svg")),
             };
-            case TestTreeNodeLevel.Package:
+            case TestTreeNodeType.Package:
             return {
                 dark: this._context.asAbsolutePath(path.join("resources", "media", "dark", "package.svg")),
                 light: this._context.asAbsolutePath(path.join("resources", "media", "light", "package.svg")),
@@ -131,7 +131,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     private getCommand(element: TestTreeNode): Command | undefined {
-        if (element.level <= TestTreeNodeLevel.Class) {
+        if (element.level <= TestTreeNodeType.Class) {
             return {
                 command: Commands.JAVA_TEST_EXPLORER_SELECT,
                 title: '',
