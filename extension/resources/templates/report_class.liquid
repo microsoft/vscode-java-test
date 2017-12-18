@@ -1,0 +1,86 @@
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; style-src 'nonce-self'; script-src 'nonce-check';">
+    <style nonce="self">
+        .run {
+            width:33%;
+            float:left;
+        }
+        .failed {
+            width:33%;
+            float:left;
+        }
+        .passed {
+            width:33%;
+            float:left;
+        }
+        #status div span {
+            display: table-cell;
+        }
+        #status div .counter {
+            background-color:rgb(200,200,200);
+            color:black;
+            width:100%;
+        }
+        #color-status {
+            background-color:
+            {% if failedCount > 0 %}
+                red;
+            {% elsif (passCount | plus: skippedCount) == totalCount %}
+                green;
+            {% else %}
+                orange;
+            {% endif %}
+            height: 15px;
+            float:left;
+            width:100%;
+        }
+    </style>
+</head>
+{% assign children = allTests %}
+{% assign passedChildren = passedTests %}
+{% assign failedChildren = failedTests %}
+<body>
+    <div>Test report of class: {{test}}</div>
+    <hr/>
+    <div id="status">
+        <div class="run">
+            <span class="label">Run:</span><span class="counter">{{ passCount | plus: failedCount | plus: skippedCount }}/{{ totalCount }}</span>
+        </div>
+        <div class="passed"><span class="label">Passed:</span><span class="counter">{{ passCount }}</span></div>
+        <div class="failed"><span class="label">Failed:</span><span class="counter">{{ failedCount }}</span></div>
+    </div>
+    <div id="color-status">
+        &nbsp;
+    </div>
+    {% if result and result.summary %}
+        <div id="summary">
+            <span>Summary: {{ result.summary }}</span>
+        </div>
+    {% endif %}
+    <div id="filter">
+        <label><input type="radio" name="test" value="all" checked ="checked"> All tests</label>
+        <label><input type="radio" name="test" value="passed"> Passed</label>
+        <label><input type="radio" name="test" value="failed"> Failed</label>
+    </div>
+    <div id="children">
+        {% include 'report_method_table' %}
+    </div>
+    <script nonce="check">
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = [...document.getElementsByTagName("input")];
+            elements.forEach((element) => element.addEventListener('change', check));
+        });
+        function check(event) {
+            const radio = event.target;
+            const v = radio.value;
+            const table = document.getElementById("children");
+            if (v === 'all') {
+                table.innerHTML = `{% include 'report_method_table' %}`;
+            } else if (v === 'passed') {
+                table.innerHTML = `{% include 'report_passed_method_table' %}`;
+            } else if (v === 'failed') {
+                table.innerHTML = `{% include 'report_failed_method_table' %}`;
+            }
+        }
+    </script>
+</body>

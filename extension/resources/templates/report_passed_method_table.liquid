@@ -1,0 +1,34 @@
+<table border="1">
+    <tr>
+        <th>Method</th>
+        <th>Status</th>
+        <th>Duration(ms)</th>
+        <th>Message</th>
+    </tr>
+    {% for child in passedChildren %}
+    <tr>
+        <td>{{ child.test | replace: "#", "." }}</td>
+        <td>
+            {% if child.result %}
+                {{ child.result.status }}
+            {% else %}
+                Not run
+            {% endif %}
+        </td>
+        <td>
+            {% if child.result and child.result.duration %}
+                {{ child.result.duration }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
+        <td>
+            {% if child.result and child.result.message %}
+                {{ child.result.message }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>

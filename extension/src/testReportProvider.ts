@@ -19,38 +19,21 @@ export class TestReportProvider implements TextDocumentContentProvider {
         this._engine.registerFileSystem(new liquid.LocalFileSystem(this._context.asAbsolutePath(path.join('resources', 'templates')), 'liquid'));
     }
 
-    public provideTextDocumentContent(uri: Uri): string {
+    public async provideTextDocumentContent(uri: Uri): Promise<string> {
         const [target, test] = decodeTestSuite(uri);
         const testsContainedInFile = this._testResourceProvider.getTests(target);
         if (!testsContainedInFile) {
-            return `No tests in the uri: ${uri}. Shouldn\'t happen, please report us a bug.`;
+            return this.errorSnippet(`No tests in the uri: ${uri}. Shouldn\'t happen, please report us a bug.`);
         }
         if (testsContainedInFile.dirty) {
-            return 'Test file has been changed, try open the report again...';
+            return this.errorSnippet('Test file has been changed, try open the report again...');
         }
         const testMap: Map<string, TestSuite> = new Map(testsContainedInFile.tests.map((t): [string, TestSuite] => [t.test, t]));
         const matchedTest = testMap.get(test);
         if (!matchedTest) {
-            return 'No matched test found in the test storage. Shouldn\'t happen, please report us a bug.';
+            return this.errorSnippet('No matched test found in the test storage. Shouldn\'t happen, please report us a bug.');
         }
-        return this.getTestReport(matchedTest);
-    }
-
-    // to-do: better formatting
-    private getTestReport(test: TestSuite): string {
-        let report = test.test + ':' + os.EOL;
-        if (!test.result) {
-            return report + "Not run...";
-        }
-        report += JSON.stringify(test.result, null, 4);
-        if (test.level === TestLevel.Method) {
-            return report;
-        }
-        report += os.EOL;
-        for (const child of test.children) {
-            report += this.getTestReport(child) + os.EOL;
-        }
-        return report;
+        return this.reportSnippet(matchedTest);
     }
 
     private reportSnippet(test: TestSuite): string | Promise<string> {
@@ -87,7 +70,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
     }
 
     private errorSnippet(error: string): Promise<string> {
-        return this.renderSnippet(error, 'report_error');
+        return this.renderSnippet({message: error}, 'report_error');
     }
 
     private async renderSnippet(content: any, templateName: string): Promise<string> {
