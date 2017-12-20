@@ -10,3 +10,4 @@ export const TELEMETRY_USAGEDATA_SCOPE = 'usageData';
 export const TELEMETRY_PROPS_STATUS = 'status';
 export const TELEMETRY_PROPS_EXCEPTION = 'exception';
 export const TELEMETRY_MEASURES_DURATION = 'duration';
+export const TEST_EXPLORER_VIEW_ID = 'testExplorer';

@@ -31,6 +31,7 @@
         "max-line-length": [
             true,
             150
+            //"^import", see https://github.com/palantir/tslint/pull/3099
         ], 
         "no-angle-bracket-type-assertion": false,
         "ordered-imports": [

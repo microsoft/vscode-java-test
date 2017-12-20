@@ -15,7 +15,11 @@ export const JAVA_DEBUG_TEST_COMMAND = 'java.test.debug';
 
 export const JAVA_TEST_SHOW_DETAILS = 'java.test.show.detail';
 
+export const JAVA_TEST_EXPLORER_SELECT = 'java.test.explorer.select';
+
 export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
+
+export const JAVA_SEARCH_ALL_TESTS = 'vscode.java.test.search.all';
 
 export const JAVA_CALCULATE_CLASS_PATH = 'vscode.java.test.runtime.classpath';
 
