@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.1.0",
+    "version": "0.2.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -34,7 +34,7 @@
     "main": "./out/src/extension",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.1.0.jar"
+            "./server/com.microsoft.java.test.plugin-0.2.0.jar"
         ],
         "views": {
             "explorer": [
