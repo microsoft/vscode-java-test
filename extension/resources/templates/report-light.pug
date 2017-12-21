@@ -1,0 +1,55 @@
+doctype html
+html(lang="en")
+    head
+        link(rel="stylesheet", nonce="check", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css", integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb", crossorigin="anonymous")
+    body(style='padding-top:70px')
+        .navbar.fixed-top.navbar-light.bg-light.navbar-expand-sm
+            a.navbar-brand(href='#') Test Report
+            div.collapse.navbar-collapse
+                ul.navbar-nav
+                    li.nav-item.active
+                        a.nav-link(href='all') All
+                    li.nav-item
+                        a.nav-link(href='failed') Failed
+                    li.nav-item
+                        a.nav-link(href='passed') Passed
+        .container
+            .row
+                .col
+                    .progress
+                        .progress-bar.bg-success(role='progressbar', style='width:25%', aria-valuenow='15', aria-valuemin='0', aria-valuemax='100') 1 Passed
+                        .progress-bar.bg-danger(role='progresssbar', style='width:50%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') 2 Failed
+                        .progress-bar.bg-secondary(role='progresssbar', style='width:30%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') 1 Skipped
+            .row
+                .col
+                    .navbar.bg-light
+                        .navbar-text.lead.text-dark com.microsoft.java.test.TestServer
+            .row
+                .col
+                    table.table.table-hover
+                        thead
+                            tr
+                                th(scope='col') Method
+                                th(scope='col') Status
+                                th(scope='col') Duration
+                        tbody
+                            tr
+                                td testInitCreationForm
+                                td
+                                    span.badge.badge-success Passed
+                                td 26 ms
+                            tr
+                                td testProcessCreationFormSuccess
+                                td
+                                    span.badge.badge-danger Failed
+                                td 20 ms
+                            tr
+                                td testProcessCreationFormHasErrors
+                                td
+                                    span.badge.badge-danger Failed
+                                td 37 ms
+                            tr
+                                td testProcessUpdateOwnerFormSuccess
+                                td
+                                    span.badge.badge-secondary Skipped
+                                td N/A
