@@ -44,9 +44,10 @@ let running: boolean = false;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    testResourceManager.refresh();
+    // to-do: add status to show it is loading tests.
+    await testResourceManager.refresh();
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
