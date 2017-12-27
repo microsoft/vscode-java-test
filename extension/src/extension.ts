@@ -27,7 +27,7 @@ import * as Constants from './constants';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { Logger, LogLevel } from './logger';
 import { TestLevel, TestSuite } from './protocols';
-import { encodeTestSuite, TestReportProvider } from './testReportProvider';
+import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 import { TestExplorer } from './Explorer/testExplorer';
@@ -238,7 +238,8 @@ async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, st
 function showDetails(test: TestSuite) {
     const editor = window.activeTextEditor;
     const uri: Uri = encodeTestSuite(editor.document.uri, test);
-    return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, 'Test Report');
+    const name: string = parseTestReportName(test);
+    return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, name);
 }
 
 async function parseParams(

@@ -3,69 +3,33 @@ doctype html
 html(lang="en")
     head
         meta(http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; style-src * 'unsafe-inline'; script-src 'nonce-check';")
-        meta(charset="utf-8")
-        meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
-        link(rel="stylesheet", nonce="check", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css", integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb", crossorigin="anonymous")
-    body
-        div Test report of class: #{test}
-        hr
-        #status(class="container")
+        link(rel="stylesheet", nonce="check", href=cssFile)
+        script(nonce="check", src="https://code.jquery.com/jquery-3.2.1.slim.min.js", integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN", crossorigin="anonymous")
+        script(nonce="check", src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js", integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh", crossorigin="anonymous")
+        script(nonce="check", src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js", integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ", crossorigin="anonymous")
+    body.bg-dark(style='padding-top:70px;')
+        .navbar.navbar-dark.bg-dark.fixed-top.navbar-expand-sm
+            a.navbar-brand(href='#') Test Report
+            div.collapse.navbar-collapse
+                ul.navbar-nav
+                    li.nav-item(class= type === 0 ? "active" : "")
+                        a.nav-link(href=uri) All
+                    li.nav-item(class= type === 2 ? "active" : "")
+                        a.nav-link(href=failedUri) Failed
+                    li.nav-item(class= type === 1 ? "active" : "")
+                        a.nav-link(href=passedUri) Passed
+        .container
             .row
-                .col-sm
-                    span Run:
-                        span(class="badge badge-info") #{passCount + failedCount + skippedCount}/#{totalCount}
-                .col-sm
-                    span Failed:
-                        span(class="badge badge-danger") #{failedCount}
-                .col-sm
-                    span Passed:
-                        span(class="badge badge-success") #{passCount}
-        #color-status(class="progress")
-            - var tag = (failedCount > 0 ? "bg-danger" : (passCount + skippedCount == totalCount ? "bg-success" : "bg-warning"))
-            div(class="progress-bar " + tag, role="progressbar", style="width: 100%", aria-valuenow="100", aria-valuemin="0", aria-valuemax="100")
-        if result && result.summary
-        #summary Summary: #{result.summary}
-        #filter
-            label
-                input(type="radio", name="test", value="all", checked ="checked")
-                | All tests&nbsp;
-            label
-                input(type="radio", name="test", value="passed")
-                | Passed&nbsp;
-            label
-                input(type="radio", name="test", value="failed")
-                | Failed
-        #children
-            +methodTable(allTests)
-        #passedChildren(style="display:none")
-            +methodTable(passedTests)
-        #failedChildren(style="display:none")
-            +methodTable(failedTests)
-        script(type="text/javascript", nonce="check").
-            document.addEventListener("DOMContentLoaded", () => {
-                const elements = [...document.getElementsByTagName("input")];
-                elements.forEach((element) => element.addEventListener("change", check));
-            });
-            function check(event) {
-                const radio = event.target;
-                const v = radio.value;
-                const all = document.getElementById("children");
-                const passed = document.getElementById("passedChildren");
-                const failed = document.getElementById("failedChildren");
-                if (v === "all") {
-                    all.removeAttribute("style");
-                    passed.style.display = "none";
-                    failed.style.display = "none";
-                } else if (v === "passed") {
-                    passed.removeAttribute("style");
-                    all.style.display = "none";
-                    failed.style.display = "none";
-                } else if (v === "failed") {
-                    failed.removeAttribute("style");
-                    passed.style.display = "none";
-                    all.style.display = "none";
-                }
-            }
-
-
-
+                .col
+                    .progress
+                        .progress-bar.bg-success(role='progressbar', style='width:25%', aria-valuenow='15', aria-valuemin='0', aria-valuemax='100') #{passCount} Passed
+                        .progress-bar.bg-danger(role='progresssbar', style='width:50%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{failedCount} Failed
+                        .progress-bar.bg-light.text-dark(role='progresssbar', style='width:30%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{skippedCount} Skipped
+            .row
+                .col
+                    .navbar.bg-dark
+                        .navbar-text.lead.text-light #{test}
+            .row
+                .col
+                    #children
+                        +collapseMethodTable(tests)
