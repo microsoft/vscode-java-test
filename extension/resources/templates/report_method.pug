@@ -5,18 +5,41 @@ html(lang="en")
         meta(charset="utf-8")
         meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
         link(rel="stylesheet", nonce="check", href=cssFile)
-    body.bg-dark.text-light
-        div Test report of method: #{test.replace("#", ".")}
-        hr.bg-light
-        #status
-            span Status: #{result ? result.status : "Not run"}
-        #duration
-            span Duration: #{result && result.duration ? result.duration + " milliseconds" : "N/A"}
-        #message
-            span Message: #{result && result.message ? result.message : "N/A"}
-        #callstack
-            span CallStack:
-                if result && result.details
-                    pre.text-light: code #{result.details}
-                else
-                    span N/A
+    body.bg-dark(style='padding-top:70px;')
+        .navbar.navbar-dark.bg-dark.fixed-top.navbar-expand-sm
+            a.navbar-brand(href='#') Test Report
+
+        .container
+            .row
+                .col
+                    .navbar.bg-dark
+                        .navbar-text.lead.text-light #{test.replace("#", ".")}
+            .row
+                .col
+                    table.table.table-hover.table-dark.bg-dark
+                        tbody
+                            tr
+                                th Status
+                                td
+                                    if !result
+                                        span Not run
+                                    else if result.status === 'Pass'
+                                        span.badge.badge-success Passed
+                                    else if result.status === 'Fail'
+                                        span.badge.badge-danger Failed
+                                    else
+                                        span.badge.badge-secondary Skipped
+                            tr
+                                th Duration
+                                td #{result && result.duration ? result.duration + " milliseconds" : "N/A"}
+                            tr
+                                th Message
+                                td #{result && result.message ? result.message : "N/A"}
+                            tr
+                                th StackTrace
+                                td
+                                    if result && result.details
+                                        pre.text-light: code #{result.details}
+                                    else
+                                        span N/A
+

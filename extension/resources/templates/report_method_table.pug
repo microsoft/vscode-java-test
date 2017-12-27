@@ -9,7 +9,7 @@ mixin collapseMethodTable(children)
             - var index = 0
             each child in children
                 - index++
-                tr.accordion-toggle(data-toggle="collapse" data-target="#collapse" + index)
+                tr.accordion-toggle(data-toggle="collapse", data-target="#collapse" + index, style="cursor:pointer")
                     td #{child.test.replace("#", ".")}
                     td
                         if !child.result
@@ -21,19 +21,18 @@ mixin collapseMethodTable(children)
                         else
                             span.badge.badge-secondary Skipped
                     td #{child.result && child.result.duration ? child.result.duration : "N/A"}
-                tr
+                tr.accordion-body(id="collapse" + index, class="collapse")
                     td(colspan="3")
-                        .accordion-body(id="collapse" + index, class="collapse")
-                            table.table.table-dark.bg-dark
-                                thead
-                                    tr
-                                        th(scope="col") Message
-                                        th(scope="col") StackTrace
-                                tbody
-                                    tr
-                                        td #{child.result && child.result.message ? child.result.message : "N/A"}
-                                        td
-                                            if child.result && child.result.details
-                                                pre.text-light: code #{child.result.details}
-                                            else
-                                                span N/A
+                        table.table.table-dark.bg-dark
+                            thead
+                                tr
+                                    th(scope="col") Message
+                                    th(scope="col") StackTrace
+                            tbody
+                                tr
+                                    td #{child.result && child.result.message ? child.result.message : "N/A"}
+                                    td
+                                        if child.result && child.result.details
+                                            pre.text-light: code #{child.result.details}
+                                        else
+                                            span N/A

@@ -103,12 +103,20 @@ export class TestReportProvider implements TextDocumentContentProvider {
 
 export function encodeTestSuite(uri: Uri, test: TestSuite, type: TestReportType = TestReportType.All): Uri {
     const query = JSON.stringify([uri.toString(), test.test.replace('#', '%23'), type]);
-    return Uri.parse(`${TestReportProvider.scheme}:test-report?${query}`);
+    return Uri.parse(`${TestReportProvider.scheme}:${parseTestReportName(test, type)}?${query}`);
 }
 
 export function decodeTestSuite(uri: Uri): [Uri, string, TestReportType] {
     const [target, test, type] = <[string, string, TestReportType]>JSON.parse(uri.query);
     return [Uri.parse(target), test.replace('%23', '#'), type];
+}
+
+export function parseTestReportName(test: TestSuite, type: TestReportType = TestReportType.All): string {
+    const name: string = test.test.split(/\.|#/).slice(-1)[0];
+    if (test.level === TestLevel.Method) {
+        return name;
+    }
+    return `${name} - ${TestReportType[type]}`;
 }
 
 export enum TestReportType {
