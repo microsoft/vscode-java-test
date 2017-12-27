@@ -1,21 +1,39 @@
-mixin methodTable(children)
-    table(class="table")
-        thead(class="thread-light")
+mixin collapseMethodTable(children)
+    table.table.table-hover.table-dark.bg-dark
+        thead
             tr
                 th(scope="col") Method
                 th(scope="col") Status
                 th(scope="col") Duration(ms)
-                th(scope="col") Message
-                th(scope="col") StackTrace
         tbody
+            - var index = 0
             each child in children
-                tr
+                - index++
+                tr.accordion-toggle(data-toggle="collapse" data-target="#collapse" + index)
                     td #{child.test.replace("#", ".")}
-                    td #{child.result ? child.result.status : "Not run"}
-                    td #{child.result && child.result.duration ? child.result.duration : "N/A"}
-                    td #{child.result && child.result.message ? child.result.message : "N/A"}
                     td
-                        if child.result && child.result.details
-                            pre: code #{child.result.details}
+                        if !child.result
+                            span Not run
+                        else if child.result.status === 'Pass'
+                            span.badge.badge-success Passed
+                        else if child.result.status === 'Fail'
+                            span.badge.badge-danger Failed
                         else
-                            span N/A
+                            span.badge.badge-secondary Skipped
+                    td #{child.result && child.result.duration ? child.result.duration : "N/A"}
+                tr
+                    td(colspan="3")
+                        .accordion-body(id="collapse" + index, class="collapse")
+                            table.table.table-dark.bg-dark
+                                thead
+                                    tr
+                                        th(scope="col") Message
+                                        th(scope="col") StackTrace
+                                tbody
+                                    tr
+                                        td #{child.result && child.result.message ? child.result.message : "N/A"}
+                                        td
+                                            if child.result && child.result.details
+                                                pre.text-light: code #{child.result.details}
+                                            else
+                                                span N/A

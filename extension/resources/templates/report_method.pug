@@ -4,10 +4,10 @@ html(lang="en")
         meta(http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; style-src * 'unsafe-inline'; script-src 'nonce-check';")
         meta(charset="utf-8")
         meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
-        link(rel="stylesheet", nonce="check", href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css", integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb", crossorigin="anonymous")
-    body
+        link(rel="stylesheet", nonce="check", href=cssFile)
+    body.bg-dark.text-light
         div Test report of method: #{test.replace("#", ".")}
-        hr
+        hr.bg-light
         #status
             span Status: #{result ? result.status : "Not run"}
         #duration
@@ -17,6 +17,6 @@ html(lang="en")
         #callstack
             span CallStack:
                 if result && result.details
-                    pre: code #{result.details}
+                    pre.text-light: code #{result.details}
                 else
                     span N/A
