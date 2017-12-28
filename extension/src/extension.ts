@@ -48,7 +48,7 @@ let running: boolean = false;
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    testStatusBarItem.init(testResourceManager.refresh());
+    await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
