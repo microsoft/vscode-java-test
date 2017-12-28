@@ -17,7 +17,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
 import * as rimraf from 'rimraf';
-import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
+// tslint:disable-next-line
+import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { ClassPathManager } from './classPathManager';
@@ -176,7 +177,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     }
 
     const testResultAnalyzer = new TestResultAnalyzer(testList);
-    await new Promise((resolve, reject) => {
+    await testStatusBarItem.update(testList, new Promise((resolve, reject) => {
         let error: string = '';
         const process = cp.exec(params.join(' '));
         process.on('error', (err) => {
@@ -195,7 +196,6 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         process.on('close', () => {
             testResultAnalyzer.feedBack();
             onDidChange.fire();
-            testStatusBarItem.update(testList);
             rimraf(storageForThisRun, (err) => {
                 if (err) {
                     logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
@@ -221,7 +221,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
                 });
             }, 500);
         }
-    });
+    }));
 }
 
 async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
