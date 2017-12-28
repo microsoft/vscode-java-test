@@ -31,13 +31,15 @@ html(lang="en")
                                         span.badge.badge-secondary Skipped
                             tr
                                 th Duration
-                                td #{result && result.duration ? result.duration + " milliseconds" : "N/A"}
+                                td #{result && result.duration ? result.duration + " ms" : "N/A"}
                             tr
-                                th Message
-                                td #{result && result.message ? result.message : "N/A"}
+                                th(colspan=2) Message:
                             tr
-                                th StackTrace
-                                td
+                                td(colspan=2) #{result && result.message ? result.message : "N/A"}
+                            tr
+                                th(colspan=2) Stack trace:
+                            tr
+                                td(colspan=2)
                                     if result && result.details
                                         pre.text-light: code #{result.details}
                                     else

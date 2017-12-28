@@ -4,7 +4,7 @@ mixin collapseMethodTable(children)
             tr
                 th(scope="col") Method
                 th(scope="col") Status
-                th(scope="col") Duration(ms)
+                th(scope="col") Duration
         tbody
             - var index = 0
             each child in children
@@ -20,17 +20,18 @@ mixin collapseMethodTable(children)
                             span.badge.badge-danger Failed
                         else
                             span.badge.badge-secondary Skipped
-                    td #{child.result && child.result.duration ? child.result.duration : "N/A"}
+                    td #{child.result && child.result.duration ? child.result.duration + "ms" : "N/A"}
                 tr.accordion-body(id="collapse" + index, class="collapse")
                     td(colspan="3")
                         table.table.table-dark.bg-dark
-                            thead
-                                tr
-                                    th(scope="col") Message
-                                    th(scope="col") StackTrace
                             tbody
                                 tr
+                                    th(scope="col") Message:
+                                tr
                                     td #{child.result && child.result.message ? child.result.message : "N/A"}
+                                tr
+                                    th(scope="col") Stack trace:
+                                tr
                                     td
                                         if child.result && child.result.details
                                             pre.text-light: code #{child.result.details}
