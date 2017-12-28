@@ -30,12 +30,14 @@ import { TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
+import { TestStatusBarSingleton } from './testStatusBarSingleton';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
+const testStatusBarItem: TestStatusBarSingleton = TestStatusBarSingleton.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel); // TO-DO: refactor Logger. Make logger stateless and no need to pass the instance.
 const testResourceManager: TestResourceManager = new TestResourceManager(logger);
@@ -46,8 +48,7 @@ let running: boolean = false;
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    // to-do: add status to show it is loading tests.
-    await testResourceManager.refresh();
+    testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
@@ -92,6 +93,7 @@ export function deactivate() {
     testResourceManager.dispose();
     classPathManager.dispose();
     logger.dispose();
+    testStatusBarItem.dispose();
 }
 
 function activateTelemetry(context: ExtensionContext) {
@@ -193,6 +195,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         process.on('close', () => {
             testResultAnalyzer.feedBack();
             onDidChange.fire();
+            testStatusBarItem.update(testList);
             rimraf(storageForThisRun, (err) => {
                 if (err) {
                     logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
