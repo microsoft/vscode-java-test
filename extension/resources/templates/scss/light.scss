@@ -1,0 +1,36 @@
+$white:    #fff;
+$gray-100: #f8f9fa;
+$gray-200: #e9ecef;
+$gray-300: #dee2e6;
+$gray-400: #ced4da;
+$gray-500: #adb5bd;
+$gray-600: #868e96;
+$gray-700: #495057;
+$gray-800: #343a40;
+$gray-900: #212529;
+$black:    #000;
+
+$light:         $gray-800;
+$dark:          $gray-100;
+
+$navbar-light-color:                 rgba($white,.5);
+$navbar-light-hover-color:           rgba($white,.75);
+$navbar-light-active-color:          $white;
+$navbar-light-disabled-color:        rgba($white,.25);
+$navbar-light-toggler-icon-bg:       str-replace(url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='#{$navbar-light-color}' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E"), "#", "%23");
+$navbar-light-toggler-border-color:  rgba($white,.1);
+
+$navbar-dark-color:                rgba($black,.5);
+$navbar-dark-hover-color:          rgba($black,.7);
+$navbar-dark-active-color:         rgba($black,.9);
+$navbar-dark-disabled-color:       rgba($black,.3);
+$navbar-dark-toggler-icon-bg:      str-replace(url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='#{$navbar-dark-color}' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E"), "#", "%23");
+$navbar-dark-toggler-border-color: rgba($black,.1);
+
+$table-dark-bg:               transparent;
+$table-dark-accent-bg:        rgba($black,.05);
+$table-dark-hover-bg:         rgba($black,.075);
+$table-dark-border-color:     $gray-200;
+$table-dark-color:            $black;
+
+@import "../../../node_modules/bootstrap/scss/bootstrap"
