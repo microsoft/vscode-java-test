@@ -13,9 +13,11 @@ export const JAVA_RUN_TEST_COMMAND = 'java.test.run';
  */
 export const JAVA_DEBUG_TEST_COMMAND = 'java.test.debug';
 
-export const JAVA_TEST_SHOW_DETAILS = 'java.test.show.detail';
+export const JAVA_TEST_SHOW_REPORT = 'java.test.show.report';
 
 export const JAVA_TEST_EXPLORER_SELECT = 'java.test.explorer.select';
+
+export const JAVA_TEST_SHOW_OUTPUT = 'java.test.show.output';
 
 export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
 

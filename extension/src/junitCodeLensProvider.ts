@@ -97,8 +97,8 @@ function getCodeLens(tests: TestSuite[]): CodeLens[] {
         if (test.result) {
             codeLenses.push(new CodeLens(test.range, {
                 title: getTestStatusIcon(test.result.status),
-                command: Commands.JAVA_TEST_SHOW_DETAILS,
-                tooltip: 'Show Details',
+                command: Commands.JAVA_TEST_SHOW_REPORT,
+                tooltip: 'Show Report',
                 arguments: [test],
             }));
         }

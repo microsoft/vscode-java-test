@@ -29,7 +29,8 @@
     "activationEvents": [
         "onLanguage:java",
         "onCommand:java.test.run",
-        "onCommand:java.test.debug"
+        "onCommand:java.test.debug",
+        "onCommand:java.test.show.output"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -44,7 +45,14 @@
                     "when": "resourceLangId == 'java'"
                 }
             ]
-        }
+        },
+        "commands": [
+            {
+                "command": "java.test.show.output",
+                "title": "Show test output",
+                "category": "Java"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "gulp sass && tsc -p ./",

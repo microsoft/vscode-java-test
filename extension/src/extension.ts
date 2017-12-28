@@ -72,13 +72,15 @@ export async function activate(context: ExtensionContext) {
 
     checkJavaHome().then((javaHome) => {
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), "Run Test")));
+            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), Constants.TELEMETRY_TYPE_RUN_TEST)));
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), "Debug Test")));
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_DETAILS, (test: TestSuite) =>
-            withScopeAsync(() => showDetails(test), "Show Test details")));
+            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), Constants.TELEMETRY_TYPE_DEBUG_TEST)));
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite) =>
+            withScopeAsync(() => showDetails(test), Constants.TELEMETRY_TYPE_SHOW_TEST_REPORT)));
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
+            withScopeAsync(() => outputChannel.show(), Constants.TELEMETRY_TYPE_SHOW_TEST_OUTPUT)));
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
-            withScopeAsync(() => testExplorer.select(node), "Select node in Test Explorer")));
+            withScopeAsync(() => testExplorer.select(node), Constants.TELEMETRY_TYPE_TEST_EXPLORER_SELECT)));
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
@@ -139,7 +141,6 @@ function readJavaConfig(): string {
 
 async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
     outputChannel.clear();
-    outputChannel.show(true);
     const testList = Array.isArray(tests) ? tests : [tests];
     const suites = testList.map((s) => s.test);
     const uri = Uri.parse(testList[0].uri);
