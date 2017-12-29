@@ -31,14 +31,14 @@ import { TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
-import { TestStatusBarSingleton } from './testStatusBarSingleton';
+import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
-const testStatusBarItem: TestStatusBarSingleton = TestStatusBarSingleton.getInstance();
+const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel); // TO-DO: refactor Logger. Make logger stateless and no need to pass the instance.
 const testResourceManager: TestResourceManager = new TestResourceManager(logger);
@@ -196,18 +196,16 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         process.on('close', () => {
             testResultAnalyzer.feedBack();
             onDidChange.fire();
-            rimraf(storageForThisRun, (err) => {
-                if (err) {
-                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
-                }
-            });
-        });
-        process.on('exit', () => {
             if (error !== '') {
                 reject(error);
             } else {
                 resolve();
             }
+            rimraf(storageForThisRun, (err) => {
+                if (err) {
+                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
+                }
+            });
         });
         if (isDebugMode) {
             const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));

@@ -6,11 +6,11 @@ import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from "vsc
 import * as Commands from "./commands";
 import { TestLevel, TestStatus, TestSuite } from "./protocols";
 
-export class TestStatusBarSingleton {
-    public static getInstance(): TestStatusBarSingleton {
-        return TestStatusBarSingleton.instance;
+export class TestStatusBarProvider {
+    public static getInstance(): TestStatusBarProvider {
+        return TestStatusBarProvider.instance;
     }
-    private static readonly instance: TestStatusBarSingleton = new TestStatusBarSingleton();
+    private static readonly instance: TestStatusBarProvider = new TestStatusBarProvider();
 
     private statusBarItem: StatusBarItem;
 
@@ -34,15 +34,13 @@ export class TestStatusBarSingleton {
     }
 
     public update(tests: TestSuite[], action: Thenable<void>) {
-        return window.withProgress({ location: ProgressLocation.Window }, async (p) => {
-            p.report({message: 'Running/Debugging test...'});
-            this.statusBarItem.text = 'View test output';
-            this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
-            return action.then(() => this.updateStatus(tests),
-            (reason) => {
-                this.statusBarItem.text = 'Failed to run tests';
-                return Promise.reject(reason);
-            });
+        this.statusBarItem.text = `$(sync~spin) Running tests...`;
+        this.statusBarItem.tooltip = 'View test logs';
+        this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
+        return action.then(() => this.updateStatus(tests),
+        (reason) => {
+            this.statusBarItem.text = 'Failed to run tests';
+            return Promise.reject(reason);
         });
     }
 
@@ -62,6 +60,8 @@ export class TestStatusBarSingleton {
             }
         }
         this.statusBarItem.text = `$(x)${failedCount}  $(check)${passedCount}`;
+        this.statusBarItem.color = failedCount > 0 ? 'yellow' : '#66ff66';
+        this.statusBarItem.tooltip = 'View test report';
         this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
     }
 }
