@@ -5,6 +5,7 @@ import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from "vsc
 
 import * as Commands from "./commands";
 import { TestLevel, TestStatus, TestSuite } from "./protocols";
+import { CommandUtility } from "./Utils/commandUtility";
 
 export class TestStatusBarProvider {
     public static getInstance(): TestStatusBarProvider {
@@ -62,6 +63,6 @@ export class TestStatusBarProvider {
         this.statusBarItem.text = `$(x)${failedCount}  $(check)${passedCount}`;
         this.statusBarItem.color = failedCount > 0 ? 'yellow' : '#66ff66';
         this.statusBarItem.tooltip = 'View test report';
-        this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
+        this.statusBarItem.command = CommandUtility.get(Commands.JAVA_TEST_SHOW_REPORT, tests);
     }
 }

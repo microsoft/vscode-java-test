@@ -27,58 +27,45 @@ export class TestReportProvider implements TextDocumentContentProvider {
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
         const [target, test, reportType] = decodeTestSuite(uri);
-        const testsContainedInFile = this._testResourceProvider.getTests(target);
-        if (!testsContainedInFile) {
+        const testsContainedInFile = target.map((t) => this._testResourceProvider.getTests(t));
+        if (testsContainedInFile.findIndex((t) => !t) !== -1) {
             return this.errorSnippet(`No tests in the uri: ${uri}. Shouldn\'t happen, please report us a bug.`);
         }
-        if (testsContainedInFile.dirty) {
+        if (testsContainedInFile.findIndex((t) => t.dirty) !== -1) {
             return this.errorSnippet('Test file has been changed, try open the report again...');
         }
-        const testMap: Map<string, TestSuite> = new Map(testsContainedInFile.tests.map((t): [string, TestSuite] => [t.test, t]));
-        const matchedTest = testMap.get(test);
-        if (!matchedTest) {
+        const testMap: Map<string, TestSuite> = new Map(
+            testsContainedInFile.map((t) => t.tests).reduce((a, b) => a.concat(b)).map((t): [string, TestSuite] => [t.test, t]));
+        const matchedTest = test.map((t) => testMap.get(t));
+        if (matchedTest.findIndex((t) => !t) !== -1) {
             return this.errorSnippet('No matched test found in the test storage. Shouldn\'t happen, please report us a bug.');
         }
         return this.reportSnippet(matchedTest, reportType);
     }
 
-    private reportSnippet(test: TestSuite, type: TestReportType): string | Promise<string> {
-        switch (test.level) {
-            case TestLevel.Class:
-                return this.classSnippet(test, type);
-            case TestLevel.Method:
-                return this.methodSnippet(test);
-            default:
-                return this.errorSnippet('Not supported test level. Currently support class level and method level.');
-        }
-    }
-
-    private classSnippet(test: TestSuite, type: TestReportType): Promise<string> {
-        const passedTests: TestSuite[] = test.children.filter((c) => c.result && c.result.status === TestStatus.Pass);
-        const failedTests: TestSuite[] = test.children.filter((c) => c.result && c.result.status === TestStatus.Fail);
-        const skippedTests: TestSuite[] = test.children.filter((c) => c.result && c.result.status === TestStatus.Skipped);
+    private reportSnippet(test: TestSuite[], type: TestReportType): Promise<string> {
+        const flattenedTests: TestSuite[] = this.flattenTests(test);
+        const passedTests: TestSuite[] = flattenedTests.filter((c) => c.result && c.result.status === TestStatus.Pass);
+        const failedTests: TestSuite[] = flattenedTests.filter((c) => c.result && c.result.status === TestStatus.Fail);
+        const skippedTests: TestSuite[] = flattenedTests.filter((c) => c.result && c.result.status === TestStatus.Skipped);
         const extraInfo = {
-            tests: type === TestReportType.All ? test.children : (type === TestReportType.Failed ? failedTests : passedTests),
-            uri: encodeURI('command:vscode.previewHtml?' + JSON.stringify(encodeTestSuite(Uri.parse(test.uri), test, TestReportType.All))),
-            passedUri: encodeURI('command:vscode.previewHtml?' + JSON.stringify(encodeTestSuite(Uri.parse(test.uri), test, TestReportType.Passed))),
-            failedUri: encodeURI('command:vscode.previewHtml?' + JSON.stringify(encodeTestSuite(Uri.parse(test.uri), test, TestReportType.Failed))),
+            tests: type === TestReportType.All ? flattenedTests : (type === TestReportType.Failed ? failedTests : passedTests),
+            uri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestSuite(test, TestReportType.All))),
+            passedUri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestSuite(test, TestReportType.Passed))),
+            failedUri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestSuite(test, TestReportType.Failed))),
             type,
+            name: test.length === 1 ? test[0].test.replace("#", ".") : undefined,
             cssFile: this.cssTheme(),
-            totalCount: test.children.length,
+            totalCount: flattenedTests.length,
             passCount: passedTests.length,
             failedCount: failedTests.length,
             skippedCount: skippedTests.length,
         };
-        const copied = {...test, ...extraInfo};
-        return this.renderSnippet(copied, TestReportProvider.compiledClassTemplate);
+        return this.renderSnippet(extraInfo, TestReportProvider.compiledClassTemplate);
     }
 
-    private methodSnippet(test: TestSuite): Promise<string> {
-        const extraInfo = {
-            cssFile: this.cssTheme(),
-        };
-        const copied = {...test, ...extraInfo};
-        return this.renderSnippet(copied, TestReportProvider.compiledMethodTemplate);
+    private flattenTests(test: TestSuite[]): TestSuite[] {
+        return test.map((t) => t.level === TestLevel.Class ? this.flattenTests(t.children) : [t]).reduce((a, b) => a.concat(b));
     }
 
     private errorSnippet(error: string): Promise<string> {
@@ -101,19 +88,22 @@ export class TestReportProvider implements TextDocumentContentProvider {
     }
 }
 
-export function encodeTestSuite(uri: Uri, test: TestSuite, type: TestReportType = TestReportType.All): Uri {
-    const query = JSON.stringify([uri.toString(), test.test.replace('#', '%23'), type]);
-    return Uri.parse(`${TestReportProvider.scheme}:${parseTestReportName(test, type)}?${query}`);
+export function encodeTestSuite(test: TestSuite[], type: TestReportType = TestReportType.All): Uri {
+    const query = JSON.stringify([test.map((t) => t.uri), test.map((t) => t.test), type]);
+    return Uri.parse(`${TestReportProvider.scheme}:${parseTestReportName(test, type)}?${encodeURIComponent(query)}`);
 }
 
-export function decodeTestSuite(uri: Uri): [Uri, string, TestReportType] {
-    const [target, test, type] = <[string, string, TestReportType]>JSON.parse(uri.query);
-    return [Uri.parse(target), test.replace('%23', '#'), type];
+export function decodeTestSuite(uri: Uri): [Uri[], string[], TestReportType] {
+    const [target, test, type] = <[string[], string[], TestReportType]>JSON.parse(decodeURIComponent(uri.query));
+    return [target.map((t) => Uri.parse(t)), test, type];
 }
 
-export function parseTestReportName(test: TestSuite, type: TestReportType = TestReportType.All): string {
-    const name: string = test.test.split(/\.|#/).slice(-1)[0];
-    if (test.level === TestLevel.Method) {
+export function parseTestReportName(test: TestSuite[], type: TestReportType = TestReportType.All): string {
+    if (test.length > 1) {
+        return 'Aggregated test report';
+    }
+    const name: string = test[0].test.split(/\.|#/).slice(-1)[0];
+    if (test[0].level === TestLevel.Method) {
         return name;
     }
     return `${name} - ${TestReportType[type]}`;

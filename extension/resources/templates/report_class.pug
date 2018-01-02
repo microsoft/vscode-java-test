@@ -27,10 +27,11 @@ html(lang="en")
                         .progress-bar.bg-success(role='progressbar', style='width:25%', aria-valuenow='15', aria-valuemin='0', aria-valuemax='100') #{passCount} Passed
                         .progress-bar.bg-danger(role='progresssbar', style='width:50%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{failedCount} Failed
                         .progress-bar.bg-light.text-dark(role='progresssbar', style='width:30%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{skippedCount} Skipped
+            if name
             .row
                 .col
                     .navbar.bg-dark
-                        .navbar-text.lead.text-light #{test}
+                        .navbar-text.lead.text-light #{name}
             .row
                 .col
                     #children
