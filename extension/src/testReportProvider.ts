@@ -12,17 +12,15 @@ import { window, workspace, ExtensionContext, TextDocumentContentProvider, Uri, 
 export class TestReportProvider implements TextDocumentContentProvider {
 
     public static scheme = 'test-report';
-    private static compiledClassTemplate: (any) => string;
+    private static compiledReportTemplate: (any) => string;
     private static compiledErrorTemplate: (any) => string;
     private static compiledMethodTemplate: (any) => string;
 
     constructor(private _context: ExtensionContext, private _testResourceProvider: TestResourceManager) {
-        TestReportProvider.compiledClassTemplate =
-            pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_class.pug')));
+        TestReportProvider.compiledReportTemplate =
+            pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report.pug')));
         TestReportProvider.compiledErrorTemplate =
             pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_error.pug')));
-        TestReportProvider.compiledMethodTemplate =
-            pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_method.pug')));
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
@@ -61,7 +59,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
             failedCount: failedTests.length,
             skippedCount: skippedTests.length,
         };
-        return this.renderSnippet(extraInfo, TestReportProvider.compiledClassTemplate);
+        return this.renderSnippet(extraInfo, TestReportProvider.compiledReportTemplate);
     }
 
     private flattenTests(test: TestSuite[]): TestSuite[] {
