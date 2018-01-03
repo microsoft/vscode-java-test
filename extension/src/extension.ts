@@ -17,7 +17,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
 import * as rimraf from 'rimraf';
-import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
+// tslint:disable-next-line
+import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { ClassPathManager } from './classPathManager';
@@ -30,12 +31,14 @@ import { TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
+import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
+const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel); // TO-DO: refactor Logger. Make logger stateless and no need to pass the instance.
 const testResourceManager: TestResourceManager = new TestResourceManager(logger);
@@ -46,8 +49,7 @@ let running: boolean = false;
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    // to-do: add status to show it is loading tests.
-    await testResourceManager.refresh();
+    await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
@@ -92,6 +94,7 @@ export function deactivate() {
     testResourceManager.dispose();
     classPathManager.dispose();
     logger.dispose();
+    testStatusBarItem.dispose();
 }
 
 function activateTelemetry(context: ExtensionContext) {
@@ -174,7 +177,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     }
 
     const testResultAnalyzer = new TestResultAnalyzer(testList);
-    await new Promise((resolve, reject) => {
+    await testStatusBarItem.update(testList, new Promise((resolve, reject) => {
         let error: string = '';
         const process = cp.exec(params.join(' '));
         process.on('error', (err) => {
@@ -193,18 +196,16 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         process.on('close', () => {
             testResultAnalyzer.feedBack();
             onDidChange.fire();
-            rimraf(storageForThisRun, (err) => {
-                if (err) {
-                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
-                }
-            });
-        });
-        process.on('exit', () => {
             if (error !== '') {
                 reject(error);
             } else {
                 resolve();
             }
+            rimraf(storageForThisRun, (err) => {
+                if (err) {
+                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
+                }
+            });
         });
         if (isDebugMode) {
             const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));
@@ -218,7 +219,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
                 });
             }, 500);
         }
-    });
+    }));
 }
 
 async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
