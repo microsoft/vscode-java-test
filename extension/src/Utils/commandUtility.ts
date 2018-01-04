@@ -5,7 +5,7 @@ import * as util from 'util';
 import { commands } from 'vscode';
 
 export class CommandUtility {
-    public static get(command: string, args: any[]) {
+    public static getCommandWithArgs(command: string, args: any[]) {
         if (!args) {
             return command;
         }

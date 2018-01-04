@@ -13,7 +13,7 @@ mixin collapseMethodTable(children)
                     td #{child.test.replace("#", ".")}
                     td
                         if !child.result
-                            span Not run
+                            span.badge.badge-warning Not run
                         else if child.result.status === 'Pass'
                             span.badge.badge-success Passed
                         else if child.result.status === 'Fail'
