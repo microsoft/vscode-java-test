@@ -12,14 +12,15 @@ html(lang="en")
     body.bg-dark(style='padding-top:70px;')
         .navbar.navbar-dark.bg-dark.fixed-top.navbar-expand-sm
             a.navbar-brand(href='#') Test Report
-            div.collapse.navbar-collapse
-                ul.navbar-nav
-                    li.nav-item(class= type === 0 ? "active" : "")
-                        a.nav-link(href=uri) All
-                    li.nav-item(class= type === 2 ? "active" : "")
-                        a.nav-link(href=failedUri) Failed
-                    li.nav-item(class= type === 1 ? "active" : "")
-                        a.nav-link(href=passedUri) Passed
+            if showStatistics
+                div.collapse.navbar-collapse
+                    ul.navbar-nav
+                        li.nav-item(class= type === 0 ? "active" : "")
+                            a.nav-link(href=uri) All
+                        li.nav-item(class= type === 2 ? "active" : "")
+                            a.nav-link(href=failedUri) Failed
+                        li.nav-item(class= type === 1 ? "active" : "")
+                            a.nav-link(href=passedUri) Passed
         .container
             .row
                 .col
@@ -27,10 +28,11 @@ html(lang="en")
                         .progress-bar.bg-success(role='progressbar', style='width:25%', aria-valuenow='15', aria-valuemin='0', aria-valuemax='100') #{passCount} Passed
                         .progress-bar.bg-danger(role='progresssbar', style='width:50%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{failedCount} Failed
                         .progress-bar.bg-light.text-dark(role='progresssbar', style='width:30%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{skippedCount} Skipped
-            .row
-                .col
-                    .navbar.bg-dark
-                        .navbar-text.lead.text-light #{test}
+            if name
+                .row
+                    .col
+                        .navbar.bg-dark
+                            .navbar-text.lead.text-light #{name}
             .row
                 .col
                     #children

@@ -34,6 +34,7 @@ import { TestResultAnalyzer } from './testResultAnalyzer';
 import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
+import { CommandUtility } from './Utils/commandUtility';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -77,7 +78,7 @@ export async function activate(context: ExtensionContext) {
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), Constants.TELEMETRY_TYPE_RUN_TEST)));
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), Constants.TELEMETRY_TYPE_DEBUG_TEST)));
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite) =>
+        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
             withScopeAsync(() => showDetails(test), Constants.TELEMETRY_TYPE_SHOW_TEST_REPORT)));
         context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
             withScopeAsync(() => outputChannel.show(), Constants.TELEMETRY_TYPE_SHOW_TEST_OUTPUT)));
@@ -95,6 +96,7 @@ export function deactivate() {
     classPathManager.dispose();
     logger.dispose();
     testStatusBarItem.dispose();
+    CommandUtility.clearCommandsCache();
 }
 
 function activateTelemetry(context: ExtensionContext) {
@@ -237,10 +239,10 @@ async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, st
     }
 }
 
-function showDetails(test: TestSuite) {
-    const editor = window.activeTextEditor;
-    const uri: Uri = encodeTestSuite(editor.document.uri, test);
-    const name: string = parseTestReportName(test);
+function showDetails(test: TestSuite[] | TestSuite) {
+    const testList = Array.isArray(test) ? test : [test];
+    const uri: Uri = encodeTestSuite(testList);
+    const name: string = parseTestReportName(testList);
     return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, name);
 }
 
