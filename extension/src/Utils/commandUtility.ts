@@ -2,26 +2,30 @@
 // Licensed under the MIT license.
 
 import * as util from 'util';
-import { commands } from 'vscode';
+import { commands, Disposable } from 'vscode';
 
 export class CommandUtility {
-    public static getCommandWithArgs(command: string, args: any[]) {
+    public static getCommandWithArgs(command: string, args: any[]): string {
         if (!args) {
             return command;
         }
-
-        const hash = `${command}${util.inspect(args)}`;
-        const exists = !!CommandUtility.proxiesHashes.find((h) => h === hash);
+        const commandWithArgs: string = `${command}-args`;
+        const exists: boolean = CommandUtility.proxiesHashes.has(commandWithArgs);
 
         if (exists) {
-          return hash;
+          CommandUtility.proxiesHashes.get(commandWithArgs).dispose();
         }
-        commands.registerCommand (hash, () => {
+        const composite: Disposable = commands.registerCommand (commandWithArgs, () => {
             commands.executeCommand(command, ...args);
         });
 
-        CommandUtility.proxiesHashes.push (hash);
-        return hash;
+        CommandUtility.proxiesHashes.set(commandWithArgs, composite);
+        return commandWithArgs;
     }
-    private static readonly proxiesHashes: string[] = [];
+
+    public static clearCommandsCache(): void {
+        CommandUtility.proxiesHashes.forEach((c) => c.dispose());
+        CommandUtility.proxiesHashes.clear();
+    }
+    private static readonly proxiesHashes: Map<string, Disposable> = new Map<string, Disposable>();
 }

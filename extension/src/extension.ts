@@ -34,6 +34,7 @@ import { TestResultAnalyzer } from './testResultAnalyzer';
 import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
+import { CommandUtility } from './Utils/commandUtility';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -95,6 +96,7 @@ export function deactivate() {
     classPathManager.dispose();
     logger.dispose();
     testStatusBarItem.dispose();
+    CommandUtility.clearCommandsCache();
 }
 
 function activateTelemetry(context: ExtensionContext) {
