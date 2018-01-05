@@ -52,7 +52,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
             failedUri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestSuite(test, TestReportType.Failed))),
             type,
             name: test.length === 1 ? test[0].test.replace("#", ".") : undefined,
-            showFilter: flattenedTests.length > 1 || test[0].level === TestLevel.Class,
+            showFilters: flattenedTests.length > 1 || test[0].level === TestLevel.Class,
             cssFile: this.cssTheme(),
             totalCount: flattenedTests.length,
             passCount: passedTests.length,
