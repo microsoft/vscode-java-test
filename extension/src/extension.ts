@@ -20,6 +20,7 @@ import * as rimraf from 'rimraf';
 // tslint:disable-next-line
 import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
+import { TelemetryWrapper, Transaction } from 'vscode-extension-telemetry-wrapper';
 
 import { ClassPathManager } from './classPathManager';
 import * as Commands from './commands';
@@ -74,16 +75,27 @@ export async function activate(context: ExtensionContext) {
     });
 
     checkJavaHome().then((javaHome) => {
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, false), Constants.TELEMETRY_TYPE_RUN_TEST)));
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => runSingleton(javaHome, suites, context.storagePath, true), Constants.TELEMETRY_TYPE_DEBUG_TEST)));
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
-            withScopeAsync(() => showDetails(test), Constants.TELEMETRY_TYPE_SHOW_TEST_REPORT)));
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
-            withScopeAsync(() => outputChannel.show(), Constants.TELEMETRY_TYPE_SHOW_TEST_OUTPUT)));
-        context.subscriptions.push(commands.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
-            withScopeAsync(() => testExplorer.select(node), Constants.TELEMETRY_TYPE_TEST_EXPLORER_SELECT)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (t: Transaction) => {
+            return (suites: TestSuite[] | TestSuite) =>
+            // TO-DO: pass transaction id to telemetry log listener, and let it handle such thing.
+            runSingleton(javaHome, suites, context.storagePath, false, t.id);
+        }));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (t: Transaction) => {
+            return (suites: TestSuite[] | TestSuite) =>
+            runSingleton(javaHome, suites, context.storagePath, true, t.id);
+        }));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (t: Transaction) => {
+            return (test: TestSuite[] | TestSuite) =>
+            showDetails(test);
+        }));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, (t: Transaction) => {
+            return () =>
+            outputChannel.show();
+        }));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (t: Transaction) => {
+            return (node: TestTreeNode) =>
+            testExplorer.select(node);
+        }));
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
@@ -103,12 +115,14 @@ function activateTelemetry(context: ExtensionContext) {
     const extensionPackage = require(context.asAbsolutePath("./package.json"));
     if (extensionPackage) {
         const packageInfo = {
+            publisher: extensionPackage.publisher,
             name: extensionPackage.name,
             version: extensionPackage.version,
             aiKey: extensionPackage.aiKey,
         };
         if (packageInfo.aiKey) {
-            const telemetryReporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
+            TelemetryWrapper.initilize(packageInfo.publisher, packageInfo.name, packageInfo.version, packageInfo.aiKey);
+            const telemetryReporter: TelemetryReporter = TelemetryWrapper.getReporter();
             telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_ACTIVATION_SCOPE, {});
             logger.setTelemetryReporter(telemetryReporter, LogLevel.Error);
         }
@@ -144,7 +158,7 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
+async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean, transactionId: string) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
     const suites = testList.map((s) => s.test);
@@ -157,7 +171,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         } catch (ex) {
             const message = `Failed to get free port for debugging. Details: ${ex}.`;
             window.showErrorMessage(message);
-            logger.logError(message);
+            logger.logError(message, ex, transactionId);
             throw ex;
         }
     }
@@ -166,10 +180,10 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     try {
         params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, isDebugMode);
     } catch (ex) {
-        logger.logError(`Exception occers while parsing params. Details: ${ex}`);
+        logger.logError(`Exception occers while parsing params. Details: ${ex}`, ex, transactionId);
         rimraf(storageForThisRun, (err) => {
             if (err) {
-                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
+                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, transactionId);
             }
         });
         throw ex;
@@ -183,16 +197,18 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
         let error: string = '';
         const process = cp.exec(params.join(' '));
         process.on('error', (err) => {
-            logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`);
+            logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
+             err.stack,
+             transactionId);
             reject(err);
         });
         process.stderr.on('data', (data) => {
             error += data.toString();
-            logger.logError(`Error occured: ${data.toString()}`);
+            logger.logError(`Error occured: ${data.toString()}`, null, transactionId);
             testResultAnalyzer.sendData(data.toString());
         });
         process.stdout.on('data', (data) => {
-            logger.logInfo(data.toString());
+            logger.logInfo(data.toString(), transactionId);
             testResultAnalyzer.sendData(data.toString());
         });
         process.on('close', () => {
@@ -205,7 +221,7 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
             }
             rimraf(storageForThisRun, (err) => {
                 if (err) {
-                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`);
+                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, transactionId);
                 }
             });
         });
@@ -224,16 +240,16 @@ async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storage
     }));
 }
 
-async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean) {
+async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean, transactionId: string) {
 
     if (running) {
         window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
-        logger.logInfo('Skip this run cause we only support running one session at the same time');
+        logger.logInfo('Skip this run cause we only support running one session at the same time', transactionId);
         return;
     }
     running = true;
     try {
-        await runTest(javaHome, tests, storagePath, isDebugMode);
+        await runTest(javaHome, tests, storagePath, isDebugMode, transactionId);
     } finally {
         running = false;
     }
@@ -322,28 +338,4 @@ function constructManifestFile(classpaths: string[]): string {
     content += extended.join(` ${os.EOL} `);
     content += os.EOL;
     return content;
-}
-
-async function withScopeAsync(action, eventType) {
-    const start = new Date();
-    const eventId: string = start.getTime().toString();
-    const props = {
-        eventId,
-        type: eventType,
-    };
-    // tslint:disable-next-line
-    let measures = {};
-    try {
-        const res = await action();
-        props[Constants.TELEMETRY_PROPS_STATUS] = 'success';
-        return res;
-    } catch (ex) {
-        props[Constants.TELEMETRY_PROPS_STATUS] = 'fail';
-        props[Constants.TELEMETRY_PROPS_EXCEPTION] = ex.toString();
-    } finally {
-        const end = new Date();
-        const duration: number = end.getTime() - start.getTime();
-        measures[Constants.TELEMETRY_MEASURES_DURATION] = duration;
-        logger.logUsage(props, measures);
-    }
 }
