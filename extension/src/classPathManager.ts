@@ -3,7 +3,7 @@
 
 import { workspace, CancellationToken, Uri } from 'vscode';
 import * as Commands from './commands';
-import { Logger } from './logger';
+import { Logger } from './Utils/Logging/logger';
 
 export class ClassPathManager {
     private classPathCache = new Map<string, string[]>();

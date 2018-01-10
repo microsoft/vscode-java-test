@@ -27,7 +27,6 @@ import * as Commands from './commands';
 import * as Configs from './configs';
 import * as Constants from './constants';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
-import { Logger, LogLevel } from './logger';
 import { TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
@@ -36,6 +35,8 @@ import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 import { CommandUtility } from './Utils/commandUtility';
+import { Logger } from './Utils/Logging/logger';
+import { LogLevel } from './Utils/Logging/logListener';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
