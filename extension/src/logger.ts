@@ -3,7 +3,6 @@
 
 import { OutputChannel } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
-
 import * as Constants from "./constants";
 
 export class Logger {
@@ -17,28 +16,24 @@ export class Logger {
         this._telemetryReportThreshold = reportLevel;
     }
 
-    public logError(errorMessage: string, stack: string = null): void {
+    public logError(errorMessage: string, stack: string = null, transactionId: string = null): void {
         this._channel.append(errorMessage);
         if (this._telemetryReporter && this._telemetryReportThreshold >= LogLevel.Error) {
             this._telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_EXCEPTION_SCOPE, {
                 error: errorMessage,
                 stack,
+                transactionId, // TO-DO: refactor logger to separate log listeners and let telemetry listener to handle transactionid thing
             });
         }
     }
 
-    public logInfo(message: string): void {
+    public logInfo(message: string, transactionId: string = null): void {
         this._channel.append(message);
         if (this._telemetryReporter && this._telemetryReportThreshold >= LogLevel.Info) {
             this._telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_INFO_SCOPE, {
                 info: message,
+                transactionId,
             });
-        }
-    }
-
-    public logUsage(props, measures): void {
-        if (this._telemetryReporter) {
-            this._telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_USAGEDATA_SCOPE, props, measures);
         }
     }
 
