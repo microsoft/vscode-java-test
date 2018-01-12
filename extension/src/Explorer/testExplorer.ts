@@ -104,7 +104,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         if (test.level === TestLevel.Method) {
             return test.test.substring(test.test.indexOf('#') + 1);
         } else {
-            return test.test.substring(test.packageName.length + 1);
+            return test.test.substring(test.packageName === '' ? 0 : test.packageName.length + 1);
         }
     }
 
