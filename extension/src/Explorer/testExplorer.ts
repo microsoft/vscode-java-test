@@ -53,7 +53,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     public run(element: TestTreeNode, debugMode: boolean) {
-        // TO-DO
+        // TODO
         return null;
     }
 
