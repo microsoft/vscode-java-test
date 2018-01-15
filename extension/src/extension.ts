@@ -96,6 +96,14 @@ export async function activate(context: ExtensionContext) {
             return (node: TestTreeNode) =>
             testExplorer.select(node);
         }));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (t: Transaction) => {
+            return (node: TestTreeNode) =>
+            testExplorer.run(node, false);
+        }));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (t: Transaction) => {
+            return (node: TestTreeNode) =>
+            testExplorer.run(node, true);
+        }));
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");

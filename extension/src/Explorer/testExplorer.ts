@@ -52,6 +52,11 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         });
     }
 
+    public run(element: TestTreeNode, debugMode: boolean) {
+        // TO-DO
+        return null;
+    }
+
     private createTestTreeNode(
         tests: TestSuite[],
         parent: TestTreeNode,
