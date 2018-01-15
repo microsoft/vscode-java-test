@@ -17,6 +17,10 @@ export const JAVA_TEST_SHOW_REPORT = 'java.test.show.report';
 
 export const JAVA_TEST_EXPLORER_SELECT = 'java.test.explorer.select';
 
+export const JAVA_TEST_EXPLORER_RUN_TEST = 'java.test.explorer.run';
+
+export const JAVA_TEST_EXPLORER_DEBUG_TEST = 'java.test.explorer.debug';
+
 export const JAVA_TEST_SHOW_OUTPUT = 'java.test.show.output';
 
 export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';

@@ -46,11 +46,53 @@
                 }
             ]
         },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "java.test.explorer.run",
+                    "when": "view == testExplorer",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "view == testExplorer",
+                    "group": "navigation@1"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "java.test.explorer.run",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@0"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@1"
+                }
+            ]
+        },
         "commands": [
             {
                 "command": "java.test.show.output",
                 "title": "Show test output",
                 "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.run",
+                "title": "Run Test",
+                "icon": {
+                    "light": "resources/media/light/placeholder.png",
+                    "dark": "resources/media/dark/placeholder.png"
+                }
+            },
+            {
+                "command": "java.test.explorer.debug",
+                "title": "Debug Test",
+                "icon": {
+                    "light": "resources/media/light/placeholder.png",
+                    "dark": "resources/media/dark/placeholder.png"
+                }
             }
         ]
     },
