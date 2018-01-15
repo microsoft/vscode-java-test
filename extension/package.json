@@ -82,16 +82,16 @@
                 "command": "java.test.explorer.run",
                 "title": "Run Test",
                 "icon": {
-                    "light": "resources/media/light/occupier.png",
-                    "dark": "resources/media/dark/occupier.png"
+                    "light": "resources/media/light/placeholder.png",
+                    "dark": "resources/media/dark/placeholder.png"
                 }
             },
             {
                 "command": "java.test.explorer.debug",
                 "title": "Debug Test",
                 "icon": {
-                    "light": "resources/media/light/occupier.png",
-                    "dark": "resources/media/dark/occupier.png"
+                    "light": "resources/media/light/placeholder.png",
+                    "dark": "resources/media/dark/placeholder.png"
                 }
             }
         ]
