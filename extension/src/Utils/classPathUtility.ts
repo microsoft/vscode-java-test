@@ -13,7 +13,7 @@ import * as path from 'path';
 
 export class ClassPathUtility {
     // TODO: refactor logger, no need to pass in logger instance.
-    public static processLongClassPath(
+    public static getClassPathStr(
         transactionId: string,
         logger: Logger,
         classpaths: string[],
@@ -23,6 +23,17 @@ export class ClassPathUtility {
         if (concated.length <= Configs.MAX_CLASS_PATH_LENGTH) {
             return Promise.resolve(concated);
         }
+        return ClassPathUtility.generateClassPathFile(transactionId, logger, classpaths, tmpStoragePath);
+    }
+
+    /*
+     * solve the issue that long class path cannot be processed by child process
+     */
+    private static generateClassPathFile(
+        transactionId: string,
+        logger: Logger,
+        classpaths: string[],
+        tmpStoragePath: string): Promise<string> {
         const tempFile = path.join(tmpStoragePath, 'path.jar');
         return new Promise((resolve, reject) => {
             mkdirp(path.dirname(tempFile), (err) => {

@@ -2,10 +2,11 @@
 // Licensed under the MIT license.
 
 import { JarFileTestRunner } from "./jarFileTestRunner";
-import { ITestRunnerContext } from "./testRunnerContext";
+import { ITestRunnerContext, JarFileTestRunnerContext } from "./testRunnerContext";
 
 import * as glob from 'glob';
 import * as path from 'path';
+import { TestSuite } from "../protocols";
 
 export class JUnitTestRunner extends JarFileTestRunner {
     public get debugConfigName(): string {
@@ -22,23 +23,23 @@ export class JUnitTestRunner extends JarFileTestRunner {
         }
     }
 
-    public async parseParams(context: ITestRunnerContext): Promise<string[]> {
+    public async parseParams(tests: TestSuite[], isDebugMode: boolean, context: JarFileTestRunnerContext): Promise<string[]> {
         let params = [];
         params.push('"' + path.resolve(this._javaHome + '/bin/java') + '"');
         params.push('-cp');
-        const classpathStr: string = context.contextData.get('classpathStr') as string;
+        const classpathStr: string = context.classpathStr;
         params.push('"' + classpathStr + '"');
 
-        if (context.isDebugMode) {
+        if (isDebugMode) {
             const debugParams = [];
             debugParams.push('-Xdebug');
-            const port: number = context.contextData.get('port') as number;
+            const port: number = context.port;
             debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);
             params = [...params, ...debugParams];
         }
 
         params.push('com.microsoft.java.test.runner.JUnitLauncher');
-        const suites: string[] = context.tests.map((t) => t.test);
+        const suites: string[] = tests.map((t) => t.test);
         params = [...params, ...suites];
         return params;
     }

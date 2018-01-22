@@ -1,20 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestSuite } from "../protocols";
-
 export interface ITestRunnerContext {
-    tests: TestSuite[];
-    isDebugMode: boolean;
-    contextData: Map<string, ContextData>;
+    storagePath: string;
+    port: number | undefined;
+    transactionId: string | undefined; // TODO: remove later after refactoring logger
+    extra: Map<string, ContextData>;
 }
 
-export class TestRunnerContext implements ITestRunnerContext {
+export class JarFileTestRunnerContext implements ITestRunnerContext {
 
-    public readonly contextData: Map<string, ContextData>;
-    constructor(readonly tests: TestSuite[], readonly isDebugMode: boolean) {
-        this.contextData = new Map<string, ContextData>();
-    }
+    public readonly extra: Map<string, ContextData> = new Map<string, ContextData>();
+
+    public storagePath: string;
+
+    public port: number | undefined;
+
+    public transactionId: string | undefined;
+
+    public classpathStr: string;
 }
 
 export type ContextData = object | string | number | boolean;
