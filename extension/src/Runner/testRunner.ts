@@ -2,9 +2,11 @@
 // Licensed under the MIT license.
 
 import { TestSuite } from "../protocols";
-import { ITestRunnerContext } from "./testRunnerContext";
+import { RunnerResultStream } from "./runnerResultStream";
+import { ITestRunnerEnvironment } from "./testRunnerEnvironment";
 
 export interface ITestRunner {
-    setup(tests: TestSuite[], isDebugMode: boolean, context: ITestRunnerContext): Promise<void>;
-    run(tests: TestSuite[], isDebugMode: boolean, context: ITestRunnerContext): Promise<void>;
+    setup(tests: TestSuite[], isDebugMode: boolean): Promise<ITestRunnerEnvironment>;
+    run(env: ITestRunnerEnvironment): Promise<RunnerResultStream>;
+    updateTestStatus(env: ITestRunnerEnvironment, result: RunnerResultStream): Promise<void>;
 }

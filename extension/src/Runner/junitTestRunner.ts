@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { JarFileTestRunner } from "./jarFileTestRunner";
-import { ITestRunnerContext, JarFileTestRunnerContext } from "./testRunnerContext";
-
 import * as glob from 'glob';
 import * as path from 'path';
-import { TestSuite } from "../protocols";
+import { TestResultAnalyzer } from "../testResultAnalyzer";
+import { JarFileTestRunner } from "./jarFileTestRunner";
+import { ITestRunnerEnvironment, JarFileTestRunnerEnvironment } from "./testRunnerEnvironment";
 
 export class JUnitTestRunner extends JarFileTestRunner {
     public get debugConfigName(): string {
@@ -23,24 +22,28 @@ export class JUnitTestRunner extends JarFileTestRunner {
         }
     }
 
-    public async parseParams(tests: TestSuite[], isDebugMode: boolean, context: JarFileTestRunnerContext): Promise<string[]> {
+    public async parseParams(env: JarFileTestRunnerEnvironment): Promise<string[]> {
         let params = [];
         params.push('"' + path.resolve(this._javaHome + '/bin/java') + '"');
         params.push('-cp');
-        const classpathStr: string = context.classpathStr;
+        const classpathStr: string = env.classpathStr;
         params.push('"' + classpathStr + '"');
 
-        if (isDebugMode) {
+        if (env.isDebugMode) {
             const debugParams = [];
             debugParams.push('-Xdebug');
-            const port: number = context.port;
+            const port: number = env.port;
             debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);
             params = [...params, ...debugParams];
         }
 
         params.push('com.microsoft.java.test.runner.JUnitLauncher');
-        const suites: string[] = tests.map((t) => t.test);
+        const suites: string[] = env.tests.map((t) => t.test);
         params = [...params, ...suites];
         return params;
+    }
+
+    public getTestResultAnalyzer(env: JarFileTestRunnerEnvironment): TestResultAnalyzer {
+        return new TestResultAnalyzer(env.tests);
     }
 }

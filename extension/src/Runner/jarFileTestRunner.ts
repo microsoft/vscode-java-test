@@ -7,8 +7,9 @@ import { TestSuite } from "../protocols";
 import { TestResultAnalyzer } from "../testResultAnalyzer";
 import { TestStatusBarProvider } from "../testStatusBarProvider";
 import { ClassPathUtility } from "../Utils/classPathUtility";
+import { RunnerResultStream } from "./runnerResultStream";
 import { ITestRunner } from "./testRunner";
-import { ITestRunnerContext, JarFileTestRunnerContext } from "./testRunnerContext";
+import { ITestRunnerEnvironment, JarFileTestRunnerEnvironment } from "./testRunnerEnvironment";
 
 import * as cp from 'child_process';
 import * as getPort from "get-port";
@@ -27,54 +28,82 @@ export abstract class JarFileTestRunner implements ITestRunner {
 
     public abstract get debugConfigName(): string;
     public abstract get runnerJarFilePath(): string;
-    public abstract parseParams(tests: TestSuite[], isDebugMode: boolean, context: JarFileTestRunnerContext): Promise<string[]>;
+    public abstract parseParams(env: JarFileTestRunnerEnvironment): Promise<string[]>;
+    public abstract getTestResultAnalyzer(env: JarFileTestRunnerEnvironment): TestResultAnalyzer;
 
-    public async setup(tests: TestSuite[], isDebugMode: boolean, context: ITestRunnerContext): Promise<void> {
-        const jarContext: JarFileTestRunnerContext = context as JarFileTestRunnerContext;
-        if (!jarContext) {
-            return Promise.reject('Illegal context type, should pass in JarFileTestRunnerContext!');
-        }
+    public async setup(tests: TestSuite[], isDebugMode: boolean): Promise<ITestRunnerEnvironment> {
+        const env: JarFileTestRunnerEnvironment = new JarFileTestRunnerEnvironment();
         const uri: Uri = Uri.parse(tests[0].uri);
         const classpaths: string[] = this._classPathManager.getClassPath(uri);
         // TODO: refactor logger, no need to pass transactionId around.
-        const transactionId = jarContext.transactionId;
+        const transactionId = env.transactionId;
         const port: number | undefined = isDebugMode ? await this.getPortWithWrapper(transactionId) : undefined;
         const storageForThisRun: string = path.join(this._storagePath, new Date().getTime().toString());
         const classpathStr: string = await this.constructClassPathStr(transactionId, classpaths, storageForThisRun);
-        jarContext.port = port;
-        jarContext.storagePath = storageForThisRun;
-        jarContext.classpathStr = classpathStr;
+        env.tests = tests;
+        env.isDebugMode = isDebugMode;
+        env.port = port;
+        env.storagePath = storageForThisRun;
+        env.classpathStr = classpathStr;
+        return env;
     }
 
-    public async run(tests: TestSuite[], isDebugMode: boolean, context: ITestRunnerContext): Promise<void> {
-        const jarContext: JarFileTestRunnerContext = context as JarFileTestRunnerContext;
-        if (!jarContext) {
-            return Promise.reject('Illegal context type, should pass in JarFileTestRunnerContext!');
+    public async run(env: ITestRunnerEnvironment): Promise<RunnerResultStream> {
+        const jarEnv: JarFileTestRunnerEnvironment = env as JarFileTestRunnerEnvironment;
+        if (!jarEnv) {
+            return Promise.reject('Illegal env type, should pass in JarFileTestRunnerEnvironment!');
         }
         // TODO: refactor logger, no need to pass transactionId around.
-        const transactionId = jarContext.transactionId;
-        const params: string[] = await this.parseParamsWithWrapper(tests, isDebugMode, jarContext);
+        const transactionId = jarEnv.transactionId;
+        const params: string[] = await this.parseParamsWithWrapper(jarEnv);
+        const process = cp.exec(params.join(' '));
+        const result: RunnerResultStream = new RunnerResultStream(process.stderr, process.stdout);
+        process.on('error', (err) => {
+            result.emit('error', err);
+        });
+        process.on('close', () => {
+            result.emit('finish');
+        });
+        if (jarEnv.isDebugMode) {
+            const uri = Uri.parse(jarEnv.tests[0].uri);
+            const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));
+            setTimeout(() => {
+                debug.startDebugging(rootDir, {
+                    name: this.debugConfigName,
+                    type: 'java',
+                    request: 'attach',
+                    hostName: 'localhost',
+                    port: jarEnv.port,
+                });
+            }, 500);
+        }
+        return result;
+    }
 
-        const testResultAnalyzer = new TestResultAnalyzer(tests);
-        return TestStatusBarProvider.getInstance().update(tests, new Promise((resolve, reject) => {
+    public async updateTestStatus(env: ITestRunnerEnvironment, result: RunnerResultStream): Promise<void> {
+        const jarEnv: JarFileTestRunnerEnvironment = env as JarFileTestRunnerEnvironment;
+        if (!jarEnv) {
+            return Promise.reject('Illegal env type, should pass in JarFileTestRunnerEnvironment!');
+        }
+        return TestStatusBarProvider.getInstance().update(jarEnv.tests, new Promise((resolve, reject) => {
+            const testResultAnalyzer = this.getTestResultAnalyzer(jarEnv);
             let error: string = '';
-            const process = cp.exec(params.join(' '));
-            process.on('error', (err) => {
+            result.on('error', (err) => {
                 this._logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
                     err.stack,
-                    transactionId);
+                    jarEnv.transactionId);
                 reject(err);
             });
-            process.stderr.on('data', (data) => {
+            result.stderr.on('data', (data) => {
                 error += data.toString();
-                this._logger.logError(`Error occured: ${data.toString()}`, null, transactionId);
+                this._logger.logError(`Error occured: ${data.toString()}`, null, jarEnv.transactionId);
                 testResultAnalyzer.sendData(data.toString());
             });
-            process.stdout.on('data', (data) => {
-                this._logger.logInfo(data.toString(), transactionId);
+            result.stdout.on('data', (data) => {
+                this._logger.logInfo(data.toString(), jarEnv.transactionId);
                 testResultAnalyzer.sendData(data.toString());
             });
-            process.on('close', () => {
+            result.on('finish', () => {
                 testResultAnalyzer.feedBack();
                 this._onDidChange.fire();
                 if (error !== '') {
@@ -82,25 +111,12 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 } else {
                     resolve();
                 }
-                rimraf(jarContext.storagePath, (err) => {
+                rimraf(jarEnv.storagePath, (err) => {
                     if (err) {
-                        this._logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, transactionId);
+                        this._logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, jarEnv.transactionId);
                     }
                 });
             });
-            if (isDebugMode) {
-                const uri = Uri.parse(tests[0].uri);
-                const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));
-                setTimeout(() => {
-                    debug.startDebugging(rootDir, {
-                        name: this.debugConfigName,
-                        type: 'java',
-                        request: 'attach',
-                        hostName: 'localhost',
-                        port: jarContext.port,
-                    });
-                }, 500);
-            }
         }));
     }
 
@@ -130,14 +146,14 @@ export abstract class JarFileTestRunner implements ITestRunner {
         return ClassPathUtility.getClassPathStr(transactionId, this._logger, extendedClasspaths, separator, storageForThisRun);
     }
 
-    private async parseParamsWithWrapper(tests: TestSuite[], isDebugMode: boolean, context: JarFileTestRunnerContext): Promise<string[]> {
+    private async parseParamsWithWrapper(env: JarFileTestRunnerEnvironment): Promise<string[]> {
         try {
-            return await this.parseParams(tests, isDebugMode, context);
+            return await this.parseParams(env);
         } catch (ex) {
-            this._logger.logError(`Exception occers while parsing params. Details: ${ex}`, ex, context.transactionId);
-            rimraf(context.storagePath, (err) => {
+            this._logger.logError(`Exception occers while parsing params. Details: ${ex}`, ex, env.transactionId);
+            rimraf(env.storagePath, (err) => {
                 if (err) {
-                    this._logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, context.transactionId);
+                    this._logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, env.transactionId);
                 }
             });
             throw ex;
