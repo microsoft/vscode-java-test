@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestSuite } from "../protocols";
-import { RunnerResultStream } from "./runnerResultStream";
-import { ITestRunnerEnvironment } from "./testRunnerEnvironment";
+import { ITestInfo, ITestResult } from "./testModel";
+import { ITestRunnerParameters } from "./testRunnerParameters";
 
 export interface ITestRunner {
-    setup(tests: TestSuite[], isDebugMode: boolean): Promise<ITestRunnerEnvironment>;
-    run(env: ITestRunnerEnvironment): Promise<RunnerResultStream>;
-    updateTestStatus(env: ITestRunnerEnvironment, result: RunnerResultStream): Promise<void>;
+    setup(tests: ITestInfo[], isDebugMode: boolean): Promise<ITestRunnerParameters>;
+    run(params: ITestRunnerParameters): Promise<ITestResult[]>;
 }
