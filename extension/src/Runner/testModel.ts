@@ -14,6 +14,8 @@ export interface ITestInfo {
     level: TestLevel;
 }
 
-export interface ITestResult extends ITestInfo {
+export interface ITestResult {
     result?: TestResult;
+    parent: TestResult;
+    children: TestResult[];
 }

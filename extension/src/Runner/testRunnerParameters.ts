@@ -13,4 +13,5 @@ export interface ITestRunnerParameters {
 
 export interface IJarFileTestRunnerParameters extends ITestRunnerParameters {
     classpathStr: string;
+    runnerJarFilePath: string;
 }
