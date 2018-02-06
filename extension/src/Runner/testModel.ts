@@ -15,7 +15,7 @@ export interface ITestInfo {
 }
 
 export interface ITestResult {
-    result?: TestResult;
-    parent: TestResult;
-    children: TestResult[];
+    uri: string;
+    test: string;
+    result: TestResult;
 }

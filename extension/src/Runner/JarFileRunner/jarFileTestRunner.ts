@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ClassPathManager } from "../classPathManager";
-import { Logger } from "../logger";
-import { TestSuite } from "../protocols";
-import { TestResultAnalyzer } from "../testResultAnalyzer";
-import { TestStatusBarProvider } from "../testStatusBarProvider";
-import { ClassPathUtility } from "../Utils/classPathUtility";
-import { JarTestRunnerResultAnalyzer } from "./jarTestRunnerResultAnalyzer";
-import { ITestResult } from "./testModel";
-import { ITestRunner } from "./testRunner";
-import { IJarFileTestRunnerParameters, ITestRunnerParameters } from "./testRunnerParameters";
+import { ClassPathManager } from "../../classPathManager";
+import { Logger } from "../../logger";
+import { TestSuite } from "../../protocols";
+import { TestResultAnalyzer } from "../../testResultAnalyzer";
+import { TestStatusBarProvider } from "../../testStatusBarProvider";
+import { ClassPathUtility } from "../../Utils/classPathUtility";
+import { ITestResult } from "../testModel";
+import { ITestRunner } from "../testRunner";
+import { ITestRunnerParameters } from "../testRunnerParameters";
+import { IJarFileTestRunnerParameters } from "./jarFileRunnerParameters";
+import { JarFileRunnerResultAnalyzer } from "./jarFileRunnerResultAnalyzer";
 
 import * as cp from 'child_process';
 import * as getPort from "get-port";
@@ -31,7 +32,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public abstract get runnerJarFilePath(): string;
     public abstract get runnerClassName(): string;
     public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string>;
-    public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarTestRunnerResultAnalyzer;
+    public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer;
 
     public async setup(tests: TestSuite[], isDebugMode: boolean): Promise<ITestRunnerParameters> {
         const uri: Uri = Uri.parse(tests[0].uri);
@@ -40,13 +41,21 @@ export abstract class JarFileTestRunner implements ITestRunner {
         const transactionId: string = undefined;
         const port: number | undefined = isDebugMode ? await this.getPortWithWrapper(transactionId) : undefined;
         const storageForThisRun: string = path.join(this._storagePath, new Date().getTime().toString());
+        const runnerJarFilePath: string = this.runnerJarFilePath;
+        if (runnerJarFilePath === null) {
+            const err = 'Failed to locate test server runtime!';
+            this._logger.logError(err, null, transactionId);
+            return Promise.reject(err);
+        }
+        const extendedClasspaths = [runnerJarFilePath, ...classpaths];
         const runnerClassName: string = this.runnerClassName;
-        const classpathStr: string = await this.constructClassPathStr(transactionId, classpaths, storageForThisRun);
+        const classpathStr: string = await this.constructClassPathStr(transactionId, extendedClasspaths, storageForThisRun);
         const params: IJarFileTestRunnerParameters = {
             tests,
             isDebugMode,
             port,
             classpathStr,
+            runnerJarFilePath,
             runnerClassName,
             storagePath: storageForThisRun,
             transactionId,
@@ -65,7 +74,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         const command: string = await this.constructCommandWithWrapper(jarParams);
         const process = cp.exec(command);
         return new Promise<ITestResult[]>((resolve, reject) => {
-            const testResultAnalyzer: JarTestRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
+            const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let error: string = '';
             process.on('error', (err) => {
                 this._logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
@@ -122,18 +131,11 @@ export abstract class JarFileTestRunner implements ITestRunner {
     }
 
     private async constructClassPathStr(transactionId: string, classpaths: string[], storageForThisRun: string): Promise<string> {
-        const runnerJar: string = this.runnerJarFilePath;
-        if (runnerJar === null) {
-            const err = 'Failed to locate test server runtime!';
-            this._logger.logError(err, null, transactionId);
-            return Promise.reject(err);
-        }
-        const extendedClasspaths = [runnerJar, ...classpaths];
         let separator = ';';
         if (process.platform === 'darwin' || process.platform === 'linux') {
             separator = ':';
         }
-        return ClassPathUtility.getClassPathStr(transactionId, this._logger, extendedClasspaths, separator, storageForThisRun);
+        return ClassPathUtility.getClassPathStr(transactionId, this._logger, classpaths, separator, storageForThisRun);
     }
 
     private async constructCommandWithWrapper(params: IJarFileTestRunnerParameters): Promise<string> {

@@ -10,8 +10,3 @@ export interface ITestRunnerParameters {
     port: number | undefined;
     transactionId: string | undefined; // TODO: remove later after refactoring logger
 }
-
-export interface IJarFileTestRunnerParameters extends ITestRunnerParameters {
-    classpathStr: string;
-    runnerClassName: string;
-}
