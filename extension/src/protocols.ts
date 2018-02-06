@@ -18,6 +18,7 @@ export type TestSuite = {
     children: TestSuite[];
     packageName: string;
     level: TestLevel;
+    kind: TestKind;
     result?: TestResult;
 };
 
@@ -38,4 +39,8 @@ export enum TestStatus {
 export enum TestLevel {
     Method,
     Class,
+}
+
+export enum TestKind {
+    JUnit,
 }

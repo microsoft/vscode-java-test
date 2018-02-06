@@ -119,6 +119,11 @@ export abstract class JarFileTestRunner implements ITestRunner {
         });
     }
 
+    public postRun(): Promise<void> {
+        this._onDidChange.fire();
+        return Promise.resolve();
+    }
+
     private async getPortWithWrapper(transactionId: string): Promise<number> {
         try {
             return await getPort();

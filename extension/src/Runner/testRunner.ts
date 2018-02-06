@@ -7,4 +7,5 @@ import { ITestRunnerParameters } from "./testRunnerParameters";
 export interface ITestRunner {
     setup(tests: ITestInfo[], isDebugMode: boolean): Promise<ITestRunnerParameters>;
     run(params: ITestRunnerParameters): Promise<ITestResult[]>;
+    postRun(): Promise<void>;
 }
