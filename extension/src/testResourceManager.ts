@@ -3,9 +3,9 @@
 
 import { commands, workspace, Event, EventEmitter, Uri } from 'vscode';
 import * as Commands from './commands';
-import * as FetchTestsUtility from './fetchTestUtility';
 import { Logger } from './logger';
 import { Test, TestSuite } from './protocols';
+import * as FetchTestsUtility from './Utils/fetchTestUtility';
 
 export class TestResourceManager {
     private testsIndexedByFileUri = new Map<string, Test | null | undefined>();

@@ -3,7 +3,7 @@
 
 import { TestLevel, TestResult, TestStatus } from "../../protocols";
 import { ITestInfo, ITestResult } from "../testModel";
-import { JarFileRunnerResultAnalyzer } from "./jarFileRunnerResultAnalyzer";
+import { JarFileRunnerResultAnalyzer } from "../JarFileRunner/jarFileRunnerResultAnalyzer";
 
 const SUITE_START: string = 'testSuiteStarted';
 const SUITE_FINISH: string = 'testSuiteFinished';
