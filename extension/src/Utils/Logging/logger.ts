@@ -3,7 +3,8 @@
 
 import { OutputChannel } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
-import * as Constants from "./constants";
+import * as Constants from "../../constants";
+import { LogLevel } from './logListener';
 
 export class Logger {
     private _telemetryReporter: TelemetryReporter;
@@ -43,11 +44,4 @@ export class Logger {
         }
         this._channel.dispose();
     }
-}
-
-export enum LogLevel {
-    None = 0,
-    Error = 1,
-    Warning = 2,
-    Info = 3,
 }

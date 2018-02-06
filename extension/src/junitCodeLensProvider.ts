@@ -6,10 +6,10 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from "vscode";
 
 import * as Commands from './commands';
-import * as FetchTestsUtility from './fetchTestUtility';
-import { Logger } from "./logger";
 import { TestResult, TestStatus, TestSuite } from './protocols';
 import { TestResourceManager } from './testResourceManager';
+import * as FetchTestsUtility from './Utils/fetchTestUtility';
+import { Logger } from "./Utils/Logging/logger";
 
 export class JUnitCodeLensProvider implements CodeLensProvider {
     constructor(

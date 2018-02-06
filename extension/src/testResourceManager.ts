@@ -2,10 +2,9 @@
 // Licensed under the MIT license.
 
 import { commands, workspace, Event, EventEmitter, Uri } from 'vscode';
-import * as Commands from './commands';
-import * as FetchTestsUtility from './fetchTestUtility';
-import { Logger } from './logger';
 import { Test, TestSuite } from './protocols';
+import * as FetchTestsUtility from './Utils/fetchTestUtility';
+import { Logger } from './Utils/Logging/logger';
 
 export class TestResourceManager {
     private testsIndexedByFileUri = new Map<string, Test | null | undefined>();
