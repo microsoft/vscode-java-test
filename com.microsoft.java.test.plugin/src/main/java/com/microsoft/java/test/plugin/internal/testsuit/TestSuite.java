@@ -5,81 +5,92 @@ import java.util.List;
 import org.eclipse.lsp4j.Range;
 
 public class TestSuite {
-	private Range range;
-	
+    private Range range;
+
     private String uri;
-	
-	private String test;
-	
-	private List<Integer> childrenIndices;
-	
-	private Integer parentIndex;
-	
-	private String packageName;
-	
-	private TestLevel level;
-	
-	public Range getRange() {
-		return range;
-	}
 
-	public void setRange(Range range) {
-		this.range = range;
-	}
+    private String test;
 
-	public String getUri() {
-		return uri;
-	}
+    private List<Integer> childrenIndices;
 
-	public void setUri(String uri) {
-		this.uri = uri;
-	}
+    private Integer parentIndex;
 
-	public String getTest() {
-		return test;
-	}
+    private String packageName;
 
-	public void setTest(String test) {
-		this.test = test;
-	}
-	
-	public List<Integer> getChildren() {
-		return childrenIndices;
-	}
+    private TestLevel level;
 
-	public void setChildren(List<Integer> children) {
-		this.childrenIndices = children;
-	}
+    private TestKind kind;
 
-	public String getPackageName() {
-		return packageName;
-	}
+    public Range getRange() {
+        return range;
+    }
 
-	public void setPackageName(String packageName) {
-		this.packageName = packageName;
-	}
+    public void setRange(Range range) {
+        this.range = range;
+    }
 
-	public TestLevel getLevel() {
-		return level;
-	}
+    public String getUri() {
+        return uri;
+    }
 
-	public void setLevel(TestLevel level) {
-		this.level = level;
-	}
-	
-	public Integer getParent() {
-		return parentIndex;
-	}
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
 
-	public void setParent(Integer parent) {
-		this.parentIndex = parent;
-	}
+    public String getTest() {
+        return test;
+    }
 
-	public TestSuite(Range range, String uri, String test, String packageName, TestLevel level) {
-		this.range = range;
-		this.uri = uri;
-		this.test = test;
-		this.packageName = packageName;
-		this.level = level;
-	}
+    public void setTest(String test) {
+        this.test = test;
+    }
+
+    public List<Integer> getChildren() {
+        return childrenIndices;
+    }
+
+    public void setChildren(List<Integer> children) {
+        this.childrenIndices = children;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
+    public TestLevel getLevel() {
+        return level;
+    }
+
+    public void setLevel(TestLevel level) {
+        this.level = level;
+    }
+
+    public TestKind getKind() {
+        return kind;
+    }
+
+    public void setKind(TestKind kind) {
+        this.kind = kind;
+    }
+
+    public Integer getParent() {
+        return parentIndex;
+    }
+
+    public void setParent(Integer parent) {
+        this.parentIndex = parent;
+    }
+
+    public TestSuite(Range range, String uri, String test, String packageName, TestLevel level, TestKind kind) {
+        this.range = range;
+        this.uri = uri;
+        this.test = test;
+        this.packageName = packageName;
+        this.level = level;
+        this.kind = kind;
+    }
 }
