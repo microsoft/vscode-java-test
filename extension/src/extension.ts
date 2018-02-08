@@ -20,7 +20,7 @@ import * as rimraf from 'rimraf';
 // tslint:disable-next-line
 import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { TelemetryWrapper, Transaction } from 'vscode-extension-telemetry-wrapper';
+import { Session, TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
@@ -37,6 +37,9 @@ import { TestKind, TestLevel, TestSuite } from './Models/protocols';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
 import { CommandUtility } from './Utils/commandUtility';
+/* import * as Logger2 from './Utils/Logger/logger';
+import { OutputTransport } from './Utils/Logger/outputTransport';
+import { TelemetryTransport } from './Utils/Logger/telemetryTransport'; */
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -51,6 +54,7 @@ const classPathManager: ClassPathManager = new ClassPathManager(logger);
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
+    // Logger2.configure([new TelemetryTransport({ level: 'warn' }), new OutputTransport({ channel: outputChannel })]);
     await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
@@ -75,32 +79,32 @@ export async function activate(context: ExtensionContext) {
     });
 
     checkJavaHome().then((javaHome) => {
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (t: Session) => {
             return (suites: TestSuite[] | TestSuite) =>
             // TO-DO: pass transaction id to telemetry log listener, and let it handle such thing.
             runTest(suites, false, t.id);
         }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (t: Session) => {
             return (suites: TestSuite[] | TestSuite) =>
             runTest(suites, true, t.id);
         }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (t: Session) => {
             return (test: TestSuite[] | TestSuite) =>
             showDetails(test);
         }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, (t: Session) => {
             return () =>
             outputChannel.show();
         }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (t: Session) => {
             return (node: TestTreeNode) =>
             testExplorer.select(node);
         }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (t: Session) => {
             return (node: TestTreeNode) =>
             testExplorer.run(node, false);
         }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (t: Transaction) => {
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (t: Session) => {
             return (node: TestTreeNode) =>
             testExplorer.run(node, true);
         }));
