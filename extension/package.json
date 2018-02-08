@@ -94,6 +94,21 @@
                     "dark": "resources/media/dark/placeholder.png"
                 }
             }
+        ],
+        "languages": [
+            {
+                "id": "test-log",
+                "mimetypes": [
+                    "text/x-code-output"
+                ]
+            }
+        ],
+        "grammars": [
+            {
+                "language": "test-log",
+                "scopeName": "test.log",
+                "path": "./syntaxes/test.log.tmLanguage"
+            }
         ]
     },
     "scripts": {
