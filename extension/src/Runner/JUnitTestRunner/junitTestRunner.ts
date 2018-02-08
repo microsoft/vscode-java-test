@@ -14,7 +14,7 @@ export class JUnitTestRunner extends JarFileTestRunner {
     }
 
     public get runnerJarFilePath(): string {
-        const serverHome: string = path.resolve(__dirname, '../../../server');
+        const serverHome: string = path.resolve(__dirname, '../../../../server');
         const launchersFound: string[] = glob.sync('**/com.microsoft.java.test.runner-*.jar', { cwd: serverHome });
         if (launchersFound.length) {
             return path.resolve(serverHome, launchersFound[0]);

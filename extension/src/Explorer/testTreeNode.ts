@@ -18,7 +18,11 @@ export class TestTreeNode {
     }
 
     public get fullName(): string {
-        return (this._parent ? `${this._parent.fullName}` + (this.level === TestTreeNodeType.Method ? "#" : ".") : "") + this._name;
+        const prefix: string = this._parent && this._parent.level !== TestTreeNodeType.Folder ? `${this._parent.fullName}` : "";
+        if (prefix === '') {
+            return this._name;
+        }
+        return prefix + (this.level === TestTreeNodeType.Method ? "#" : ".") + this._name;
     }
 
     public get uri(): string {

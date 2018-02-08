@@ -28,13 +28,15 @@ import * as Configs from './configs';
 import * as Constants from './constants';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { Logger, LogLevel } from './logger';
-import { TestLevel, TestSuite } from './protocols';
+import { TestKind, TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestResultAnalyzer } from './testResultAnalyzer';
 import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
+import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
+import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
 import { CommandUtility } from './Utils/commandUtility';
 
 const isWindows = process.platform.indexOf('win') === 0;
@@ -105,6 +107,7 @@ export async function activate(context: ExtensionContext) {
             testExplorer.run(node, true);
         }));
         classPathManager.refresh();
+        TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange, logger));
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
     });

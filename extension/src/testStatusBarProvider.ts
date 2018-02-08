@@ -63,6 +63,6 @@ export class TestStatusBarProvider {
         this.statusBarItem.text = `$(x) ${failedCount} $(check) ${passedCount}`;
         this.statusBarItem.color = failedCount > 0 ? 'yellow' : '#66ff66';
         this.statusBarItem.tooltip = 'View test report';
-        this.statusBarItem.command = CommandUtility.getCommandWithArgs(Commands.JAVA_TEST_SHOW_REPORT, tests);
+        this.statusBarItem.command = CommandUtility.getCommandWithArgs(Commands.JAVA_TEST_SHOW_REPORT, [tests]);
     }
 }
