@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestResult, TestStatus } from "../../protocols";
+import { TestLevel, TestResult, TestStatus } from "../../Models/protocols";
 import { ITestInfo, ITestResult } from "../testModel";
 import { JarFileRunnerResultAnalyzer } from "../JarFileRunner/jarFileRunnerResultAnalyzer";
 

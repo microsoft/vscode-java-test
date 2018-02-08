@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { workspace, CancellationToken, Uri } from 'vscode';
-import * as Commands from './commands';
 import { Logger } from './logger';
+import * as Commands from './Constants/commands';
 
 export class ClassPathManager {
     private classPathCache = new Map<string, string[]>();

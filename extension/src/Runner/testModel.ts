@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Range } from "vscode";
-import { TestLevel, TestResult } from "../protocols";
+import { TestLevel, TestResult } from "../Models/protocols";
 
 export interface ITestInfo {
     range: Range;

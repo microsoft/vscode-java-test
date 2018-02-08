@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as Configs from '../configs';
 import { Logger } from '../logger';
+import * as Configs from '../Constants/configs';
 
 import * as archiver from 'archiver';
 import * as fileUrl from 'file-url';

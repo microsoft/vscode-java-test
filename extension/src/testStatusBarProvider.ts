@@ -3,8 +3,8 @@
 
 import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from "vscode";
 
-import * as Commands from "./commands";
-import { TestLevel, TestStatus, TestSuite } from "./protocols";
+import * as Commands from "./Constants/commands";
+import { TestLevel, TestStatus, TestSuite } from "./Models/protocols";
 import { CommandUtility } from "./Utils/commandUtility";
 
 export class TestStatusBarProvider {

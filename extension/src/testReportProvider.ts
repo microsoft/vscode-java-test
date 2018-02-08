@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestStatus, TestSuite } from "./protocols";
 import { TestResourceManager } from "./testResourceManager";
+import { TestLevel, TestStatus, TestSuite } from "./Models/protocols";
 
 import * as os from 'os';
 import * as path from 'path';

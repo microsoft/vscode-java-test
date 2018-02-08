@@ -3,7 +3,7 @@
 
 import { OutputChannel } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
-import * as Constants from "./constants";
+import * as Constants from "./Constants/constants";
 
 export class Logger {
     private _telemetryReporter: TelemetryReporter;

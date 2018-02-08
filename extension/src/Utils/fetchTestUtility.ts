@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { TextDocument } from "vscode";
-import * as Commands from '../commands';
-import { TestSuite } from "../protocols";
+import * as Commands from '../Constants/commands';
+import { TestSuite } from "../Models/protocols";
 
 export function fetchTests(document: TextDocument): Thenable<TestSuite[]> {
     return Commands.executeJavaLanguageServerCommand(Commands.JAVA_FETCH_TEST, document.uri.toString()).then((tests: TestSuite[]) => {

@@ -3,8 +3,8 @@
 
 import { ClassPathManager } from "../../classPathManager";
 import { Logger } from "../../logger";
-import { TestSuite } from "../../protocols";
 import { TestStatusBarProvider } from "../../testStatusBarProvider";
+import { TestSuite } from "../../Models/protocols";
 import { ClassPathUtility } from "../../Utils/classPathUtility";
 import { ITestResult } from "../testModel";
 import { ITestRunner } from "../testRunner";

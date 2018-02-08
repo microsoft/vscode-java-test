@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { commands, workspace, Event, EventEmitter, Uri } from 'vscode';
-import * as Commands from './commands';
 import { Logger } from './logger';
-import { Test, TestSuite } from './protocols';
+import * as Commands from './Constants/commands';
+import { Test, TestSuite } from './Models/protocols';
 import * as FetchTestsUtility from './Utils/fetchTestUtility';
 
 export class TestResourceManager {

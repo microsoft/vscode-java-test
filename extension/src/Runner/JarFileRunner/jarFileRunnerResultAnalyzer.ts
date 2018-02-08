@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestResult } from "../../protocols";
+import { TestResult } from "../../Models/protocols";
 import { ITestInfo, ITestResult } from "../testModel";
 
 export abstract class JarFileRunnerResultAnalyzer {

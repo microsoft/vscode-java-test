@@ -4,9 +4,9 @@
 import * as path from 'path';
 // tslint:disable-next-line
 import { window, workspace, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, ViewColumn, Command } from "vscode";
-import * as Commands from '../commands';
-import { TestLevel, TestSuite } from '../protocols';
 import { TestResourceManager } from '../testResourceManager';
+import * as Commands from '../Constants/commands';
+import { TestLevel, TestSuite } from '../Models/protocols';
 import { TestRunnerWrapper } from '../Runner/testRunnerWrapper';
 import { TestTreeNode, TestTreeNodeType } from "./testTreeNode";
 

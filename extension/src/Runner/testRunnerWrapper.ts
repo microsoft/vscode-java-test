@@ -3,8 +3,8 @@
 
 import { ClassPathManager } from "../classPathManager";
 import { Logger } from "../logger";
-import { TestKind, TestResult, TestSuite } from "../protocols";
 import { TestStatusBarProvider } from "../testStatusBarProvider";
+import { TestKind, TestResult, TestSuite } from "../Models/protocols";
 import { ITestRunner } from "./testRunner";
 import { ITestRunnerParameters } from "./testRunnerParameters";
 import { JUnitTestRunner } from "./JUnitTestRunner/junitTestRunner";
