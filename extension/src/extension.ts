@@ -31,7 +31,6 @@ import { Logger, LogLevel } from './logger';
 import { TestKind, TestLevel, TestSuite } from './protocols';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
-import { TestResultAnalyzer } from './testResultAnalyzer';
 import { TestStatusBarProvider } from './testStatusBarProvider';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
@@ -47,7 +46,6 @@ const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const logger: Logger = new Logger(outputChannel); // TO-DO: refactor Logger. Make logger stateless and no need to pass the instance.
 const testResourceManager: TestResourceManager = new TestResourceManager(logger);
 const classPathManager: ClassPathManager = new ClassPathManager(logger);
-let running: boolean = false;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -80,11 +78,11 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (t: Transaction) => {
             return (suites: TestSuite[] | TestSuite) =>
             // TO-DO: pass transaction id to telemetry log listener, and let it handle such thing.
-            runSingleton(javaHome, suites, context.storagePath, false, t.id);
+            runTest(suites, false, t.id);
         }));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (t: Transaction) => {
             return (suites: TestSuite[] | TestSuite) =>
-            runSingleton(javaHome, suites, context.storagePath, true, t.id);
+            runTest(suites, true, t.id);
         }));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (t: Transaction) => {
             return (test: TestSuite[] | TestSuite) =>
@@ -169,101 +167,10 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-async function runTest(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean, transactionId: string) {
+function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, transactionId: string) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
-    const suites = testList.map((s) => s.test);
-    const uri = Uri.parse(testList[0].uri);
-    const classpaths = classPathManager.getClassPath(uri);
-    let port;
-    if (isDebugMode) {
-        try {
-            port = await getPort();
-        } catch (ex) {
-            const message = `Failed to get free port for debugging. Details: ${ex}.`;
-            window.showErrorMessage(message);
-            logger.logError(message, ex, transactionId);
-            throw ex;
-        }
-    }
-    const storageForThisRun = path.join(storagePath, new Date().getTime().toString());
-    let params: string[];
-    try {
-        params = await parseParams(javaHome, classpaths, suites, storageForThisRun, port, isDebugMode);
-    } catch (ex) {
-        logger.logError(`Exception occers while parsing params. Details: ${ex}`, ex, transactionId);
-        rimraf(storageForThisRun, (err) => {
-            if (err) {
-                logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, transactionId);
-            }
-        });
-        throw ex;
-    }
-    if (params === null) {
-        return null;
-    }
-
-    const testResultAnalyzer = new TestResultAnalyzer(testList);
-    await testStatusBarItem.update(testList, new Promise((resolve, reject) => {
-        let error: string = '';
-        const process = cp.exec(params.join(' '));
-        process.on('error', (err) => {
-            logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
-             err.stack,
-             transactionId);
-            reject(err);
-        });
-        process.stderr.on('data', (data) => {
-            error += data.toString();
-            logger.logError(`Error occured: ${data.toString()}`, null, transactionId);
-            testResultAnalyzer.sendData(data.toString());
-        });
-        process.stdout.on('data', (data) => {
-            logger.logInfo(data.toString(), transactionId);
-            testResultAnalyzer.sendData(data.toString());
-        });
-        process.on('close', () => {
-            testResultAnalyzer.feedBack();
-            onDidChange.fire();
-            if (error !== '') {
-                reject(error);
-            } else {
-                resolve();
-            }
-            rimraf(storageForThisRun, (err) => {
-                if (err) {
-                    logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, transactionId);
-                }
-            });
-        });
-        if (isDebugMode) {
-            const rootDir = workspace.getWorkspaceFolder(Uri.file(uri.fsPath));
-            setTimeout(() => {
-                debug.startDebugging(rootDir, {
-                    name: 'Debug Junit Test',
-                    type: 'java',
-                    request: 'attach',
-                    hostName: 'localhost',
-                    port,
-                });
-            }, 500);
-        }
-    }));
-}
-
-async function runSingleton(javaHome: string, tests: TestSuite[] | TestSuite, storagePath: string, isDebugMode: boolean, transactionId: string) {
-
-    if (running) {
-        window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
-        logger.logInfo('Skip this run cause we only support running one session at the same time', transactionId);
-        return;
-    }
-    running = true;
-    try {
-        await runTest(javaHome, tests, storagePath, isDebugMode, transactionId);
-    } finally {
-        running = false;
-    }
+    return TestRunnerWrapper.run(testList, isDebugMode);
 }
 
 function showDetails(test: TestSuite[] | TestSuite) {
@@ -271,82 +178,4 @@ function showDetails(test: TestSuite[] | TestSuite) {
     const uri: Uri = encodeTestSuite(testList);
     const name: string = parseTestReportName(testList);
     return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, name);
-}
-
-async function parseParams(
-    javaHome: string,
-    classpaths: string[],
-    suites: string[],
-    storagePath: string,
-    port: number | undefined,
-    isDebugMode: boolean): Promise<string[]> {
-
-    let params = [];
-    params.push('"' + path.resolve(javaHome + '/bin/java') + '"');
-    const serverHome: string = path.resolve(__dirname, '../../server');
-    const launchersFound: string[] = glob.sync('**/com.microsoft.java.test.runner-*.jar', { cwd: serverHome });
-    if (launchersFound.length) {
-        params.push('-cp');
-        classpaths = [path.resolve(serverHome, launchersFound[0]), ...classpaths];
-        let separator = ';';
-        if (process.platform === 'darwin' || process.platform === 'linux') {
-            separator = ':';
-        }
-        const classpathStr = await processLongClassPath(classpaths, separator, storagePath);
-        params.push('"' + classpathStr + '"');
-    } else {
-        logger.logError('Failed to locate test server runtime!');
-        return null;
-    }
-
-    if (isDebugMode) {
-        const debugParams = [];
-        debugParams.push('-Xdebug');
-        debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);
-        params = [...params, ...debugParams];
-    }
-
-    params.push('com.microsoft.java.test.runner.JUnitLauncher');
-    params = [...params, ...suites];
-    return params;
-}
-
-function processLongClassPath(classpaths: string[], separator: string, storagePath: string): Promise<string> {
-    const concated = classpaths.join(separator);
-    if (concated.length <= Configs.MAX_CLASS_PATH_LENGTH) {
-        return Promise.resolve(concated);
-    }
-    const tempFile = path.join(storagePath, 'path.jar');
-    return new Promise((resolve, reject) => {
-        mkdirp(path.dirname(tempFile), (err) => {
-            if (err && err.code !== 'EEXIST') {
-                logger.logError(`Failed to create sub directory for this run. Storage path: ${err}`);
-                reject(err);
-            }
-            const output = fs.createWriteStream(tempFile);
-            output.on('close', () => {
-                resolve(tempFile);
-            });
-            const jarfile = archiver('zip');
-            jarfile.on('error', (jarErr) => {
-                logger.logError(`Failed to process too long class path issue. Error: ${err}`);
-                reject(jarErr);
-            });
-            // pipe archive data to the file
-            jarfile.pipe(output);
-            jarfile.append(constructManifestFile(classpaths), { name: 'META-INF/MANIFEST.MF' });
-            jarfile.finalize();
-        });
-    });
-}
-
-function constructManifestFile(classpaths: string[]): string {
-    let content = "";
-    const extended = ["Class-Path:", ...classpaths.map((c) => {
-        const p = fileUrl(c);
-        return p.endsWith('.jar') ? p : p + '/';
-    })];
-    content += extended.join(` ${os.EOL} `);
-    content += os.EOL;
-    return content;
 }

@@ -60,7 +60,7 @@ export class TestRunnerWrapper {
             total.set(cur.test, cur.result);
             return total;
         }, new Map<string, TestResult>());
-        const flattenedTests = new Set(tests.map((t) => [t, t.parent, ...t.children])
+        const flattenedTests = new Set(tests.map((t) => [t, t.parent, ...(t.children || [])])
                                     .reduce((total, cur) => total.concat(cur), [])
                                     .filter((t) => t));
         flattenedTests.forEach((t) => {

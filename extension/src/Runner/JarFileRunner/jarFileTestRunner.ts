@@ -4,7 +4,6 @@
 import { ClassPathManager } from "../../classPathManager";
 import { Logger } from "../../logger";
 import { TestSuite } from "../../protocols";
-import { TestResultAnalyzer } from "../../testResultAnalyzer";
 import { TestStatusBarProvider } from "../../testStatusBarProvider";
 import { ClassPathUtility } from "../../Utils/classPathUtility";
 import { ITestResult } from "../testModel";
