@@ -83,8 +83,8 @@
                 "command": "java.test.explorer.run",
                 "title": "Run Test",
                 "icon": {
-                    "light": "resources/media/light/placeholder.png",
-                    "dark": "resources/media/dark/placeholder.png"
+                    "light": "resources/media/light/run.svg",
+                    "dark": "resources/media/dark/run.svg"
                 },
                 "category": "Java"
             },
@@ -92,8 +92,8 @@
                 "command": "java.test.explorer.debug",
                 "title": "Debug Test",
                 "icon": {
-                    "light": "resources/media/light/placeholder.png",
-                    "dark": "resources/media/dark/placeholder.png"
+                    "light": "resources/media/light/debug.svg",
+                    "dark": "resources/media/dark/debug.svg"
                 },
                 "category": "Java"
             },
