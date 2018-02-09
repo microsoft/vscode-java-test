@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { ClassPathManager } from "../classPathManager";
-import { Logger } from "../logger";
 import { TestStatusBarProvider } from "../testStatusBarProvider";
 import { TestKind, TestResult, TestSuite } from "../Models/protocols";
+import * as Logger from "../Utils/Logger/logger";
 import { ITestRunner } from "./testRunner";
 import { ITestRunnerParameters } from "./testRunnerParameters";
 import { JUnitTestRunner } from "./JUnitTestRunner/junitTestRunner";
@@ -20,7 +20,7 @@ export class TestRunnerWrapper {
     public static async run(tests: TestSuite[], isDebugMode: boolean): Promise<void> {
         if (TestRunnerWrapper.running) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
-            TestRunnerWrapper.logger.logInfo('Skip this run cause we only support running one session at the same time');
+            Logger.info('Skip this run cause we only support running one session at the same time');
             return;
         }
         TestRunnerWrapper.running = true;
@@ -42,7 +42,6 @@ export class TestRunnerWrapper {
 
     private static readonly runnerPool: Map<TestKind, ITestRunner> = new Map<TestKind, ITestRunner>();
     private static running: boolean = false;
-    private static logger: Logger;
 
     private static getRunner(tests: TestSuite[]): ITestRunner {
         const kind = [...new Set(tests.map((t) => t.kind))];
