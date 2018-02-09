@@ -5,17 +5,16 @@
 
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from "vscode";
 
-import { Logger } from "./logger";
 import { TestResourceManager } from './testResourceManager';
 import * as Commands from './Constants/commands';
 import { TestResult, TestStatus, TestSuite } from './Models/protocols';
 import * as FetchTestsUtility from './Utils/fetchTestUtility';
+import * as Logger from './Utils/Logger/logger';
 
 export class JUnitCodeLensProvider implements CodeLensProvider {
     constructor(
         private _onDidChange: EventEmitter<void>,
-        private _testCollectionStorage: TestResourceManager,
-        private _logger: Logger) {
+        private _testCollectionStorage: TestResourceManager) {
     }
 
     get onDidChangeCodeLenses(): Event<void> {
@@ -41,10 +40,10 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
         },
         (reason) => {
             if (token.isCancellationRequested) {
-                this._logger.logError('test codelens request is cancelled.');
+                Logger.error('test codelens request is cancelled.');
                 return [];
             }
-            this._logger.logError(`Failed to get test codelens. Details: ${reason}.`);
+            Logger.error(`Failed to get test codelens. Details: ${reason}.`);
             return Promise.reject(reason);
         });
     }

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Logger } from '../logger';
 import * as Configs from '../Constants/configs';
+import * as Logger from './Logger/logger';
 
 import * as archiver from 'archiver';
 import * as fileUrl from 'file-url';
@@ -12,10 +12,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 export class ClassPathUtility {
-    // TODO: refactor logger, no need to pass in logger instance.
     public static getClassPathStr(
-        transactionId: string,
-        logger: Logger,
         classpaths: string[],
         separator: string,
         tmpStoragePath: string): Promise<string> {
@@ -23,22 +20,22 @@ export class ClassPathUtility {
         if (concated.length <= Configs.MAX_CLASS_PATH_LENGTH) {
             return Promise.resolve(concated);
         }
-        return ClassPathUtility.generateClassPathFile(transactionId, logger, classpaths, tmpStoragePath);
+        return ClassPathUtility.generateClassPathFile(classpaths, tmpStoragePath);
     }
 
     /*
      * solve the issue that long class path cannot be processed by child process
      */
     private static generateClassPathFile(
-        transactionId: string,
-        logger: Logger,
         classpaths: string[],
         tmpStoragePath: string): Promise<string> {
         const tempFile = path.join(tmpStoragePath, 'path.jar');
         return new Promise((resolve, reject) => {
             mkdirp(path.dirname(tempFile), (err) => {
                 if (err && err.code !== 'EEXIST') {
-                    logger.logError(`Failed to create sub directory for this run. Storage path: ${err}`, err, transactionId);
+                    Logger.error(`Failed to create sub directory for this run. Storage path: ${err}`, {
+                        error: err,
+                    });
                     reject(err);
                 }
                 const output = fs.createWriteStream(tempFile);
@@ -47,7 +44,9 @@ export class ClassPathUtility {
                 });
                 const jarfile = archiver('zip');
                 jarfile.on('error', (jarErr) => {
-                    logger.logError(`Failed to process too long class path issue. Error: ${err}`, err, transactionId);
+                    Logger.error(`Failed to process too long class path issue. Error: ${err}`, {
+                        error: err,
+                    });
                     reject(jarErr);
                 });
                 // pipe archive data to the file

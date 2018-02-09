@@ -2,19 +2,16 @@
 // Licensed under the MIT license.
 
 import { commands, workspace, Event, EventEmitter, Uri } from 'vscode';
-import { Logger } from './logger';
 import * as Commands from './Constants/commands';
 import { Test, TestSuite } from './Models/protocols';
 import * as FetchTestsUtility from './Utils/fetchTestUtility';
+import * as Logger from './Utils/Logger/logger';
 
 export class TestResourceManager {
     private testsIndexedByFileUri = new Map<string, Test | null | undefined>();
     private readonly _onDidChangeTestStorage: EventEmitter<void> = new EventEmitter<void>();
     // tslint:disable-next-line
     public readonly onDidChangeTestStorage: Event<void> = this._onDidChangeTestStorage.event;
-
-    constructor(private _logger: Logger) {
-    }
 
     public getTests(file: Uri): Test | undefined {
         const path = file.fsPath || '';
@@ -64,7 +61,7 @@ export class TestResourceManager {
             });
         },
         (reason) => {
-            this._logger.logError(`Failed to refresh test storage. Details: ${reason}.`);
+            Logger.error(`Failed to refresh test storage. Details: ${reason}.`);
             return Promise.reject(reason);
         });
     }

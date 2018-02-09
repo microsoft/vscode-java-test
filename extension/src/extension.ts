@@ -24,7 +24,6 @@ import { Session, TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
-import { Logger, LogLevel } from './logger';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestStatusBarProvider } from './testStatusBarProvider';
@@ -37,26 +36,25 @@ import { TestKind, TestLevel, TestSuite } from './Models/protocols';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
 import { CommandUtility } from './Utils/commandUtility';
-/* import * as Logger2 from './Utils/Logger/logger';
+import * as Logger from './Utils/Logger/logger';
 import { OutputTransport } from './Utils/Logger/outputTransport';
-import { TelemetryTransport } from './Utils/Logger/telemetryTransport'; */
+import { TelemetryTransport } from './Utils/Logger/telemetryTransport';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
 const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
-const logger: Logger = new Logger(outputChannel); // TO-DO: refactor Logger. Make logger stateless and no need to pass the instance.
-const testResourceManager: TestResourceManager = new TestResourceManager(logger);
-const classPathManager: ClassPathManager = new ClassPathManager(logger);
+const testResourceManager: TestResourceManager = new TestResourceManager();
+const classPathManager: ClassPathManager = new ClassPathManager();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    // Logger2.configure(context, [new TelemetryTransport({ level: 'warn' }), new OutputTransport({ level: 'info', channel: outputChannel })]);
+    Logger.configure(context, [new TelemetryTransport({ level: 'warn' }), new OutputTransport({ level: 'info', channel: outputChannel })]);
     await testStatusBarItem.init(testResourceManager.refresh());
-    const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
+    const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
     context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
@@ -93,7 +91,7 @@ export async function activate(context: ExtensionContext) {
             testExplorer.run(node, false)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
             testExplorer.run(node, true)));
-        TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange, logger));
+        TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
@@ -104,7 +102,6 @@ export async function activate(context: ExtensionContext) {
 export function deactivate() {
     testResourceManager.dispose();
     classPathManager.dispose();
-    logger.dispose();
     testStatusBarItem.dispose();
     CommandUtility.clearCommandsCache();
 }
@@ -120,9 +117,7 @@ function activateTelemetry(context: ExtensionContext) {
         };
         if (packageInfo.aiKey) {
             TelemetryWrapper.initilize(packageInfo.publisher, packageInfo.name, packageInfo.version, packageInfo.aiKey);
-            const telemetryReporter: TelemetryReporter = TelemetryWrapper.getReporter();
-            telemetryReporter.sendTelemetryEvent(Constants.TELEMETRY_ACTIVATION_SCOPE, {});
-            logger.setTelemetryReporter(telemetryReporter, LogLevel.Error);
+            TelemetryWrapper.sendTelemetryEvent(Constants.TELEMETRY_ACTIVATION_SCOPE, {});
         }
     }
 }

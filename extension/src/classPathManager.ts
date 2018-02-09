@@ -2,14 +2,11 @@
 // Licensed under the MIT license.
 
 import { workspace, CancellationToken, Uri } from 'vscode';
-import { Logger } from './logger';
 import * as Commands from './Constants/commands';
+import * as Logger from './Utils/Logger/logger';
 
 export class ClassPathManager {
     private classPathCache = new Map<string, string[]>();
-
-    constructor(private _logger: Logger) {
-    }
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
@@ -20,7 +17,7 @@ export class ClassPathManager {
                 if (token.isCancellationRequested) {
                     return;
                 }
-                this._logger.logError(`Failed to refresh class path. Details: ${reason}.`);
+                Logger.error(`Failed to refresh class path. Details: ${reason}.`);
                 return Promise.reject(reason);
             });
         }));

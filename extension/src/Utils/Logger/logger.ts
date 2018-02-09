@@ -17,15 +17,15 @@ export function configure(context: ExtensionContext, transports: winston.Transpo
 }
 
 export function info(message: string, metadata?: any) {
-    winston.info(message, metadata);
+    winston.info(message, withSessionId(metadata));
 }
 
 export function warn(message: string, metadata?: any) {
-    winston.warn(message, metadata);
+    winston.warn(message, withSessionId(metadata));
 }
 
 export function error(message: string, metadata?: any) {
-    winston.error(message, metadata);
+    winston.error(message, withSessionId(metadata));
 }
 
 export function currentSessionId(): string | undefined {
@@ -36,4 +36,11 @@ export function currentSessionId(): string | undefined {
 export function currentCommand(): string | undefined {
     const session = TelemetryWrapper.currentSession();
     return session ? session.action : undefined;
+}
+
+function withSessionId(metadata?: any) {
+    return {
+        sessionId: currentSessionId(),
+        metadata,
+    };
 }

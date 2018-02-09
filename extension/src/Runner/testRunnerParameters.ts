@@ -8,5 +8,4 @@ export interface ITestRunnerParameters {
     isDebugMode: boolean;
     storagePath: string;
     port: number | undefined;
-    transactionId: string | undefined; // TODO: remove later after refactoring logger
 }

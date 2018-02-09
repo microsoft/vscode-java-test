@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { ClassPathManager } from "../../classPathManager";
-import { Logger } from "../../logger";
 import { TestStatusBarProvider } from "../../testStatusBarProvider";
 import { TestSuite } from "../../Models/protocols";
 import { ClassPathUtility } from "../../Utils/classPathUtility";
+import * as Logger from '../../Utils/Logger/logger';
 import { ITestResult } from "../testModel";
 import { ITestRunner } from "../testRunner";
 import { ITestRunnerParameters } from "../testRunnerParameters";
@@ -23,8 +23,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         protected _javaHome: string,
         protected _storagePath: string,
         protected _classPathManager: ClassPathManager,
-        protected _onDidChange: EventEmitter<void>,
-        protected _logger: Logger) { // TODO: logger instance would be removed later
+        protected _onDidChange: EventEmitter<void>) {
     }
 
     public abstract get debugConfigName(): string;
@@ -36,19 +35,17 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public async setup(tests: TestSuite[], isDebugMode: boolean): Promise<ITestRunnerParameters> {
         const uri: Uri = Uri.parse(tests[0].uri);
         const classpaths: string[] = this._classPathManager.getClassPath(uri);
-        // TODO: refactor logger, get the session id from logger.
-        const transactionId: string = undefined;
-        const port: number | undefined = isDebugMode ? await this.getPortWithWrapper(transactionId) : undefined;
+        const port: number | undefined = isDebugMode ? await this.getPortWithWrapper() : undefined;
         const storageForThisRun: string = path.join(this._storagePath, new Date().getTime().toString());
         const runnerJarFilePath: string = this.runnerJarFilePath;
         if (runnerJarFilePath === null) {
             const err = 'Failed to locate test server runtime!';
-            this._logger.logError(err, null, transactionId);
+            Logger.error(err);
             return Promise.reject(err);
         }
         const extendedClasspaths = [runnerJarFilePath, ...classpaths];
         const runnerClassName: string = this.runnerClassName;
-        const classpathStr: string = await this.constructClassPathStr(transactionId, extendedClasspaths, storageForThisRun);
+        const classpathStr: string = await this.constructClassPathStr(extendedClasspaths, storageForThisRun);
         const params: IJarFileTestRunnerParameters = {
             tests,
             isDebugMode,
@@ -57,7 +54,6 @@ export abstract class JarFileTestRunner implements ITestRunner {
             runnerJarFilePath,
             runnerClassName,
             storagePath: storageForThisRun,
-            transactionId,
         };
 
         return params;
@@ -68,26 +64,26 @@ export abstract class JarFileTestRunner implements ITestRunner {
         if (!jarParams) {
             return Promise.reject('Illegal env type, should pass in IJarFileTestRunnerParameters!');
         }
-        // TODO: refactor logger, no need to pass transactionId around.
-        const transactionId = jarParams.transactionId;
         const command: string = await this.constructCommandWithWrapper(jarParams);
         const process = cp.exec(command);
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let error: string = '';
             process.on('error', (err) => {
-                this._logger.logError(`Error occured while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
-                    err.stack,
-                    jarParams.transactionId);
+                Logger.error(
+                    `Error occurred while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
+                    {
+                        stack: err.stack,
+                    });
                 reject(err);
             });
             process.stderr.on('data', (data) => {
                 error += data.toString();
-                this._logger.logError(`Error occured: ${data.toString()}`, null, jarParams.transactionId);
+                Logger.error(`Error occurred: ${data.toString()}`);
                 testResultAnalyzer.analyzeData(data.toString());
             });
             process.stdout.on('data', (data) => {
-                this._logger.logInfo(data.toString(), jarParams.transactionId);
+                Logger.info(data.toString());
                 testResultAnalyzer.analyzeData(data.toString());
             });
             process.on('close', () => {
@@ -98,7 +94,9 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 }
                 rimraf(jarParams.storagePath, (err) => {
                     if (err) {
-                        this._logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, jarParams.transactionId);
+                        Logger.error(`Failed to delete storage for this run. Storage path: ${err}`, {
+                            error: err,
+                        });
                     }
                 });
             });
@@ -123,33 +121,39 @@ export abstract class JarFileTestRunner implements ITestRunner {
         return Promise.resolve();
     }
 
-    private async getPortWithWrapper(transactionId: string): Promise<number> {
+    private async getPortWithWrapper(): Promise<number> {
         try {
             return await getPort();
         } catch (ex) {
             const message = `Failed to get free port for debugging. Details: ${ex}.`;
             window.showErrorMessage(message);
-            this._logger.logError(message, ex, transactionId);
+            Logger.error(message, {
+                error: ex,
+            });
             throw ex;
         }
     }
 
-    private async constructClassPathStr(transactionId: string, classpaths: string[], storageForThisRun: string): Promise<string> {
+    private async constructClassPathStr(classpaths: string[], storageForThisRun: string): Promise<string> {
         let separator = ';';
         if (process.platform === 'darwin' || process.platform === 'linux') {
             separator = ':';
         }
-        return ClassPathUtility.getClassPathStr(transactionId, this._logger, classpaths, separator, storageForThisRun);
+        return ClassPathUtility.getClassPathStr(classpaths, separator, storageForThisRun);
     }
 
     private async constructCommandWithWrapper(params: IJarFileTestRunnerParameters): Promise<string> {
         try {
             return await this.constructCommand(params);
         } catch (ex) {
-            this._logger.logError(`Exception occers while parsing params. Details: ${ex}`, ex, params.transactionId);
+            Logger.error(`Exception occers while parsing params. Details: ${ex}`, {
+                error: ex,
+            });
             rimraf(params.storagePath, (err) => {
                 if (err) {
-                    this._logger.logError(`Failed to delete storage for this run. Storage path: ${err}`, err, params.transactionId);
+                    Logger.error(`Failed to delete storage for this run. Storage path: ${err}`, {
+                        error: err,
+                    });
                 }
             });
             throw ex;
