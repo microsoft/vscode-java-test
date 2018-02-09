@@ -132,6 +132,7 @@
         "pug": "^2.0.0-rc.4",
         "rimraf": "^2.6.2",
         "vscode-extension-telemetry": "0.0.10",
-        "vscode-extension-telemetry-wrapper": "0.0.7"
+        "vscode-extension-telemetry-wrapper": "^0.2.0",
+        "winston": "^2.4.0"
     }
 }
