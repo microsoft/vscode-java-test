@@ -54,7 +54,7 @@ const classPathManager: ClassPathManager = new ClassPathManager(logger);
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    // Logger2.configure([new TelemetryTransport({ level: 'warn' }), new OutputTransport({ channel: outputChannel })]);
+    // Logger2.configure(context, [new TelemetryTransport({ level: 'warn' }), new OutputTransport({ level: 'info', channel: outputChannel })]);
     await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager, logger);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
