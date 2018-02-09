@@ -146,7 +146,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         try {
             return await this.constructCommand(params);
         } catch (ex) {
-            Logger.error(`Exception occers while parsing params. Details: ${ex}`, {
+            Logger.error(`Exception occurred while parsing params. Details: ${ex}`, {
                 error: ex,
             });
             rimraf(params.storagePath, (err) => {
