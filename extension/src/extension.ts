@@ -79,37 +79,22 @@ export async function activate(context: ExtensionContext) {
     });
 
     checkJavaHome().then((javaHome) => {
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (t: Session) => {
-            return (suites: TestSuite[] | TestSuite) =>
-            // TO-DO: pass transaction id to telemetry log listener, and let it handle such thing.
-            runTest(suites, false, t.id);
-        }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (t: Session) => {
-            return (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, true, t.id);
-        }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (t: Session) => {
-            return (test: TestSuite[] | TestSuite) =>
-            showDetails(test);
-        }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, (t: Session) => {
-            return () =>
-            outputChannel.show();
-        }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (t: Session) => {
-            return (node: TestTreeNode) =>
-            testExplorer.select(node);
-        }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (t: Session) => {
-            return (node: TestTreeNode) =>
-            testExplorer.run(node, false);
-        }));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (t: Session) => {
-            return (node: TestTreeNode) =>
-            testExplorer.run(node, true);
-        }));
-        classPathManager.refresh();
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+            runTest(suites, false)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+            runTest(suites, true)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
+            showDetails(test)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
+            outputChannel.show()));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
+            testExplorer.select(node)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
+            testExplorer.run(node, false)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
+            testExplorer.run(node, true)));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange, logger));
+        classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
     });
@@ -171,7 +156,7 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, transactionId: string) {
+function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
     return TestRunnerWrapper.run(testList, isDebugMode);
