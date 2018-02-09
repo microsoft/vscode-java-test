@@ -23,6 +23,8 @@ export const JAVA_TEST_EXPLORER_DEBUG_TEST = 'java.test.explorer.debug';
 
 export const JAVA_TEST_SHOW_OUTPUT = 'java.test.show.output';
 
+export const JAVA_TEST_OPEN_LOG = 'java.test.open.log';
+
 export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
 
 export const JAVA_SEARCH_ALL_TESTS = 'vscode.java.test.search.all';

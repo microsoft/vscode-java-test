@@ -30,7 +30,8 @@
         "onLanguage:java",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
-        "onCommand:java.test.show.output"
+        "onCommand:java.test.show.output",
+        "onCommand:java.test.open.log"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -84,7 +85,8 @@
                 "icon": {
                     "light": "resources/media/light/placeholder.png",
                     "dark": "resources/media/dark/placeholder.png"
-                }
+                },
+                "category": "Java"
             },
             {
                 "command": "java.test.explorer.debug",
@@ -92,7 +94,13 @@
                 "icon": {
                     "light": "resources/media/light/placeholder.png",
                     "dark": "resources/media/dark/placeholder.png"
-                }
+                },
+                "category": "Java"
+            },
+            {
+                "command": "java.test.open.log",
+                "title": "Open Log",
+                "category": "Java"
             }
         ]
     },

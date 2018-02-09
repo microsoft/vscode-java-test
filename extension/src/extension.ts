@@ -91,6 +91,8 @@ export async function activate(context: ExtensionContext) {
             testExplorer.run(node, false)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
             testExplorer.run(node, true)));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
+            openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();
     }).catch((err) => {
@@ -162,4 +164,15 @@ function showDetails(test: TestSuite[] | TestSuite) {
     const uri: Uri = encodeTestSuite(testList);
     const name: string = parseTestReportName(testList);
     return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, name);
+}
+
+function openTestLogFile(logFile: string): Thenable<boolean> {
+    return workspace.openTextDocument(logFile).then((doc) => {
+        return window.showTextDocument(doc);
+    }, () => false).then((didOpen) => {
+        if (!didOpen) {
+            window.showWarningMessage('Could not open Test Log file');
+        }
+        return didOpen ? true : false;
+    });
 }
