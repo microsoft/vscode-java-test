@@ -102,7 +102,22 @@
                 "title": "Open Log",
                 "category": "Java"
             }
-        ]
+        ],
+        "configuration": {
+            "title": "Java Test configuration",
+            "properties": {
+                "java.test.report.position": {
+                    "type": "string",
+                    "enum": [
+                        "sideView",
+                        "currentView"
+                    ],
+                    "default": "sideView",
+                    "description": "Specify where to show the test report",
+                    "scope": "window"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "gulp sass && tsc -p ./",
