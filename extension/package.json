@@ -36,7 +36,7 @@
     "main": "./out/src/extension",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.2.0.jar"
+            "./server/com.microsoft.java.test.plugin-0.3.0.jar"
         ],
         "views": {
             "explorer": [
