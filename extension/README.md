@@ -15,11 +15,16 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 
 ## Use
 
-![Run/debug JUnit test](https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/extension/demo/junit-demo.gif)
+![Run/debug JUnit test](https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/extension/demo/junit-demo-2-11.gif)
 
 ## Available commands
 
 - `Java:Show test output`: open the test output window.
+- `Java:Open Log`: open extension log file.
+
+## Supported VSCode settings
+
+- `java.test.report.position`: Specify where to show the test report. Supported values are `sideView`, `currentView`. The default value is `sideView`.
 
 ## Requirements
 
