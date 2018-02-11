@@ -36,11 +36,13 @@ export class TestStatusBarProvider {
 
     public update(tests: TestSuite[], action: Thenable<void>) {
         this.statusBarItem.text = `$(sync~spin) Running tests...`;
+        this.statusBarItem.color = 'white';
         this.statusBarItem.tooltip = 'View test logs';
         this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
         return action.then(() => this.updateStatus(tests),
         (reason) => {
             this.statusBarItem.text = 'Failed to run tests';
+            this.statusBarItem.color = 'red';
             return Promise.reject(reason);
         });
     }
@@ -61,7 +63,7 @@ export class TestStatusBarProvider {
             }
         }
         this.statusBarItem.text = `$(x) ${failedCount} $(check) ${passedCount}`;
-        this.statusBarItem.color = failedCount > 0 ? 'yellow' : '#66ff66';
+        this.statusBarItem.color = failedCount > 0 ? 'red' : '#66ff66';
         this.statusBarItem.tooltip = 'View test report';
         this.statusBarItem.command = CommandUtility.getCommandWithArgs(Commands.JAVA_TEST_SHOW_REPORT, [tests]);
     }
