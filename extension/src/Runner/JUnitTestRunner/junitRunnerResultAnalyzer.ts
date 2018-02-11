@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { TestLevel, TestResult, TestStatus } from "../../Models/protocols";
+import * as Logger from "../../Utils/Logger/logger";
 import { ITestInfo, ITestResult } from "../testModel";
 import { JarFileRunnerResultAnalyzer } from "../JarFileRunner/jarFileRunnerResultAnalyzer";
 
@@ -20,7 +21,13 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         do {
             match = regex.exec(data);
             if (match) {
-                this.analyzeDataCore(match[1]);
+                try {
+                    this.analyzeDataCore(match[1]);
+                } catch (ex) {
+                    Logger.error(`Failed to analyze runner output data. Data: ${match[1]}.`, {
+                        error: ex,
+                    });
+                }
             }
         } while (match);
     }
