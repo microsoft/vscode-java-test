@@ -163,7 +163,9 @@ function showDetails(test: TestSuite[] | TestSuite) {
     const testList = Array.isArray(test) ? test : [test];
     const uri: Uri = encodeTestSuite(testList);
     const name: string = parseTestReportName(testList);
-    return commands.executeCommand('vscode.previewHtml', uri, ViewColumn.Two, name);
+    const config = workspace.getConfiguration();
+    const position: string = config.get<string>('java.test.report.position', 'sideView');
+    return commands.executeCommand('vscode.previewHtml', uri, position === 'sideView' ? ViewColumn.Two : ViewColumn.Active, name);
 }
 
 function openTestLogFile(logFile: string): Thenable<boolean> {
