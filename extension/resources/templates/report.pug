@@ -16,11 +16,11 @@ html(lang="en")
                 div.collapse.navbar-collapse
                     ul.navbar-nav
                         li.nav-item(class= type === 0 ? "active" : "")
-                            a.nav-link(href=uri) All
+                            a.nav-link(href=uri, title="all tests") All
                         li.nav-item(class= type === 2 ? "active" : "")
-                            a.nav-link(href=failedUri) Failed
+                            a.nav-link(href=failedUri, title="failed tests") Failed
                         li.nav-item(class= type === 1 ? "active" : "")
-                            a.nav-link(href=passedUri) Passed
+                            a.nav-link(href=passedUri, title="passed tests") Passed
         .container
             .row
                 .col
