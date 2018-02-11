@@ -9,7 +9,7 @@ mixin collapseMethodTable(children)
             - var index = 0
             each child in children
                 - index++
-                tr.accordion-toggle(data-toggle="collapse", data-target="#collapse" + index, style="cursor:pointer", title="view details")
+                tr.accordion-toggle(data-toggle="collapse", data-target="#collapse" + index, style="cursor:pointer", title="View details")
                     td #{child.test.replace("#", ".")}
                     td
                         if !child.result
