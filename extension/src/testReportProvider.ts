@@ -88,7 +88,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
 
 export function encodeTestSuite(test: TestSuite[], type: TestReportType = TestReportType.All): Uri {
     const query = JSON.stringify([test.map((t) => t.uri), test.map((t) => t.test), type]);
-    return Uri.parse(`${TestReportProvider.scheme}:${parseTestReportName(test, type)}?${encodeURIComponent(query)}`);
+    return Uri.parse(`${TestReportProvider.scheme}:${parseTestReportName(test, type)}.java?${encodeURIComponent(query)}`);
 }
 
 export function decodeTestSuite(uri: Uri): [Uri[], string[], TestReportType] {

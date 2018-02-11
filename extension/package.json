@@ -43,7 +43,7 @@
                 {
                     "id": "testExplorer",
                     "name": "Test Explorer",
-                    "when": "resourceLangId == 'java'"
+                    "when": "resourceExtname == '.java'"
                 }
             ]
         },
