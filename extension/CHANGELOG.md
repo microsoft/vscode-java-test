@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add setting `java.test.report.position` to specify the position of test report.
 
 ### Fixed
+- Fix bug [#83](https://github.com/Microsoft/vscode-java-test/issues/83)
 - Fix bug [#86](https://github.com/Microsoft/vscode-java-test/issues/86)
 - Fix bug [#90](https://github.com/Microsoft/vscode-java-test/issues/90)
-- Fix bug [#83](https://github.com/Microsoft/vscode-java-test/issues/83)
 - Fix bug that test explorer would disappear when opening test report.
 
 ## 0.2.0 - 2018-01-05
