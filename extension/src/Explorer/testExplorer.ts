@@ -26,7 +26,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
 
     public getTreeItem(element: TestTreeNode): TreeItem {
         return {
-            label: element.name,
+            label: this.getFriendlyElementName(element),
             collapsibleState: element.isFolder ? TreeItemCollapsibleState.Collapsed : void 0,
             command: this.getCommand(element),
             iconPath: this.getIconPath(element),
@@ -89,7 +89,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             case TestTreeNodeType.Folder:
                 return (_) => this.getWorkspaceFolder(_);
             case TestTreeNodeType.Package:
-                return (_) => this.getFriendlyPackageName(_);
+                return (_) => _.packageName;
             case TestTreeNodeType.Class:
                 return (_) => this.getShortName(_.parent);
             default:
@@ -105,16 +105,19 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         }).map((f) => path.basename(f.uri.path))[0];
     }
 
-    private getFriendlyPackageName(test: TestSuite): string {
-        return test.packageName === '' ? '(default package)' : test.packageName;
-    }
-
     private getShortName(test: TestSuite): string {
         if (test.level === TestLevel.Method) {
             return test.test.substring(test.test.indexOf('#') + 1);
         } else {
             return test.test.substring(test.packageName === '' ? 0 : test.packageName.length + 1);
         }
+    }
+
+    private getFriendlyElementName(element: TestTreeNode): string {
+        if (element.level === TestTreeNodeType.Package && element.name === '') {
+            return '(default package)';
+        }
+        return element.name;
     }
 
     private getIconPath(element: TestTreeNode): string | Uri | {dark: string | Uri, light: string | Uri} {
