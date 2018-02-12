@@ -3,7 +3,7 @@
 
 import { ClassPathManager } from "../classPathManager";
 import { TestStatusBarProvider } from "../testStatusBarProvider";
-import { TestKind, TestResult, TestSuite } from "../Models/protocols";
+import { TestKind, TestLevel, TestResult, TestStatus, TestSuite } from "../Models/protocols";
 import * as Logger from "../Utils/Logger/logger";
 import { ITestRunner } from "./testRunner";
 import { ITestRunnerParameters } from "./testRunnerParameters";
@@ -59,13 +59,49 @@ export class TestRunnerWrapper {
             total.set(cur.test, cur.result);
             return total;
         }, new Map<string, TestResult>());
+        const classesInflucenced = [];
         const flattenedTests = new Set(tests.map((t) => [t, t.parent, ...(t.children || [])])
                                     .reduce((total, cur) => total.concat(cur), [])
                                     .filter((t) => t));
         flattenedTests.forEach((t) => {
             if (mapper.has(t.test)) {
                 t.result = mapper.get(t.test);
+            } else if (t.level === TestLevel.Class) {
+                classesInflucenced.push(t);
             }
         });
+        classesInflucenced.forEach((c) => this.processClass(c));
+    }
+
+    private static processClass(t: TestSuite): void {
+        let passNum: number = 0;
+        let failNum: number = 0;
+        let skipNum: number = 0;
+        let duration: number = 0;
+        let notRun: boolean = false;
+        for (const child of t.children) {
+            if (!child.result) {
+                notRun = true;
+                continue;
+            }
+            duration += Number(child.result.duration);
+            switch (child.result.status) {
+                case TestStatus.Pass:
+                    passNum++;
+                    break;
+                case TestStatus.Fail:
+                    failNum++;
+                    break;
+                case TestStatus.Skipped:
+                    skipNum++;
+                    break;
+            }
+        }
+
+        t.result = {
+            status: notRun ? undefined : (skipNum === t.children.length ? TestStatus.Skipped : (failNum > 0 ? TestStatus.Fail : TestStatus.Pass)),
+            summary: `Tests run: ${passNum + failNum}, Failures: ${failNum}, Skipped: ${skipNum}.`,
+            duration: notRun ? undefined : duration.toString(),
+        };
     }
 }

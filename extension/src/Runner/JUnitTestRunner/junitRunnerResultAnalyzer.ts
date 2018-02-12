@@ -37,14 +37,11 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         const result: ITestResult[] = [];
         this._tests.forEach((t) => {
             if (t.level === TestLevel.Class) {
-                toAggregate.add(t);
                 t.children.forEach((c) => this.processMethod(c, result));
             } else {
-                toAggregate.add(t.parent);
                 this.processMethod(t, result);
             }
         });
-        toAggregate.forEach((t) => this.processClass(t, result));
         return result;
     }
 
@@ -83,44 +80,6 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
                 res.duration = info.attributes.duration;
                 break;
         }
-    }
-
-    private processClass(t: ITestInfo, result: ITestResult[]): void {
-        let passNum: number = 0;
-        let failNum: number = 0;
-        let skipNum: number = 0;
-        let duration: number = 0;
-        let notRun: boolean = false;
-        for (const child of t.children) {
-            if (!this._testResults.has(child.test)) {
-                notRun = true;
-                continue;
-            }
-            const childResult: TestResult = this._testResults.get(child.test);
-            duration += Number(childResult.duration);
-            switch (childResult.status) {
-                case TestStatus.Pass:
-                    passNum++;
-                    break;
-                case TestStatus.Fail:
-                    failNum++;
-                    break;
-                case TestStatus.Skipped:
-                    skipNum++;
-                    break;
-            }
-        }
-
-        const classResult: TestResult = {
-            status: notRun ? undefined : (skipNum === t.children.length ? TestStatus.Skipped : (failNum > 0 ? TestStatus.Fail : TestStatus.Pass)),
-            summary: `Tests run: ${passNum + failNum}, Failures: ${failNum}, Skipped: ${skipNum}.`,
-            duration: notRun ? undefined : duration.toString(),
-        };
-        result.push({
-            test: t.test,
-            uri: t.uri,
-            result: classResult,
-        });
     }
 
     private processMethod(t: ITestInfo, result: ITestResult[]): void {
