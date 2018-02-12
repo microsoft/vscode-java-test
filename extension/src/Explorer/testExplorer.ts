@@ -106,7 +106,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     private getFriendlyPackageName(test: TestSuite): string {
-        return test.packageName === '' ? 'default package' : test.packageName;
+        return test.packageName === '' ? '(default package)' : test.packageName;
     }
 
     private getShortName(test: TestSuite): string {
