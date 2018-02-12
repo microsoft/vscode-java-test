@@ -4,13 +4,29 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.3.0 - 2018-02-11
+
+### Added
+- Trigger tests from test explorer.
+- Add command `Java:Open Log` to open log file.
+- Add setting `java.test.report.position` to specify the position of test report.
+
+### Fixed
+- Fix bug [#83](https://github.com/Microsoft/vscode-java-test/issues/83)
+- Fix bug [#86](https://github.com/Microsoft/vscode-java-test/issues/86)
+- Fix bug [#90](https://github.com/Microsoft/vscode-java-test/issues/90)
+- Fix bug that test explorer would disappear when opening test report.
+
 ## 0.2.0 - 2018-01-05
+
 ### Added
 - Add Test explorer, you can view/locate all tests from the explorer.
 - Add status bar item to show test status and statistics.
 - Add command to show test output window. By default it wouldn't be open while running tests.
+
 ### Changed
 - Make test report more user friendly. No need to save test report any more
+
 ### Fixed
 - Fix bug [#34](https://github.com/Microsoft/vscode-java-test/issues/34)
 
