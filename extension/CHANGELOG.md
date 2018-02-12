@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## 0.3.0 - 2018-02-11
 
 ### Added
-- Trigger tests from test explorer.
+- Trigger tests from test explorer. We now support folder/package/class/method levels or you can run all.
 - Add command `Java:Open Log` to open log file.
 - Add setting `java.test.report.position` to specify the position of test report.
 
