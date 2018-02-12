@@ -89,7 +89,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             case TestTreeNodeType.Folder:
                 return (_) => this.getWorkspaceFolder(_);
             case TestTreeNodeType.Package:
-                return (_) => _.packageName;
+                return (_) => this.getFriendlyPackageName(_);
             case TestTreeNodeType.Class:
                 return (_) => this.getShortName(_.parent);
             default:
@@ -103,6 +103,10 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             const fp = Uri.parse(test.uri).fsPath;
             return fp.startsWith(f.uri.fsPath);
         }).map((f) => path.basename(f.uri.path))[0];
+    }
+
+    private getFriendlyPackageName(test: TestSuite): string {
+        return test.packageName === '' ? '(default package)' : test.packageName;
     }
 
     private getShortName(test: TestSuite): string {
