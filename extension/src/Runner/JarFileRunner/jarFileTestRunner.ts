@@ -68,7 +68,6 @@ export abstract class JarFileTestRunner implements ITestRunner {
         const process = cp.exec(command);
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
-            let error: string = '';
             process.on('error', (err) => {
                 Logger.error(
                     `Error occurred while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
@@ -78,7 +77,6 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 reject(err);
             });
             process.stderr.on('data', (data) => {
-                error += data.toString();
                 Logger.error(`Error occurred: ${data.toString()}`);
                 testResultAnalyzer.analyzeData(data.toString());
             });
@@ -86,9 +84,9 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 Logger.info(data.toString());
                 testResultAnalyzer.analyzeData(data.toString());
             });
-            process.on('close', () => {
-                if (error !== '') {
-                    reject(error);
+            process.on('close', (signal) => {
+                if (signal !== 0) {
+                    reject(`Runner exited with code ${signal}.`);
                 } else {
                     resolve(testResultAnalyzer.feedBack());
                 }
