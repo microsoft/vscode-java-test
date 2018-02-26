@@ -95,7 +95,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         });
     }
 
-    private decodeContent(content: string) : string {
+    private decodeContent(content: string): string {
         if (!content) {
             return content;
         }
