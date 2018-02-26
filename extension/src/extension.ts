@@ -97,6 +97,9 @@ export async function activate(context: ExtensionContext) {
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
+        Logger.error("couldn't find Java home.", {
+            error: err,
+        });
     });
 }
 

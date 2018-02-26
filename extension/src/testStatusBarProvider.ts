@@ -6,6 +6,7 @@ import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from "vsc
 import * as Commands from "./Constants/commands";
 import { TestLevel, TestStatus, TestSuite } from "./Models/protocols";
 import { CommandUtility } from "./Utils/commandUtility";
+import * as Logger from './Utils/Logger/logger';
 
 export class TestStatusBarProvider {
     public static getInstance(): TestStatusBarProvider {
@@ -30,6 +31,9 @@ export class TestStatusBarProvider {
             return action.then(null,
             (reason) => {
                 this.statusBarItem.text = 'Failed to load tests';
+                Logger.error('Failed to load tests.', {
+                    error: reason,
+                });
             });
         });
     }
@@ -37,12 +41,15 @@ export class TestStatusBarProvider {
     public update(tests: TestSuite[], action: Thenable<void>) {
         this.statusBarItem.text = `$(sync~spin) Running tests...`;
         this.statusBarItem.color = 'white';
-        this.statusBarItem.tooltip = 'View test logs';
+        this.statusBarItem.tooltip = 'View test output';
         this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
         return action.then(() => this.updateStatus(tests),
         (reason) => {
             this.statusBarItem.text = 'Failed to run tests';
             this.statusBarItem.color = 'red';
+            Logger.error('Failed to run tests.', {
+                error: reason,
+            });
             return Promise.reject(reason);
         });
     }
