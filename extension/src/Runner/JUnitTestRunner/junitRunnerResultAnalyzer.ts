@@ -66,8 +66,8 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
                     return;
                 }
                 res.status = TestStatus.Fail;
-                res.message = info.attributes.message;
-                res.details = info.attributes.details;
+                res.message = this.decodeContent(info.attributes.message);
+                res.details = this.decodeContent(info.attributes.details);
                 break;
             case TEST_FINISH:
                 res = this._testResults.get(this._suiteName + "#" + info.attributes.name);
@@ -93,6 +93,13 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
             uri: t.uri,
             result: this._testResults.get(t.test),
         });
+    }
+
+    private decodeContent(content: string) : string {
+        if (!content) {
+            return content;
+        }
+        return content.replace(new RegExp("&#x40;", "gm"), "@");
     }
 }
 

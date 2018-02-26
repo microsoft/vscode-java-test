@@ -259,6 +259,9 @@ public class TestingMessageHelper {
             case '\r':
                sb.append("\\r");
                break;
+            case '@':
+               sb.append("&#x40;");
+               break;
             default:
                 if (c < ' ') {
                     t = "000" + Integer.toHexString(c);
