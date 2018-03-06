@@ -25,15 +25,14 @@ export class TestRunnerWrapper {
         }
         TestRunnerWrapper.running = true;
         try {
-            const runner: ITestRunner = TestRunnerWrapper.getRunner(tests);
-            if (runner === null) {
-                return undefined;
-            }
+            const runners: Map<ITestRunner, TestSuite[]> = TestRunnerWrapper.classifyTests(tests);
             await TestStatusBarProvider.getInstance().update(tests, (async () => {
-                const params = await runner.setup(tests, isDebugMode);
-                const res = await runner.run(params);
-                this.updateTestStorage(tests, res);
-                runner.postRun();
+                for (const [runner, t] of runners.entries()) {
+                    const params = await runner.setup(t, isDebugMode);
+                    const res = await runner.run(params);
+                    this.updateTestStorage(t, res);
+                    await runner.postRun();
+                }
             })());
         } finally {
             TestRunnerWrapper.running = false;
@@ -43,15 +42,30 @@ export class TestRunnerWrapper {
     private static readonly runnerPool: Map<TestKind, ITestRunner> = new Map<TestKind, ITestRunner>();
     private static running: boolean = false;
 
-    private static getRunner(tests: TestSuite[]): ITestRunner {
-        const kind = [...new Set(tests.map((t) => t.kind))];
-        if (kind.length > 1) {
+    private static classifyTests(tests: TestSuite[]): Map<ITestRunner, TestSuite[]> {
+        return tests.reduce((map, t) => {
+            const runner = this.getRunner(t);
+            if (runner === null) {
+                Logger.warn(`Cannot find matched runner to run the test: ${t.test}`, {
+                    test: t,
+                });
+                return map;
+            }
+            const collection: TestSuite[] = map.get(runner);
+            if (!collection) {
+                map.set(runner, [t]);
+            } else {
+                collection.push(t);
+            }
+            return map;
+        }, new Map<ITestRunner, TestSuite[]>());
+    }
+
+    private static getRunner(test: TestSuite): ITestRunner {
+        if (!TestRunnerWrapper.runnerPool.has(test.kind)) {
             return null;
         }
-        if (!TestRunnerWrapper.runnerPool.has(kind[0])) {
-            return null;
-        }
-        return TestRunnerWrapper.runnerPool.get(kind[0]);
+        return TestRunnerWrapper.runnerPool.get(test.kind);
     }
 
     private static updateTestStorage(tests: TestSuite[], result: ITestResult[]): void {
