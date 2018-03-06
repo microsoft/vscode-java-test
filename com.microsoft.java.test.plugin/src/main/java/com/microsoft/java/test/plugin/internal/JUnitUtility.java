@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotatable;
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -22,13 +24,15 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
+import com.microsoft.java.test.plugin.internal.testsuit.TestKind;
+
 public class JUnitUtility {
     public static boolean isTestMethod(IMethod method, String annotation) {
         int flags;
         try {
             flags = method.getFlags();
             // 'V' is void signature
-            return !(method.isConstructor() || !Flags.isPublic(flags) || Flags.isAbstract(flags)
+            return !(method.isConstructor() || !(annotation.contains("jupiter") ? true : Flags.isPublic(flags)) || Flags.isAbstract(flags)
                     || Flags.isStatic(flags) || !"V".equals(method.getReturnType()))
                     && hasTestAnnotation(method, annotation);
         } catch (JavaModelException e) {
@@ -74,10 +78,17 @@ public class JUnitUtility {
 
     static boolean hasTestAnnotation(IMethod method, String annotation) {
         try {
-            if (!Arrays.stream(method.getAnnotations()).anyMatch(a -> a.getElementName().equals(annotation))) {
+            String name = annotation.substring(annotation.lastIndexOf('.') + 1);
+            if (!Arrays.stream(method.getAnnotations()).anyMatch(a -> a.getElementName().equals(name))) {
                 return false;
             }
-            return method.getAnnotation(annotation).exists();
+            IAnnotation anno = method.getAnnotation(name);
+            if (!anno.exists()) {
+                return false;
+            }
+            String[][] fullNameArr = method.getDeclaringType().resolveType(name);
+            String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
+            return fullName.equals(annotation);
         } catch (JavaModelException e) {
             return false;
         }

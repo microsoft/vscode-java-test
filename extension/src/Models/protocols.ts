@@ -43,4 +43,5 @@ export enum TestLevel {
 
 export enum TestKind {
     JUnit,
+    JUnit5,
 }

@@ -81,8 +81,9 @@ public class JUnitTestFetcher {
                 suites.addAll(children);
                 if (children.size() > 0 || type.getAnnotation("RunWith").exists()) {
                     String test = type.getFullyQualifiedName();
+                    TestKind kind = children.size() > 0 ? children.get(0).getKind() : TestKind.JUnit;
                     TestSuite cur = new TestSuite(getRange(unit, element), uri, test,
-                            type.getPackageFragment().getElementName(), TestLevel.Class, TestKind.JUnit);
+                            type.getPackageFragment().getElementName(), TestLevel.Class, kind);
                     List<TestSuite> directChildren = children.stream().filter(c -> c.getParent() == null)
                             .collect(Collectors.toList());
                     relations.children.put(cur, directChildren);
@@ -93,11 +94,13 @@ public class JUnitTestFetcher {
                 }
 
             } else if (element.getElementType() == IJavaElement.METHOD && !JDTUtils.isHiddenGeneratedElement(element)) {
-                if (JUnitUtility.isTestMethod((IMethod) element, "Test")) {
+                boolean isJunit4 = JUnitUtility.isTestMethod((IMethod) element, "org.junit.Test");
+                boolean isJunit5 = JUnitUtility.isTestMethod((IMethod) element, "org.junit.jupiter.api.Test");
+                if (isJunit4 || isJunit5) {
                     IType type = ((IMethod) element).getDeclaringType();
                     String test = type.getFullyQualifiedName() + "#" + element.getElementName();
                     suites.add(new TestSuite(getRange(unit, element), uri, test,
-                            type.getPackageFragment().getElementName(), TestLevel.Method, TestKind.JUnit));
+                            type.getPackageFragment().getElementName(), TestLevel.Method, isJunit4 ? TestKind.JUnit : TestKind.JUnit5));
                 }
             }
         }

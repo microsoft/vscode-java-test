@@ -34,6 +34,7 @@ import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 import { TestKind, TestLevel, TestSuite } from './Models/protocols';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
+import { JUnit5TestRunner } from './Runner/JUnitTestRunner/junit5TestRunner';
 import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
 import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
@@ -94,6 +95,7 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
             openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
+        TestRunnerWrapper.registerRunner(TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");

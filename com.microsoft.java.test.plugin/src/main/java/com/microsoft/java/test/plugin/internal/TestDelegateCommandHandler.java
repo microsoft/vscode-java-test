@@ -12,16 +12,24 @@
 package com.microsoft.java.test.plugin.internal;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
+
+import com.microsoft.java.test.plugin.internal.testsuit.TestSuite;
 
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     public static String FETCH_TEST = "vscode.java.test.fetch";
     public static String SEARCH_ALL_TEST = "vscode.java.test.search.all";
     public static String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
+    private static final JUnitTestSearcher[] Searchers = new JUnitTestSearcher[] {
+            new JUnit4TestSearcher(),
+            new JUnit5TestSearcher(),
+    };
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -30,7 +38,14 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
         } else if (COMPUTE_RUNTIME_CLASSPATH.equals(commandId)) {
         	return new RuntimeClassPathResolver().resolveRunTimeClassPath(arguments);
         } else if (SEARCH_ALL_TEST.equals(commandId)) {
-        	return new JUnitTestSearcher().searchAllTests(monitor);
+            List<TestSuite> res = new ArrayList<>();
+            for (JUnitTestSearcher searcher : Searchers) {
+                if (monitor.isCanceled()) {
+                    return Collections.emptyList();
+                }
+                searcher.searchAllTests(res, monitor);
+            }
+        	return res;
         }
         throw new UnsupportedOperationException(String.format("Java test plugin doesn't support the command '%s'.", commandId));
     }

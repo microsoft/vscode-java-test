@@ -48,19 +48,17 @@ import com.microsoft.java.test.plugin.internal.testsuit.TestKind;
 import com.microsoft.java.test.plugin.internal.testsuit.TestLevel;
 import com.microsoft.java.test.plugin.internal.testsuit.TestSuite;
 
-public class JUnitTestSearcher {
-    private final String JUNIT_TEST_ANNOTATION = "org.junit.Test";
-    private final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
+public abstract class JUnitTestSearcher {
+    
+    
+    public abstract SearchPattern getSearchPattern();
+    
+    public abstract TestKind getTestKind();
+    
+    public abstract String getTestMethodAnnotation();
 
-    public List<TestSuite> searchAllTests(IProgressMonitor monitor) {
-        SearchPattern runWithPattern = SearchPattern.createPattern(JUNIT_RUN_WITH_ANNOTATION,
-                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        SearchPattern testPattern = SearchPattern.createPattern(JUNIT_TEST_ANNOTATION,
-                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        SearchPattern pattern = SearchPattern.createOrPattern(runWithPattern, testPattern);
-        List<TestSuite> tests = new ArrayList<>();
+    public void searchAllTests(List<TestSuite> tests, IProgressMonitor monitor) {
+        SearchPattern pattern = this.getSearchPattern();
         HashSet<IType> testClasses = new HashSet<>();
 
         SearchRequestor requestor = new SearchRequestor() {
@@ -89,7 +87,7 @@ public class JUnitTestSearcher {
                     int childIndex = parentIndex + 1;
                     List<Integer> children = new ArrayList<>();
                     for (IMethod m : type.getMethods()) {
-                        if (JUnitUtility.isTestMethod(m, "Test")) {
+                        if (JUnitUtility.isTestMethod(m, getTestMethodAnnotation())) {
                             TestSuite child = getTestSuite(m);
                             child.setParent(parentIndex);
                             tests.add(child);
@@ -103,7 +101,6 @@ public class JUnitTestSearcher {
         } catch (CoreException e) {
             // ignore
         }
-        return tests;
     }
 
     private static IJavaSearchScope createSearchScope() throws JavaModelException {
@@ -117,12 +114,12 @@ public class JUnitTestSearcher {
         if (member.getElementType() == IJavaElement.TYPE) {
             IType type = (IType) member;
             return new TestSuite(getRange(unit, member), uri, type.getFullyQualifiedName(),
-                    type.getPackageFragment().getElementName(), TestLevel.Class, TestKind.JUnit);
+                    type.getPackageFragment().getElementName(), TestLevel.Class, this.getTestKind());
         } else {
             IType type = ((IMethod) member).getDeclaringType();
             return new TestSuite(getRange(unit, member), uri,
                     type.getFullyQualifiedName() + "#" + member.getElementName(),
-                    type.getPackageFragment().getElementName(), TestLevel.Method, TestKind.JUnit);
+                    type.getPackageFragment().getElementName(), TestLevel.Method, this.getTestKind());
         }
     }
 

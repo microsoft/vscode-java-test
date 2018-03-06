@@ -8,7 +8,9 @@ gulp.task('build_server', () => {
     gulp.src(server_dir + '/com.microsoft.java.test.plugin/target/*.jar')
         .pipe(gulp.dest('./server'));
     gulp.src(server_dir + '/com.microsoft.java.test.runner/target/*.jar')
-        .pipe(gulp.dest('./server'))
+        .pipe(gulp.dest('./server'));
+    gulp.src(server_dir + '/com.microsoft.java.test.runner.junit5/target/*.jar')
+        .pipe(gulp.dest('./server'));
 });
 
 gulp.task("tslint", () => {
