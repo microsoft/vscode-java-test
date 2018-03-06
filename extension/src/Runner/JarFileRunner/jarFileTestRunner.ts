@@ -85,7 +85,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 testResultAnalyzer.analyzeData(data.toString());
             });
             process.on('close', (signal) => {
-                if (signal !== 0) {
+                if (signal && signal !== 0) {
                     reject(`Runner exited with code ${signal}.`);
                 } else {
                     resolve(testResultAnalyzer.feedBack());
