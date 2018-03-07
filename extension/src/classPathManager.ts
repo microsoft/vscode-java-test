@@ -37,9 +37,7 @@ export class ClassPathManager {
         if (set.size === 0) {
             return [];
         }
-        return [...set].map((p) => this.classPathCache.get(p)).reduce((a,b) => {
-            return a.concat(b);
-        });
+        return [...set].map((p) => this.classPathCache.get(p)).reduce((a, b) => a.concat(b));
     }
 
     public storeClassPath(wkspace: Uri, classPath: string[]): void {
