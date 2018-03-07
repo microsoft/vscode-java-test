@@ -33,8 +33,8 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer;
 
     public async setup(tests: TestSuite[], isDebugMode: boolean): Promise<ITestRunnerParameters> {
-        const uri: Uri = Uri.parse(tests[0].uri);
-        const classpaths: string[] = this._classPathManager.getClassPath(uri);
+        const uris: Uri[] = tests.map((t) => Uri.parse(t.uri));
+        const classpaths: string[] = this._classPathManager.getClassPaths(uris);
         const port: number | undefined = isDebugMode ? await this.getPortWithWrapper() : undefined;
         const storageForThisRun: string = path.join(this._storagePath, new Date().getTime().toString());
         const runnerJarFilePath: string = this.runnerJarFilePath;
