@@ -34,10 +34,7 @@ export class ClassPathManager {
 
     public getClassPaths(wkspaces: Uri[]): string[] | undefined {
         const set = new Set(wkspaces.map((w) => this.getWorkspaceFolderPath(w)).filter((p) => p && this.classPathCache.has(p)));
-        if (set.size === 0) {
-            return [];
-        }
-        return [...set].map((p) => this.classPathCache.get(p)).reduce((a, b) => a.concat(b));
+        return [...set].map((p) => this.classPathCache.get(p)).reduce((a, b) => a.concat(b), []);
     }
 
     public storeClassPath(wkspace: Uri, classPath: string[]): void {

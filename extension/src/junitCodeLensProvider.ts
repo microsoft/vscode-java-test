@@ -103,5 +103,5 @@ function getCodeLens(tests: TestSuite[]): CodeLens[] {
         }
 
         return codeLenses;
-    }).reduce((a, b) => a.concat(b));
+    }).reduce((a, b) => a.concat(b), []);
 }
