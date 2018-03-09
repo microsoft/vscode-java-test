@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -23,8 +22,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-
-import com.microsoft.java.test.plugin.internal.testsuit.TestKind;
 
 public class JUnitUtility {
     public static boolean isTestMethod(IMethod method, String annotation) {
@@ -87,6 +84,10 @@ public class JUnitUtility {
                 return false;
             }
             String[][] fullNameArr = method.getDeclaringType().resolveType(name);
+            if (fullNameArr == null) {
+                ICompilationUnit cu = method.getCompilationUnit();
+                return cu != null && cu.getImport(annotation).exists();
+            }
             String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
             return fullName.equals(annotation);
         } catch (JavaModelException e) {
