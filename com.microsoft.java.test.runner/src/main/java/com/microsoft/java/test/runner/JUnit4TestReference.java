@@ -10,7 +10,7 @@
  */
 package com.microsoft.java.test.runner;
 
-import com.microsoft.java.test.runner.listeners.CustomizedJUnitTestListener;
+import com.microsoft.java.test.runner.listeners.JUnitTestListenerDelegate;
 
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -52,7 +52,7 @@ public class JUnit4TestReference {
     }
 
     /** Sends tree structure of the current test. */
-    public void sendTree(CustomizedJUnitTestListener listener) {
+    public void sendTree(JUnitTestListenerDelegate listener) {
         if (description.isTest()) listener.suiteTreeStarted(description);
 
         listener.suiteSendTree(description);

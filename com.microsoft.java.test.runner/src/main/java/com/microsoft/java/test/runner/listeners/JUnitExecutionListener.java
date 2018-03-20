@@ -20,11 +20,11 @@ import org.junit.runner.notification.RunListener;
  * test run.
  */
 public class JUnitExecutionListener extends RunListener {
-    private CustomizedJUnitTestListener delegate;
+    private JUnitTestListenerDelegate delegate;
 
     private String currentSuite;
 
-    public JUnitExecutionListener(CustomizedJUnitTestListener delegate) {
+    public JUnitExecutionListener(JUnitTestListenerDelegate delegate) {
         this.delegate = delegate;
         currentSuite = "";
     }
