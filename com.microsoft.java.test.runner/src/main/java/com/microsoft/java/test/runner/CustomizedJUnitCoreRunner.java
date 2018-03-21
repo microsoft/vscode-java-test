@@ -11,6 +11,7 @@
 package com.microsoft.java.test.runner;
 
 import com.microsoft.java.test.runner.listeners.CustomizedJUnitTestListener;
+
 import com.microsoft.java.test.runner.listeners.JUnitExecutionListener;
 import java.util.List;
 
@@ -20,37 +21,30 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 
 public class CustomizedJUnitCoreRunner extends JUnitCore {
-    private CustomizedJUnitTestListener listener;
     public void run(String[] suites) {
-        createListener();
-        List<JUnit4TestReference> newSuites = TestRunnerUtil.createTestReferences(suites);
-
-        if (newSuites.isEmpty()) {
+        List<JUnit4TestReference> testSuites = TestRunnerUtil.createTestReferences(suites);
+        if (testSuites.isEmpty()) {
             TestingMessageHelper.reporterAttached(System.out);
             return;
         }
 
+        CustomizedJUnitTestListener delegate = new CustomizedJUnitTestListener();
+        RunListener listener = new JUnitExecutionListener(delegate);
         RunNotifier runNotifier = new RunNotifier();
-        runNotifier.addListener(new JUnitExecutionListener(listener));
-        listener.testRunStarted();
-
-        for (JUnit4TestReference jUnit4TestReference : newSuites) {
-            jUnit4TestReference.sendTree(listener);
+        runNotifier.addListener(listener);
+        delegate.testRunStarted();
+        for (JUnit4TestReference testReference: testSuites) {
+            testReference.sendTree(delegate);
         }
 
         Result result = new Result();
         final RunListener resultListener = result.createListener();
         runNotifier.addListener(resultListener);
 
-        for (JUnit4TestReference testReference : newSuites) {
+        for (JUnit4TestReference testReference : testSuites) {
             testReference.run(runNotifier);
         }
         runNotifier.fireTestRunFinished(result);
-    }
-
-    private void createListener() {
-        listener = new CustomizedJUnitTestListener();
-        this.addListener(new JUnitExecutionListener(listener));
     }
 }
 
