@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ClassPathManager } from "../classPathManager";
-import { TestStatusBarProvider } from "../testStatusBarProvider";
-import { TestKind, TestLevel, TestResult, TestStatus, TestSuite } from "../Models/protocols";
-import * as Logger from "../Utils/Logger/logger";
-import { ITestRunner } from "./testRunner";
-import { ITestRunnerParameters } from "./testRunnerParameters";
-import { JUnitTestRunner } from "./JUnitTestRunner/junitTestRunner";
+import { ClassPathManager } from '../classPathManager';
+import { TestStatusBarProvider } from '../testStatusBarProvider';
+import { TestKind, TestLevel, TestResult, TestStatus, TestSuite } from '../Models/protocols';
+import * as Logger from '../Utils/Logger/logger';
+import { ITestRunner } from './testRunner';
+import { ITestRunnerParameters } from './testRunnerParameters';
+import { JUnitTestRunner } from './JUnitTestRunner/junitTestRunner';
 
-import { window, EventEmitter } from "vscode";
-import { ITestResult } from "./testModel";
+import { window, EventEmitter } from 'vscode';
+import { ITestResult } from './testModel';
 
 export class TestRunnerWrapper {
     public static registerRunner(kind: TestKind, runner: ITestRunner) {

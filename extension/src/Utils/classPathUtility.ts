@@ -58,8 +58,8 @@ export class ClassPathUtility {
     }
 
     private static constructManifestFile(classpaths: string[]): string {
-        let content = "";
-        const extended = ["Class-Path:", ...classpaths.map((c) => {
+        let content = '';
+        const extended = ['Class-Path:', ...classpaths.map((c) => {
             const p = fileUrl(c);
             return p.endsWith('.jar') ? p : p + '/';
         })];

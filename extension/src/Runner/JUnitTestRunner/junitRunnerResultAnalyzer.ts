@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestResult, TestStatus } from "../../Models/protocols";
-import * as Logger from "../../Utils/Logger/logger";
-import { ITestInfo, ITestResult } from "../testModel";
-import { JarFileRunnerResultAnalyzer } from "../JarFileRunner/jarFileRunnerResultAnalyzer";
+import { TestLevel, TestResult, TestStatus } from '../../Models/protocols';
+import * as Logger from '../../Utils/Logger/logger';
+import { ITestInfo, ITestResult } from '../testModel';
+import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
 
 const SUITE_START: string = 'testSuiteStarted';
 const SUITE_FINISH: string = 'testSuiteFinished';
@@ -56,12 +56,12 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
                 this._suiteName = undefined;
                 break;
             case TEST_START:
-                this._testResults.set(this._suiteName + "#" + info.attributes.name, {
+                this._testResults.set(this._suiteName + '#' + info.attributes.name, {
                     status: undefined,
                 });
                 break;
             case TEST_FAIL:
-                res = this._testResults.get(this._suiteName + "#" + info.attributes.name);
+                res = this._testResults.get(this._suiteName + '#' + info.attributes.name);
                 if (!res) {
                     return;
                 }
@@ -70,7 +70,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
                 res.details = this.decodeContent(info.attributes.details);
                 break;
             case TEST_FINISH:
-                res = this._testResults.get(this._suiteName + "#" + info.attributes.name);
+                res = this._testResults.get(this._suiteName + '#' + info.attributes.name);
                 if (!res) {
                     return;
                 }
@@ -99,7 +99,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         if (!content) {
             return content;
         }
-        return content.replace(new RegExp("&#x40;", "gm"), "@");
+        return content.replace(new RegExp('&#x40;', 'gm'), '@');
     }
 }
 

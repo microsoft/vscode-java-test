@@ -42,7 +42,7 @@
             }
         ],
         "no-console": [true, "log","error"],
-        "quotemark": false,
+        "quotemark": [true, "single", "avoid-escape"],
         "interface-over-type-literal": false
     }
 }

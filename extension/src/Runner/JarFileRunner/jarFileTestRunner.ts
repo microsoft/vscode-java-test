@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ClassPathManager } from "../../classPathManager";
-import { TestStatusBarProvider } from "../../testStatusBarProvider";
-import { TestSuite } from "../../Models/protocols";
-import { ClassPathUtility } from "../../Utils/classPathUtility";
+import { ClassPathManager } from '../../classPathManager';
+import { TestStatusBarProvider } from '../../testStatusBarProvider';
+import { TestSuite } from '../../Models/protocols';
+import { ClassPathUtility } from '../../Utils/classPathUtility';
 import * as Logger from '../../Utils/Logger/logger';
-import { ITestResult } from "../testModel";
-import { ITestRunner } from "../testRunner";
-import { ITestRunnerParameters } from "../testRunnerParameters";
-import { IJarFileTestRunnerParameters } from "./jarFileRunnerParameters";
-import { JarFileRunnerResultAnalyzer } from "./jarFileRunnerResultAnalyzer";
+import { ITestResult } from '../testModel';
+import { ITestRunner } from '../testRunner';
+import { ITestRunnerParameters } from '../testRunnerParameters';
+import { IJarFileTestRunnerParameters } from './jarFileRunnerParameters';
+import { JarFileRunnerResultAnalyzer } from './jarFileRunnerResultAnalyzer';
 
 import * as cp from 'child_process';
-import * as getPort from "get-port";
+import * as getPort from 'get-port';
 import * as os from 'os';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
-import { debug, window, workspace, EventEmitter, Uri } from "vscode";
+import { debug, window, workspace, EventEmitter, Uri } from 'vscode';
 
 export abstract class JarFileTestRunner implements ITestRunner {
     constructor(
@@ -69,7 +69,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         const process = cp.exec(command, {maxBuffer: 1024 * 1024});
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
-            let bufferred: string = "";
+            let bufferred: string = '';
             process.on('error', (err) => {
                 Logger.error(
                     `Error occurred while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,

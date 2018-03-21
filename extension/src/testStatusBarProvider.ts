@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from "vscode";
+import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
 
-import * as Commands from "./Constants/commands";
-import { TestLevel, TestStatus, TestSuite } from "./Models/protocols";
-import { CommandUtility } from "./Utils/commandUtility";
+import * as Commands from './Constants/commands';
+import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
+import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 
 export class TestStatusBarProvider {

@@ -31,7 +31,7 @@ export const JAVA_SEARCH_ALL_TESTS = 'vscode.java.test.search.all';
 
 export const JAVA_CALCULATE_CLASS_PATH = 'vscode.java.test.runtime.classpath';
 
-export const JAVA_EXECUTE_WORKSPACE_COMMAND = "java.execute.workspaceCommand";
+export const JAVA_EXECUTE_WORKSPACE_COMMAND = 'java.execute.workspaceCommand';
 
 export function executeJavaLanguageServerCommand(...rest) {
     // TODO: need to handle error and trace telemetry

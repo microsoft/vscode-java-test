@@ -3,12 +3,12 @@
 
 import * as path from 'path';
 // tslint:disable-next-line
-import { window, workspace, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, ViewColumn, Command } from "vscode";
+import { window, workspace, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, ViewColumn, Command } from 'vscode';
 import { TestResourceManager } from '../testResourceManager';
 import * as Commands from '../Constants/commands';
 import { TestLevel, TestSuite } from '../Models/protocols';
 import { TestRunnerWrapper } from '../Runner/testRunnerWrapper';
-import { TestTreeNode, TestTreeNodeType } from "./testTreeNode";
+import { TestTreeNode, TestTreeNodeType } from './testTreeNode';
 
 export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     private _onDidChangeTreeData: EventEmitter<TestTreeNode | undefined> = new EventEmitter<TestTreeNode | undefined>();
@@ -124,18 +124,18 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         switch (element.level) {
             case TestTreeNodeType.Method:
             return {
-                dark: this._context.asAbsolutePath(path.join("resources", "media", "dark", "method.svg")),
-                light: this._context.asAbsolutePath(path.join("resources", "media", "light", "method.svg")),
+                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'method.svg')),
+                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'method.svg')),
             };
             case TestTreeNodeType.Class:
             return {
-                dark: this._context.asAbsolutePath(path.join("resources", "media", "dark", "class.svg")),
-                light: this._context.asAbsolutePath(path.join("resources", "media", "light", "class.svg")),
+                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'class.svg')),
+                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'class.svg')),
             };
             case TestTreeNodeType.Package:
             return {
-                dark: this._context.asAbsolutePath(path.join("resources", "media", "dark", "package.svg")),
-                light: this._context.asAbsolutePath(path.join("resources", "media", "light", "package.svg")),
+                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'package.svg')),
+                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'package.svg')),
             };
             default:
             return undefined;

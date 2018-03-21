@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range } from "vscode";
+import { Range } from 'vscode';
 
 export class TestTreeNode {
     constructor(
@@ -18,11 +18,11 @@ export class TestTreeNode {
     }
 
     public get fullName(): string {
-        const prefix: string = this._parent && this._parent.level !== TestTreeNodeType.Folder ? `${this._parent.fullName}` : "";
+        const prefix: string = this._parent && this._parent.level !== TestTreeNodeType.Folder ? `${this._parent.fullName}` : '';
         if (prefix === '') {
             return this._name;
         }
-        return prefix + (this.level === TestTreeNodeType.Method ? "#" : ".") + this._name;
+        return prefix + (this.level === TestTreeNodeType.Method ? '#' : '.') + this._name;
     }
 
     public get uri(): string {
