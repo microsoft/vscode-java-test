@@ -18,12 +18,12 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 /** Listener for whole life cycle of the JUnit test run. */
-public class JUnitTestListenerDelegate {
+public class CustomizedJUnitTestListener {
     private final PrintStream out;
 
     private long myCurrentTestStart;
 
-    public JUnitTestListenerDelegate() {
+    public CustomizedJUnitTestListener() {
         this.out = System.out;
         TestingMessageHelper.reporterAttached(out);
     }

@@ -10,7 +10,7 @@
  */
 package com.microsoft.java.test.runner;
 
-import com.microsoft.java.test.runner.listeners.JUnitTestListenerDelegate;
+import com.microsoft.java.test.runner.listeners.CustomizedJUnitTestListener;
 
 import com.microsoft.java.test.runner.listeners.JUnitExecutionListener;
 import java.util.List;
@@ -28,10 +28,14 @@ public class CustomizedJUnitCoreRunner extends JUnitCore {
             return;
         }
 
-        JUnitTestListenerDelegate delegate = new JUnitTestListenerDelegate();
+        CustomizedJUnitTestListener delegate = new CustomizedJUnitTestListener();
         RunListener listener = new JUnitExecutionListener(delegate);
         RunNotifier runNotifier = new RunNotifier();
         runNotifier.addListener(listener);
+        delegate.testRunStarted();
+        for (JUnit4TestReference testReference: testSuites) {
+            testReference.sendTree(delegate);
+        }
 
         Result result = new Result();
         final RunListener resultListener = result.createListener();
