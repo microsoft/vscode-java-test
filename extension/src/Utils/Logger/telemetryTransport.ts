@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
-import * as winston from "winston";
+import * as winston from 'winston';
 
 import * as Constants from '../../Constants/constants';
 import * as Logger from './logger';
@@ -29,9 +29,9 @@ export class TelemetryTransport extends winston.Transport {
                 meta,
             });
         } catch (telemetryErr) {
-            Logger.error("Failed to send telemetry event. error: " + telemetryErr);
+            Logger.error('Failed to send telemetry event. error: ' + telemetryErr);
         }
-        super.emit("logged");
+        super.emit('logged');
         if (callback) {
             callback(null, true);
         }

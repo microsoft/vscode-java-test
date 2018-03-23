@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestResourceManager } from "./testResourceManager";
-import { TestLevel, TestStatus, TestSuite } from "./Models/protocols";
+import { TestResourceManager } from './testResourceManager';
+import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
 
 import * as os from 'os';
 import * as path from 'path';
 import * as pug from 'pug';
-import { window, workspace, ExtensionContext, TextDocumentContentProvider, Uri, WorkspaceConfiguration } from "vscode";
+import { window, workspace, ExtensionContext, TextDocumentContentProvider, Uri, WorkspaceConfiguration } from 'vscode';
 
 export class TestReportProvider implements TextDocumentContentProvider {
 
@@ -51,7 +51,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
             passedUri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestSuite(test, TestReportType.Passed))),
             failedUri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestSuite(test, TestReportType.Failed))),
             type,
-            name: test.length === 1 ? test[0].test.replace("#", ".") : undefined,
+            name: test.length === 1 ? test[0].test.replace('#', '.') : undefined,
             showFilters: flattenedTests.length > 1 || test[0].level === TestLevel.Class,
             cssFile: this.cssTheme(),
             totalCount: flattenedTests.length,
@@ -80,8 +80,8 @@ export class TestReportProvider implements TextDocumentContentProvider {
 
     private cssTheme(): string {
         const config: WorkspaceConfiguration = workspace.getConfiguration();
-        const theme: string = config.get<string>("workbench.colorTheme", null);
-        const reportTheme: string = theme && theme.toLowerCase().indexOf("light") !== -1 ? "light.css" : "dark.css";
+        const theme: string = config.get<string>('workbench.colorTheme', null);
+        const reportTheme: string = theme && theme.toLowerCase().indexOf('light') !== -1 ? 'light.css' : 'dark.css';
         return this._context.asAbsolutePath(path.join('resources', 'templates', 'css', reportTheme));
     }
 }

@@ -3,7 +3,7 @@
 
 import { ExtensionContext } from 'vscode';
 import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
-import * as winston from "winston";
+import * as winston from 'winston';
 
 import * as Configs from '../../Constants/configs';
 
@@ -11,7 +11,7 @@ export function configure(context: ExtensionContext, transports: winston.Transpo
     winston.configure({
         transports: [
             ...transports,
-            new (winston.transports.File)({level: "info", filename: context.asAbsolutePath(Configs.LOG_FILE_NAME)}),
+            new (winston.transports.File)({level: 'info', filename: context.asAbsolutePath(Configs.LOG_FILE_NAME)}),
         ],
     });
 }

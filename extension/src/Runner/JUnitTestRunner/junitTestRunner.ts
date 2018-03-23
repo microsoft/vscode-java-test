@@ -3,10 +3,10 @@
 
 import * as glob from 'glob';
 import * as path from 'path';
-import { IJarFileTestRunnerParameters } from "../JarFileRunner/jarFileRunnerParameters";
+import { IJarFileTestRunnerParameters } from '../JarFileRunner/jarFileRunnerParameters';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
-import { JarFileTestRunner } from "../JarFileRunner/jarFileTestRunner";
-import { JUnitRunnerResultAnalyzer } from "./junitRunnerResultAnalyzer";
+import { JarFileTestRunner } from '../JarFileRunner/jarFileTestRunner';
+import { JUnitRunnerResultAnalyzer } from './junitRunnerResultAnalyzer';
 
 export class JUnitTestRunner extends JarFileTestRunner {
     public get debugConfigName(): string {

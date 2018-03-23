@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { OutputChannel } from "vscode";
-import * as winston from "winston";
+import { OutputChannel } from 'vscode';
+import * as winston from 'winston';
 
 import * as Commands from '../../Constants/commands';
 import * as Logger from './logger';
-import { LogLevel } from "./loglevel";
+import { LogLevel } from './loglevel';
 
 export class OutputTransport extends winston.Transport {
     private static commandList: Set<string> = new Set([
@@ -35,7 +35,7 @@ export class OutputTransport extends winston.Transport {
             return;
         }
         this.channel.append(msg);
-        super.emit("logged");
+        super.emit('logged');
         if (callback) {
             callback(null, true);
         }

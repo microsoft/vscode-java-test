@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from "vscode";
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from 'vscode';
 
 import { TestResourceManager } from './testResourceManager';
 import * as Commands from './Constants/commands';

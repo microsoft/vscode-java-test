@@ -9,7 +9,7 @@ import * as expandHomeDir from 'expand-home-dir';
 import * as fileUrl from 'file-url';
 import * as findJavaHome from 'find-java-home';
 import * as fs from 'fs';
-import * as getPort from "get-port";
+import * as getPort from 'get-port';
 import * as glob from 'glob';
 import * as mkdirp from 'mkdirp';
 import * as net from 'net';
@@ -114,7 +114,7 @@ export function deactivate() {
 }
 
 function activateTelemetry(context: ExtensionContext) {
-    const extensionPackage = require(context.asAbsolutePath("./package.json"));
+    const extensionPackage = require(context.asAbsolutePath('./package.json'));
     if (extensionPackage) {
         const packageInfo = {
             publisher: extensionPackage.publisher,

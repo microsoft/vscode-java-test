@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestStatus  } from "../../Models/protocols";
-import * as Logger from "../../Utils/Logger/logger";
-import { ITestInfo, ITestResult } from "../testModel";
-import { JarFileRunnerResultAnalyzer } from "../JarFileRunner/jarFileRunnerResultAnalyzer";
+import { TestLevel, TestStatus  } from '../../Models/protocols';
+import * as Logger from '../../Utils/Logger/logger';
+import { ITestInfo, ITestResult } from '../testModel';
+import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
 
 import * as path from 'path';
 
@@ -90,7 +90,7 @@ export class JUnit5RunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         if (!content) {
             return content;
         }
-        return content.replace(new RegExp("&#x40;", "gm"), "@");
+        return content.replace(new RegExp('&#x40;', 'gm'), '@');
     }
 
     private parseFullyQualifiedNameFromId(id: string): string {

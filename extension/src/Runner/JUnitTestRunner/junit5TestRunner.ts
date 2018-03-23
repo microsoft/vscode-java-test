@@ -7,7 +7,7 @@ import * as path from 'path';
 import { TestLevel } from '../../Models/protocols';
 import { IJarFileTestRunnerParameters } from '../JarFileRunner/jarFileRunnerParameters';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
-import { JarFileTestRunner } from "../JarFileRunner/jarFileTestRunner";
+import { JarFileTestRunner } from '../JarFileRunner/jarFileTestRunner';
 import { JUnit5RunnerResultAnalyzer } from './junit5RunnerResultAnalyzer';
 
 export class JUnit5TestRunner extends JarFileTestRunner {
