@@ -6,6 +6,7 @@
             <command id="vscode.java.test.fetch"/>
             <command id="vscode.java.test.runtime.classpath" />
             <command id="vscode.java.test.search.all" />
+            <command id="vscode.java.test.project.info" />
        </delegateCommandHandler>
    </extension>
 </plugin>

@@ -26,6 +26,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     public static String FETCH_TEST = "vscode.java.test.fetch";
     public static String SEARCH_ALL_TEST = "vscode.java.test.search.all";
     public static String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
+    public static String GET_PROJECT_INFO = "vscode.java.test.project.info";
     private static final JUnitTestSearcher[] Searchers = new JUnitTestSearcher[] {
             new JUnit4TestSearcher(),
             new JUnit5TestSearcher(),
@@ -46,6 +47,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 searcher.searchAllTests(res, monitor);
             }
         	return res;
+        } else if (GET_PROJECT_INFO.equals(commandId)) {
+            return new ProjectInfoFetcher().getProjectInfo(arguments);
         }
         throw new UnsupportedOperationException(String.format("Java test plugin doesn't support the command '%s'.", commandId));
     }
