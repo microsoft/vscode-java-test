@@ -3,6 +3,7 @@
 
 # Log file
 *.log
+**/test-launch.config
 
 # BlueJ files
 *.ctxt
