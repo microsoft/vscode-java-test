@@ -31,6 +31,9 @@ export class TestRunnerWrapper {
             const runners: Map<ITestRunner, TestSuite[]> = TestRunnerWrapper.classifyTests(tests);
             await TestStatusBarProvider.getInstance().update(tests, (async () => {
                 for (const [runner, t] of runners.entries()) {
+                    if (config && config.preLaunchTask.length > 0) {
+                        await this.execPreLaunchTask(config.workingDirectory, config.preLaunchTask);
+                    }
                     const params = await runner.setup(t, isDebugMode, config);
                     const res = await runner.run(params);
                     this.updateTestStorage(t, res);
@@ -120,5 +123,32 @@ export class TestRunnerWrapper {
             summary: `Tests run: ${passNum + failNum}, Failures: ${failNum}, Skipped: ${skipNum}.`,
             duration: notRun ? undefined : duration.toString(),
         };
+    }
+
+    private static execPreLaunchTask(cwd: string, task: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const process = cp.exec(task, { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd });
+            process.on('error', (err) => {
+                Logger.error(
+                    `Error occurred while executing prelaunch task. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
+                    {
+                        stack: err.stack,
+                    });
+                reject(err);
+            });
+            process.stderr.on('data', (data) => {
+                Logger.error(`Error occurred: ${data.toString()}`);
+            });
+            process.stdout.on('data', (data) => {
+                Logger.info(data.toString());
+            });
+            process.on('close', (signal) => {
+                if (signal && signal !== 0) {
+                    reject(`Prelaunch task exited with code ${signal}.`);
+                } else {
+                    resolve(signal);
+                }
+            });
+        });
     }
 }

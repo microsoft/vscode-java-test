@@ -3,8 +3,9 @@
 
 import { ClassPathManager } from '../../classPathManager';
 import { TestStatusBarProvider } from '../../testStatusBarProvider';
+import * as Configs from '../../Constants/configs';
 import { TestSuite } from '../../Models/protocols';
-import { RunConfig } from '../../Models/testConfig';
+import { RunConfig, TestConfig } from '../../Models/testConfig';
 import { ClassPathUtility } from '../../Utils/classPathUtility';
 import * as Logger from '../../Utils/Logger/logger';
 import { ITestResult } from '../testModel';
@@ -56,6 +57,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
             runnerJarFilePath,
             runnerClassName,
             storagePath: storageForThisRun,
+            config,
         };
 
         return params;
@@ -67,7 +69,8 @@ export abstract class JarFileTestRunner implements ITestRunner {
             return Promise.reject('Illegal env type, should pass in IJarFileTestRunnerParameters!');
         }
         const command: string = await this.constructCommandWithWrapper(jarParams);
-        const process = cp.exec(command, {maxBuffer: 1024 * 1024});
+        const cwd = env.config ? env.config.workingDirectory : workspace.getWorkspaceFolder(Uri.parse(env.tests[0].uri)).uri.fsPath;
+        const process = cp.exec(command, { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd });
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let bufferred: string = '';
@@ -120,6 +123,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                         request: 'attach',
                         hostName: 'localhost',
                         port: jarParams.port,
+                        projectName: env.config ? env.config.projectName : undefined,
                     });
                 }, 500);
             }
