@@ -4,6 +4,7 @@
 import * as Commands from './Constants/commands';
 import * as Logger from './Utils/Logger/logger';
 
+import * as path from 'path';
 import { workspace, CancellationToken, Uri } from 'vscode';
 
 export class ProjectManager {
@@ -12,7 +13,7 @@ export class ProjectManager {
     public async refresh(token?: CancellationToken): Promise<void[]> {
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
             return this.getProjectInfo(wkspace.uri).then((infos: ProjectInfo[]) => {
-                infos.forEach((i) => { i.path = Uri.parse(i.path.toString()); })
+                infos.forEach((i) => { i.path = Uri.parse(i.path.toString()); });
                 this.storeProjects(infos);
             },
             (reason) => {
@@ -30,12 +31,12 @@ export class ProjectManager {
     }
 
     public getAll(): ProjectInfo[] {
-        return this.projectInfos.map((i) => Object.assign({}, i));
+        return this.projectInfos.map((i) => ({...i}));
     }
 
     public getProjectName(file: Uri): string {
-        const path: string = this.formatPath(file.fsPath);
-        const matched = this.projectInfos.filter((p) => path.startsWith(this.formatPath(p.path.fsPath)));
+        const fpath: string = this.formatPath(file.fsPath);
+        const matched = this.projectInfos.filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)));
         if (matched.length === 0) {
             Logger.error(`Failed to get project name for file ${file}.`);
             return undefined;
@@ -47,11 +48,11 @@ export class ProjectManager {
         return matched[0].name;
     }
 
-    private formatPath(path: string): string {
-        if (!path) {
-            return path;
+    private formatPath(p: string): string {
+        if (!p) {
+            return p;
         }
-        let formatted = path.toLowerCase().replace(/\\/g, '/');
+        let formatted = path.normalize(p).toLowerCase().replace(/\\/g, '/');
         if (!formatted.endsWith('/')) {
             formatted += '/';
         }
@@ -67,4 +68,3 @@ export type ProjectInfo = {
     path: Uri;
     name: string;
 };
-
