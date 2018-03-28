@@ -11,9 +11,7 @@ import { TestConfig } from './Models/testConfig';
 import * as Logger from './Utils/Logger/logger';
 
 export class TestConfigManager {
-    private readonly _configPath: string;
-    constructor(context: ExtensionContext, private _projectManager: ProjectManager) {
-        this._configPath = context.asAbsolutePath(Configs.TEST_LAUNCH_CONFIG_NAME);
+    constructor(private readonly _configPath: string, private readonly _projectManager: ProjectManager) {
     }
 
     public get configPath(): string {
