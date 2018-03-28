@@ -11,8 +11,9 @@ export class ProjectManager {
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
-            return getProjectInfo(wkspace.uri).then((infos: ProjectInfo[]) => {
-                this.storeProjects(infos.map((i) => { i.path = Uri.parse(i.path.toString()); return i; }));
+            return this.getProjectInfo(wkspace.uri).then((infos: ProjectInfo[]) => {
+                infos.forEach((i) => { i.path = Uri.parse(i.path.toString()); })
+                this.storeProjects(infos);
             },
             (reason) => {
                 if (token.isCancellationRequested) {
@@ -29,7 +30,7 @@ export class ProjectManager {
     }
 
     public getAll(): ProjectInfo[] {
-        return this.projectInfos.map((i) => i);
+        return this.projectInfos.map((i) => Object.assign({}, i));
     }
 
     public getProjectName(file: Uri): string {
@@ -56,6 +57,10 @@ export class ProjectManager {
         }
         return formatted;
     }
+
+    private getProjectInfo(folder: Uri) {
+        return Commands.executeJavaLanguageServerCommand(Commands.JAVA_GET_PROJECT_INFO, folder.toString());
+    }
 }
 
 export type ProjectInfo = {
@@ -63,6 +68,3 @@ export type ProjectInfo = {
     name: string;
 };
 
-function getProjectInfo(folder: Uri) {
-    return Commands.executeJavaLanguageServerCommand(Commands.JAVA_GET_PROJECT_INFO, folder.toString());
-}
