@@ -54,7 +54,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         });
     }
 
-    public run(element: TestTreeNode, debugMode: boolean, config: RunConfig) {
+    public run(element: TestTreeNode, debugMode: boolean, config?: RunConfig) {
         return TestRunnerWrapper.run(this.resolveTestSuites(element), debugMode, config);
     }
 

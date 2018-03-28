@@ -84,9 +84,9 @@ export async function activate(context: ExtensionContext) {
 
     checkJavaHome().then((javaHome) => {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, false, undefined)));
+            runTest(suites, false)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, true, undefined)));
+            runTest(suites, true)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
             showDetails(test)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
@@ -94,9 +94,9 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
             testExplorer.select(node)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
-            testExplorer.run(node, false, undefined)));
+            testExplorer.run(node, false)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
-            testExplorer.run(node, true, undefined)));
+            testExplorer.run(node, true)));
         context.subscriptions.push(
             TelemetryWrapper.registerCommand(Commands.JAVA_RUN_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) => {
             const config = await getTestConfig(testConfigManager, false);
@@ -186,7 +186,7 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, config: RunConfig) {
+function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, config?: RunConfig) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
     return TestRunnerWrapper.run(testList, isDebugMode, config);
