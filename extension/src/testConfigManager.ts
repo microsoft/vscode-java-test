@@ -31,7 +31,7 @@ export class TestConfigManager {
                             Logger.error('Failed to create default test config!', {
                                 error: writeErr,
                             });
-                            reject(writeErr);
+                            return reject(writeErr);
                         }
                         resolve(config);
                     });
@@ -41,7 +41,7 @@ export class TestConfigManager {
                             Logger.error('Failed to load test config!', {
                                 error: readErr,
                             });
-                            reject(readErr);
+                            return reject(readErr);
                         }
                         resolve(JSON.parse(data) as TestConfig);
                     });
@@ -56,7 +56,6 @@ export class TestConfigManager {
             return workspace.openTextDocument(this._configPath).then((doc) => {
                 return window.showTextDocument(doc, editor.viewColumn);
             }, (err) => {
-                Logger.error(err);
                 return Promise.reject(err);
             });
         });
