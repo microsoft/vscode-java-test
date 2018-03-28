@@ -24,6 +24,8 @@ import { Session, TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
+import { ProjectManager } from './projectManager';
+import { TestConfigManager } from './testConfigManager';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
 import { TestStatusBarProvider } from './testStatusBarProvider';
@@ -33,6 +35,7 @@ import * as Constants from './Constants/constants';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 import { TestKind, TestLevel, TestSuite } from './Models/protocols';
+import { RunConfig, TestConfig } from './Models/testConfig';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnit5TestRunner } from './Runner/JUnitTestRunner/junit5TestRunner';
 import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
@@ -48,6 +51,7 @@ const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstan
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const testResourceManager: TestResourceManager = new TestResourceManager();
 const classPathManager: ClassPathManager = new ClassPathManager();
+const projectManager: ProjectManager = new ProjectManager();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -64,6 +68,7 @@ export async function activate(context: ExtensionContext) {
     testResourceManager.onDidChangeTestStorage((e) => {
         testExplorer.refresh();
     });
+    const testConfigManager: TestConfigManager = new TestConfigManager(context.asAbsolutePath(Configs.TEST_LAUNCH_CONFIG_NAME), projectManager);
 
     workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
@@ -92,11 +97,34 @@ export async function activate(context: ExtensionContext) {
             testExplorer.run(node, false)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
             testExplorer.run(node, true)));
+        context.subscriptions.push(
+            TelemetryWrapper.registerCommand(Commands.JAVA_RUN_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) => {
+            const config = await getTestConfig(testConfigManager, false);
+            return runTest(suites, false, config);
+        }));
+        context.subscriptions.push(
+            TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) => {
+            const config = await getTestConfig(testConfigManager, true);
+            return runTest(suites, true, config);
+        }));
+        context.subscriptions.push(
+            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
+            const config = await getTestConfig(testConfigManager, false);
+            return testExplorer.run(node, false, config);
+        }));
+        context.subscriptions.push(
+            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
+            const config = await getTestConfig(testConfigManager, true);
+            return testExplorer.run(node, true, config);
+        }));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
             openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
+            testConfigManager.editConfig()));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         TestRunnerWrapper.registerRunner(TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();
+        projectManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
         Logger.error("couldn't find Java home.", {
@@ -158,10 +186,27 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean) {
+function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, config?: RunConfig) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
-    return TestRunnerWrapper.run(testList, isDebugMode);
+    return TestRunnerWrapper.run(testList, isDebugMode, config);
+}
+
+async function getTestConfig(configManager: TestConfigManager, isDebugMode: boolean): Promise<RunConfig> {
+    const config: TestConfig = await configManager.loadConfig();
+    const runConfigs: RunConfig[] = isDebugMode ? config.debug : config.run;
+    const items = runConfigs.map((c) => {
+        return {
+            label: c.name,
+            description: `project name: ${c.projectName}`,
+            item: c,
+        };
+    });
+    const selection = await window.showQuickPick(items, { placeHolder: 'Select test config' });
+    if (!selection) {
+        throw new Error('Please specify test config');
+    }
+    return selection.item;
 }
 
 function showDetails(test: TestSuite[] | TestSuite) {
