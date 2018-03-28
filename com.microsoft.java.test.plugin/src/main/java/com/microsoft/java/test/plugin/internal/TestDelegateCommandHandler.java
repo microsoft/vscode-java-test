@@ -48,7 +48,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
             }
         	return res;
         } else if (GET_PROJECT_INFO.equals(commandId)) {
-            return new ProjectInfoFetcher().getProjectInfo(arguments);
+            return ProjectInfoFetcher.getProjectInfo(arguments);
         }
         throw new UnsupportedOperationException(String.format("Java test plugin doesn't support the command '%s'.", commandId));
     }

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017 Microsoft Corporation and others.
+* Copyright (c) 2018 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -19,22 +19,21 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.IJavaProject;
 
-public class ProjectInfoFetcher {
-    public ProjectInfo[] getProjectInfo(List<Object> arguments) {
+public final class ProjectInfoFetcher {
+    public static ProjectInfo[] getProjectInfo(List<Object> arguments) {
         if (arguments == null || arguments.size() == 0) {
             return new ProjectInfo[0];
         }
-        List<ProjectInfo> res = new ArrayList<>();
         String folder = (String)arguments.get(0);
         try {
             URI uri = new URI(folder);
             Set<IJavaProject> projects = ProjectUtils.parseProjects(uri);
-            res.addAll(
+            return
                     projects.stream()
-                    .map(p -> new ProjectInfo(p.getProject().getLocationURI(), p.getProject().getName())).collect(Collectors.toList()));
+                    .map(p -> new ProjectInfo(p.getProject().getLocationURI(), p.getProject().getName())).toArray(ProjectInfo[]::new);
             } catch (URISyntaxException e) {
             // skip
         }
-        return res.toArray(new ProjectInfo[res.size()]);
+        return new ProjectInfo[0];
     }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017 Microsoft Corporation and others.
+* Copyright (c) 2018 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -15,21 +15,25 @@ import java.net.URI;
 public class ProjectInfo {
     private URI path;
     private String name;
+
+    public ProjectInfo(URI path, String name) {
+        this.path = path;
+        this.name = name;
+    }
+
     public URI getPath() {
         return path;
     }
+
     public void setPath(URI path) {
         this.path = path;
     }
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
-        this.name = name;
-    }
-    
-    public ProjectInfo(URI path, String name) {
-        this.path = path;
         this.name = name;
     }
 }
