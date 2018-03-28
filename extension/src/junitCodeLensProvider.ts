@@ -91,6 +91,18 @@ function getCodeLens(tests: TestSuite[]): CodeLens[] {
                 tooltip: 'Debug Test',
                 arguments: [test],
             }),
+            new CodeLens(test.range, {
+                title: 'Run With Config',
+                command: Commands.JAVA_RUN_WITH_CONFIG_COMMAND,
+                tooltip: 'Run With Config',
+                arguments: [test],
+            }),
+            new CodeLens(test.range, {
+                title: 'Debug With Config',
+                command: Commands.JAVA_DEBUG_WITH_CONFIG_COMMAND,
+                tooltip: 'Debug With Config',
+                arguments: [test],
+            }),
         ];
 
         if (test.result) {

@@ -31,7 +31,10 @@
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
         "onCommand:java.test.show.output",
-        "onCommand:java.test.open.log"
+        "onCommand:java.test.open.log",
+        "onCommand:java.test.run.config",
+        "onCommand:java.test.debug.config",
+        "onCommand:java.test.configure"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -67,9 +70,19 @@
                     "group": "testExplorer@0"
                 },
                 {
-                    "command": "java.test.explorer.debug",
+                    "command": "java.test.explorer.run.config",
                     "when": "view == testExplorer",
                     "group": "testExplorer@1"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@2"
+                },
+                {
+                    "command": "java.test.explorer.debug.config",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@3"
                 }
             ]
         },
@@ -98,8 +111,31 @@
                 "category": "Java"
             },
             {
+                "command": "java.test.explorer.run.config",
+                "title": "Run With Config",
+                "icon": {
+                    "light": "resources/media/light/run.svg",
+                    "dark": "resources/media/dark/run.svg"
+                },
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.debug.config",
+                "title": "Debug With Config",
+                "icon": {
+                    "light": "resources/media/light/debug.svg",
+                    "dark": "resources/media/dark/debug.svg"
+                },
+                "category": "Java"
+            },
+            {
                 "command": "java.test.open.log",
                 "title": "Open Log",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.configure",
+                "title": "Edit Test Configuration",
                 "category": "Java"
             }
         ],

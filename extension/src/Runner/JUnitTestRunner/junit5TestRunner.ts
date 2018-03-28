@@ -43,6 +43,15 @@ export class JUnit5TestRunner extends JarFileTestRunner {
             debugParams.push('-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + port);
             commandParams = [...commandParams, ...debugParams];
         }
+
+        if (params.config) {
+            if (params.config.vmargs.length > 0) {
+                commandParams = [...commandParams, ...params.config.vmargs];
+            }
+            if (params.config.args.length > 0) {
+                commandParams = [...commandParams, ...params.config.args];
+            }
+        }
         commandParams.push(this.runnerClassName);
 
         const suites: string[] = params.tests.map((t) => t.level === TestLevel.Method ? `-m ${t.test}` : `-c ${t.test}`);

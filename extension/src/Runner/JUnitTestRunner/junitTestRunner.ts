@@ -42,6 +42,15 @@ export class JUnitTestRunner extends JarFileTestRunner {
             commandParams = [...commandParams, ...debugParams];
         }
 
+        if (params.config) {
+            if (params.config.vmargs.length > 0) {
+                commandParams = [...commandParams, ...params.config.vmargs];
+            }
+            if (params.config.args.length > 0) {
+                commandParams = [...commandParams, ...params.config.args];
+            }
+        }
+
         commandParams.push(this.runnerClassName);
         const suites: string[] = params.tests.map((t) => t.test);
         commandParams = [...commandParams, ...suites];
