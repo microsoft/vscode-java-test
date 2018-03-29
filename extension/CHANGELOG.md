@@ -4,6 +4,18 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.5.0 - 2018-03-29
+
+### Added
+- Support test configuration. You can now configure your test setting through command `java.test.configure`. It supports following configuration:
+  * projectName
+  * workingDirectory
+  * args
+  * vmargs
+  * preLaunchTask
+
+  And you can run/debug with config through codelens or test explorer context menu.
+
 ## 0.4.0 - 2018-03-07
 
 ### Added

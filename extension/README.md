@@ -12,6 +12,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 - View test logs
 - View test report
 - Test Explorer
+- Test Configuration
 
 ## Use
 
@@ -21,6 +22,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 
 - `Java:Show test output`: open the test output window.
 - `Java:Open Log`: open extension log file.
+- `Java:Edit Test Configuration`: edit test configuration.
 
 ## Supported VSCode settings
 
