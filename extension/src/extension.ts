@@ -68,7 +68,7 @@ export async function activate(context: ExtensionContext) {
     testResourceManager.onDidChangeTestStorage((e) => {
         testExplorer.refresh();
     });
-    const testConfigManager: TestConfigManager = new TestConfigManager(context.asAbsolutePath(Configs.TEST_LAUNCH_CONFIG_NAME), projectManager);
+    const testConfigManager: TestConfigManager = new TestConfigManager(context.storagePath, projectManager);
 
     workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;

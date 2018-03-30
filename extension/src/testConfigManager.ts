@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as fs from 'fs';
+import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import { window, workspace, ExtensionContext, TextEditor } from 'vscode';
 
@@ -11,7 +12,9 @@ import { TestConfig } from './Models/testConfig';
 import * as Logger from './Utils/Logger/logger';
 
 export class TestConfigManager {
-    constructor(private readonly _configPath: string, private readonly _projectManager: ProjectManager) {
+    private readonly _configPath: string;
+    constructor(storagePath: string, private readonly _projectManager: ProjectManager) {
+        this._configPath = path.join(storagePath, "configs", Configs.TEST_LAUNCH_CONFIG_NAME);
     }
 
     public get configPath(): string {
@@ -20,30 +23,38 @@ export class TestConfigManager {
 
     public loadConfig(): Promise<TestConfig> {
         return new Promise((resolve, reject) => {
-            fs.access(this._configPath, (err) => {
-                if (err) {
-                    const config: TestConfig = this.createDefaultTestConfig();
-                    const content: string = JSON.stringify(config, null, 4);
-                    fs.writeFile(this._configPath, content, 'utf-8', (writeErr) => {
-                        if (writeErr) {
-                            Logger.error('Failed to create default test config!', {
-                                error: writeErr,
-                            });
-                            return reject(writeErr);
-                        }
-                        resolve(config);
+            mkdirp(path.dirname(this._configPath), (err) => {
+                if (err && err.code !== 'EEXIST') {
+                    Logger.error(`Failed to create sub directory for this config. Storage path: ${err}`, {
+                        error: err,
                     });
-                } else {
-                    fs.readFile(this._configPath, 'utf-8', (readErr, data) => {
-                        if (readErr) {
-                            Logger.error('Failed to load test config!', {
-                                error: readErr,
-                            });
-                            return reject(readErr);
-                        }
-                        resolve(JSON.parse(data) as TestConfig);
-                    });
+                    reject(err);
                 }
+                fs.access(this._configPath, (err) => {
+                    if (err) {
+                        const config: TestConfig = this.createDefaultTestConfig();
+                        const content: string = JSON.stringify(config, null, 4);
+                        fs.writeFile(this._configPath, content, 'utf-8', (writeErr) => {
+                            if (writeErr) {
+                                Logger.error('Failed to create default test config!', {
+                                    error: writeErr,
+                                });
+                                return reject(writeErr);
+                            }
+                            resolve(config);
+                        });
+                    } else {
+                        fs.readFile(this._configPath, 'utf-8', (readErr, data) => {
+                            if (readErr) {
+                                Logger.error('Failed to load test config!', {
+                                    error: readErr,
+                                });
+                                return reject(readErr);
+                            }
+                            resolve(JSON.parse(data) as TestConfig);
+                        });
+                    }
+                });
             });
         });
     }
