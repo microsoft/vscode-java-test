@@ -11,6 +11,9 @@ export class ProjectManager {
     private projectInfos: ProjectInfo[] = [];
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
+        if (!workspace.workspaceFolders) {
+            return;
+        }
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
             return this.getProjectInfo(wkspace.uri).then((infos: ProjectInfo[]) => {
                 infos.forEach((i) => { i.path = Uri.parse(i.path.toString()); });

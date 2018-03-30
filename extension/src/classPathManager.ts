@@ -9,6 +9,9 @@ export class ClassPathManager {
     private classPathCache = new Map<string, string[]>();
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
+        if (!workspace.workspaceFolders) {
+            return;
+        }
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
             return calculateClassPath(wkspace.uri).then((classpath: string[]) => {
                 this.storeClassPath(wkspace.uri, classpath);
