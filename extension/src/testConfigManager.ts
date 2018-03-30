@@ -14,7 +14,7 @@ import * as Logger from './Utils/Logger/logger';
 export class TestConfigManager {
     private readonly _configPath: string;
     constructor(storagePath: string, private readonly _projectManager: ProjectManager) {
-        this._configPath = path.join(storagePath, "configs", Configs.TEST_LAUNCH_CONFIG_NAME);
+        this._configPath = path.join(storagePath, 'configs', Configs.TEST_LAUNCH_CONFIG_NAME);
     }
 
     public get configPath(): string {
@@ -23,12 +23,12 @@ export class TestConfigManager {
 
     public loadConfig(): Promise<TestConfig> {
         return new Promise((resolve, reject) => {
-            mkdirp(path.dirname(this._configPath), (err) => {
-                if (err && err.code !== 'EEXIST') {
-                    Logger.error(`Failed to create sub directory for this config. Storage path: ${err}`, {
-                        error: err,
+            mkdirp(path.dirname(this._configPath), (merr) => {
+                if (merr && merr.code !== 'EEXIST') {
+                    Logger.error(`Failed to create sub directory for this config. Storage path: ${merr}`, {
+                        error: merr,
                     });
-                    reject(err);
+                    reject(merr);
                 }
                 fs.access(this._configPath, (err) => {
                     if (err) {
