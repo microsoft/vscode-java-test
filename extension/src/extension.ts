@@ -197,7 +197,7 @@ async function getTestConfig(configManager: TestConfigManager, isDebugMode: bool
     try {
         config = await configManager.loadConfig();
     } catch (ex) {
-        window.showErrorMessage('Failed to load test config! Please check whether your test configuration is a valid JSON file');
+        window.showErrorMessage('Failed to load the test config! Please check whether your test configuration is a valid JSON file');
         throw ex;
     }
     const runConfigs: RunConfig[] = isDebugMode ? config.debug : config.run;
@@ -210,8 +210,8 @@ async function getTestConfig(configManager: TestConfigManager, isDebugMode: bool
     });
     const selection = await window.showQuickPick(items, { placeHolder: 'Select test config' });
     if (!selection) {
-        window.showErrorMessage('Please specify test config to use!');
-        throw new Error('Please specify test config to use');
+        window.showErrorMessage('Please specify the test config to use!');
+        throw new Error('Please specify the test config to use');
     }
     return selection.item;
 }

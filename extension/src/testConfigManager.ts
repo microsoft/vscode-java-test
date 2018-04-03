@@ -30,7 +30,7 @@ export class TestConfigManager {
         return new Promise<TestConfig>((resolve, reject) => {
             fs.readFile(this._configPath, 'utf-8', (readErr, data) => {
                 if (readErr) {
-                    Logger.error('Failed to read test config!', {
+                    Logger.error('Failed to read the test config!', {
                         error: readErr,
                     });
                     return reject(readErr);
@@ -39,7 +39,7 @@ export class TestConfigManager {
                     const config: TestConfig = JSON.parse(data) as TestConfig;
                     resolve(config);
                 } catch (ex) {
-                    Logger.error('Failed to parse test config!', {
+                    Logger.error('Failed to parse the test config!', {
                         error: ex,
                     });
                     reject(ex);
@@ -63,7 +63,7 @@ export class TestConfigManager {
         return new Promise((resolve, reject) => {
             mkdirp(path.dirname(this._configPath), (merr) => {
                 if (merr && merr.code !== 'EEXIST') {
-                    Logger.error(`Failed to create sub directory for this config. Storage path: ${merr}`, {
+                    Logger.error(`Failed to create sub directory for this config. File path: ${this._configPath}`, {
                         error: merr,
                     });
                     return reject(merr);
