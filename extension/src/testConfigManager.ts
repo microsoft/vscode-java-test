@@ -13,22 +13,60 @@ import * as Logger from './Utils/Logger/logger';
 
 export class TestConfigManager {
     private readonly _configPath: string;
-    constructor(storagePath: string, private readonly _projectManager: ProjectManager) {
-        this._configPath = path.join(storagePath, 'configs', Configs.TEST_LAUNCH_CONFIG_NAME);
+    constructor(private readonly _projectManager: ProjectManager) {
+        const workspaceFolders = workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            throw new Error('Not supported without a folder!');
+        }
+        this._configPath = path.join(workspaceFolders[0].uri.fsPath, '.vscode', Configs.TEST_LAUNCH_CONFIG_NAME);
     }
 
     public get configPath(): string {
         return this._configPath;
     }
 
-    public loadConfig(): Promise<TestConfig> {
+    public async loadConfig(): Promise<TestConfig> {
+        await this.createTestConfigIfNotExisted();
+        return new Promise<TestConfig>((resolve, reject) => {
+            fs.readFile(this._configPath, 'utf-8', (readErr, data) => {
+                if (readErr) {
+                    Logger.error('Failed to read test config!', {
+                        error: readErr,
+                    });
+                    return reject(readErr);
+                }
+                try {
+                    const config: TestConfig = JSON.parse(data) as TestConfig;
+                    resolve(config);
+                } catch (ex) {
+                    Logger.error('Failed to parse test config!', {
+                        error: ex,
+                    });
+                    reject(ex);
+                }
+            });
+        });
+    }
+
+    public editConfig(): Promise<TextEditor> {
+        const editor = window.activeTextEditor;
+        return this.createTestConfigIfNotExisted().then(() => {
+            return workspace.openTextDocument(this._configPath).then((doc) => {
+                return window.showTextDocument(doc, editor ? editor.viewColumn : undefined);
+            }, (err) => {
+                return Promise.reject(err);
+            });
+        });
+    }
+
+    private createTestConfigIfNotExisted(): Promise<void> {
         return new Promise((resolve, reject) => {
             mkdirp(path.dirname(this._configPath), (merr) => {
                 if (merr && merr.code !== 'EEXIST') {
                     Logger.error(`Failed to create sub directory for this config. Storage path: ${merr}`, {
                         error: merr,
                     });
-                    reject(merr);
+                    return reject(merr);
                 }
                 fs.access(this._configPath, (err) => {
                     if (err) {
@@ -41,31 +79,10 @@ export class TestConfigManager {
                                 });
                                 return reject(writeErr);
                             }
-                            resolve(config);
-                        });
-                    } else {
-                        fs.readFile(this._configPath, 'utf-8', (readErr, data) => {
-                            if (readErr) {
-                                Logger.error('Failed to load test config!', {
-                                    error: readErr,
-                                });
-                                return reject(readErr);
-                            }
-                            resolve(JSON.parse(data) as TestConfig);
                         });
                     }
+                    resolve();
                 });
-            });
-        });
-    }
-
-    public editConfig(): Promise<TextEditor> {
-        const editor = window.activeTextEditor;
-        return this.loadConfig().then(() => {
-            return workspace.openTextDocument(this._configPath).then((doc) => {
-                return window.showTextDocument(doc, editor ? editor.viewColumn : undefined);
-            }, (err) => {
-                return Promise.reject(err);
             });
         });
     }

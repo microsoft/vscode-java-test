@@ -68,7 +68,7 @@ export async function activate(context: ExtensionContext) {
     testResourceManager.onDidChangeTestStorage((e) => {
         testExplorer.refresh();
     });
-    const testConfigManager: TestConfigManager = new TestConfigManager(context.storagePath, projectManager);
+    const testConfigManager: TestConfigManager = new TestConfigManager(projectManager);
 
     workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
@@ -193,7 +193,13 @@ function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, config?: 
 }
 
 async function getTestConfig(configManager: TestConfigManager, isDebugMode: boolean): Promise<RunConfig> {
-    const config: TestConfig = await configManager.loadConfig();
+    let config: TestConfig;
+    try {
+        config = await configManager.loadConfig();
+    } catch (ex) {
+        window.showErrorMessage('Failed to load test config! Please check whether your test configuration is a valid JSON file');
+        throw ex;
+    }
     const runConfigs: RunConfig[] = isDebugMode ? config.debug : config.run;
     const items = runConfigs.map((c) => {
         return {
@@ -204,7 +210,8 @@ async function getTestConfig(configManager: TestConfigManager, isDebugMode: bool
     });
     const selection = await window.showQuickPick(items, { placeHolder: 'Select test config' });
     if (!selection) {
-        throw new Error('Please specify test config');
+        window.showErrorMessage('Please specify test config to use!');
+        throw new Error('Please specify test config to use');
     }
     return selection.item;
 }
