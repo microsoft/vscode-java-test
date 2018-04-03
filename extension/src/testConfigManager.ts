@@ -52,7 +52,7 @@ export class TestConfigManager {
         const editor = window.activeTextEditor;
         return this.loadConfig().then(() => {
             return workspace.openTextDocument(this._configPath).then((doc) => {
-                return window.showTextDocument(doc, editor.viewColumn);
+                return window.showTextDocument(doc, editor ? editor.viewColumn : undefined);
             }, (err) => {
                 return Promise.reject(err);
             });
