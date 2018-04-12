@@ -71,6 +71,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         const command: string = await this.constructCommandWithWrapper(jarParams);
         const cwd = env.config ? env.config.workingDirectory : workspace.getWorkspaceFolder(Uri.parse(env.tests[0].uri)).uri.fsPath;
         const process = cp.exec(command, { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd });
+        let killed: boolean = false;
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let bufferred: string = '';
@@ -99,6 +100,8 @@ export abstract class JarFileTestRunner implements ITestRunner {
             process.on('close', (signal) => {
                 if (signal && signal !== 0) {
                     reject(`Runner exited with code ${signal}.`);
+                } else if (killed) {
+                    reject(`Runner is killed.`);
                 } else {
                     if (bufferred.length > 0) {
                         testResultAnalyzer.analyzeData(bufferred);
@@ -127,6 +130,11 @@ export abstract class JarFileTestRunner implements ITestRunner {
                     });
                 }, 500);
             }
+            setTimeout(() => {
+                Logger.warn('Runner did not finish within the expected time, kill it.');
+                process.kill();
+                killed = process.killed;
+            }, Configs.CHILD_PROCESS_TIMEOUT_MILLISECOND);
         });
     }
 
