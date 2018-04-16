@@ -41,8 +41,8 @@ export class TestStatusBarProvider {
     public update(tests: TestSuite[], action: Thenable<void>) {
         this.statusBarItem.text = `$(sync~spin) Running tests...`;
         this.statusBarItem.color = 'white';
-        this.statusBarItem.tooltip = 'View test output';
-        this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
+        this.statusBarItem.tooltip = 'Open composite menu';
+        this.statusBarItem.command = Commands.JAVA_STATUS_COMPOSITE_COMMAND;
         return action.then(() => this.updateStatus(tests),
         (reason) => {
             this.statusBarItem.text = 'Failed to run tests';
