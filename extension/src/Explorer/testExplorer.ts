@@ -58,6 +58,10 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return TestRunnerWrapper.run(this.resolveTestSuites(element), debugMode, config);
     }
 
+    public cancelRun() {
+        // to-do
+    }
+
     private createTestTreeNode(
         tests: TestSuite[],
         parent: TestTreeNode,

@@ -121,10 +121,8 @@ export async function activate(context: ExtensionContext) {
             openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
             testConfigManager.editConfig()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_STATUS_COMPOSITE_COMMAND, () =>
-            executeStatusCompositeCommand()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CANCEL_TEST, () =>
-            cancelTest()));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_CANCEL_TEST, () =>
+            testExplorer.cancelRun()));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         TestRunnerWrapper.registerRunner(TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();
@@ -238,28 +236,4 @@ function openTestLogFile(logFile: string): Thenable<boolean> {
         }
         return didOpen ? true : false;
     });
-}
-
-async function executeStatusCompositeCommand(): Promise<void> {
-    const items = [
-        {
-            label: 'View test output',
-            description: 'Click to open test output',
-            item: Commands.JAVA_TEST_SHOW_OUTPUT,
-        },
-        {
-            label: 'Cancel test',
-            description: 'Click to cancel the test',
-            item: Commands.JAVA_CANCEL_TEST,
-        },
-    ];
-    const selection = await window.showQuickPick(items, { placeHolder: 'Select actions...' });
-    if (!selection) {
-        return;
-    }
-    await commands.executeCommand(selection.item);
-}
-
-function cancelTest() {
-    // to-do
 }
