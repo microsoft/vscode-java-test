@@ -25,6 +25,8 @@ export const JAVA_TEST_EXPLORER_RUN_TEST = 'java.test.explorer.run';
 
 export const JAVA_TEST_EXPLORER_DEBUG_TEST = 'java.test.explorer.debug';
 
+export const JAVA_TEST_EXPLORER_CANCEL_TEST = 'java.test.explorer.cancel';
+
 export const JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG = 'java.test.explorer.run.config';
 
 export const JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG = 'java.test.explorer.debug.config';
