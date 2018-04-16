@@ -121,7 +121,7 @@ export async function activate(context: ExtensionContext) {
             openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
             testConfigManager.editConfig()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_STATUS_COMPOSITE_COMMAND, () =>
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_STATUS_COMPOSITE_COMMAND, () =>
             executeStatusCompositeCommand()));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CANCEL_TEST, () =>
             cancelTest()));

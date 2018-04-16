@@ -37,7 +37,7 @@ export const JAVA_CONFIGURE_TEST_COMMAND = 'java.test.configure';
 
 export const JAVA_CANCEL_TEST = 'java.test.cancel';
 
-export const JAVA_STATUS_COMPOSITE_COMMAND = 'java.status';
+export const JAVA_TEST_STATUS_COMPOSITE_COMMAND = 'java.test.status';
 
 export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
 
