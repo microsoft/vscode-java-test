@@ -45,6 +45,13 @@ export class TestRunnerWrapper {
         }
     }
 
+    public static async cancel(): Promise<void> {
+        const tasks: Array<Promise<void>> = [];
+        TestRunnerWrapper.runnerPool.forEach((runner) => tasks.push(runner.cancel()));
+        await Promise.all(tasks);
+        return Promise.resolve();
+    }
+
     private static readonly runnerPool: Map<TestKind, ITestRunner> = new Map<TestKind, ITestRunner>();
     private static running: boolean = false;
 

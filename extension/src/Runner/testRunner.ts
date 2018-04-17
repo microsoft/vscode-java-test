@@ -9,4 +9,5 @@ export interface ITestRunner {
     setup(tests: ITestInfo[], isDebugMode: boolean, config: RunConfig): Promise<ITestRunnerParameters>;
     run(params: ITestRunnerParameters): Promise<ITestResult[]>;
     postRun(): Promise<void>;
+    cancel(): Promise<void>;
 }

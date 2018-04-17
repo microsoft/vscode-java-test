@@ -19,9 +19,11 @@ import * as getPort from 'get-port';
 import * as os from 'os';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
+import * as kill from 'tree-kill';
 import { debug, window, workspace, EventEmitter, Uri } from 'vscode';
 
 export abstract class JarFileTestRunner implements ITestRunner {
+    private _process: cp.ChildProcess;
     constructor(
         protected _javaHome: string,
         protected _storagePath: string,
@@ -70,11 +72,11 @@ export abstract class JarFileTestRunner implements ITestRunner {
         }
         const command: string = await this.constructCommandWithWrapper(jarParams);
         const cwd = env.config ? env.config.workingDirectory : workspace.getWorkspaceFolder(Uri.parse(env.tests[0].uri)).uri.fsPath;
-        const process = cp.exec(command, { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd });
+        this._process = cp.exec(command, { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd });
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let bufferred: string = '';
-            process.on('error', (err) => {
+            this._process.on('error', (err) => {
                 Logger.error(
                     `Error occurred while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
                     {
@@ -82,10 +84,10 @@ export abstract class JarFileTestRunner implements ITestRunner {
                     });
                 reject(err);
             });
-            process.stderr.on('data', (data) => {
+            this._process.stderr.on('data', (data) => {
                 Logger.error(`Error occurred: ${data.toString()}`);
             });
-            process.stdout.on('data', (data) => {
+            this._process.stdout.on('data', (data) => {
                 Logger.info(data.toString());
                 const toConsume = bufferred + data.toString();
                 const index = toConsume.lastIndexOf(os.EOL);
@@ -96,7 +98,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                     bufferred = toConsume;
                 }
             });
-            process.on('close', (signal) => {
+            this._process.on('close', (signal) => {
                 if (signal && signal !== 0) {
                     reject(`Runner exited with code ${signal}.`);
                 } else {
@@ -127,11 +129,35 @@ export abstract class JarFileTestRunner implements ITestRunner {
                     });
                 }, 500);
             }
+        }).then((result) => {
+            this._process = undefined;
+            return result;
+        }, (error) => {
+            this._process = undefined;
+            throw error;
         });
     }
 
     public postRun(): Promise<void> {
         this._onDidChange.fire();
+        return Promise.resolve();
+    }
+
+    public cancel(): Promise<void> {
+        if (this._process) {
+            Logger.warn('Cancelling this test run...');
+            return new Promise((resolve, reject) => {
+                kill(this._process.pid, 'SIGTERM', (err) => {
+                    if (err) {
+                        Logger.error('Failed to cancel this test run.', {
+                            error: err,
+                        });
+                        return reject(err);
+                    }
+                    resolve();
+                });
+            });
+        }
         return Promise.resolve();
     }
 

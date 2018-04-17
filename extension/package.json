@@ -204,6 +204,7 @@
         "path-exists": "^3.0.0",
         "pug": "^2.0.0-rc.4",
         "rimraf": "^2.6.2",
+        "tree-kill": "^1.2.0",
         "vscode-extension-telemetry": "0.0.10",
         "vscode-extension-telemetry-wrapper": "^0.2.0",
         "winston": "^2.4.0"
