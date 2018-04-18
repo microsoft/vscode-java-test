@@ -212,8 +212,7 @@ async function getTestConfig(configManager: TestConfigManager, isDebugMode: bool
     });
     const selection = await window.showQuickPick(items, { placeHolder: 'Select test config' });
     if (!selection) {
-        window.showErrorMessage('Please specify the test config to use!');
-        throw new Error('Please specify the test config to use');
+        throw new Error('Please specify the test config to use!');
     }
     return selection.item;
 }
