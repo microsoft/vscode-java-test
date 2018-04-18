@@ -5,7 +5,7 @@ import { ClassPathManager } from '../../classPathManager';
 import { TestStatusBarProvider } from '../../testStatusBarProvider';
 import * as Configs from '../../Constants/configs';
 import { TestSuite } from '../../Models/protocols';
-import { RunConfig, TestConfig } from '../../Models/testConfig';
+import { RunConfigItem, TestConfig } from '../../Models/testConfig';
 import { ClassPathUtility } from '../../Utils/classPathUtility';
 import * as Logger from '../../Utils/Logger/logger';
 import { ITestResult } from '../testModel';
@@ -37,7 +37,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string>;
     public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer;
 
-    public async setup(tests: TestSuite[], isDebugMode: boolean, config: RunConfig): Promise<ITestRunnerParameters> {
+    public async setup(tests: TestSuite[], isDebugMode: boolean, config: RunConfigItem): Promise<ITestRunnerParameters> {
         const uris: Uri[] = tests.map((t) => Uri.parse(t.uri));
         const classpaths: string[] = this._classPathManager.getClassPaths(uris);
         const port: number | undefined = isDebugMode ? await this.getPortWithWrapper() : undefined;

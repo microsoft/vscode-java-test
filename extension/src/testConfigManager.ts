@@ -90,26 +90,32 @@ export class TestConfigManager {
     private createDefaultTestConfig(): TestConfig {
         const projects: ProjectInfo[] = this._projectManager.getAll();
         const config: TestConfig = {
-            run: projects.map((i) => {
-                return {
-                    name: i.name,
-                    projectName: i.name,
-                    workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
-                    args: [],
-                    vmargs: [],
-                    preLaunchTask: '',
-                };
-            }),
-            debug: projects.map((i) => {
-                return {
-                    name: i.name,
-                    projectName: i.name,
-                    workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
-                    args: [],
-                    vmargs: [],
-                    preLaunchTask: '',
-                };
-            }),
+            run: {
+                default: '',
+                items: projects.map((i) => {
+                    return {
+                        name: i.name,
+                        projectName: i.name,
+                        workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
+                        args: [],
+                        vmargs: [],
+                        preLaunchTask: '',
+                    };
+                }),
+            },
+            debug: {
+                default: '',
+                items: projects.map((i) => {
+                    return {
+                        name: i.name,
+                        projectName: i.name,
+                        workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
+                        args: [],
+                        vmargs: [],
+                        preLaunchTask: '',
+                    };
+                }),
+            },
         };
         return config;
     }

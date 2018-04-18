@@ -5,7 +5,7 @@ import { ClassPathManager } from '../classPathManager';
 import { TestStatusBarProvider } from '../testStatusBarProvider';
 import * as Configs from '../Constants/configs';
 import { TestKind, TestLevel, TestResult, TestStatus, TestSuite } from '../Models/protocols';
-import { RunConfig } from '../Models/testConfig';
+import { RunConfigItem } from '../Models/testConfig';
 import * as Logger from '../Utils/Logger/logger';
 import { ITestResult } from './testModel';
 import { ITestRunner } from './testRunner';
@@ -20,7 +20,7 @@ export class TestRunnerWrapper {
         TestRunnerWrapper.runnerPool.set(kind, runner);
     }
 
-    public static async run(tests: TestSuite[], isDebugMode: boolean, config: RunConfig): Promise<void> {
+    public static async run(tests: TestSuite[], isDebugMode: boolean, config: RunConfigItem): Promise<void> {
         if (TestRunnerWrapper.running) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             Logger.info('Skip this run cause we only support running one session at the same time');

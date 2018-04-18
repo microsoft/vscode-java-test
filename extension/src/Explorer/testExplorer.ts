@@ -7,7 +7,7 @@ import { window, workspace, Event, EventEmitter, ExtensionContext, TreeDataProvi
 import { TestResourceManager } from '../testResourceManager';
 import * as Commands from '../Constants/commands';
 import { TestLevel, TestSuite } from '../Models/protocols';
-import { RunConfig } from '../Models/testConfig';
+import { RunConfigItem } from '../Models/testConfig';
 import { TestRunnerWrapper } from '../Runner/testRunnerWrapper';
 import { TestTreeNode, TestTreeNodeType } from './testTreeNode';
 
@@ -54,7 +54,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         });
     }
 
-    public run(element: TestTreeNode, debugMode: boolean, config?: RunConfig) {
+    public run(element: TestTreeNode, debugMode: boolean, config?: RunConfigItem) {
         return TestRunnerWrapper.run(this.resolveTestSuites(element), debugMode, config);
     }
 
