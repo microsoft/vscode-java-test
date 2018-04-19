@@ -35,7 +35,7 @@ import * as Constants from './Constants/constants';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
 import { TestKind, TestLevel, TestSuite } from './Models/protocols';
-import { RunConfig, TestConfig } from './Models/testConfig';
+import { RunConfig, RunConfigItem, TestConfig } from './Models/testConfig';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnit5TestRunner } from './Runner/JUnitTestRunner/junit5TestRunner';
 import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
@@ -52,6 +52,7 @@ const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const testResourceManager: TestResourceManager = new TestResourceManager();
 const classPathManager: ClassPathManager = new ClassPathManager();
 const projectManager: ProjectManager = new ProjectManager();
+const testConfigManager: TestConfigManager = new TestConfigManager(projectManager);
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -68,7 +69,6 @@ export async function activate(context: ExtensionContext) {
     testResourceManager.onDidChangeTestStorage((e) => {
         testExplorer.refresh();
     });
-    const testConfigManager: TestConfigManager = new TestConfigManager(projectManager);
 
     workspace.onDidChangeTextDocument((event) => {
         const uri = event.document.uri;
@@ -84,9 +84,9 @@ export async function activate(context: ExtensionContext) {
 
     checkJavaHome().then((javaHome) => {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, false)));
+            runTest(suites, false, true)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, true)));
+            runTest(suites, true, true)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
             showDetails(test)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
@@ -98,23 +98,19 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
             testExplorer.run(node, true)));
         context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_RUN_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) => {
-            const config = await getTestConfig(testConfigManager, false);
-            return runTest(suites, false, config);
-        }));
+            TelemetryWrapper.registerCommand(Commands.JAVA_RUN_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) =>
+            runTest(suites, false, false)));
         context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) => {
-            const config = await getTestConfig(testConfigManager, true);
-            return runTest(suites, true, config);
-        }));
+            TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) =>
+            runTest(suites, true, false)));
         context.subscriptions.push(
             TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
-            const config = await getTestConfig(testConfigManager, false);
+            const config = await getTestConfig(false, false);
             return testExplorer.run(node, false, config);
         }));
         context.subscriptions.push(
             TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
-            const config = await getTestConfig(testConfigManager, true);
+            const config = await getTestConfig(true, false);
             return testExplorer.run(node, true, config);
         }));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
@@ -188,22 +184,37 @@ function readJavaConfig(): string {
     return config.get<string>('java.home', null);
 }
 
-function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, config?: RunConfig) {
+async function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, defaultConfig: boolean) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
+    const config = await getTestConfig(isDebugMode, defaultConfig);
     return TestRunnerWrapper.run(testList, isDebugMode, config);
 }
 
-async function getTestConfig(configManager: TestConfigManager, isDebugMode: boolean): Promise<RunConfig> {
+async function getTestConfig(isDebugMode: boolean, isDefault: boolean): Promise<RunConfigItem> {
     let config: TestConfig;
     try {
-        config = await configManager.loadConfig();
+        config = await testConfigManager.loadConfig();
     } catch (ex) {
         window.showErrorMessage('Failed to load the test config! Please check whether your test configuration is a valid JSON file');
         throw ex;
     }
-    const runConfigs: RunConfig[] = isDebugMode ? config.debug : config.run;
-    const items = runConfigs.map((c) => {
+    const runConfig: RunConfig = isDebugMode ? config.debug : config.run;
+    if (isDefault) {
+        if (!runConfig.default) {
+            return undefined;
+        }
+        const candidates = runConfig.items.filter((i) => i.name === runConfig.default);
+        if (candidates.length === 0) {
+            window.showWarningMessage(`There is no config with name: ${runConfig.default}.`);
+            return undefined;
+        }
+        if (candidates.length > 1) {
+            window.showWarningMessage(`Duplicate configs with default name: ${runConfig.default}.`);
+        }
+        return candidates[0];
+    }
+    const items = runConfig.items.map((c) => {
         return {
             label: c.name,
             description: `project name: ${c.projectName}`,

@@ -2,11 +2,16 @@
 // Licensed under the MIT license.
 
 export type TestConfig = {
-    run: RunConfig[];
-    debug: RunConfig[];
+    run: RunConfig;
+    debug: RunConfig;
 };
 
 export type RunConfig = {
+    default: string;
+    items: RunConfigItem[];
+};
+
+export type RunConfigItem = {
     name: string;
     projectName: string;
     workingDirectory: string;
