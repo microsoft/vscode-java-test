@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { window, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
+import { window, ProgressLocation, StatusBarAlignment, StatusBarItem, commands } from 'vscode';
 
 import * as Commands from './Constants/commands';
 import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
@@ -43,14 +43,24 @@ export class TestStatusBarProvider {
         this.statusBarItem.color = 'white';
         this.statusBarItem.tooltip = 'View test output';
         this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
-        return action.then(() => this.updateStatus(tests),
-        (reason) => {
-            this.statusBarItem.text = 'Failed to run tests';
-            this.statusBarItem.color = 'red';
-            Logger.error('Failed to run tests.', {
-                error: reason,
+        return window.withProgress({ location: ProgressLocation.Notification, title: 'Running tests', cancellable: true }, (p, token) => {
+            token.onCancellationRequested(() => {
+                Logger.info("User canceled the long running operation");
+                commands.executeCommand(Commands.JAVA_TEST_EXPLORER_CANCEL_TEST);
             });
-            return Promise.reject(reason);
+            p.report({ message: 'Running tests...', increment: 0 });
+            return action.then(() => {
+                this.updateStatus(tests);
+                p.report({ increment: 100 });
+            },
+                (reason) => {
+                    this.statusBarItem.text = 'Failed to run tests';
+                    this.statusBarItem.color = 'red';
+                    Logger.error('Failed to run tests.', {
+                        error: reason,
+                    });
+                    return Promise.reject(reason);
+                });
         });
     }
 
