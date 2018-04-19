@@ -13,10 +13,6 @@ export const JAVA_RUN_TEST_COMMAND = 'java.test.run';
  */
 export const JAVA_DEBUG_TEST_COMMAND = 'java.test.debug';
 
-export const JAVA_RUN_WITH_CONFIG_COMMAND = 'java.test.run.config';
-
-export const JAVA_DEBUG_WITH_CONFIG_COMMAND = 'java.test.debug.config';
-
 export const JAVA_TEST_SHOW_REPORT = 'java.test.show.report';
 
 export const JAVA_TEST_EXPLORER_SELECT = 'java.test.explorer.select';
