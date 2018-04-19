@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { window, ProgressLocation, StatusBarAlignment, StatusBarItem, commands } from 'vscode';
+import { commands, window, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
 
 import * as Commands from './Constants/commands';
 import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
@@ -45,7 +45,7 @@ export class TestStatusBarProvider {
         this.statusBarItem.command = Commands.JAVA_TEST_SHOW_OUTPUT;
         return window.withProgress({ location: ProgressLocation.Notification, title: 'Running tests', cancellable: true }, (p, token) => {
             token.onCancellationRequested(() => {
-                Logger.info("User canceled the long running operation");
+                Logger.info('User canceled the long running operation');
                 commands.executeCommand(Commands.JAVA_TEST_EXPLORER_CANCEL_TEST);
             });
             p.report({ message: 'Running tests...', increment: 0 });
