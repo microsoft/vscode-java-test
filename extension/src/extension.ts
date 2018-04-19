@@ -98,12 +98,6 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
             testExplorer.run(node, true)));
         context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_RUN_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, false, false)));
-        context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_WITH_CONFIG_COMMAND, async (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, true, false)));
-        context.subscriptions.push(
             TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
             const config = await getTestConfig(false, false);
             return testExplorer.run(node, false, config);
