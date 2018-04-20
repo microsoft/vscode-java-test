@@ -53,14 +53,17 @@ export class TestStatusBarProvider {
                 this.updateStatus(tests);
                 p.report({ increment: 100 });
             },
-                (reason) => {
-                    this.statusBarItem.text = 'Failed to run tests';
-                    this.statusBarItem.color = 'red';
-                    Logger.error('Failed to run tests.', {
-                        error: reason,
-                    });
-                    return Promise.reject(reason);
+            (reason) => {
+                this.statusBarItem.text = 'Failed to run tests';
+                this.statusBarItem.color = 'red';
+                if (tests) {
+                    this.statusBarItem.command = CommandUtility.getCommandWithArgs(Commands.JAVA_TEST_SHOW_REPORT, [tests]);
+                }
+                Logger.error('Failed to run tests.', {
+                    error: reason,
                 });
+                return Promise.reject(reason);
+            });
         });
     }
 

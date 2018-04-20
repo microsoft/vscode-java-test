@@ -35,9 +35,14 @@ export class TestRunnerWrapper {
                         await this.execPreLaunchTask(config.workingDirectory, config.preLaunchTask);
                     }
                     const params = await runner.setup(t, isDebugMode, config);
-                    const res = await runner.run(params);
-                    this.updateTestStorage(t, res);
-                    await runner.postRun();
+                    await runner.run(params).then(async (res) => {
+                        this.updateTestStorage(t, res);
+                        await runner.postRun();
+                    }, async ([error, res]) => {
+                        this.updateTestStorage(t, res);
+                        await runner.postRun();
+                        throw error;
+                    });
                 }
             })());
         } finally {

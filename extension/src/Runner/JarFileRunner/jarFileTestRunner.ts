@@ -82,7 +82,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                     {
                         stack: err.stack,
                     });
-                reject(err);
+                reject([err]);
             });
             this._process.stderr.on('data', (data) => {
                 Logger.error(`Error occurred: ${data.toString()}`);
@@ -99,13 +99,14 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 }
             });
             this._process.on('close', (signal) => {
+                if (bufferred.length > 0) {
+                    testResultAnalyzer.analyzeData(bufferred);
+                }
+                const result = testResultAnalyzer.feedBack();
                 if (signal && signal !== 0) {
-                    reject(`Runner exited with code ${signal}.`);
+                    reject([`Runner exited with code ${signal}.`, result]);
                 } else {
-                    if (bufferred.length > 0) {
-                        testResultAnalyzer.analyzeData(bufferred);
-                    }
-                    resolve(testResultAnalyzer.feedBack());
+                    resolve(result);
                 }
                 rimraf(jarParams.storagePath, (err) => {
                     if (err) {
