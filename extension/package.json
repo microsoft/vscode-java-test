@@ -146,8 +146,8 @@
         ],
         "jsonValidation": [
             {
-                "fileMatch": "test.launch.json",
-                "url": "./test.launch.schema.json"
+                "fileMatch": "launch.test.json",
+                "url": "./launch.test.schema.json"
             }
         ],
         "configuration": {
