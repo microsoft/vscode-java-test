@@ -1,0 +1,124 @@
+{
+    "title": "JSON schema for test.launch.json files",
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+      "run": {
+        "$id": "/properties/run",
+        "type": "object",
+        "properties": {
+          "default": {
+            "$id": "/properties/run/properties/default",
+            "type": "string",
+            "title": "The Default Schema ",
+            "description": "The default run config to pick, leave it out if you don't want to run with default config",
+            "default": "",
+            "examples": [
+              ""
+            ]
+          },
+          "items": {
+            "$id": "/properties/run/properties/items",
+            "type": "array",
+            "items": {
+              "$id": "/properties/run/properties/items/items",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$id": "/properties/run/properties/items/items/properties/name",
+                  "type": "string",
+                  "title": "The Name Schema ",
+                  "description": "The Name of the config, should be unique"
+                },
+                "projectName": {
+                  "$id": "/properties/run/properties/items/items/properties/projectName",
+                  "type": "string",
+                  "title": "The Projectname Schema "
+                },
+                "workingDirectory": {
+                  "$id": "/properties/run/properties/items/items/properties/workingDirectory",
+                  "type": "string",
+                  "title": "The Workingdirectory Schema "
+                },
+                "args": {
+                  "$id": "/properties/run/properties/items/items/properties/args",
+                  "type": "array"
+                },
+                "vmargs": {
+                  "$id": "/properties/run/properties/items/items/properties/vmargs",
+                  "type": "array"
+                },
+                "preLaunchTask": {
+                  "$id": "/properties/run/properties/items/items/properties/preLaunchTask",
+                  "type": "string",
+                  "title": "The Prelaunchtask Schema ",
+                  "default": "",
+                  "examples": [
+                    ""
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "debug": {
+        "$id": "/properties/debug",
+        "type": "object",
+        "properties": {
+          "default": {
+            "$id": "/properties/debug/properties/default",
+            "type": "string",
+            "title": "The Default Schema ",
+            "description": "The default debug config to pick, leave it out if you don't want to debug with default config",
+            "default": "",
+            "examples": [
+              ""
+            ]
+          },
+          "items": {
+            "$id": "/properties/debug/properties/items",
+            "type": "array",
+            "items": {
+              "$id": "/properties/debug/properties/items/items",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "$id": "/properties/debug/properties/items/items/properties/name",
+                  "type": "string",
+                  "title": "The Name Schema "
+                },
+                "projectName": {
+                  "$id": "/properties/debug/properties/items/items/properties/projectName",
+                  "type": "string",
+                  "title": "The Projectname Schema "
+                },
+                "workingDirectory": {
+                  "$id": "/properties/debug/properties/items/items/properties/workingDirectory",
+                  "type": "string",
+                  "title": "The Workingdirectory Schema "
+                },
+                "args": {
+                  "$id": "/properties/debug/properties/items/items/properties/args",
+                  "type": "array"
+                },
+                "vmargs": {
+                  "$id": "/properties/debug/properties/items/items/properties/vmargs",
+                  "type": "array"
+                },
+                "preLaunchTask": {
+                  "$id": "/properties/debug/properties/items/items/properties/preLaunchTask",
+                  "type": "string",
+                  "title": "The Prelaunchtask Schema ",
+                  "default": "",
+                  "examples": [
+                    ""
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }

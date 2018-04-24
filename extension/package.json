@@ -144,6 +144,12 @@
                 "category": "Java"
             }
         ],
+        "jsonValidation": [
+            {
+                "fileMatch": "test.launch.json",
+                "url": "./test.launch.schema.json"
+            }
+        ],
         "configuration": {
             "title": "Java Test configuration",
             "properties": {
