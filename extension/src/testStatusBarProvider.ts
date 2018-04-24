@@ -46,7 +46,7 @@ export class TestStatusBarProvider {
         return window.withProgress({ location: ProgressLocation.Notification, title: 'Running tests', cancellable: true }, (p, token) => {
             token.onCancellationRequested(() => {
                 Logger.info('User canceled the long running operation');
-                commands.executeCommand(Commands.JAVA_TEST_EXPLORER_CANCEL_TEST);
+                commands.executeCommand(Commands.JAVA_TEST_CANCEL);
             });
             p.report({ message: 'Running tests...', increment: 0 });
             return action.then(() => {
