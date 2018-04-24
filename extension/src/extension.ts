@@ -111,8 +111,8 @@ export async function activate(context: ExtensionContext) {
             openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
             testConfigManager.editConfig()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_CANCEL_TEST, () =>
-            testExplorer.cancelRun()));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_CANCEL, () =>
+            TestRunnerWrapper.cancel()));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         TestRunnerWrapper.registerRunner(TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();

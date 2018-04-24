@@ -61,11 +61,6 @@
                     "command": "java.test.explorer.debug",
                     "when": "view == testExplorer",
                     "group": "navigation@1"
-                },
-                {
-                    "command": "java.test.explorer.cancel",
-                    "when": "view == testExplorer",
-                    "group": "navigation@2"
                 }
             ],
             "view/item/context": [
@@ -116,12 +111,8 @@
                 "category": "Java"
             },
             {
-                "command": "java.test.explorer.cancel",
+                "command": "java.test.cancel",
                 "title": "Cancel Test",
-                "icon": {
-                    "light": "resources/media/light/placeholder.png",
-                    "dark": "resources/media/dark/placeholder.png"
-                },
                 "category": "Java"
             },
             {
