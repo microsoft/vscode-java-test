@@ -4,6 +4,18 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 - 2018-04-27
+
+### Added
+- Support cancelling a test run. Partial test result would be updated.
+- Add JSON schema validation for test configuration file.
+- Add `default` field in test configuration where user could specify the default config to pick while invoking command `Run Test`.
+
+### Changed
+- Behavior change: after a test run, always show the test report and update test status(might be partial) even when test runner failed.
+- Removed `Run With Config` and `Debug with Config` codelens for simplicity. Still, you can invoke the command from test explorer.
+- Renamed the test configuration file from `test-launch.json` to `launch.test.json`. Original test configuration file won't be removed, but you might need to copy its content to the new one if you have customized config.
+
 ## 0.5.0 - 2018-03-29
 
 ### Added
