@@ -13,6 +13,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 - View test report
 - Test Explorer
 - Test Configuration
+- Cancel a test run
 
 ## Use
 
@@ -31,7 +32,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 ## Requirements
 
 - JDK (version 1.8.0 or later)
-- VS Code (version 1.17.0 or later)
+- VS Code (version 1.22.0 or later)
 - [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) (version 0.14.0 or later)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
 - JUnit4: 4.8.0 or later
