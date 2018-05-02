@@ -24,6 +24,7 @@ import { debug, window, workspace, EventEmitter, Uri } from 'vscode';
 
 export abstract class JarFileTestRunner implements ITestRunner {
     private _process: cp.ChildProcess;
+    private _isCancelled: boolean;
     constructor(
         protected _javaHome: string,
         protected _storagePath: string,
@@ -102,7 +103,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 if (bufferred.length > 0) {
                     testResultAnalyzer.analyzeData(bufferred);
                 }
-                const result = testResultAnalyzer.feedBack();
+                const result = testResultAnalyzer.feedBack(this._isCancelled);
                 if (signal && signal !== 0) {
                     reject([`Runner exited with code ${signal}.`, result]);
                 } else {
@@ -148,6 +149,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         if (this._process) {
             Logger.warn('Cancelling this test run...');
             return new Promise((resolve, reject) => {
+                this._isCancelled = true;
                 kill(this._process.pid, 'SIGTERM', (err) => {
                     if (err) {
                         Logger.error('Failed to cancel this test run.', {
