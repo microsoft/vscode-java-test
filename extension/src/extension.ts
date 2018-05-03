@@ -94,19 +94,15 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
             testExplorer.select(node)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
-            testExplorer.run(node, false)));
+            runTestFromExplorer(testExplorer, node, false, true)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
-            testExplorer.run(node, true)));
+            runTestFromExplorer(testExplorer, node, true, true)));
         context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
-            const config = await getTestConfig(false, false);
-            return testExplorer.run(node, false, config);
-        }));
+            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, (node: TestTreeNode) =>
+            runTestFromExplorer(testExplorer, node, false, false)));
         context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, async (node: TestTreeNode) => {
-            const config = await getTestConfig(true, false);
-            return testExplorer.run(node, true, config);
-        }));
+            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, (node: TestTreeNode) =>
+            runTestFromExplorer(testExplorer, node, true, false)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
             openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
@@ -183,6 +179,11 @@ async function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, def
     const testList = Array.isArray(tests) ? tests : [tests];
     const config = await getTestConfig(isDebugMode, defaultConfig);
     return TestRunnerWrapper.run(testList, isDebugMode, config);
+}
+
+async function runTestFromExplorer(explorer: TestExplorer, node: TestTreeNode, isDebugMode: boolean, defaultConfig: boolean) {
+    const tests = explorer.resolveTestSuites(node);
+    return runTest(tests, isDebugMode, defaultConfig);
 }
 
 async function getTestConfig(isDebugMode: boolean, isDefault: boolean): Promise<RunConfigItem> {

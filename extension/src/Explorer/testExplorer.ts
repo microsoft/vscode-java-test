@@ -58,6 +58,16 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return TestRunnerWrapper.run(this.resolveTestSuites(element), debugMode, config);
     }
 
+    public resolveTestSuites(element: TestTreeNode): TestSuite[] {
+        if (!element) {
+            return (this.getChildren(element) as TestTreeNode[]).map((f) => this.resolveTestSuites(f)).reduce((a, b) => a.concat(b));
+        }
+        if (element.level === TestTreeNodeType.Class || element.level === TestTreeNodeType.Method) {
+            return[this.toTestSuite(element)];
+        }
+        return element.children.map((c) => this.resolveTestSuites(c)).reduce((a, b) => a.concat(b));
+    }
+
     private createTestTreeNode(
         tests: TestSuite[],
         parent: TestTreeNode,
@@ -152,16 +162,6 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             };
         }
         return undefined;
-    }
-
-    private resolveTestSuites(element: TestTreeNode): TestSuite[] {
-        if (!element) {
-            return (this.getChildren(element) as TestTreeNode[]).map((f) => this.resolveTestSuites(f)).reduce((a, b) => a.concat(b));
-        }
-        if (element.level === TestTreeNodeType.Class || element.level === TestTreeNodeType.Method) {
-            return[this.toTestSuite(element)];
-        }
-        return element.children.map((c) => this.resolveTestSuites(c)).reduce((a, b) => a.concat(b));
     }
 
     private toTestSuite(element: TestTreeNode): TestSuite {
