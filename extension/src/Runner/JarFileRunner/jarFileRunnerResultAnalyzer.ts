@@ -9,5 +9,5 @@ export abstract class JarFileRunnerResultAnalyzer {
     constructor(protected _tests: ITestInfo[]) {
     }
     public abstract analyzeData(data: string): void;
-    public abstract feedBack(): ITestResult[];
+    public abstract feedBack(isCancelled: boolean): ITestResult[];
 }

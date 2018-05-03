@@ -30,14 +30,14 @@ export class JUnit5RunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         } while (match);
     }
 
-    public feedBack(): ITestResult[] {
+    public feedBack(isCancelled: boolean): ITestResult[] {
         const toAggregate = new Set();
         const result: ITestResult[] = [];
         this._tests.forEach((t) => {
             if (t.level === TestLevel.Class) {
-                t.children.forEach((c) => this.processMethod(c, result));
+                t.children.forEach((c) => this.processMethod(c, result, isCancelled));
             } else {
-                this.processMethod(t, result);
+                this.processMethod(t, result, isCancelled);
             }
         });
         return result;
@@ -73,8 +73,11 @@ export class JUnit5RunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         }
     }
 
-    private processMethod(t: ITestInfo, result: ITestResult[]): void {
+    private processMethod(t: ITestInfo, result: ITestResult[], isCancelled: boolean): void {
         if (!this._testResults.has(t.test)) {
+            if (isCancelled) {
+                return;
+            }
             this._testResults.set(t.test, {
                 status: TestStatus.Skipped,
             });
