@@ -13,6 +13,7 @@ import { ITestRunnerParameters } from './testRunnerParameters';
 import { JUnitTestRunner } from './JUnitTestRunner/junitTestRunner';
 
 import * as cp from 'child_process';
+import * as kill from 'tree-kill';
 import { window, EventEmitter } from 'vscode';
 
 export class TestRunnerWrapper {
@@ -32,7 +33,16 @@ export class TestRunnerWrapper {
             await TestStatusBarProvider.getInstance().update(tests, (async () => {
                 for (const [runner, t] of runners.entries()) {
                     if (config && config.preLaunchTask.length > 0) {
-                        await this.execPreLaunchTask(config.workingDirectory, config.preLaunchTask);
+                        try {
+                            this.preLaunchTask = cp.exec(
+                                config.preLaunchTask, {
+                                    maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE,
+                                    cwd: config.workingDirectory,
+                                });
+                            await this.execPreLaunchTask();
+                        } finally {
+                            this.preLaunchTask = undefined;
+                        }
                     }
                     const params = await runner.setup(t, isDebugMode, config);
                     await runner.run(params).then(async (res) => {
@@ -51,14 +61,29 @@ export class TestRunnerWrapper {
     }
 
     public static async cancel(): Promise<void> {
-        const tasks: Array<Promise<void>> = [];
-        TestRunnerWrapper.runnerPool.forEach((runner) => tasks.push(runner.cancel()));
-        await Promise.all(tasks);
-        return Promise.resolve();
+        if (this.preLaunchTask) {
+            return new Promise<void>((resolve, reject) => {
+                kill(this.preLaunchTask.pid, 'SIGTERM', (err) => {
+                    if (err) {
+                        Logger.error('Failed to cancel this prelaunch task.', {
+                            error: err,
+                        });
+                        return reject(err);
+                    }
+                    resolve();
+                });
+            });
+        } else {
+            const tasks: Array<Promise<void>> = [];
+            TestRunnerWrapper.runnerPool.forEach((runner) => tasks.push(runner.cancel()));
+            await Promise.all(tasks);
+            return Promise.resolve();
+        }
     }
 
     private static readonly runnerPool: Map<TestKind, ITestRunner> = new Map<TestKind, ITestRunner>();
     private static running: boolean = false;
+    private static preLaunchTask: cp.ChildProcess;
 
     private static classifyTests(tests: TestSuite[]): Map<ITestRunner, TestSuite[]> {
         return tests.reduce((map, t) => {
@@ -137,10 +162,9 @@ export class TestRunnerWrapper {
         };
     }
 
-    private static execPreLaunchTask(cwd: string, task: string): Promise<any> {
+    private static execPreLaunchTask(): Promise<any> {
         return new Promise((resolve, reject) => {
-            const process = cp.exec(task, { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd });
-            process.on('error', (err) => {
+            this.preLaunchTask.on('error', (err) => {
                 Logger.error(
                     `Error occurred while executing prelaunch task. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
                     {
@@ -148,13 +172,13 @@ export class TestRunnerWrapper {
                     });
                 reject(err);
             });
-            process.stderr.on('data', (data) => {
+            this.preLaunchTask.stderr.on('data', (data) => {
                 Logger.error(`Error occurred: ${data.toString()}`);
             });
-            process.stdout.on('data', (data) => {
+            this.preLaunchTask.stdout.on('data', (data) => {
                 Logger.info(data.toString());
             });
-            process.on('close', (signal) => {
+            this.preLaunchTask.on('close', (signal) => {
                 if (signal && signal !== 0) {
                     reject(`Prelaunch task exited with code ${signal}.`);
                 } else {
