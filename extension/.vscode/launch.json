@@ -22,6 +22,9 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [ "${workspaceRoot}/out/test/**/*.js" ],
+            "env": {
+                "CODE_VERSION": "1.22.0"
+            },
             "preLaunchTask": "npm"
         }
     ]
