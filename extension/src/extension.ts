@@ -177,7 +177,7 @@ function readJavaConfig(): string {
 async function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, defaultConfig: boolean) {
     outputChannel.clear();
     const testList = Array.isArray(tests) ? tests : [tests];
-    const config = await getTestConfig(isDebugMode, defaultConfig);
+    const config = await getTestConfig(testList, isDebugMode, defaultConfig);
     return TestRunnerWrapper.run(testList, isDebugMode, config);
 }
 
@@ -186,19 +186,21 @@ async function runTestFromExplorer(explorer: TestExplorer, node: TestTreeNode, i
     return runTest(tests, isDebugMode, defaultConfig);
 }
 
-async function getTestConfig(isDebugMode: boolean, isDefault: boolean): Promise<RunConfigItem> {
-    let config: TestConfig;
+async function getTestConfig(tests: TestSuite[], isDebugMode: boolean, isDefault: boolean): Promise<RunConfigItem> {
+    let configs: TestConfig[];
     try {
-        config = await testConfigManager.loadConfig();
+        configs = await testConfigManager.loadConfig(tests);
     } catch (ex) {
         window.showErrorMessage('Failed to load the test config! Please check whether your test configuration is a valid JSON file');
         throw ex;
     }
-    const runConfig: RunConfig = isDebugMode ? config.debug : config.run;
+    const runConfigs: RunConfig[] = isDebugMode ? configs.map((c) => c.debug) : configs.map((c) => c.run);
     if (isDefault) {
-        if (!runConfig.default) {
+        // we don't support `Run with default config` if you trigger the test from multi-root folders.
+        if (runConfigs.length !== 1 || !runConfigs[0].default) {
             return undefined;
         }
+        const runConfig = runConfigs[0];
         const candidates = runConfig.items.filter((i) => i.name === runConfig.default);
         if (candidates.length === 0) {
             window.showWarningMessage(`There is no config with name: ${runConfig.default}.`);
@@ -209,7 +211,10 @@ async function getTestConfig(isDebugMode: boolean, isDefault: boolean): Promise<
         }
         return candidates[0];
     }
-    const items = runConfig.items.map((c) => {
+    if (runConfigs.length > 1) {
+        window.showWarningMessage('It is not supported to run tests with config from multi root.');
+    }
+    const items = runConfigs.reduce((a, r) => a.concat(r.items), []).map((c) => {
         return {
             label: c.name,
             description: `project name: ${c.projectName}`,

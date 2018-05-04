@@ -8,7 +8,7 @@ import * as path from 'path';
 import { workspace, CancellationToken, Uri } from 'vscode';
 
 export class ProjectManager {
-    private projectInfos: ProjectInfo[] = [];
+    private projectInfos: Map<Uri, ProjectInfo[]> = new Map<Uri, ProjectInfo[]>();
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
         if (!workspace.workspaceFolders) {
@@ -17,7 +17,7 @@ export class ProjectManager {
         return Promise.all(workspace.workspaceFolders.map((wkspace) => {
             return this.getProjectInfo(wkspace.uri).then((infos: ProjectInfo[]) => {
                 infos.forEach((i) => { i.path = Uri.parse(i.path.toString()); });
-                this.storeProjects(infos);
+                this.storeProjects(wkspace.uri, infos);
             },
             (reason) => {
                 if (token.isCancellationRequested) {
@@ -29,17 +29,21 @@ export class ProjectManager {
         }));
     }
 
-    public storeProjects(infos: ProjectInfo[]): void {
-        this.projectInfos = this.projectInfos.concat(infos);
+    public storeProjects(wkspace: Uri, infos: ProjectInfo[]): void {
+        this.projectInfos.set(wkspace, infos);
+    }
+
+    public getProjects(wkspace: Uri): ProjectInfo[] {
+        return this.projectInfos.has(wkspace) ? this.projectInfos.get(wkspace) : [];
     }
 
     public getAll(): ProjectInfo[] {
-        return this.projectInfos.map((i) => ({...i}));
+        return [...this.projectInfos.values()].reduce((a, b) => a.concat(b), []);
     }
 
     public getProjectName(file: Uri): string {
         const fpath: string = this.formatPath(file.fsPath);
-        const matched = this.projectInfos.filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)));
+        const matched = this.getAll().filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)));
         if (matched.length === 0) {
             Logger.error(`Failed to get project name for file ${file}.`);
             return undefined;
