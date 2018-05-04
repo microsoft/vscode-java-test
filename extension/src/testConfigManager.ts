@@ -15,10 +15,6 @@ import * as Logger from './Utils/Logger/logger';
 export class TestConfigManager {
     private readonly _configPath: string;
     constructor(private readonly _projectManager: ProjectManager) {
-        const workspaceFolders = workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            throw new Error('Not supported without a folder!');
-        }
         this._configPath = path.join('.vscode', Configs.TEST_LAUNCH_CONFIG_NAME);
     }
 
@@ -27,10 +23,7 @@ export class TestConfigManager {
     }
 
     public async loadConfig(tests: TestSuite[]): Promise<TestConfig[]> {
-        const folders = [...new Set(tests.map((t) => {
-            const f = workspace.getWorkspaceFolder(Uri.parse(t.uri));
-            return f ? f : undefined;
-        }).filter((t) => t))];
+        const folders = [...new Set(tests.map((t) => workspace.getWorkspaceFolder(Uri.parse(t.uri))).filter((t) => t))];
         return Promise.all(folders.map((f) => new Promise<TestConfig>(async (resolve, reject) => {
             const fullPath = path.join(f.uri.fsPath, this._configPath);
             await this.createTestConfigIfNotExisted(f);
@@ -55,6 +48,9 @@ export class TestConfigManager {
     }
 
     public editConfig(): Promise<TextEditor> {
+        if (!workspace.workspaceFolders) {
+            throw new Error('Not supported without a folder!');
+        }
         const editor = window.activeTextEditor;
         let folder = workspace.getWorkspaceFolder(editor.document.uri);
         if (!folder) {
