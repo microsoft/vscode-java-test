@@ -72,7 +72,7 @@ export class TestConfigManager {
             const configFullPath = path.join(folder.uri.fsPath, this._configPath);
             mkdirp(path.dirname(configFullPath), (merr) => {
                 if (merr && merr.code !== 'EEXIST') {
-                    Logger.error(`Failed to create sub directory for this config. File path: ${configFullPath}`, {
+                    Logger.error(`Failed to create sub directory for this config.`, {
                         error: merr,
                     });
                     return reject(merr);
