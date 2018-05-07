@@ -166,8 +166,10 @@ export class TestRunnerWrapper {
         return new Promise((resolve, reject) => {
             this.preLaunchTask.on('error', (err) => {
                 Logger.error(
-                    `Error occurred while executing prelaunch task. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
+                    `Error occurred while executing prelaunch task.`,
                     {
+                        name: err.name,
+                        message: err.message,
                         stack: err.stack,
                     });
                 reject(err);

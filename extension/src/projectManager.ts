@@ -45,11 +45,11 @@ export class ProjectManager {
         const fpath: string = this.formatPath(file.fsPath);
         const matched = this.getAll().filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)));
         if (matched.length === 0) {
-            Logger.error(`Failed to get project name for file ${file}.`);
+            Logger.error(`Failed to get project name.`);
             return undefined;
         }
         if (matched.length > 1) {
-            Logger.error(`Found multiple projects for file ${file}: ${matched}`);
+            Logger.error(`Found multiple projects: ${matched.map((m) => m.name)}`);
             return undefined;
         }
         return matched[0].name;
