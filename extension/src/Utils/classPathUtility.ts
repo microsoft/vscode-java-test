@@ -33,7 +33,7 @@ export class ClassPathUtility {
         return new Promise((resolve, reject) => {
             mkdirp(path.dirname(tempFile), (err) => {
                 if (err && err.code !== 'EEXIST') {
-                    Logger.error(`Failed to create sub directory for this run. Storage path: ${err}`, {
+                    Logger.error(`Failed to create sub directory for this run.`, {
                         error: err,
                     });
                     reject(err);

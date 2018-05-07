@@ -79,8 +79,10 @@ export abstract class JarFileTestRunner implements ITestRunner {
             let bufferred: string = '';
             this._process.on('error', (err) => {
                 Logger.error(
-                    `Error occurred while running/debugging tests. Name: ${err.name}. Message: ${err.message}. Stack: ${err.stack}.`,
+                    `Error occurred while running/debugging tests.`,
                     {
+                        name: err.name,
+                        message: err.message,
                         stack: err.stack,
                     });
                 reject([err]);
@@ -111,7 +113,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 }
                 rimraf(jarParams.storagePath, (err) => {
                     if (err) {
-                        Logger.error(`Failed to delete storage for this run. Storage path: ${err}`, {
+                        Logger.error(`Failed to delete storage for this run.`, {
                             error: err,
                         });
                     }
@@ -194,7 +196,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
             });
             rimraf(params.storagePath, (err) => {
                 if (err) {
-                    Logger.error(`Failed to delete storage for this run. Storage path: ${err}`, {
+                    Logger.error(`Failed to delete storage for this run.`, {
                         error: err,
                     });
                 }
