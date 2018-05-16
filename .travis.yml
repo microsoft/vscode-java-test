@@ -23,7 +23,6 @@ install:
 - npm install -g typescript
 - npm install -g gulp
 - npm install
-- code --install-extension vscjava.vscode-java-debug
 
 script:
 - gulp tslint
