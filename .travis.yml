@@ -8,7 +8,7 @@ os:
 - osx
 
 env:
-- CODE_VERSION="1.22.0"
+- CODE_VERSION="1.23.0"
 
 before_install:
 - if [ $TRAVIS_OS_NAME == "linux" ]; then
