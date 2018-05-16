@@ -12,10 +12,10 @@ suite('Extension Tests', () => {
     test('Extension should be present', () => {
         assert.ok(vscode.extensions.getExtension('vscjava.vscode-java-test'));
     });
-    test('should activate', function() {
+    /* test('should activate', function() {
         this.timeout(1 * 60 * 1000);
         return vscode.extensions.getExtension('vscjava.vscode-java-test').activate().then((api) => {
             assert.ok(true);
         });
-    });
+    }); */
 });
