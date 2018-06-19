@@ -7,19 +7,28 @@ import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
 import * as os from 'os';
 import * as path from 'path';
 import * as pug from 'pug';
-import { window, workspace, ExtensionContext, TextDocumentContentProvider, Uri, WorkspaceConfiguration } from 'vscode';
+import { window, workspace, Event, EventEmitter, ExtensionContext, TextDocumentContentProvider, Uri, WorkspaceConfiguration } from 'vscode';
 
 export class TestReportProvider implements TextDocumentContentProvider {
 
     public static scheme = 'test-report';
     private static compiledReportTemplate: (any) => string;
     private static compiledErrorTemplate: (any) => string;
+    private _onDidChangeReport: EventEmitter<Uri | undefined> = new EventEmitter<Uri | undefined>();
 
     constructor(private _context: ExtensionContext, private _testResourceProvider: TestResourceManager) {
         TestReportProvider.compiledReportTemplate =
             pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report.pug')));
         TestReportProvider.compiledErrorTemplate =
             pug.compileFile(this._context.asAbsolutePath(path.join('resources', 'templates', 'report_error.pug')));
+    }
+
+    public get onDidChange(): Event<Uri> {
+        return this._onDidChangeReport.event;
+    }
+
+    public refresh(uri: Uri): void {
+        this._onDidChangeReport.fire(uri);
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
@@ -29,7 +38,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
             return this.errorSnippet(`No tests in the uri: ${uri}. Shouldn\'t happen, please report us a bug.`);
         }
         if (testsContainedInFile.findIndex((t) => t.dirty) !== -1) {
-            return this.errorSnippet('Test file has been changed, try open the report again...');
+            return this.errorSnippet('Test file has been changed, try rerun the test again...');
         }
         const testMap: Map<string, TestSuite> = new Map(
             testsContainedInFile.map((t) => t.tests).reduce((a, b) => a.concat(b)).map((t): [string, TestSuite] => [t.test, t]));

@@ -82,6 +82,28 @@ export async function activate(context: ExtensionContext) {
         onDidChange.fire();
     });
 
+    const reports = new Set();
+    workspace.onDidOpenTextDocument((document) => {
+        const uri = document.uri;
+        if (uri.scheme === TestReportProvider.scheme) {
+            reports.add(uri);
+        }
+    });
+    workspace.onDidCloseTextDocument((document) => {
+        const uri = document.uri;
+        if (uri.scheme === TestReportProvider.scheme) {
+            reports.delete(uri);
+        }
+    });
+
+    codeLensProvider.onDidChangeCodeLenses(() => {
+        if (reports.size > 0) {
+            reports.forEach((uri) => {
+                testReportProvider.refresh(uri);
+            });
+        }
+    });
+
     checkJavaHome().then((javaHome) => {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             runTest(suites, false, true)));
