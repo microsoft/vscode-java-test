@@ -80,6 +80,13 @@ export async function activate(context: ExtensionContext) {
         const uri = document.uri;
         testResourceManager.setDirty(uri);
         onDidChange.fire();
+        const fileName = path.win32.basename(uri.fsPath).toLowerCase();
+        if (fileName === 'pom.xml' || fileName === 'build.gradle') {
+            // add a timeout as there is no event to listen when JDTLS updates the project.
+            setTimeout(async () => {
+                await classPathManager.refresh();
+            }, 10000);
+        }
     });
 
     const reports = new Set();
