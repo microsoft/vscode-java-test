@@ -108,6 +108,7 @@ export class TestConfigManager {
                         workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
                         args: [],
                         vmargs: [],
+                        env: {},
                         preLaunchTask: '',
                     };
                 }),
@@ -121,6 +122,7 @@ export class TestConfigManager {
                         workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
                         args: [],
                         vmargs: [],
+                        env: {},
                         preLaunchTask: '',
                     };
                 }),
