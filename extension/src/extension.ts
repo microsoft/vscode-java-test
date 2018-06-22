@@ -80,13 +80,6 @@ export async function activate(context: ExtensionContext) {
         const uri = document.uri;
         testResourceManager.setDirty(uri);
         onDidChange.fire();
-        const fileName = path.basename(uri.fsPath).toLowerCase();
-        if (fileName === 'pom.xml' || fileName === 'build.gradle') {
-            // add a timeout as there is no event to listen when JDTLS updates the project.
-            setTimeout(async () => {
-                await classPathManager.refresh();
-            }, 10000);
-        }
     });
 
     const reports = new Set();
@@ -138,6 +131,8 @@ export async function activate(context: ExtensionContext) {
             testConfigManager.editConfig()));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_CANCEL, () =>
             TestRunnerWrapper.cancel()));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CLASSPATH_REFRESH, () =>
+            classPathManager.refresh()));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         TestRunnerWrapper.registerRunner(TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();

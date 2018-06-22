@@ -10,16 +10,19 @@
  *******************************************************************************/
 package com.microsoft.java.test.plugin.internal;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public class JUnitPlugin implements BundleActivator {
 
+    private static final JavaModelEventProvider javaModelEventProvider = new JavaModelEventProvider();
 	/*
 	 * (non-Javadoc)
 	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
 	 */
 	public void start(BundleContext context) throws Exception {
+	    JavaCore.addElementChangedListener(javaModelEventProvider);
 	}
 	
 	/*
@@ -27,6 +30,7 @@ public class JUnitPlugin implements BundleActivator {
 	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
+	    JavaCore.removeElementChangedListener(javaModelEventProvider);
 	}
 
 }
