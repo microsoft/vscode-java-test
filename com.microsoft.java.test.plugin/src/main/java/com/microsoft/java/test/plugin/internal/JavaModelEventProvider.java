@@ -1,13 +1,15 @@
-/*******************************************************************************
- * Copyright (c) 2017 Microsoft Corporation and others.
+/*
+ * Copyright (c) 2012-2018 Red Hat, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
+ * Originally copied from org.eclipse.che.jdt.ls.extension.core.internal.JavaModelEventProvider
+ *
  * Contributors:
- *     Microsoft Corporation - initial API and implementation
- *******************************************************************************/
+ *   Red Hat, Inc. - initial API and implementation
+ */
 package com.microsoft.java.test.plugin.internal;
 
 import java.util.HashSet;
