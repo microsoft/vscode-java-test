@@ -131,6 +131,8 @@ export async function activate(context: ExtensionContext) {
             testConfigManager.editConfig()));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_CANCEL, () =>
             TestRunnerWrapper.cancel()));
+        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CLASSPATH_REFRESH, () =>
+            classPathManager.refresh()));
         TestRunnerWrapper.registerRunner(TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         TestRunnerWrapper.registerRunner(TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, onDidChange));
         classPathManager.refresh();
