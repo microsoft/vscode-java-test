@@ -34,11 +34,12 @@ export class TestReportProvider implements TextDocumentContentProvider {
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
         const [target, test, reportType] = decodeTestSuite(uri);
         const testsContainedInFile = target.map((t) => this._testResourceProvider.getTests(t));
+        let isLegacy: boolean = false;
         if (testsContainedInFile.findIndex((t) => !t) !== -1) {
             return this.errorSnippet(`No tests in the uri: ${uri}. Shouldn\'t happen, please report us a bug.`);
         }
         if (testsContainedInFile.findIndex((t) => t.dirty) !== -1) {
-            return this.errorSnippet('Test file has been changed, try rerun the test again...');
+            isLegacy = true;
         }
         const testMap: Map<string, TestSuite> = new Map(
             testsContainedInFile.map((t) => t.tests).reduce((a, b) => a.concat(b)).map((t): [string, TestSuite] => [t.test, t]));
@@ -46,10 +47,10 @@ export class TestReportProvider implements TextDocumentContentProvider {
         if (matchedTest.findIndex((t) => !t) !== -1) {
             return this.errorSnippet('No matched test found in the test storage. Shouldn\'t happen, please report us a bug.');
         }
-        return this.reportSnippet(matchedTest, reportType);
+        return this.reportSnippet(matchedTest, reportType, isLegacy);
     }
 
-    private reportSnippet(test: TestSuite[], type: TestReportType): Promise<string> {
+    private reportSnippet(test: TestSuite[], type: TestReportType, isLegacy: boolean): Promise<string> {
         const flattenedTests: TestSuite[] = this.flattenTests(test);
         const passedTests: TestSuite[] = flattenedTests.filter((c) => c.result && c.result.status === TestStatus.Pass);
         const failedTests: TestSuite[] = flattenedTests.filter((c) => c.result && c.result.status === TestStatus.Fail);
@@ -62,6 +63,7 @@ export class TestReportProvider implements TextDocumentContentProvider {
             type,
             name: test.length === 1 ? test[0].test.replace('#', '.') : undefined,
             showFilters: flattenedTests.length > 1 || test[0].level === TestLevel.Class,
+            isLegacy,
             cssFile: this.cssTheme(),
             totalCount: flattenedTests.length,
             passCount: passedTests.length,
