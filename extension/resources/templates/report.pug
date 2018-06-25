@@ -12,6 +12,8 @@ html(lang="en")
     body.bg-dark(style='padding-top:70px;')
         .navbar.navbar-dark.bg-dark.fixed-top.navbar-expand-sm
             a.navbar-brand(href='#') Test Report
+            if isLegacy
+                div.text-light Test file has been changed, try rerun the test again...
             if showFilters
                 div.collapse.navbar-collapse
                     ul.navbar-nav
