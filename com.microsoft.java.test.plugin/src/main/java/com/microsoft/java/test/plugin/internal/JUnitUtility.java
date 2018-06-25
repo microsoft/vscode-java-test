@@ -12,6 +12,7 @@ package com.microsoft.java.test.plugin.internal;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.Flags;
@@ -75,14 +76,15 @@ public class JUnitUtility {
 
     static boolean hasTestAnnotation(IMethod method, String annotation) {
         try {
-            String name = annotation.substring(annotation.lastIndexOf('.') + 1);
-            if (!Arrays.stream(method.getAnnotations()).anyMatch(a -> a.getElementName().equals(name))) {
+            Optional<IAnnotation> matched = Arrays.stream(method.getAnnotations()).filter(a -> annotation.endsWith(a.getElementName())).findAny();
+            if (!matched.isPresent()) {
                 return false;
             }
-            IAnnotation anno = method.getAnnotation(name);
+            IAnnotation anno = matched.get();
             if (!anno.exists()) {
                 return false;
             }
+            String name = anno.getElementName();
             String[][] fullNameArr = method.getDeclaringType().resolveType(name);
             if (fullNameArr == null) {
                 ICompilationUnit cu = method.getCompilationUnit();
