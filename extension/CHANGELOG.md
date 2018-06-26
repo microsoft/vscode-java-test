@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support configuring environment variables in test configuration.
 
 ### Changed
-- Move test explorer to Test View container(Thanks @sandy081 for contributing the [pr](https://github.com/Microsoft/vscode-java-test/commit/79e0c376a0f25aef520ee3cd877d368ee677d34c).)
+- Move test explorer to Test View container(Thanks @sandy081 for contributing to the [pull request](https://github.com/Microsoft/vscode-java-test/commit/79e0c376a0f25aef520ee3cd877d368ee677d34c).)
 - Auto refresh test report when files update. And still show previous test report until user reruns the test.
 
 ### Fixed
