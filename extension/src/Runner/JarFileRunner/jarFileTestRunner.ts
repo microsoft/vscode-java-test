@@ -73,9 +73,9 @@ export abstract class JarFileTestRunner implements ITestRunner {
         }
         const command: string = await this.constructCommandWithWrapper(jarParams);
         const cwd = env.config ? env.config.workingDirectory : workspace.getWorkspaceFolder(Uri.parse(env.tests[0].uri)).uri.fsPath;
-        const options = { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd, env: {} };
+        const options = { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd, env: process.env };
         if (env.config && env.config.env) {
-            options.env = env.config.env;
+            options.env = {...env.config.env, ...options.env};
         }
         this._process = cp.exec(command, options);
         return new Promise<ITestResult[]>((resolve, reject) => {
