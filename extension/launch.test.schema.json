@@ -59,6 +59,12 @@
                   "examples": [
                     ""
                   ]
+                },
+                "env": {
+                  "$id": "/properties/run/properties/items/items/properties/env",
+                  "type": "object",
+                  "title": "env",
+                  "description": "The extra environment variables for the test run."
                 }
               }
             }
@@ -120,6 +126,12 @@
                   "examples": [
                     ""
                   ]
+                },
+                "env": {
+                  "$id": "/properties/run/properties/items/items/properties/env",
+                  "type": "object",
+                  "title": "env",
+                  "description": "The extra environment variables for the test debug run."
                 }
               }
             }
