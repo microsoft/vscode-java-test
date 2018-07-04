@@ -10,9 +10,12 @@
  */
 package com.microsoft.java.test.runner;
 
-public class JUnitLauncher
-{
+public class JUnitLauncher {
     public static void main(String[] args) {
+        System.exit(execute(args));
+    }
+
+    private static int execute(String[] args) {
         try {
             if (args.length == 0) {
                 TestingMessageHelper.reporterAttached(System.out);
@@ -21,10 +24,13 @@ public class JUnitLauncher
                 CustomizedJUnitCoreRunner jUnitCore = new CustomizedJUnitCoreRunner();
                 jUnitCore.run(args);
             }
+            return 0;
         } catch (Throwable e) {
-            e.printStackTrace(); // don't allow System.exit(0) to swallow exceptions
+            e.printStackTrace();
+            return 1;
         } finally {
-            System.exit(0);
+            System.err.flush();
+            System.out.flush();
         }
     }
 }
