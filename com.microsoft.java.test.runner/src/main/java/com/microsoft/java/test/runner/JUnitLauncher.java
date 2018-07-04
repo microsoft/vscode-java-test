@@ -12,8 +12,7 @@ package com.microsoft.java.test.runner;
 
 public class JUnitLauncher {
     public static void main(String[] args) {
-        int exitCode = execute(args);
-        System.exit(exitCode);
+        System.exit(execute(args));
     }
 
     private static int execute(String[] args) {
@@ -27,7 +26,7 @@ public class JUnitLauncher {
             }
             return 0;
         } catch (Throwable e) {
-            e.printStackTrace(); // don't allow System.exit(0) to swallow exceptions
+            e.printStackTrace();
             return 1;
         } finally {
             System.err.flush();
