@@ -16,7 +16,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
     private _suiteName: string;
 
     public analyzeData(data: string): void {
-        const regex = /@@<([^@]*)>/gm;
+        const regex = /@@<({[^@]*})>/gm;
         let match;
         do {
             match = regex.exec(data);
