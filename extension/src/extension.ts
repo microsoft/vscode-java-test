@@ -215,7 +215,8 @@ async function getTestConfig(tests: TestSuite[], isDebugMode: boolean, isDefault
     try {
         configs = await testConfigManager.loadConfig(tests);
     } catch (ex) {
-        window.showErrorMessage('Failed to load the test config! Please check whether your test configuration is a valid JSON file');
+        window.showErrorMessage(
+            `Failed to load the test config! Please check whether your test configuration is a valid JSON file. Details: ${ex.message}.`);
         throw ex;
     }
     const runConfigs: RunConfig[] = isDebugMode ? configs.map((c) => c.debug) : configs.map((c) => c.run);

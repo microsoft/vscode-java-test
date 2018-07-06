@@ -26,7 +26,7 @@ export class TelemetryTransport extends winston.Transport {
         try {
             TelemetryWrapper.sendTelemetryEvent(this.toTelemetryEvent(logLevel), {
                 message: msg,
-                meta,
+                ...meta,
             });
         } catch (telemetryErr) {
             Logger.error('Failed to send telemetry event. error: ' + telemetryErr);
