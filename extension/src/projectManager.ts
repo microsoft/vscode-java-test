@@ -41,18 +41,28 @@ export class ProjectManager {
         return [...this.projectInfos.values()].reduce((a, b) => a.concat(b), []);
     }
 
-    public getProjectName(file: Uri): string {
+    public getProject(file: Uri): ProjectInfo {
         const fpath: string = this.formatPath(file.fsPath);
         const matched = this.getAll().filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)));
         if (matched.length === 0) {
-            Logger.error(`Failed to get project name.`);
+            Logger.error(`Failed to get project.`);
             return undefined;
         }
         if (matched.length > 1) {
             Logger.error(`Found multiple projects: ${matched.map((m) => m.name)}`);
             return undefined;
         }
-        return matched[0].name;
+        return matched[0];
+    }
+
+    public getProjectName(file: Uri): string {
+        const project = this.getProject(file);
+        return project && project.name;
+    }
+
+    public getProjectPath(file: Uri): Uri {
+        const project = this.getProject(file);
+        return project && project.path;
     }
 
     private formatPath(p: string): string {

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ClassPathManager } from '../../classPathManager';
+import { ProjectManager } from '../../projectManager';
 import { TestStatusBarProvider } from '../../testStatusBarProvider';
 import * as Configs from '../../Constants/configs';
 import { TestSuite } from '../../Models/protocols';
@@ -29,6 +30,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         protected _javaHome: string,
         protected _storagePath: string,
         protected _classPathManager: ClassPathManager,
+        protected _projectManager: ProjectManager,
         protected _onDidChange: EventEmitter<void>) {
     }
 
@@ -72,7 +74,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
             return Promise.reject('Illegal env type, should pass in IJarFileTestRunnerParameters!');
         }
         const command: string = await this.constructCommandWithWrapper(jarParams);
-        const cwd = env.config ? env.config.workingDirectory : workspace.getWorkspaceFolder(Uri.parse(env.tests[0].uri)).uri.fsPath;
+        const cwd = env.config ? env.config.workingDirectory : this._projectManager.getProjectPath(Uri.parse(env.tests[0].uri)).fsPath;
         const options = { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd, env: process.env };
         if (env.config && env.config.env) {
             options.env = {...env.config.env, ...options.env};

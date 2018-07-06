@@ -107,7 +107,7 @@ export class TestConfigManager {
                     return {
                         name: i.name,
                         projectName: i.name,
-                        workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
+                        workingDirectory: i.path.fsPath,
                         args: [],
                         vmargs: [],
                         env: {},
@@ -121,7 +121,7 @@ export class TestConfigManager {
                     return {
                         name: i.name,
                         projectName: i.name,
-                        workingDirectory: workspace.getWorkspaceFolder(i.path).uri.fsPath,
+                        workingDirectory: i.path.fsPath,
                         args: [],
                         vmargs: [],
                         env: {},
