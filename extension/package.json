@@ -142,6 +142,11 @@
                 "command": "java.test.configure",
                 "title": "Edit Test Configuration",
                 "category": "Java"
+            },
+            {
+                "command": "java.classpath.refresh",
+                "title": "Refresh Classpath",
+                "category": "Java"
             }
         ],
         "jsonValidation": [
