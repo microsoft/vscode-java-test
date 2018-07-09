@@ -104,7 +104,7 @@ export async function activate(context: ExtensionContext) {
         }
     });
 
-    checkJavaHome().then((javaHome) => {
+    await checkJavaHome().then(async (javaHome) => {
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
             runTest(suites, false, true)));
         context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
@@ -137,7 +137,7 @@ export async function activate(context: ExtensionContext) {
             TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         TestRunnerWrapper.registerRunner(
             TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
-        classPathManager.refresh();
+        await classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
         Logger.error("couldn't find Java home.", {
