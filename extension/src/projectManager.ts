@@ -8,6 +8,7 @@ import * as path from 'path';
 import { workspace, CancellationToken, Uri } from 'vscode';
 
 export class ProjectManager {
+    // mapping from workspace folder uri to projects.
     private projectInfos: Map<Uri, ProjectInfo[]> = new Map<Uri, ProjectInfo[]>();
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
