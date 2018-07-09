@@ -50,8 +50,8 @@ const onDidChange: EventEmitter<void> = new EventEmitter<void>();
 const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const testResourceManager: TestResourceManager = new TestResourceManager();
-const classPathManager: ClassPathManager = new ClassPathManager();
 const projectManager: ProjectManager = new ProjectManager();
+const classPathManager: ClassPathManager = new ClassPathManager(projectManager);
 const testConfigManager: TestConfigManager = new TestConfigManager(projectManager);
 
 // this method is called when your extension is activated
@@ -138,7 +138,6 @@ export async function activate(context: ExtensionContext) {
         TestRunnerWrapper.registerRunner(
             TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         classPathManager.refresh();
-        projectManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
         Logger.error("couldn't find Java home.", {
