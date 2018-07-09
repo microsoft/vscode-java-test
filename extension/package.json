@@ -145,7 +145,7 @@
             },
             {
                 "command": "java.classpath.refresh",
-                "title": "Manually Refresh Classpath",
+                "title": "Refresh Classpath",
                 "category": "Java"
             }
         ],
