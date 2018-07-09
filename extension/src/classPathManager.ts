@@ -8,7 +8,7 @@ import * as Logger from './Utils/Logger/logger';
 
 export class ClassPathManager {
     // mapping from project folder uri to classpaths.
-    private classPathCache = new Map<Uri, string[]>();
+    private _classPathCache = new Map<Uri, string[]>();
     constructor(private readonly _projectManager: ProjectManager) {
     }
 
@@ -18,9 +18,7 @@ export class ClassPathManager {
         }
         await this._projectManager.refresh();
         return Promise.all(this._projectManager.getAll().map((info) => {
-            return calculateClassPath(info.path).then((classpath: string[]) => {
-                this.storeClassPath(info.path, classpath);
-            },
+            return calculateClassPath(info.path).then((classpath: string[]) => this.storeClassPath(info.path, classpath),
             (reason) => {
                 if (token.isCancellationRequested) {
                     return;
@@ -32,22 +30,22 @@ export class ClassPathManager {
     }
 
     public dispose() {
-        this.classPathCache.clear();
+        this._classPathCache.clear();
     }
 
     public getClassPath(resource: Uri): string[] | undefined {
         const path = this._projectManager.getProjectPath(resource);
-        return this.classPathCache.has(path) ? this.classPathCache.get(path) : undefined;
+        return this._classPathCache.has(path) ? this._classPathCache.get(path) : undefined;
     }
 
     public getClassPaths(resources: Uri[]): string[] | undefined {
-        const set = new Set(resources.map((r) => this._projectManager.getProjectPath(r)).filter((p) => p && this.classPathCache.has(p)));
-        return [...set].map((p) => this.classPathCache.get(p)).reduce((a, b) => a.concat(b), []);
+        const set = new Set(resources.map((r) => this._projectManager.getProjectPath(r)).filter((p) => p && this._classPathCache.has(p)));
+        return [...set].map((p) => this._classPathCache.get(p)).reduce((a, b) => a.concat(b), []);
     }
 
     public storeClassPath(resource: Uri, classPath: string[]): void {
         const path = this._projectManager.getProjectPath(resource);
-        this.classPathCache.set(path, classPath);
+        this._classPathCache.set(path, classPath);
     }
 }
 
