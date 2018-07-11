@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.7.1 - 2018-07-11
+
+### Fixed
+- Fix the issue that the test runer hangs for some tests.
+- Fix classpath resolution issue for the scenario that there are multiple projects in a workspace folder. [#176](https://github.com/Microsoft/vscode-java-test/issues/176)
+- Fix bug for default working directory. [#229](https://github.com/Microsoft/vscode-java-test/issues/229)
+- Fix bug for test output analyzer. [#231](https://github.com/Microsoft/vscode-java-test/issues/231)
+- Add environment variable into test configuration schema.(Thanks @thwfreak for contributing the [pull request](https://github.com/Microsoft/vscode-java-test/pull/225))
+- Fix bug for environment variables in the test configuration. [#222](https://github.com/Microsoft/vscode-java-test/issues/222)
+
 ## 0.7.0 - 2018-06-26
 
 ### Added
