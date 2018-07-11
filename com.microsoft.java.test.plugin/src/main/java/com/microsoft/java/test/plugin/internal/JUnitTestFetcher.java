@@ -68,6 +68,7 @@ public class JUnitTestFetcher {
             RelationShipCache relations) throws JavaModelException {
         ArrayList<TestSuite> suites = new ArrayList<>(elements.length);
         String uri = getUri(unit);
+        String project = unit.getJavaProject().getProject().getName();
         for (IJavaElement element : elements) {
             if (monitor.isCanceled()) {
                 return Collections.emptyList();
@@ -83,7 +84,7 @@ public class JUnitTestFetcher {
                     String test = type.getFullyQualifiedName();
                     TestKind kind = children.size() > 0 ? children.get(0).getKind() : TestKind.JUnit;
                     TestSuite cur = new TestSuite(getRange(unit, element), uri, test,
-                            type.getPackageFragment().getElementName(), TestLevel.Class, kind);
+                            type.getPackageFragment().getElementName(), TestLevel.Class, kind, project);
                     List<TestSuite> directChildren = children.stream().filter(c -> c.getParent() == null)
                             .collect(Collectors.toList());
                     relations.children.put(cur, directChildren);
@@ -100,7 +101,7 @@ public class JUnitTestFetcher {
                     IType type = ((IMethod) element).getDeclaringType();
                     String test = type.getFullyQualifiedName() + "#" + element.getElementName();
                     suites.add(new TestSuite(getRange(unit, element), uri, test,
-                            type.getPackageFragment().getElementName(), TestLevel.Method, isJunit4 ? TestKind.JUnit : TestKind.JUnit5));
+                            type.getPackageFragment().getElementName(), TestLevel.Method, isJunit4 ? TestKind.JUnit : TestKind.JUnit5, project));
                 }
             }
         }

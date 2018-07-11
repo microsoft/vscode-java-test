@@ -21,6 +21,8 @@ public class TestSuite {
 
     private TestKind kind;
 
+    private String project;
+
     public Range getRange() {
         return range;
     }
@@ -85,12 +87,21 @@ public class TestSuite {
         this.parentIndex = parent;
     }
 
-    public TestSuite(Range range, String uri, String test, String packageName, TestLevel level, TestKind kind) {
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public TestSuite(Range range, String uri, String test, String packageName, TestLevel level, TestKind kind, String project) {
         this.range = range;
         this.uri = uri;
         this.test = test;
         this.packageName = packageName;
         this.level = level;
         this.kind = kind;
+        this.project = project;
     }
 }
