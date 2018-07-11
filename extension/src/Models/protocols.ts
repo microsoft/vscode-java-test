@@ -19,6 +19,7 @@ export type TestSuite = {
     packageName: string;
     level: TestLevel;
     kind: TestKind;
+    project: string;
     result?: TestResult;
 };
 

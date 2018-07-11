@@ -111,15 +111,16 @@ public abstract class JUnitTestSearcher {
     private TestSuite getTestSuite(IMember member) throws JavaModelException {
         ICompilationUnit unit = member.getCompilationUnit();
         String uri = ResourceUtils.toClientUri(JDTUtils.toUri(unit));
+        String project = unit.getJavaProject().getProject().getName();
         if (member.getElementType() == IJavaElement.TYPE) {
             IType type = (IType) member;
             return new TestSuite(getRange(unit, member), uri, type.getFullyQualifiedName(),
-                    type.getPackageFragment().getElementName(), TestLevel.Class, this.getTestKind());
+                    type.getPackageFragment().getElementName(), TestLevel.Class, this.getTestKind(), project);
         } else {
             IType type = ((IMethod) member).getDeclaringType();
             return new TestSuite(getRange(unit, member), uri,
                     type.getFullyQualifiedName() + "#" + member.getElementName(),
-                    type.getPackageFragment().getElementName(), TestLevel.Method, this.getTestKind());
+                    type.getPackageFragment().getElementName(), TestLevel.Method, this.getTestKind(), project);
         }
     }
 
