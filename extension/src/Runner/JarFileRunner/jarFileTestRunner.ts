@@ -39,6 +39,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public abstract get runnerClassName(): string;
     public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string>;
     public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer;
+    public abstract clone(): ITestRunner;
 
     public async setup(tests: TestSuite[], isDebugMode: boolean, config: RunConfigItem): Promise<ITestRunnerParameters> {
         const uris: Uri[] = tests.map((t) => Uri.parse(t.uri));

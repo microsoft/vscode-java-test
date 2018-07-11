@@ -3,6 +3,7 @@
 
 import * as glob from 'glob';
 import * as path from 'path';
+import { ITestRunner } from '../testRunner';
 import { IJarFileTestRunnerParameters } from '../JarFileRunner/jarFileRunnerParameters';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
 import { JarFileTestRunner } from '../JarFileRunner/jarFileTestRunner';
@@ -59,5 +60,9 @@ export class JUnitTestRunner extends JarFileTestRunner {
 
     public getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer {
         return new JUnitRunnerResultAnalyzer(params.tests);
+    }
+
+    public clone(): ITestRunner {
+        return new JUnitTestRunner(this._javaHome, this._storagePath, this._classPathManager, this._projectManager, this._onDidChange);
     }
 }
