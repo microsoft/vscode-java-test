@@ -29,9 +29,9 @@ export class TestRunnerWrapper {
         }
         TestRunnerWrapper.running = true;
         try {
-            const runners: Map<ITestRunner, TestSuite[]> = TestRunnerWrapper.classifyTests(tests);
+            TestRunnerWrapper.classifyTests(tests);
             await TestStatusBarProvider.getInstance().update(tests, (async () => {
-                for (const [runner, t] of runners.entries()) {
+                for (const [runner, t] of this.runners.entries()) {
                     if (config && config.preLaunchTask.length > 0) {
                         try {
                             this.preLaunchTask = cp.exec(
@@ -75,32 +75,32 @@ export class TestRunnerWrapper {
             });
         } else {
             const tasks: Array<Promise<void>> = [];
-            TestRunnerWrapper.runnerPool.forEach((runner) => tasks.push(runner.cancel()));
+            TestRunnerWrapper.runners.forEach((ts, runner) => tasks.push(runner.cancel()));
             await Promise.all(tasks);
             return Promise.resolve();
         }
     }
 
     private static readonly runnerPool: Map<TestKind, ITestRunner> = new Map<TestKind, ITestRunner>();
+    private static runners: Map<ITestRunner, TestSuite[]>;
     private static running: boolean = false;
     private static preLaunchTask: cp.ChildProcess;
 
-    private static classifyTests(tests: TestSuite[]): Map<ITestRunner, TestSuite[]> {
-        return tests.reduce((map, t) => {
-            const runner = this.getRunner(t);
+    private static classifyTests(tests: TestSuite[]): void {
+        const testsPerProject = tests.reduce((rp, rt) => {
+            const key: string = rt.project.concat(rt.kind.toString());
+            (rp[key] = rp[key] || []).push(rt);
+            return rp;
+        }, new Map<string, TestSuite[]>());
+        TestRunnerWrapper.runners = [...testsPerProject.values()].reduce((map, ts) => {
+            const runner = this.getRunner(ts[0]);
             if (runner === null) {
-                Logger.warn(`Cannot find matched runner to run the test: ${t.test}`, {
-                    test: t,
+                Logger.warn(`Cannot find matched runner to run the test: ${ts[0].test}`, {
+                    test: ts[0],
                 });
                 return map;
             }
-            const collection: TestSuite[] = map.get(runner);
-            if (!collection) {
-                map.set(runner, [t]);
-            } else {
-                collection.push(t);
-            }
-            return map;
+            map.set(runner.clone(), ts);
         }, new Map<ITestRunner, TestSuite[]>());
     }
 

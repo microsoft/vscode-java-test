@@ -5,6 +5,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 
 import { TestLevel } from '../../Models/protocols';
+import { ITestRunner } from '../testRunner';
 import { IJarFileTestRunnerParameters } from '../JarFileRunner/jarFileRunnerParameters';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
 import { JarFileTestRunner } from '../JarFileRunner/jarFileTestRunner';
@@ -61,5 +62,9 @@ export class JUnit5TestRunner extends JarFileTestRunner {
 
     public getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer {
         return new JUnit5RunnerResultAnalyzer(params.tests);
+    }
+
+    public clone(): ITestRunner {
+        return new JUnit5TestRunner(this._javaHome, this._storagePath, this._classPathManager, this._projectManager, this._onDidChange);
     }
 }

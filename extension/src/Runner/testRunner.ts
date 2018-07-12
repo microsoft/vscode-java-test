@@ -10,4 +10,5 @@ export interface ITestRunner {
     run(params: ITestRunnerParameters): Promise<ITestResult[]>;
     postRun(): Promise<void>;
     cancel(): Promise<void>;
+    clone(): ITestRunner;
 }
