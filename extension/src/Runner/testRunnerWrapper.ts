@@ -89,7 +89,11 @@ export class TestRunnerWrapper {
     private static classifyTests(tests: TestSuite[]): void {
         const testsPerProject = tests.reduce((rp, rt) => {
             const key: string = rt.project.concat(rt.kind.toString());
-            (rp[key] = rp[key] || []).push(rt);
+            if (!rp.has(key)) {
+                rp.set(key, [rt]);
+            } else {
+                rp.get(key).push(rt);
+            }
             return rp;
         }, new Map<string, TestSuite[]>());
         TestRunnerWrapper.runners = [...testsPerProject.values()].reduce((map, ts) => {
@@ -101,6 +105,7 @@ export class TestRunnerWrapper {
                 return map;
             }
             map.set(runner.clone(), ts);
+            return map;
         }, new Map<ITestRunner, TestSuite[]>());
     }
 
