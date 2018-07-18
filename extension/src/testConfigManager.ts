@@ -75,22 +75,14 @@ export class TestConfigManager {
                     });
                     return reject(merr);
                 }
-                fs.open(configFullPath, 'wx', (err) => {
-                    if (err) {
-                        if (err.code !== 'EEXIST') {
-                            return reject(err);
-                        }
-                    } else {
-                        const config: TestConfig = this.createDefaultTestConfig(folder.uri);
-                        const content: string = JSON.stringify(config, null, 4);
-                        fs.writeFile(configFullPath, content, 'utf-8', (writeErr) => {
-                            if (writeErr) {
-                                Logger.error(`Failed to create default test config! Details: ${writeErr.message}.`, {
-                                    error: writeErr,
-                                });
-                                return reject(writeErr);
-                            }
+                const config: TestConfig = this.createDefaultTestConfig(folder.uri);
+                const content: string = JSON.stringify(config, null, 4);
+                fs.writeFile(configFullPath, content, { flag: 'wx' }, (writeErr) => {
+                    if (writeErr && writeErr.code !== 'EEXIST') {
+                        Logger.error(`Failed to create default test config! Details: ${writeErr.message}.`, {
+                            error: writeErr,
                         });
+                        return reject(writeErr);
                     }
                     resolve(configFullPath);
                 });
