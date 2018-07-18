@@ -15,7 +15,7 @@ export class TestNGTestRunner extends JarFileTestRunner {
 
     public get runnerJarFilePath(): string {
         const serverHome: string = path.resolve(__dirname, '../../../../server');
-        const launchersFound: string[] = glob.sync('**/com.microsoft.java.test.runner.testng-*-jar-with-dependencies.jar', { cwd: serverHome });
+        const launchersFound: string[] = glob.sync('**/com.microsoft.java.test.runner.testng-*.jar', { cwd: serverHome });
         if (launchersFound.length) {
             return path.resolve(serverHome, launchersFound[0]);
         } else {
