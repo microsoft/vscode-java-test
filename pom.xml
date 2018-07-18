@@ -14,6 +14,7 @@
     <modules>
         <module>com.microsoft.java.test.plugin</module>
         <module>com.microsoft.java.test.runner</module>
+        <module>com.microsoft.java.test.runner.testng</module>
         <module>com.microsoft.java.test.runner.junit5</module>
     </modules>
     <build>

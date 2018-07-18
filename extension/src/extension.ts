@@ -43,6 +43,7 @@ import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 import { OutputTransport } from './Utils/Logger/outputTransport';
 import { TelemetryTransport } from './Utils/Logger/telemetryTransport';
+import { TestNGTestRunner } from './Runner/JUnitTestRunner/testngTestRunner';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -137,6 +138,8 @@ export async function activate(context: ExtensionContext) {
             TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         TestRunnerWrapper.registerRunner(
             TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
+        TestRunnerWrapper.registerRunner(
+            TestKind.TestNG, new TestNGTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         await classPathManager.refresh();
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");

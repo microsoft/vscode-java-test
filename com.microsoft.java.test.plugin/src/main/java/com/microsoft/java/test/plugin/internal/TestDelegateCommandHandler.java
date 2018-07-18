@@ -30,6 +30,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final JUnitTestSearcher[] Searchers = new JUnitTestSearcher[] {
             new JUnit4TestSearcher(),
             new JUnit5TestSearcher(),
+            new TestNGTestSearcher()
     };
 
     @Override
