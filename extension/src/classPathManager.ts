@@ -20,7 +20,7 @@ export class ClassPathManager {
         return Promise.all(this._projectManager.getAll().map((info) => {
             return calculateClassPath(info.path).then((classpath: string[]) => this.storeClassPath(info.path, classpath),
             (reason) => {
-                if (token.isCancellationRequested) {
+                if (token && token.isCancellationRequested) {
                     return;
                 }
                 Logger.error(`Failed to refresh class path. Details: ${reason}.`);

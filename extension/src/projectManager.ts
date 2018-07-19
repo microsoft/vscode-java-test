@@ -21,7 +21,7 @@ export class ProjectManager {
                 this.storeProjects(wkspace.uri, infos);
             },
             (reason) => {
-                if (token.isCancellationRequested) {
+                if (token && token.isCancellationRequested) {
                     return;
                 }
                 Logger.error(`Failed to refresh project mapping. Details: ${reason}.`);

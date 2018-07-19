@@ -51,7 +51,7 @@ export class TestConfigManager {
             throw new Error('Not supported without a folder!');
         }
         const editor = window.activeTextEditor;
-        let folder = workspace.getWorkspaceFolder(editor.document.uri);
+        let folder = editor && workspace.getWorkspaceFolder(editor.document.uri);
         if (!folder) {
             Logger.warn(`Active file isn't within a folder, use first folder instead.`);
             folder = workspace.workspaceFolders[0];
