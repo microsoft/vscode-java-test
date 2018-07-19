@@ -9,7 +9,7 @@ import { workspace, CancellationToken, Uri } from 'vscode';
 
 export class ProjectManager {
     // mapping from workspace folder uri to projects.
-    private projectInfos: Map<Uri, ProjectInfo[]> = new Map<Uri, ProjectInfo[]>();
+    private projectInfos: Map<string, ProjectInfo[]> = new Map<string, ProjectInfo[]>();
 
     public async refresh(token?: CancellationToken): Promise<void[]> {
         if (!workspace.workspaceFolders) {
@@ -31,11 +31,11 @@ export class ProjectManager {
     }
 
     public storeProjects(wkspace: Uri, infos: ProjectInfo[]): void {
-        this.projectInfos.set(wkspace, infos);
+        this.projectInfos.set(wkspace.fsPath, infos);
     }
 
     public getProjects(wkspace: Uri): ProjectInfo[] {
-        return this.projectInfos.has(wkspace) ? this.projectInfos.get(wkspace) : [];
+        return this.projectInfos.has(wkspace.fsPath) ? this.projectInfos.get(wkspace.fsPath) : [];
     }
 
     public getAll(): ProjectInfo[] {

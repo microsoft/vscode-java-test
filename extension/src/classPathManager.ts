@@ -7,8 +7,8 @@ import * as Commands from './Constants/commands';
 import * as Logger from './Utils/Logger/logger';
 
 export class ClassPathManager {
-    // mapping from project folder uri to classpaths.
-    private _classPathCache = new Map<Uri, string[]>();
+    // mapping from project folder path to classpaths.
+    private _classPathCache = new Map<string, string[]>();
     constructor(private readonly _projectManager: ProjectManager) {
     }
 
@@ -35,17 +35,17 @@ export class ClassPathManager {
 
     public getClassPath(resource: Uri): string[] | undefined {
         const path = this._projectManager.getProjectPath(resource);
-        return this._classPathCache.has(path) ? this._classPathCache.get(path) : undefined;
+        return this._classPathCache.has(path.fsPath) ? this._classPathCache.get(path.fsPath) : undefined;
     }
 
     public getClassPaths(resources: Uri[]): string[] | undefined {
-        const set = new Set(resources.map((r) => this._projectManager.getProjectPath(r)).filter((p) => p && this._classPathCache.has(p)));
-        return [...set].map((p) => this._classPathCache.get(p)).reduce((a, b) => a.concat(b), []);
+        const set = new Set(resources.map((r) => this._projectManager.getProjectPath(r)).filter((p) => p && this._classPathCache.has(p.fsPath)));
+        return [...set].map((p) => this._classPathCache.get(p.fsPath)).reduce((a, b) => a.concat(b), []);
     }
 
     public storeClassPath(resource: Uri, classPath: string[]): void {
         const path = this._projectManager.getProjectPath(resource);
-        this._classPathCache.set(path, classPath);
+        this._classPathCache.set(path.fsPath, classPath);
     }
 }
 
