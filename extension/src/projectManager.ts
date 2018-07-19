@@ -48,11 +48,11 @@ export class ProjectManager {
                             .filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)))
                             .sort((a, b) => (a.path.fsPath < b.path.fsPath ? 1 : -1));
         if (matched.length === 0) {
-            Logger.error(`Failed to get project for file ${file.fsPath}.`);
+            Logger.error(`Failed to get the project for the file ${file.fsPath}.`);
             return undefined;
         }
         if (matched.length > 1) {
-            Logger.warn(`Found multiple projects for file ${file.fsPath}: ${matched.map((m) => m.name + ':' + m.path.fsPath)}`);
+            Logger.warn(`Found multiple projects for the file ${file.fsPath}: ${matched.map((m) => m.name + ':' + m.path.fsPath)}`);
         }
         return matched[0];
     }
