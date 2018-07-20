@@ -44,14 +44,15 @@ export class ProjectManager {
 
     public getProject(file: Uri): ProjectInfo {
         const fpath: string = this.formatPath(file.fsPath);
-        const matched = this.getAll().filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)));
+        const matched = this.getAll()
+                            .filter((p) => fpath.startsWith(this.formatPath(p.path.fsPath)))
+                            .sort((a, b) => (a.path.fsPath < b.path.fsPath ? 1 : -1));
         if (matched.length === 0) {
-            Logger.error(`Failed to get project.`);
+            Logger.error(`Failed to get the project for the file ${file.fsPath}.`);
             return undefined;
         }
         if (matched.length > 1) {
-            Logger.error(`Found multiple projects: ${matched.map((m) => m.name)}`);
-            return undefined;
+            Logger.warn(`Found multiple projects for the file ${file.fsPath}: ${matched.map((m) => m.name + ':' + m.path.fsPath)}`);
         }
         return matched[0];
     }
