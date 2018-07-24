@@ -97,11 +97,19 @@ public class JUnitTestFetcher {
             } else if (element.getElementType() == IJavaElement.METHOD && !JDTUtils.isHiddenGeneratedElement(element)) {
                 boolean isJunit4 = JUnitUtility.isTestMethod((IMethod) element, "org.junit.Test");
                 boolean isJunit5 = JUnitUtility.isTestMethod((IMethod) element, "org.junit.jupiter.api.Test");
+                boolean isTestNG = JUnitUtility.isTestMethod((IMethod) element, "org.testng.annotations.Test");
                 if (isJunit4 || isJunit5) {
                     IType type = ((IMethod) element).getDeclaringType();
                     String test = type.getFullyQualifiedName() + "#" + element.getElementName();
                     suites.add(new TestSuite(getRange(unit, element), uri, test,
                             type.getPackageFragment().getElementName(), TestLevel.Method, isJunit4 ? TestKind.JUnit : TestKind.JUnit5, project));
+                }
+                else if(isTestNG)
+                {
+                    IType type = ((IMethod) element).getDeclaringType();
+                    String test = type.getFullyQualifiedName() + "#" + element.getElementName();
+                    suites.add(new TestSuite(getRange(unit, element), uri, test,
+                            type.getPackageFragment().getElementName(), TestLevel.Method, TestKind.TestNG, project));
                 }
             }
         }
