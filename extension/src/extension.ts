@@ -39,11 +39,11 @@ import { RunConfig, RunConfigItem, TestConfig } from './Models/testConfig';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnit5TestRunner } from './Runner/JUnitTestRunner/junit5TestRunner';
 import { JUnitTestRunner } from './Runner/JUnitTestRunner/junitTestRunner';
+import { TestNGTestRunner } from './Runner/JUnitTestRunner/testngTestRunner';
 import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 import { OutputTransport } from './Utils/Logger/outputTransport';
 import { TelemetryTransport } from './Utils/Logger/telemetryTransport';
-import { TestNGTestRunner } from './Runner/JUnitTestRunner/testngTestRunner';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
