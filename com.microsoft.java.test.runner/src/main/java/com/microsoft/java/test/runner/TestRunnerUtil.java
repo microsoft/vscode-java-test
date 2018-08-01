@@ -50,7 +50,8 @@ public class TestRunnerUtil {
             Runner runner = request.getRunner();
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
-            System.err.printf("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
             return emptyList();
         }
     }
@@ -61,7 +62,8 @@ public class TestRunnerUtil {
             Runner runner = request.getRunner();
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
-            System.err.printf("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
             return emptyList();
         }
     }
@@ -75,11 +77,12 @@ public class TestRunnerUtil {
                 Runner runner = request.getRunner();
                 suites.add(new JUnit4TestReference(runner, runner.getDescription()));
             } catch (ClassNotFoundException ignored) {
-                System.err.printf("Failed to parse tests for suite %s. Details: %s.", classFqn, ignored.getMessage());
+                String message = String.format("Failed to parse tests for suite %s. Details: %s.", classFqn, ignored.getMessage());
+                TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, message, ignored));
             }
         }
         if (suites.isEmpty()) {
-            System.err.print("No test found to run.");
+            TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, "No test found to run.", null));
             return emptyList();
         }
         return suites;
