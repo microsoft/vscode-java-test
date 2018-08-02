@@ -51,7 +51,7 @@ public class TestRunnerUtil {
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
             String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
-            TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
+            TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
             return emptyList();
         }
     }
@@ -63,7 +63,7 @@ public class TestRunnerUtil {
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
             String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
-            TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
+            TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
             return emptyList();
         }
     }
@@ -78,11 +78,11 @@ public class TestRunnerUtil {
                 suites.add(new JUnit4TestReference(runner, runner.getDescription()));
             } catch (ClassNotFoundException ignored) {
                 String message = String.format("Failed to parse tests for suite %s. Details: %s.", classFqn, ignored.getMessage());
-                TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, message, ignored));
+                TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, message, ignored));
             }
         }
         if (suites.isEmpty()) {
-            TestOutputSream.Instance().println(new TestReportItem(TestReportType.Error, null, null, "No test found to run.", null));
+            TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, "No test found to run.", null));
             return emptyList();
         }
         return suites;

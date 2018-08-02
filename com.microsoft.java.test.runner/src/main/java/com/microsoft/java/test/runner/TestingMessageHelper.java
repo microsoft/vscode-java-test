@@ -224,51 +224,6 @@ public class TestingMessageHelper {
         TestReportItem item = new TestReportItem(TestReportType.Info, name, attrMap, null, null);
         return item;
     }
-    
-    /*private static String escape(String str) {
-    	if (str == null) {
-    		return str;
-    	}
-        int len = str.length();
-        StringBuilder sb = new StringBuilder(len);
-        String t;
-        for (int i = 0; i < len; i += 1) {
-            char c = str.charAt(i);
-            switch (c) {
-            case '\\':
-            case '\"':
-                sb.append('\\');
-                sb.append(c);
-                break;
-            case '\b':
-                sb.append("\\b");
-                break;
-            case '\t':
-                sb.append("\\t");
-                break;
-            case '\n':
-                sb.append("\\n");
-                break;
-            case '\f':
-                sb.append("\\f");
-                break;
-            case '\r':
-               sb.append("\\r");
-               break;
-            case '@':
-               sb.append("&#x40;");
-               break;
-            default:
-                if (c < ' ') {
-                    t = "000" + Integer.toHexString(c);
-                    sb.append("\\u" + t.substring(t.length() - 4));
-                } else {
-                    sb.append(c);
-                }
-            }
-        }
-        return sb.toString();
-    }*/
 
     private static class Pair {
         final String first;

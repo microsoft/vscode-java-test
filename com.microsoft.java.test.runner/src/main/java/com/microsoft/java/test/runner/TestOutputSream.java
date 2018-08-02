@@ -13,18 +13,28 @@ public class TestOutputSream implements TestStream {
         this.out = System.out;
         this.err = System.err;
     }
-    
-    public static TestOutputSream Instance() {
+
+    public static TestOutputSream instance() {
         return instance;
     }
 
     @Override
     public void print(TestReportItem item) {
-        String content = ToJson(item);
+        String content = toJson(item);
         if (item.type == TestReportType.Error) {
             this.err.print(content);
         } else {
             this.out.print(content);
+        }
+    }
+
+    @Override
+    public void println(TestReportItem item) {
+        String content = toJson(item);
+        if (item.type == TestReportType.Error) {
+            this.err.println(content);
+        } else {
+            this.out.println(content);
         }
     }
 
@@ -34,17 +44,7 @@ public class TestOutputSream implements TestStream {
         this.err.flush();
     }
 
-    @Override
-    public void println(TestReportItem item) {
-        String content = ToJson(item);
-        if (item.type == TestReportType.Error) {
-            this.err.println(content);
-        } else {
-            this.out.println(content);
-        }
-    }
-    
-    private static String ToJson(TestReportItem item) {
+    private static String toJson(TestReportItem item) {
         Gson gson = new Gson();
         String jsonStr = gson.toJson(item);
         return "@@<RunnerOutput-" + jsonStr + "-RunnerOutput>@@";

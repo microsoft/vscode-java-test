@@ -16,7 +16,7 @@ public class JUnitLauncher {
     }
 
     private static int execute(String[] args) {
-        TestOutputSream stream = TestOutputSream.Instance();
+        TestOutputSream stream = TestOutputSream.instance();
         try {
             if (args.length == 0) {
                 TestingMessageHelper.reporterAttached(stream);

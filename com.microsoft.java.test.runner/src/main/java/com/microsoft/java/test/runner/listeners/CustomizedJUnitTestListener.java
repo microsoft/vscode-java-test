@@ -26,7 +26,7 @@ public class CustomizedJUnitTestListener {
     private long myCurrentTestStart;
 
     public CustomizedJUnitTestListener() {
-        this.stream = TestOutputSream.Instance();
+        this.stream = TestOutputSream.instance();
         TestingMessageHelper.reporterAttached(stream);
     }
 
