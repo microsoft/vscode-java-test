@@ -11,6 +11,8 @@
 package com.microsoft.java.test.runner.listeners;
 
 import java.io.PrintStream;
+
+import com.microsoft.java.test.runner.TestOutputSream;
 import com.microsoft.java.test.runner.TestingMessageHelper;
 
 import org.junit.runner.Description;
@@ -19,18 +21,18 @@ import org.junit.runner.notification.Failure;
 
 /** Listener for whole life cycle of the JUnit test run. */
 public class CustomizedJUnitTestListener {
-    private final PrintStream out;
+    private final TestOutputSream stream;
 
     private long myCurrentTestStart;
 
     public CustomizedJUnitTestListener() {
-        this.out = System.out;
-        TestingMessageHelper.reporterAttached(out);
+        this.stream = TestOutputSream.instance();
+        TestingMessageHelper.reporterAttached(stream);
     }
 
     /** Called before any tests have been run. */
     public void testRunStarted() {
-        TestingMessageHelper.rootPresentation(out);
+        TestingMessageHelper.rootPresentation(stream);
     }
 
     /**
@@ -42,7 +44,7 @@ public class CustomizedJUnitTestListener {
     public void testStarted(Description description) {
         myCurrentTestStart = System.currentTimeMillis();
 
-        TestingMessageHelper.testStarted(out, description);
+        TestingMessageHelper.testStarted(stream, description);
     }
 
     /**
@@ -53,7 +55,7 @@ public class CustomizedJUnitTestListener {
     public void testFinished(Description description) {
         long duration = System.currentTimeMillis() - myCurrentTestStart;
 
-        TestingMessageHelper.testFinished(out, description, duration);
+        TestingMessageHelper.testFinished(stream, description, duration);
     }
 
     /**
@@ -62,7 +64,7 @@ public class CustomizedJUnitTestListener {
      * @param description the description of the test suite
      */
     public void testSuiteStarted(Description description) {
-        TestingMessageHelper.testSuiteStarted(out, description);
+        TestingMessageHelper.testSuiteStarted(stream, description);
     }
 
     /**
@@ -71,7 +73,7 @@ public class CustomizedJUnitTestListener {
      * @param currentSuite name of test suite
      */
     public void testSuiteFinished(String currentSuite) {
-        TestingMessageHelper.testSuiteFinished(out, currentSuite);
+        TestingMessageHelper.testSuiteFinished(stream, currentSuite);
     }
 
     /**
@@ -82,7 +84,7 @@ public class CustomizedJUnitTestListener {
     public void testFailure(Failure failure) {
         long duration = System.currentTimeMillis() - myCurrentTestStart;
 
-        TestingMessageHelper.testFailed(out, failure, duration);
+        TestingMessageHelper.testFailed(stream, failure, duration);
     }
 
     /**
@@ -91,7 +93,7 @@ public class CustomizedJUnitTestListener {
      * @param result the summary of the test run, including all the tests that failed
      */
     public void testRunFinished(Result result) {
-        TestingMessageHelper.testRunFinished(out, result);
+        TestingMessageHelper.testRunFinished(stream, result);
     }
 
     /**
@@ -101,7 +103,7 @@ public class CustomizedJUnitTestListener {
      * @param description describes the test that will not be run
      */
     public void testIgnored(Description description) {
-        TestingMessageHelper.testIgnored(out, description.getMethodName());
+        TestingMessageHelper.testIgnored(stream, description.getMethodName());
     }
 
     /**
@@ -111,7 +113,7 @@ public class CustomizedJUnitTestListener {
      */
     public void suiteSendTree(Description description) {
         if (description.isTest()) {
-            TestingMessageHelper.treeNode(out, description);
+            TestingMessageHelper.treeNode(stream, description);
         } else {
             suiteTreeStarted(description);
             for (Description child : description.getChildren()) {
@@ -127,7 +129,7 @@ public class CustomizedJUnitTestListener {
      * @param description describes the test suite
      */
     public void suiteTreeStarted(Description description) {
-        TestingMessageHelper.suiteTreeNodeStarted(out, description);
+        TestingMessageHelper.suiteTreeNodeStarted(stream, description);
     }
 
     /**
@@ -136,6 +138,6 @@ public class CustomizedJUnitTestListener {
      * @param description describes the test suite
      */
     public void suiteTreeEnded(Description description) {
-        TestingMessageHelper.suiteTreeNodeEnded(out, description);
+        TestingMessageHelper.suiteTreeNodeEnded(stream, description);
     }
 }

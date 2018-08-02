@@ -24,7 +24,7 @@ public class CustomizedJUnitCoreRunner extends JUnitCore {
     public void run(String[] suites) {
         List<JUnit4TestReference> testSuites = TestRunnerUtil.createTestReferences(suites);
         if (testSuites.isEmpty()) {
-            TestingMessageHelper.reporterAttached(System.out);
+            TestingMessageHelper.reporterAttached(TestOutputSream.instance());
             return;
         }
 

@@ -16,10 +16,11 @@ public class JUnitLauncher {
     }
 
     private static int execute(String[] args) {
+        TestOutputSream stream = TestOutputSream.instance();
         try {
             if (args.length == 0) {
-                TestingMessageHelper.reporterAttached(System.out);
-                System.err.print("No test found to run");
+                TestingMessageHelper.reporterAttached(stream);
+                stream.println(new TestReportItem(TestReportType.Error, null, null, "No test found to run", null));
             } else {
                 CustomizedJUnitCoreRunner jUnitCore = new CustomizedJUnitCoreRunner();
                 jUnitCore.run(args);
@@ -27,10 +28,10 @@ public class JUnitLauncher {
             return 0;
         } catch (Throwable e) {
             e.printStackTrace();
+            stream.println(new TestReportItem(TestReportType.Error, null, null, "Failed to launch Junit", e));
             return 1;
         } finally {
-            System.err.flush();
-            System.out.flush();
+            stream.flush();
         }
     }
 }
