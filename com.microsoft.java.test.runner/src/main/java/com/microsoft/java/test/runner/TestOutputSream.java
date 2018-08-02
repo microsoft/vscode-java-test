@@ -47,6 +47,6 @@ public class TestOutputSream implements TestStream {
     private static String ToJson(TestReportItem item) {
         Gson gson = new Gson();
         String jsonStr = gson.toJson(item);
-        return jsonStr.length() + jsonStr;
+        return "@@<RunnerOutput-" + jsonStr + "-RunnerOutput>@@";
     }
 }
