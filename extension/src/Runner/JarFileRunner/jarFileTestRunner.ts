@@ -95,7 +95,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 reject([err]);
             });
             this._process.stderr.on('data', (data) => {
-                Logger.error(`Error occurred: ${data.toString()}`);
+                testResultAnalyzer.analyzeError(data.toString());
             });
             this._process.stdout.on('data', (data) => {
                 Logger.info(data.toString());

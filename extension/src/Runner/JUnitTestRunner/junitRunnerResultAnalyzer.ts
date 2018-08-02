@@ -13,13 +13,13 @@ const TEST_FAIL: string = 'testFailed';
 const TEST_FINISH: string = 'testFinished';
 
 export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
+    public static regex: RegExp = /@@<RunnerOutput-({[\s\S]*})-RunnerOutput>@@/gm;
     private _suiteName: string;
 
     public analyzeData(data: string): void {
-        const regex = /@@<({[^@]*})>/gm;
         let match;
         do {
-            match = regex.exec(data);
+            match = JUnitRunnerResultAnalyzer.regex.exec(data);
             if (match) {
                 try {
                     this.analyzeDataCore(match[1]);
@@ -27,6 +27,21 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
                     Logger.error(`Failed to analyze runner output data. Data: ${match[1]}.`, {
                         error: ex,
                     });
+                }
+            }
+        } while (match);
+    }
+
+    public analyzeError(error: string): void {
+        let match;
+        do {
+            match = JUnitRunnerResultAnalyzer.regex.exec(error);
+            if (match) {
+                try {
+                    const info = JSON.parse(match[1]) as JUnitTestResultInfo;
+                    Logger.error(`Error occurred: ${match[1]}`);
+                } catch (ex) {
+                    // ignore error output by tests.
                 }
             }
         } while (match);
@@ -48,7 +63,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
     private analyzeDataCore(match: string) {
         let res;
         const info = JSON.parse(match) as JUnitTestResultInfo;
-        switch (info.name) {
+        switch (info.phase) {
             case SUITE_START :
                 this._suiteName = info.attributes.name;
                 break;
@@ -107,8 +122,11 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
 }
 
 export type JUnitTestResultInfo = {
-    name: string;
+    type: TestOutputType;
+    phase: string;
     attributes: JUnitTestAttributes;
+    message: string;
+    stacktrace: string;
 };
 
 export type JUnitTestAttributes = {
@@ -118,3 +136,8 @@ export type JUnitTestAttributes = {
     message: string;
     details: string;
 };
+
+export enum TestOutputType {
+    Info,
+    Error,
+}
