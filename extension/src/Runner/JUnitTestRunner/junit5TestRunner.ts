@@ -55,7 +55,8 @@ export class JUnit5TestRunner extends JarFileTestRunner {
         }
         commandParams.push(this.runnerClassName);
 
-        const suites: string[] = params.tests.map((t) => t.level === TestLevel.Method ? `-m ${t.test}` : `-c ${t.test}`);
+        const suites: string[] = params.tests.map((t) => t.level === TestLevel.Method ? ['-m', t.test] : ['-c', t.test])
+                                .reduce((a, b) => a.concat(b), []);
         commandParams = [...commandParams, ...suites];
         return commandParams;
     }
