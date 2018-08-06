@@ -10,47 +10,24 @@
  */
 package com.microsoft.java.test.runner;
 
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
-import com.google.gson.Gson;
-
 public class TestingMessageHelper {
-    private static final String TEST_REPORTER_ATTACHED = "testReporterAttached";
-    private static final String ROOT_NAME = "rootName";
-    private static final String NAME = "name";
-    private static final String LOCATION = "location";
-    private static final String TEST_STARTED = "testStarted";
-    private static final String TEST_IGNORED = "testIgnored";
-    private static final String TEST_FINISHED = "testFinished";
-    private static final String DURATION = "duration";
-    private static final String SUITE_TREE_NODE = "suiteTreeNode";
-    private static final String TEST_SUITE_FINISHED = "testSuiteFinished";
-    private static final String TEST_SUITE_STARTED = "testSuiteStarted";
-    private static final String SUITE_TREE_STARTED = "suiteTreeStarted";
-    private static final String SUITE_TREE_ENDED = "suiteTreeEnded";
-    private static final String MESSAGE = "message";
-    private static final String DETAILS = "details";
-    private static final String TEST_FAILED = "testFailed";
-
     /**
      * Prints a message when the test reported was attached.
      *
      * @param stream output stream
      */
-    public static void reporterAttached(TestOutputSream stream) {
-        stream.println(create(TEST_REPORTER_ATTACHED, (List<Pair>) null));
+    public static void reporterAttached(TestOutputStream stream) {
+        stream.println(create(TestMessageConstants.TEST_REPORTER_ATTACHED, (List<Pair>) null));
     }
 
     /**
@@ -58,8 +35,8 @@ public class TestingMessageHelper {
      *
      * @param out output stream
      */
-    public static void rootPresentation(TestOutputSream stream) {
-        stream.println(create(ROOT_NAME, new Pair(NAME, "Default Suite")));
+    public static void rootPresentation(TestOutputStream stream) {
+        stream.println(create(TestMessageConstants.ROOT_NAME, new Pair(TestMessageConstants.NAME, "Default Suite")));
     }
 
     /**
@@ -68,13 +45,13 @@ public class TestingMessageHelper {
      * @param description information about test
      * @param out output stream
      */
-    public static void testStarted(TestOutputSream stream, Description description) {
+    public static void testStarted(TestOutputStream stream, Description description) {
         String location = description.getClassName() + "." + description.getMethodName();
         stream.println(
                 create(
-                        TEST_STARTED,
-                        new Pair(NAME, description.getMethodName()),
-                        new Pair(LOCATION, "java:test://" + location)));
+                        TestMessageConstants.TEST_STARTED,
+                        new Pair(TestMessageConstants.NAME, description.getMethodName()),
+                        new Pair(TestMessageConstants.LOCATION, "java:test://" + location)));
     }
 
     /**
@@ -83,8 +60,8 @@ public class TestingMessageHelper {
      * @param name method name
      * @param out output stream
      */
-    public static void testIgnored(TestOutputSream stream, String name) {
-        stream.println(create(TEST_IGNORED, new Pair(NAME, name)));
+    public static void testIgnored(TestOutputStream stream, String name) {
+        stream.println(create(TestMessageConstants.TEST_IGNORED, new Pair(TestMessageConstants.NAME, name)));
     }
 
     /**
@@ -94,12 +71,12 @@ public class TestingMessageHelper {
      * @param out output stream
      * @param duration time of test running
      */
-    public static void testFinished(TestOutputSream stream, Description description, long duration) {
+    public static void testFinished(TestOutputStream stream, Description description, long duration) {
         stream.println(
                 create(
-                        TEST_FINISHED,
-                        new Pair(NAME, description.getMethodName()),
-                        new Pair(DURATION, String.valueOf(duration))));
+                        TestMessageConstants.TEST_FINISHED,
+                        new Pair(TestMessageConstants.NAME, description.getMethodName()),
+                        new Pair(TestMessageConstants.DURATION, String.valueOf(duration))));
     }
 
     /**
@@ -108,13 +85,13 @@ public class TestingMessageHelper {
      * @param description information about test node
      * @param out output stream
      */
-    public static void treeNode(TestOutputSream stream, Description description) {
+    public static void treeNode(TestOutputStream stream, Description description) {
         String location = description.getClassName() + "." + description.getMethodName();
         stream.println(
                 create(
-                        SUITE_TREE_NODE,
-                        new Pair(NAME, description.getMethodName()),
-                        new Pair(LOCATION, "java:test://" + location)));
+                        TestMessageConstants.SUITE_TREE_NODE,
+                        new Pair(TestMessageConstants.NAME, description.getMethodName()),
+                        new Pair(TestMessageConstants.LOCATION, "java:test://" + location)));
     }
 
     /**
@@ -123,8 +100,8 @@ public class TestingMessageHelper {
      * @param currentSuite name of test suite
      * @param out output stream
      */
-    public static void testSuiteFinished(TestOutputSream stream, String currentSuite) {
-        stream.println(create(TEST_SUITE_FINISHED, new Pair(NAME, currentSuite)));
+    public static void testSuiteFinished(TestOutputStream stream, String currentSuite) {
+        stream.println(create(TestMessageConstants.TEST_SUITE_FINISHED, new Pair(TestMessageConstants.NAME, currentSuite)));
     }
 
     /**
@@ -133,12 +110,12 @@ public class TestingMessageHelper {
      * @param description information about suite
      * @param out output stream
      */
-    public static void testSuiteStarted(TestOutputSream stream, Description description) {
+    public static void testSuiteStarted(TestOutputStream stream, Description description) {
         stream.println(
                 create(
-                        TEST_SUITE_STARTED,
-                        new Pair(NAME, description.getClassName()),
-                        new Pair(LOCATION, "java:test://" + description.getClassName())));
+                        TestMessageConstants.TEST_SUITE_STARTED,
+                        new Pair(TestMessageConstants.NAME, description.getClassName()),
+                        new Pair(TestMessageConstants.LOCATION, "java:test://" + description.getClassName())));
     }
 
     /**
@@ -147,12 +124,12 @@ public class TestingMessageHelper {
      * @param description information about suite
      * @param out output stream
      */
-    public static void suiteTreeNodeStarted(TestOutputSream stream, Description description) {
+    public static void suiteTreeNodeStarted(TestOutputStream stream, Description description) {
         stream.println(
                 create(
-                        SUITE_TREE_STARTED,
-                        new Pair(NAME, description.getClassName()),
-                        new Pair(LOCATION, "java:test://" + description.getClassName())));
+                        TestMessageConstants.SUITE_TREE_STARTED,
+                        new Pair(TestMessageConstants.NAME, description.getClassName()),
+                        new Pair(TestMessageConstants.LOCATION, "java:test://" + description.getClassName())));
     }
 
     /**
@@ -161,12 +138,12 @@ public class TestingMessageHelper {
      * @param description information about suite
      * @param out output stream
      */
-    public static void suiteTreeNodeEnded(TestOutputSream stream, Description description) {
+    public static void suiteTreeNodeEnded(TestOutputStream stream, Description description) {
         stream.println(
                 create(
-                        SUITE_TREE_ENDED,
-                        new Pair(NAME, description.getClassName()),
-                        new Pair(LOCATION, "java:test://" + description.getClassName())));
+                        TestMessageConstants.SUITE_TREE_ENDED,
+                        new Pair(TestMessageConstants.NAME, description.getClassName()),
+                        new Pair(TestMessageConstants.LOCATION, "java:test://" + description.getClassName())));
     }
 
     /**
@@ -176,9 +153,9 @@ public class TestingMessageHelper {
      * @param failure describes the test that failed and the exception that was thrown
      * @param duration time of test running
      */
-    public static void testFailed(TestOutputSream stream, Failure failure, long duration) {
+    public static void testFailed(TestOutputStream stream, Failure failure, long duration) {
         List<Pair> attributes = new ArrayList<>();
-        attributes.add(new Pair(NAME, failure.getDescription().getMethodName()));
+        attributes.add(new Pair(TestMessageConstants.NAME, failure.getDescription().getMethodName()));
         Throwable exception = failure.getException();
         if (exception != null) {
             String failMessage = failure.getMessage();
@@ -186,14 +163,14 @@ public class TestingMessageHelper {
             PrintWriter printWriter = new PrintWriter(writer);
             exception.printStackTrace(printWriter);
             String stackTrace = writer.getBuffer().toString();
-            attributes.add(new Pair(MESSAGE, failMessage));
-            attributes.add(new Pair(DETAILS, stackTrace));
+            attributes.add(new Pair(TestMessageConstants.MESSAGE, failMessage));
+            attributes.add(new Pair(TestMessageConstants.DETAILS, stackTrace));
         } else {
-            attributes.add(new Pair(MESSAGE, ""));
+            attributes.add(new Pair(TestMessageConstants.MESSAGE, ""));
         }
-        attributes.add(new Pair(DURATION, String.valueOf(duration)));
+        attributes.add(new Pair(TestMessageConstants.DURATION, String.valueOf(duration)));
 
-        stream.println(create(TEST_FAILED, attributes));
+        stream.println(create(TestMessageConstants.TEST_FAILED, attributes));
     }
 
     /**
@@ -202,13 +179,15 @@ public class TestingMessageHelper {
      * @param out output stream
      * @param result the summary of the test run, including all the tests that failed
      */
-    public static void testRunFinished(TestOutputSream stream, Result result) {
+    public static void testRunFinished(TestOutputStream stream, Result result) {
         String message = String.format("Total tests run: %d, Failures: %d, Skips: %d",
                 result.getRunCount(), result.getFailureCount(), result.getIgnoreCount());
-        stream.println(new TestReportItem(TestReportType.Info, null, null, message, null));
+        stream.println(create(
+                TestMessageConstants.TEST_RESULT_SUMMARY,
+                new Pair(TestMessageConstants.MESSAGE, message)));
     }
 
-    private static TestReportItem create(String name, Pair... attributes) {
+    private static TestMessageItem create(String name, Pair... attributes) {
         List<Pair> pairList = null;
         if (attributes != null) {
             pairList = Arrays.asList(attributes);
@@ -216,22 +195,8 @@ public class TestingMessageHelper {
         return create(name, pairList);
     }
 
-    private static TestReportItem create(String name, List<Pair> attributes) {
-        Map<String, String> attrMap = null;
-        if (attributes != null) {
-            attrMap = attributes.stream().collect(Collectors.toMap((p) -> p.first, (p) -> p.second));
-        }
-        TestReportItem item = new TestReportItem(TestReportType.Info, name, attrMap, null, null);
+    private static TestMessageItem create(String name, List<Pair> attributes) {
+        TestMessageItem item = new TestMessageItem(TestMessageType.Info, name, attributes);
         return item;
-    }
-
-    private static class Pair {
-        final String first;
-        final String second;
-
-        Pair(String first, String second) {
-            this.first = first;
-            this.second = second;
-        }
     }
 }

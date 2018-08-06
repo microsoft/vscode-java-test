@@ -27,6 +27,8 @@ public class TestRunnerUtil {
      * @param suites array of test classes or test method (if args.length == 1) to execute
      * @return list of {@link JUnit4TestReference}
      */
+    private static TestOutputStream stream = TestOutputStream.instance();
+
     public static List<JUnit4TestReference> createTestReferences(String[] suites) {
         if (suites.length == 0) {
             return emptyList();
@@ -51,7 +53,7 @@ public class TestRunnerUtil {
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
             String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
-            TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
+            stream.println(new TestMessageItem(message, e));
             return emptyList();
         }
     }
@@ -63,7 +65,7 @@ public class TestRunnerUtil {
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
             String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
-            TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, message, e));
+            stream.println(new TestMessageItem(message, e));
             return emptyList();
         }
     }
@@ -78,11 +80,11 @@ public class TestRunnerUtil {
                 suites.add(new JUnit4TestReference(runner, runner.getDescription()));
             } catch (ClassNotFoundException ignored) {
                 String message = String.format("Failed to parse tests for suite %s. Details: %s.", classFqn, ignored.getMessage());
-                TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, message, ignored));
+                stream.println(new TestMessageItem(message, ignored));
             }
         }
         if (suites.isEmpty()) {
-            TestOutputSream.instance().println(new TestReportItem(TestReportType.Error, null, null, "No test found to run.", null));
+            stream.println(new TestMessageItem("No test found to run.", null));
             return emptyList();
         }
         return suites;
