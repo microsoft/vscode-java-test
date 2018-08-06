@@ -99,13 +99,11 @@ export abstract class JarFileTestRunner implements ITestRunner {
             });
             this._process.stdout.on('data', (data) => {
                 Logger.info(data.toString());
-                const toConsume = bufferred + data.toString();
-                const index = toConsume.lastIndexOf(os.EOL);
+                bufferred = bufferred.concat(data.toString());
+                const index = bufferred.lastIndexOf(os.EOL);
                 if (index >= 0) {
-                    testResultAnalyzer.analyzeData(toConsume.substring(0, index));
-                    bufferred = toConsume.substring(index + os.EOL.length);
-                } else {
-                    bufferred = toConsume;
+                    testResultAnalyzer.analyzeData(bufferred.substring(0, index));
+                    bufferred = bufferred.substring(index + os.EOL.length);
                 }
             });
             this._process.on('close', (signal) => {

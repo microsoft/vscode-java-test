@@ -13,7 +13,7 @@ const TEST_FAIL: string = 'testFailed';
 const TEST_FINISH: string = 'testFinished';
 
 export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
-    public static regex: RegExp = /@@<RunnerOutput-({[\s\S]*})-RunnerOutput>@@/gm;
+    public static regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/gm;
     private _suiteName: string;
 
     public analyzeData(data: string): void {
@@ -42,7 +42,10 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
                     Logger.error(`Error occurred: ${match[1]}`);
                 } catch (ex) {
                     // ignore error output by tests.
+                    Logger.info(error);
                 }
+            } else {
+                Logger.info(error);
             }
         } while (match);
     }
@@ -63,7 +66,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
     private analyzeDataCore(match: string) {
         let res;
         const info = JSON.parse(match) as JUnitTestResultInfo;
-        switch (info.phase) {
+        switch (info.name) {
             case SUITE_START :
                 this._suiteName = info.attributes.name;
                 break;
@@ -123,10 +126,8 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
 
 export type JUnitTestResultInfo = {
     type: TestOutputType;
-    phase: string;
+    name: string;
     attributes: JUnitTestAttributes;
-    message: string;
-    stacktrace: string;
 };
 
 export type JUnitTestAttributes = {
