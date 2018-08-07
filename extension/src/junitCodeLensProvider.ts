@@ -40,7 +40,7 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
         },
         (reason) => {
             if (token.isCancellationRequested) {
-                Logger.error('test codelens request is cancelled.');
+                Logger.error('test codelens request is cancelled.', undefined, true);
                 return [];
             }
             Logger.error(`Failed to get test codelens. Details: ${reason}.`);
