@@ -12,7 +12,7 @@ package com.microsoft.java.test.runner.listeners;
 
 import java.io.PrintStream;
 
-import com.microsoft.java.test.runner.TestOutputSream;
+import com.microsoft.java.test.runner.TestOutputStream;
 import com.microsoft.java.test.runner.TestingMessageHelper;
 
 import org.junit.runner.Description;
@@ -21,12 +21,12 @@ import org.junit.runner.notification.Failure;
 
 /** Listener for whole life cycle of the JUnit test run. */
 public class CustomizedJUnitTestListener {
-    private final TestOutputSream stream;
+    private final TestOutputStream stream;
 
     private long myCurrentTestStart;
 
     public CustomizedJUnitTestListener() {
-        this.stream = TestOutputSream.instance();
+        this.stream = TestOutputStream.instance();
         TestingMessageHelper.reporterAttached(stream);
     }
 

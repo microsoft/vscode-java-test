@@ -1,6 +1,6 @@
 package com.microsoft.java.test.runner;
 
-public enum TestReportType {
+public enum TestMessageType {
     Info,
     Error,
 }
