@@ -1,6 +1,6 @@
 package com.microsoft.java.test.runner;
 
-public class Pair {
+public final class Pair {
     final String first;
     final String second;
 
