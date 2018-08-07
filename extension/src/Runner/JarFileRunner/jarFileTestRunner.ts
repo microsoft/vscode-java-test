@@ -154,7 +154,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
 
     public cancel(): Promise<void> {
         if (this._process) {
-            Logger.warn('Cancelling this test run...');
+            Logger.warn('Cancelling this test run...', undefined, true);
             return new Promise((resolve, reject) => {
                 this._isCancelled = true;
                 kill(this._process.pid, 'SIGTERM', (err) => {
@@ -179,7 +179,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
             window.showErrorMessage(message);
             Logger.error(message, {
                 error: ex,
-            });
+            }, true);
             throw ex;
         }
     }

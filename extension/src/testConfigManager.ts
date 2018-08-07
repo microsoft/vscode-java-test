@@ -30,7 +30,7 @@ export class TestConfigManager {
                 if (readErr) {
                     Logger.error(`Failed to read the test config! Details: ${readErr.message}.`, {
                         error: readErr,
-                    });
+                    }, true);
                     return reject(readErr);
                 }
                 try {
@@ -39,7 +39,7 @@ export class TestConfigManager {
                 } catch (ex) {
                     Logger.error(`Failed to parse the test config! Details: ${ex.message}.`, {
                         error: ex,
-                    });
+                    }, true);
                     reject(ex);
                 }
             });
@@ -53,7 +53,7 @@ export class TestConfigManager {
         const editor = window.activeTextEditor;
         let folder = editor && workspace.getWorkspaceFolder(editor.document.uri);
         if (!folder) {
-            Logger.warn(`Active file isn't within a folder, use first folder instead.`);
+            Logger.warn(`Active file isn't within a folder, use first folder instead.`, undefined, true);
             folder = workspace.workspaceFolders[0];
         }
         return this.createTestConfigIfNotExisted(folder).then((fullPath) => {

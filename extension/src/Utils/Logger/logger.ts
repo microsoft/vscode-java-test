@@ -16,16 +16,16 @@ export function configure(context: ExtensionContext, transports: winston.Transpo
     });
 }
 
-export function info(message: string, metadata?: any) {
-    winston.info(message, withSessionId(metadata));
+export function info(message: string, metadata?: any, userTag?: boolean) {
+    winston.info(message, withUserTag(withSessionId(metadata)));
 }
 
-export function warn(message: string, metadata?: any) {
-    winston.warn(message, withSessionId(metadata));
+export function warn(message: string, metadata?: any, userTag?: boolean) {
+    winston.warn(message, withUserTag(withSessionId(metadata)));
 }
 
-export function error(message: string, metadata?: any) {
-    winston.error(message, withSessionId(metadata));
+export function error(message: string, metadata?: any, userTag?: boolean) {
+    winston.error(message, withUserTag(withSessionId(metadata)));
 }
 
 export function currentSessionId(): string | undefined {
@@ -41,6 +41,13 @@ export function currentCommand(): string | undefined {
 function withSessionId(metadata?: any) {
     return {
         sessionId: currentSessionId(),
-        metadata,
+        ...metadata,
+    };
+}
+
+function withUserTag(metadata?: any, tag?: boolean) {
+    return {
+        userTag: tag ? tag : false,
+        ...metadata,
     };
 }

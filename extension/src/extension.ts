@@ -142,7 +142,7 @@ export async function activate(context: ExtensionContext) {
         window.showErrorMessage("couldn't find Java home...");
         Logger.error("couldn't find Java home.", {
             error: err,
-        });
+        }, true);
     });
 }
 
