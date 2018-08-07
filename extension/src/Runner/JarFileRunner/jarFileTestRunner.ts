@@ -37,7 +37,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public abstract get debugConfigName(): string;
     public abstract get runnerJarFilePath(): string;
     public abstract get runnerClassName(): string;
-    public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string>;
+    public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string[]>;
     public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer;
     public abstract clone(): ITestRunner;
 
@@ -74,13 +74,13 @@ export abstract class JarFileTestRunner implements ITestRunner {
         if (!jarParams) {
             return Promise.reject('Illegal env type, should pass in IJarFileTestRunnerParameters!');
         }
-        const command: string = await this.constructCommandWithWrapper(jarParams);
+        const command: string[] = await this.constructCommandWithWrapper(jarParams);
         const cwd = env.config ? env.config.workingDirectory : this._projectManager.getProjectPath(Uri.parse(env.tests[0].uri)).fsPath;
-        const options = { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd, env: process.env };
+        const options = { cwd, env: process.env };
         if (env.config && env.config.env) {
             options.env = {...env.config.env, ...options.env};
         }
-        this._process = cp.exec(command, options);
+        this._process = cp.spawn(command[0], command.slice(1), options);
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let bufferred: string = '';
@@ -194,7 +194,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         return ClassPathUtility.getClassPathStr(classpaths, separator, storageForThisRun);
     }
 
-    private async constructCommandWithWrapper(params: IJarFileTestRunnerParameters): Promise<string> {
+    private async constructCommandWithWrapper(params: IJarFileTestRunnerParameters): Promise<string[]> {
         try {
             return await this.constructCommand(params);
         } catch (ex) {
