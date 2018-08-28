@@ -23,7 +23,11 @@ export class TestResourceManager {
             dirty: false,
             tests,
         };
-        this.testsIndexedByFileUri.set(path, test);
+        if (tests === undefined || tests === null) {
+            this.testsIndexedByFileUri.delete(path);
+        } else {
+            this.testsIndexedByFileUri.set(path, test);
+        }
         this._onDidChangeTestStorage.fire();
     }
     public setDirty(file: Uri): void {

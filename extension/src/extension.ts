@@ -18,7 +18,7 @@ import * as path from 'path';
 import * as pathExists from 'path-exists';
 import * as rimraf from 'rimraf';
 // tslint:disable-next-line
-import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn } from 'vscode';
+import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn, TextDocument } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { Session, TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 
@@ -74,6 +74,14 @@ export async function activate(context: ExtensionContext) {
         const uri = event.document.uri;
         testResourceManager.setDirty(uri);
         // onDidChange.fire();
+    });
+
+    workspace.onDidCloseTextDocument((document) => {
+        const uri = document.uri;
+        // if a test file is removed, should update test storage.
+        if (!fs.existsSync(uri.fsPath)) {
+            testResourceManager.storeTests(uri, undefined);
+        }
     });
 
     workspace.onDidSaveTextDocument((document) => {
