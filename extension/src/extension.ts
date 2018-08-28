@@ -3,24 +3,14 @@
 
 'use strict';
 
-import * as archiver from 'archiver';
-import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
-import * as fileUrl from 'file-url';
 import * as findJavaHome from 'find-java-home';
 import * as fs from 'fs';
-import * as getPort from 'get-port';
-import * as glob from 'glob';
-import * as mkdirp from 'mkdirp';
-import * as net from 'net';
-import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
-import * as rimraf from 'rimraf';
 // tslint:disable-next-line
-import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn, TextDocument } from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
-import { Session, TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
+import { commands, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
+import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
