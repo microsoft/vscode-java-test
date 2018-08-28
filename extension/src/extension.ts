@@ -60,6 +60,7 @@ export async function activate(context: ExtensionContext) {
         testExplorer.refresh();
     });
     const watcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
+    context.subscriptions.push(watcher);
     watcher.onDidChange((uri) => {
         testResourceManager.setDirty(uri);
         onDidChange.fire();
