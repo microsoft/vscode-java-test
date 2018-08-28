@@ -18,20 +18,23 @@ export class TestResourceManager {
         return this.testsIndexedByFileUri.has(path) ? this.testsIndexedByFileUri.get(path) : undefined;
     }
     public storeTests(file: Uri, tests: TestSuite[] | null | undefined): void {
+        if (tests === undefined || tests === null) {
+            return;
+        }
         const path = file.fsPath || '';
         const test: Test = {
             dirty: false,
             tests,
         };
-        if (tests === undefined || tests === null) {
-            this.testsIndexedByFileUri.delete(path);
-        } else {
-            this.testsIndexedByFileUri.set(path, test);
-        }
+        this.testsIndexedByFileUri.set(path, test);
         this._onDidChangeTestStorage.fire();
     }
     public removeTests(file: Uri): void {
-        this.storeTests(file, undefined);
+        const path = file.fsPath || '';
+        const deleted: boolean = this.testsIndexedByFileUri.delete(path);
+        if (deleted) {
+            this._onDidChangeTestStorage.fire();
+        }
     }
     public setDirty(file: Uri): void {
         const test = this.getTests(file);

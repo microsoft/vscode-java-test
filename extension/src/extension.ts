@@ -59,25 +59,13 @@ export async function activate(context: ExtensionContext) {
     testResourceManager.onDidChangeTestStorage((e) => {
         testExplorer.refresh();
     });
-
-    workspace.onDidChangeTextDocument((event) => {
-        const uri = event.document.uri;
-        testResourceManager.setDirty(uri);
-        // onDidChange.fire();
-    });
-
-    workspace.onDidCloseTextDocument((document) => {
-        const uri = document.uri;
-        // if a test file is removed, should update test storage.
-        if (!fs.existsSync(uri.fsPath)) {
-            testResourceManager.removeTests(uri);
-        }
-    });
-
-    workspace.onDidSaveTextDocument((document) => {
-        const uri = document.uri;
+    const watcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
+    watcher.onDidChange((uri) => {
         testResourceManager.setDirty(uri);
         onDidChange.fire();
+    });
+    watcher.onDidDelete((uri) => {
+        testResourceManager.removeTests(uri);
     });
 
     const reports = new Set();
