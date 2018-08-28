@@ -30,6 +30,9 @@ export class TestResourceManager {
         }
         this._onDidChangeTestStorage.fire();
     }
+    public removeTests(file: Uri): void {
+        this.storeTests(file, undefined);
+    }
     public setDirty(file: Uri): void {
         const test = this.getTests(file);
         if (test) {

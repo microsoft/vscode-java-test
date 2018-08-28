@@ -70,7 +70,7 @@ export async function activate(context: ExtensionContext) {
         const uri = document.uri;
         // if a test file is removed, should update test storage.
         if (!fs.existsSync(uri.fsPath)) {
-            testResourceManager.storeTests(uri, undefined);
+            testResourceManager.removeTests(uri);
         }
     });
 
