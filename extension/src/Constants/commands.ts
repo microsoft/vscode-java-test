@@ -47,5 +47,5 @@ export const JAVA_EXECUTE_WORKSPACE_COMMAND = 'java.execute.workspaceCommand';
 
 export function executeJavaLanguageServerCommand<T>(...rest): Thenable<T> {
     // TODO: need to handle error and trace telemetry
-    return vscode.commands.executeCommand(JAVA_EXECUTE_WORKSPACE_COMMAND, ...rest);
+    return vscode.commands.executeCommand<T>(JAVA_EXECUTE_WORKSPACE_COMMAND, ...rest);
 }
