@@ -3,7 +3,6 @@
 
 import * as glob from 'glob';
 import * as path from 'path';
-
 import { TestLevel } from '../../Models/protocols';
 import { ITestRunner } from '../testRunner';
 import { IJarFileTestRunnerParameters } from '../JarFileRunner/jarFileRunnerParameters';

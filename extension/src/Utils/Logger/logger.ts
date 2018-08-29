@@ -4,7 +4,6 @@
 import { ExtensionContext } from 'vscode';
 import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 import * as winston from 'winston';
-
 import * as Configs from '../../Constants/configs';
 
 export function configure(context: ExtensionContext, transports: winston.Transport[]) {
@@ -16,15 +15,15 @@ export function configure(context: ExtensionContext, transports: winston.Transpo
     });
 }
 
-export function info(message: string, metadata?: any, userTag?: boolean) {
+export function info(message: string, metadata?: any, _userTag?: boolean) {
     winston.info(message, withUserTag(withSessionId(metadata)));
 }
 
-export function warn(message: string, metadata?: any, userTag?: boolean) {
+export function warn(message: string, metadata?: any, _userTag?: boolean) {
     winston.warn(message, withUserTag(withSessionId(metadata)));
 }
 
-export function error(message: string, metadata?: any, userTag?: boolean) {
+export function error(message: string, metadata?: any, _userTag?: boolean) {
     winston.error(message, withUserTag(withSessionId(metadata)));
 }
 

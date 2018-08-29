@@ -6,8 +6,6 @@ import * as Logger from '../../Utils/Logger/logger';
 import { ITestInfo, ITestResult } from '../testModel';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
 
-import * as path from 'path';
-
 const TEST_START: string = 'testStarted';
 const TEST_SKIP: string = 'testSkipped';
 const TEST_FINISH: string = 'testFinished';
@@ -35,7 +33,6 @@ export class JUnit5RunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
     }
 
     public feedBack(isCancelled: boolean): ITestResult[] {
-        const toAggregate = new Set();
         const result: ITestResult[] = [];
         this._tests.forEach((t) => {
             if (t.level === TestLevel.Class) {

@@ -1,33 +1,34 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as Commands from './Constants/commands';
-import * as Logger from './Utils/Logger/logger';
-
 import * as path from 'path';
 import { workspace, CancellationToken, Uri } from 'vscode';
+import * as Commands from './Constants/commands';
+import * as Logger from './Utils/Logger/logger';
 
 export class ProjectManager {
     // mapping from workspace folder uri to projects.
     private projectInfos: Map<string, ProjectInfo[]> = new Map<string, ProjectInfo[]>();
 
-    public async refresh(token?: CancellationToken): Promise<void[]> {
+    public async refresh(token?: CancellationToken): Promise<void> {
         if (!workspace.workspaceFolders) {
             return;
         }
-        return Promise.all(workspace.workspaceFolders.map((wkspace) => {
-            return this.getProjectInfo(wkspace.uri).then((infos: ProjectInfo[]) => {
-                infos.forEach((i) => { i.path = Uri.parse(i.path.toString()); });
-                this.storeProjects(wkspace.uri, infos);
-            },
-            (reason) => {
+        workspace.workspaceFolders.map(async (workspaceFolder) => {
+            try {
+                const infos: ProjectInfo[] = await this.getProjectInfo(workspaceFolder.uri);
+                for (const info of infos) {
+                    info.path = Uri.parse(info.path.toString());
+                }
+                this.storeProjects(workspaceFolder.uri, infos);
+            } catch (error) {
                 if (token && token.isCancellationRequested) {
                     return;
                 }
-                Logger.error(`Failed to refresh project mapping. Details: ${reason}.`);
-                return Promise.reject(reason);
-            });
-        }));
+                Logger.error(`Failed to refresh project mapping. Details: ${error}.`);
+                throw error;
+            }
+        });
     }
 
     public storeProjects(wkspace: Uri, infos: ProjectInfo[]): void {
@@ -78,8 +79,8 @@ export class ProjectManager {
         return formatted;
     }
 
-    private getProjectInfo(folder: Uri) {
-        return Commands.executeJavaLanguageServerCommand(Commands.JAVA_GET_PROJECT_INFO, folder.toString());
+    private getProjectInfo(folder: Uri): Thenable<ProjectInfo[]> {
+        return Commands.executeJavaLanguageServerCommand<ProjectInfo[]>(Commands.JAVA_GET_PROJECT_INFO, folder.toString());
     }
 }
 

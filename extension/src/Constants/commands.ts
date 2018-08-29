@@ -45,7 +45,7 @@ export const JAVA_GET_PROJECT_INFO = 'vscode.java.test.project.info';
 
 export const JAVA_EXECUTE_WORKSPACE_COMMAND = 'java.execute.workspaceCommand';
 
-export function executeJavaLanguageServerCommand(...rest) {
+export function executeJavaLanguageServerCommand<T>(...rest): Thenable<T> {
     // TODO: need to handle error and trace telemetry
     return vscode.commands.executeCommand(JAVA_EXECUTE_WORKSPACE_COMMAND, ...rest);
 }
