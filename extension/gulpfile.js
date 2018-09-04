@@ -23,7 +23,7 @@ gulp.task('build-plugin', () => {
 gulp.task('download-server', () => {
 	download("http://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz")
 		.pipe(decompress())
-		.pipe(gulp.dest(path.join(server_dir, 'server')));
+		.pipe(gulp.dest(path.join(server_dir, 'jdtls')));
 });
 
 gulp.task("tslint", () => {
