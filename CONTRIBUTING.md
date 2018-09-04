@@ -17,7 +17,8 @@
     - Click `Apply and Close`
 
 ## Debug the TypeScript codes
-Simply hit `F5` will launch the extension in debug mode
+1. In VS Code, open the folder `extension` under the project base path
+2. Hit `F5` will launch the extension in debug mode
 
 ## Debug the Java codes
 1. In Eclipse, create a new `Debug Configurations`, select the type as `Remote Java Application`
