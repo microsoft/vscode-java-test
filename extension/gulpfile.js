@@ -8,9 +8,9 @@ const path = require("path");
 
 const server_dir = path.join(__dirname, '..');
 
-gulp.task('build-server', ['build-plugin', 'download-server']);
+gulp.task('build-server', ['build-jars', 'download-server']);
 
-gulp.task('build-plugin', () => {
+gulp.task('build-jars', () => {
     cp.execSync(mvnw() + ' clean package', { cwd: server_dir, stdio: [0, 1, 2] });
     gulp.src(path.join(server_dir, 'com.microsoft.java.test.plugin/target/*.jar'))
         .pipe(gulp.dest('./server'));
