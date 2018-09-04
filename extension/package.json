@@ -187,6 +187,8 @@
         "@types/node": "^6.0.110",
         "bootstrap": "^4.1.1",
         "gulp": "^3.9.1",
+        "gulp-decompress": "^2.0.2",
+        "gulp-download": "0.0.1",
         "gulp-sass": "^3.2.1",
         "gulp-tslint": "^8.1.3",
         "mocha": "^2.3.3",
