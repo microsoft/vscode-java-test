@@ -2,7 +2,7 @@
 1. Fork and clone the repository: `git clone git@github.com:Microsoft/vscode-java-test.git`
 2. `cd vscode-java-test/extension`
 3. Install the dependencies: `npm install`
-4. Build the VS Code Java Test Runner bundle of Java Language Server and runner jars: `gulp build-jars`
+4. Build the Java Test Runner bundle for Java Language Server and the runner jars: `gulp build-jars`
 5. Open the folder in VS Code
 > Note: The below steps are only required if you want to debug the Java codes of the extension, if you are only interested in the TypeScript part, you are done now
 6. Download the Java Language Server binaries: `gulp download-server`
