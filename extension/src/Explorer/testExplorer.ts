@@ -2,8 +2,7 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-// tslint:disable-next-line
-import { window, workspace, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, ViewColumn, Command } from 'vscode';
+import { window, workspace, Command, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TestResourceManager } from '../testResourceManager';
 import * as Commands from '../Constants/commands';
 import { TestLevel, TestSuite } from '../Models/protocols';
@@ -44,7 +43,6 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     public select(element: TestTreeNode) {
-        const editor = window.activeTextEditor;
         const uri = Uri.parse(element.uri);
         workspace.openTextDocument(uri).then((doc) => {
             return window.showTextDocument(doc, {

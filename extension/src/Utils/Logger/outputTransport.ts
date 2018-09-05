@@ -3,7 +3,6 @@
 
 import { OutputChannel } from 'vscode';
 import * as winston from 'winston';
-
 import * as Commands from '../../Constants/commands';
 import * as Logger from './logger';
 import { LogLevel } from './loglevel';
@@ -18,17 +17,15 @@ export class OutputTransport extends winston.Transport {
         Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG,
         Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG,
     ]);
-    private name: string;
     private level: string;
     private channel: OutputChannel;
     constructor(options: any) {
         super(options);
-        this.name = 'output';
         this.channel = options.channel;
         this.level = options.level || 'info';
     }
 
-    protected log(level: string, msg: string, meta?: any, callback?: (arg1, arg2) => void) {
+    protected log(level: string, msg: string, _meta?: any, callback?: (arg1, arg2) => void) {
         const logLevel: LogLevel | undefined = LogLevel[level];
         if (logLevel === undefined || logLevel > LogLevel[this.level]) {
             return;

@@ -1,20 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ClassPathManager } from '../../classPathManager';
-import { ProjectManager } from '../../projectManager';
-import { TestStatusBarProvider } from '../../testStatusBarProvider';
-import * as Configs from '../../Constants/configs';
-import { TestSuite } from '../../Models/protocols';
-import { RunConfigItem, TestConfig } from '../../Models/testConfig';
-import { ClassPathUtility } from '../../Utils/classPathUtility';
-import * as Logger from '../../Utils/Logger/logger';
-import { ITestResult } from '../testModel';
-import { ITestRunner } from '../testRunner';
-import { ITestRunnerParameters } from '../testRunnerParameters';
-import { IJarFileTestRunnerParameters } from './jarFileRunnerParameters';
-import { JarFileRunnerResultAnalyzer } from './jarFileRunnerResultAnalyzer';
-
 import * as cp from 'child_process';
 import * as getPort from 'get-port';
 import * as os from 'os';
@@ -22,6 +8,17 @@ import * as path from 'path';
 import * as rimraf from 'rimraf';
 import * as kill from 'tree-kill';
 import { debug, window, workspace, EventEmitter, Uri } from 'vscode';
+import { ClassPathManager } from '../../classPathManager';
+import { ProjectManager } from '../../projectManager';
+import { TestSuite } from '../../Models/protocols';
+import { RunConfigItem } from '../../Models/testConfig';
+import { ClassPathUtility } from '../../Utils/classPathUtility';
+import * as Logger from '../../Utils/Logger/logger';
+import { ITestResult } from '../testModel';
+import { ITestRunner } from '../testRunner';
+import { ITestRunnerParameters } from '../testRunnerParameters';
+import { IJarFileTestRunnerParameters } from './jarFileRunnerParameters';
+import { JarFileRunnerResultAnalyzer } from './jarFileRunnerResultAnalyzer';
 
 export abstract class JarFileTestRunner implements ITestRunner {
     private _process: cp.ChildProcess;

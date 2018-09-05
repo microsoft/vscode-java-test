@@ -12,21 +12,22 @@ export class ClassPathManager {
     constructor(private readonly _projectManager: ProjectManager) {
     }
 
-    public async refresh(token?: CancellationToken): Promise<void[]> {
+    public async refresh(token?: CancellationToken): Promise<void> {
         if (!workspace.workspaceFolders) {
             return;
         }
-        await this._projectManager.refresh();
-        return Promise.all(this._projectManager.getAll().map((info) => {
-            return calculateClassPath(info.path).then((classpath: string[]) => this.storeClassPath(info.path, classpath),
-            (reason) => {
+        this._projectManager.getAll().map(async (info) => {
+            try {
+                await this._projectManager.refresh();
+                this.storeClassPath(info.path, await calculateClassPath(info.path));
+            } catch (error) {
                 if (token && token.isCancellationRequested) {
                     return;
                 }
-                Logger.error(`Failed to refresh class path. Details: ${reason}.`);
-                return Promise.reject(reason);
-            });
-        }));
+                Logger.error(`Failed to refresh class path. Details: ${error}.`);
+                throw error;
+            }
+        });
     }
 
     public dispose() {
@@ -49,6 +50,6 @@ export class ClassPathManager {
     }
 }
 
-function calculateClassPath(folder: Uri) {
-    return Commands.executeJavaLanguageServerCommand(Commands.JAVA_CALCULATE_CLASS_PATH, folder.toString());
+function calculateClassPath(folder: Uri): Thenable<string[]> {
+    return Commands.executeJavaLanguageServerCommand<string[]>(Commands.JAVA_CALCULATE_CLASS_PATH, folder.toString());
 }
