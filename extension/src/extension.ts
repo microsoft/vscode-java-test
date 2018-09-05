@@ -45,7 +45,13 @@ const testConfigManager: TestConfigManager = new TestConfigManager(projectManage
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    Logger.configure(context, [new TelemetryTransport({ level: 'warn' }), new OutputTransport({ level: 'info', channel: outputChannel })]);
+    Logger.configure(
+        context,
+        [
+            new TelemetryTransport({ level: 'warn', name: 'telemetry' }),
+            new OutputTransport({ level: 'info', channel: outputChannel, name: 'output' }),
+        ],
+    );
     await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
