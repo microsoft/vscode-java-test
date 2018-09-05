@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ClassPathManager } from '../classPathManager';
+import * as cp from 'child_process';
+import * as kill from 'tree-kill';
+import { window } from 'vscode';
 import { TestStatusBarProvider } from '../testStatusBarProvider';
 import * as Configs from '../Constants/configs';
 import { TestKind, TestLevel, TestResult, TestStatus, TestSuite } from '../Models/protocols';
@@ -9,12 +11,6 @@ import { RunConfigItem } from '../Models/testConfig';
 import * as Logger from '../Utils/Logger/logger';
 import { ITestResult } from './testModel';
 import { ITestRunner } from './testRunner';
-import { ITestRunnerParameters } from './testRunnerParameters';
-import { JUnitTestRunner } from './JUnitTestRunner/junitTestRunner';
-
-import * as cp from 'child_process';
-import * as kill from 'tree-kill';
-import { window, EventEmitter } from 'vscode';
 
 export class TestRunnerWrapper {
     public static registerRunner(kind: TestKind, runner: ITestRunner) {
@@ -75,7 +71,7 @@ export class TestRunnerWrapper {
             });
         } else {
             const tasks: Array<Promise<void>> = [];
-            TestRunnerWrapper.runners.forEach((ts, runner) => tasks.push(runner.cancel()));
+            TestRunnerWrapper.runners.forEach((_ts, runner) => tasks.push(runner.cancel()));
             await Promise.all(tasks);
             return Promise.resolve();
         }

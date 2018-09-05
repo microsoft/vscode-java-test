@@ -4,8 +4,7 @@
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
-import { window, workspace, ExtensionContext, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-
+import { window, workspace, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { ProjectInfo, ProjectManager } from './projectManager';
 import * as Configs from './Constants/configs';
 import { TestSuite } from './Models/protocols';

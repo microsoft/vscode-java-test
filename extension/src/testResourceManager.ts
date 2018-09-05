@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, workspace, Event, EventEmitter, Uri } from 'vscode';
-import * as Commands from './Constants/commands';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { Test, TestSuite } from './Models/protocols';
 import * as FetchTestsUtility from './Utils/fetchTestUtility';
 import * as Logger from './Utils/Logger/logger';
@@ -48,7 +47,7 @@ export class TestResourceManager {
     }
     public getAll(): TestSuite[] {
         let allTests: TestSuite[] = [];
-        this.testsIndexedByFileUri.forEach((value, key, m) => {
+        this.testsIndexedByFileUri.forEach((value) => {
             allTests = allTests.concat(value.tests);
         });
         return allTests;
@@ -66,7 +65,7 @@ export class TestResourceManager {
                     collection.push(test);
                 }
             });
-            map.forEach((value, key, m) => {
+            map.forEach((value, key) => {
                 this.storeTests(Uri.parse(key), value);
             });
         },

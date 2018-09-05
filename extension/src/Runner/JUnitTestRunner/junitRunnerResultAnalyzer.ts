@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestResult, TestStatus } from '../../Models/protocols';
+import { TestLevel, TestStatus } from '../../Models/protocols';
 import * as Logger from '../../Utils/Logger/logger';
 import { ITestInfo, ITestResult } from '../testModel';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
@@ -38,7 +38,6 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
             match = JUnitRunnerResultAnalyzer.regex.exec(error);
             if (match) {
                 try {
-                    const info = JSON.parse(match[1]) as JUnitTestResultInfo;
                     Logger.error(`Error occurred: ${match[1]}`);
                 } catch (ex) {
                     // ignore error output by tests.
@@ -51,7 +50,6 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
     }
 
     public feedBack(isCancelled: boolean): ITestResult[] {
-        const toAggregate = new Set();
         const result: ITestResult[] = [];
         this._tests.forEach((t) => {
             if (t.level === TestLevel.Class) {

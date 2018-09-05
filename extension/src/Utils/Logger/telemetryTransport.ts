@@ -3,17 +3,14 @@
 
 import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 import * as winston from 'winston';
-
 import * as Constants from '../../Constants/constants';
 import * as Logger from './logger';
 import { LogLevel } from './loglevel';
 
 export class TelemetryTransport extends winston.Transport {
-    private name: string;
     private level: string;
     constructor(options: any) {
         super(options);
-        this.name = 'telemetry';
         this.level = options.level || 'warn';
     }
 
@@ -44,6 +41,7 @@ export class TelemetryTransport extends winston.Transport {
             case LogLevel.warn:
                 return Constants.TELEMETRY_WARN_SCOPE;
             case LogLevel.info:
+            default:
                 return Constants.TELEMETRY_INFO_SCOPE;
         }
     }

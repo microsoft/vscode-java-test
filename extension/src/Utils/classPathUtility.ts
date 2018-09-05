@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as Configs from '../Constants/configs';
-import * as Logger from './Logger/logger';
-
 import * as archiver from 'archiver';
 import * as fileUrl from 'file-url';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as os from 'os';
 import * as path from 'path';
+import * as Configs from '../Constants/configs';
+import * as Logger from './Logger/logger';
 
 export class ClassPathUtility {
     public static getClassPathStr(

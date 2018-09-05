@@ -5,13 +5,10 @@
 
 import * as expandHomeDir from 'expand-home-dir';
 import * as findJavaHome from 'find-java-home';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
-// tslint:disable-next-line
 import { commands, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
 import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
-
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { ProjectManager } from './projectManager';
@@ -24,7 +21,7 @@ import * as Configs from './Constants/configs';
 import * as Constants from './Constants/constants';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
-import { TestKind, TestLevel, TestSuite } from './Models/protocols';
+import { TestKind, TestSuite } from './Models/protocols';
 import { RunConfig, RunConfigItem, TestConfig } from './Models/testConfig';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnit5TestRunner } from './Runner/JUnitTestRunner/junit5TestRunner';
@@ -56,7 +53,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
     const testExplorer = new TestExplorer(context, testResourceManager);
     context.subscriptions.push(window.registerTreeDataProvider(Constants.TEST_EXPLORER_VIEW_ID, testExplorer));
-    testResourceManager.onDidChangeTestStorage((e) => {
+    testResourceManager.onDidChangeTestStorage(() => {
         testExplorer.refresh();
     });
     const watcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
