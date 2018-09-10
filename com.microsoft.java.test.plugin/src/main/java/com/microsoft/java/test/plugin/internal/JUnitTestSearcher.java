@@ -1,16 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2017 Microsoft Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     Microsoft Corporation - initial API and implementation
- *******************************************************************************/
+* Copyright (c) 2017 Microsoft Corporation and others.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*     Microsoft Corporation - initial API and implementation
+*******************************************************************************/
 package com.microsoft.java.test.plugin.internal;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,6 +44,7 @@ import com.microsoft.java.test.plugin.internal.testsuit.TestKind;
 import com.microsoft.java.test.plugin.internal.testsuit.TestLevel;
 import com.microsoft.java.test.plugin.internal.testsuit.TestSuite;
 
+@SuppressWarnings("restriction")
 public abstract class JUnitTestSearcher {
 
 
@@ -129,27 +129,6 @@ public abstract class JUnitTestSearcher {
         final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot()).getJavaProjects();
         return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
     }
-
-    private static IJavaSearchScope createSearchScope(URI folderUri) throws JavaModelException {
-        final String uriQuery = folderUri.getQuery();
-        final IJavaElement element = JavaCore.create(uriQuery);
-        return SearchEngine.createJavaSearchScope(new IJavaElement[] {element}, IJavaSearchScope.SOURCES);
-    }
-
-    //    private static IJavaSearchScope createHierarchyScope(String uri) throws JavaModelException, URISyntaxException {
-    //        final IPackageFragment packageFragment = JDTUtils.resolvePackage(uri);
-    //        if (packageFragment == null || !packageFragment.getResource().exists()) {
-    //            return createSearchScope(new URI(uri));
-    //        }
-    //        final IJavaElement[] elements = packageFragment.getChildren();
-    //        final List<IJavaElement> types = Arrays.stream(elements)
-    //                .filter(e -> e.getElementType() == IJavaElement.TYPE && parent.getTest().endsWith(e.getElementName()))
-    //                .collect(Collectors.toList());
-    //        if (types.size() == 0) {
-    //            return createSearchScope(new URI(uri));
-    //        }
-    //        return SearchEngine.createHierarchyScope((IType)types.get(0));
-    //    }
 
     private TestSuite getTestSuite(IMember member) throws JavaModelException {
         final ICompilationUnit unit = member.getCompilationUnit();
