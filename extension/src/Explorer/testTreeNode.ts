@@ -7,7 +7,7 @@ export class TestTreeNode {
     constructor(
         private _name: string,
         private _fullName: string,
-        private _level: TestTreeNodeType,
+        private _type: TestTreeNodeType,
         private _uri?: string,
         private _range?: Range,
         private _parent?: TestTreeNode,
@@ -31,7 +31,7 @@ export class TestTreeNode {
     }
 
     public get isMethod(): boolean {
-        return this.level === TestTreeNodeType.Method;
+        return this.type === TestTreeNodeType.Method;
     }
 
     public get children(): TestTreeNode[] {
@@ -50,8 +50,8 @@ export class TestTreeNode {
         this._parent = c;
     }
 
-    public get level(): TestTreeNodeType {
-        return this._level;
+    public get type(): TestTreeNodeType {
+        return this._type;
     }
 }
 

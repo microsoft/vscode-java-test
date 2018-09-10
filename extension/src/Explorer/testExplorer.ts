@@ -31,7 +31,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             collapsibleState: element.isMethod ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed,
             command: this.getCommand(element),
             iconPath: this.getIconPath(element),
-            contextValue: element.level.toString(),
+            contextValue: element.type.toString(),
         };
     }
 
@@ -42,7 +42,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         } else if (!element.children) {
             return new Promise(async (resolve: (res: TestTreeNode[]) => void): Promise<void> => {
                 const results: SearchResults[] = await FetchTestsUtility.searchTestEntries({
-                    nodeType: element.level,
+                    nodeType: element.type,
                     uri: element.uri,
                     fullName: element.fullName,
                 });
@@ -88,7 +88,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         if (!element) {
             return (this.getChildren(element) as TestTreeNode[]).map((f) => this.resolveTestSuites(f)).reduce((a, b) => a.concat(b));
         }
-        if (element.level === TestTreeNodeType.Class || element.level === TestTreeNodeType.Method) {
+        if (element.type === TestTreeNodeType.Class || element.type === TestTreeNodeType.Method) {
             return[this.toTestSuite(element)];
         }
         return element.children.map((c) => this.resolveTestSuites(c)).reduce((a, b) => a.concat(b));
@@ -111,7 +111,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     private getIconPath(element: TestTreeNode): string | Uri | {dark: string | Uri, light: string | Uri} {
-        switch (element.level) {
+        switch (element.type) {
             case TestTreeNodeType.Method:
             return {
                 dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'method.svg')),
@@ -133,7 +133,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     private getCommand(element: TestTreeNode): Command | undefined {
-        if (element.level === TestTreeNodeType.Class || element.level === TestTreeNodeType.Method) {
+        if (element.type === TestTreeNodeType.Class || element.type === TestTreeNodeType.Method) {
             return {
                 command: Commands.JAVA_TEST_EXPLORER_SELECT,
                 title: '',
