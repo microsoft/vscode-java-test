@@ -26,7 +26,6 @@ export class TestResourceManager {
             tests,
         };
         this.testsIndexedByFileUri.set(path, test);
-        this._onDidChangeTestStorage.fire();
     }
     public removeTests(file: Uri): void {
         const path = file.fsPath || '';

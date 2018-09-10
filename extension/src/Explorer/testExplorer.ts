@@ -5,9 +5,10 @@ import * as path from 'path';
 import { window, workspace, Command, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TestResourceManager } from '../testResourceManager';
 import * as Commands from '../Constants/commands';
-import { TestLevel, TestSuite } from '../Models/protocols';
+import { SearchResults, Test, TestSuite } from '../Models/protocols';
 import { RunConfigItem } from '../Models/testConfig';
 import { TestRunnerWrapper } from '../Runner/testRunnerWrapper';
+import * as FetchTestsUtility from '../Utils/fetchTestUtility';
 import { TestTreeNode, TestTreeNodeType } from './testTreeNode';
 
 export class TestExplorer implements TreeDataProvider<TestTreeNode> {
@@ -26,20 +27,47 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
 
     public getTreeItem(element: TestTreeNode): TreeItem {
         return {
-            label: this.getFriendlyElementName(element),
-            collapsibleState: element.isFolder ? TreeItemCollapsibleState.Collapsed : void 0,
+            label: element.name,
+            collapsibleState: element.isMethod ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed,
             command: this.getCommand(element),
             iconPath: this.getIconPath(element),
             contextValue: element.level.toString(),
         };
     }
 
-    public getChildren(element?: TestTreeNode): TestTreeNode[] | Thenable<TestTreeNode[]> {
-        if (element) {
+    public getChildren(element?: TestTreeNode): TestTreeNode[] | Promise<TestTreeNode[]> {
+        if (!element) {
+            const folders = workspace.workspaceFolders;
+            return folders.map((folder) => new TestTreeNode(folder.name, folder.name, TestTreeNodeType.Folder, folder.uri.toString()));
+        } else if (!element.children) {
+            return new Promise(async (resolve: (res: TestTreeNode[]) => void): Promise<void> => {
+                const results: SearchResults[] = await FetchTestsUtility.searchTestEntries({
+                    nodeType: element.level,
+                    uri: element.uri,
+                    fullName: element.fullName,
+                });
+                const parentSuite: TestSuite = this.toTestSuite(element);
+                if (parentSuite) {
+                    const childSuites: TestSuite[] = results.map((result) => result.suite);
+                    for (const childSuite of childSuites) {
+                        childSuite.parent = parentSuite;
+                    }
+                    parentSuite.children = childSuites;
+                    this.updateTestStorage(childSuites);
+                }
+                element.children = results.map((result) => new TestTreeNode(
+                    result.displayName,
+                    result.suite.test,
+                    result.nodeType,
+                    result.suite.uri,
+                    result.suite.range,
+                    element,
+                ));
+                resolve(element.children);
+            });
+        } else {
             return element.children;
         }
-        const tests: TestSuite[] = this._testCollectionStorage.getAll().filter((t) => t.level === TestLevel.Method);
-        return this.createTestTreeNode(tests, undefined, TestTreeNodeType.Folder);
     }
 
     public select(element: TestTreeNode) {
@@ -66,67 +94,20 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return element.children.map((c) => this.resolveTestSuites(c)).reduce((a, b) => a.concat(b));
     }
 
-    private createTestTreeNode(
-        tests: TestSuite[],
-        parent: TestTreeNode,
-        level: TestTreeNodeType): TestTreeNode[] {
-        if (level === TestTreeNodeType.Method) {
-            return tests.map((t) => new TestTreeNode(this.getShortName(t), t.uri, t.range, parent, undefined));
+    private updateTestStorage(tests: TestSuite[]) {
+        if (!tests || tests.length === 0) {
+            return;
         }
-        const keyFunc: (_: TestSuite) => string = this.getGroupKeyFunc(level);
-        const map = new Map<string, TestSuite[]>();
-        tests.forEach((t) => {
-            const key = keyFunc(t);
-            const collection: TestSuite[] = map.get(key);
-            if (!collection) {
-                map.set(key, [t]);
-            } else {
-                collection.push(t);
+        const groupByUri: {} = tests.reduce((accumulator, currentVal) => {
+            if (!accumulator[currentVal.uri]) {
+                accumulator[currentVal.uri] = [];
             }
-        });
-        const children = [...map.entries()].map((value) => {
-            const uri: string = level === TestTreeNodeType.Class ? value[1][0].uri : undefined;
-            const c: TestTreeNode = new TestTreeNode(value[0], uri, undefined, parent, undefined, level);
-            c.children = this.createTestTreeNode(value[1], c, level - 1);
-            return c;
-        });
-        return children;
-    }
-
-    private getGroupKeyFunc(level: TestTreeNodeType): ((_: TestSuite) => string) {
-        switch (level) {
-            case TestTreeNodeType.Folder:
-                return (_) => this.getWorkspaceFolder(_);
-            case TestTreeNodeType.Package:
-                return (_) => _.packageName;
-            case TestTreeNodeType.Class:
-                return (_) => this.getShortName(_.parent);
-            default:
-                throw new Error('Not supported group level');
+            accumulator[currentVal.uri].push(currentVal);
+            return accumulator;
+        }, {});
+        for (const uri of Object.keys(groupByUri)) {
+            this._testCollectionStorage.storeTests(Uri.parse(uri), groupByUri[uri]);
         }
-    }
-
-    private getWorkspaceFolder(test: TestSuite): string {
-        const folders = workspace.workspaceFolders;
-        return folders.filter((f) => {
-            const fp = Uri.parse(test.uri).fsPath;
-            return fp.startsWith(f.uri.fsPath);
-        }).map((f) => path.basename(f.uri.path))[0];
-    }
-
-    private getShortName(test: TestSuite): string {
-        if (test.level === TestLevel.Method) {
-            return test.test.substring(test.test.indexOf('#') + 1);
-        } else {
-            return test.test.substring(test.packageName === '' ? 0 : test.packageName.length + 1);
-        }
-    }
-
-    private getFriendlyElementName(element: TestTreeNode): string {
-        if (element.level === TestTreeNodeType.Package && element.name === '') {
-            return '(default package)';
-        }
-        return element.name;
     }
 
     private getIconPath(element: TestTreeNode): string | Uri | {dark: string | Uri, light: string | Uri} {
@@ -152,7 +133,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     private getCommand(element: TestTreeNode): Command | undefined {
-        if (element.level <= TestTreeNodeType.Class) {
+        if (element.level === TestTreeNodeType.Class || element.level === TestTreeNodeType.Method) {
             return {
                 command: Commands.JAVA_TEST_EXPLORER_SELECT,
                 title: '',
@@ -162,9 +143,9 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return undefined;
     }
 
-    private toTestSuite(element: TestTreeNode): TestSuite {
+    private toTestSuite(element: TestTreeNode): TestSuite | undefined {
         const uri: Uri = Uri.parse(element.uri);
-        const tests: TestSuite[] = this._testCollectionStorage.getTests(uri).tests;
-        return tests.filter((t) => t.test === element.fullName)[0];
+        const testData: Test | undefined = this._testCollectionStorage.getTests(uri);
+        return testData ? testData.tests.filter((t) => t.test === element.fullName)[0] : undefined;
     }
 }
