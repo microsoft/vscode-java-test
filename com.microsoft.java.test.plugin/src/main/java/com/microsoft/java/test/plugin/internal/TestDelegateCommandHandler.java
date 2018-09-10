@@ -29,11 +29,6 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String GET_PROJECT_INFO = "vscode.java.test.project.info";
     private static final String SEARCH_TEST_ENTRY = "vscode.java.test.search.entries";
 
-    private static final JUnitTestSearcher[] Searchers = new JUnitTestSearcher[] {
-            new JUnit4TestSearcher(),
-            new JUnit5TestSearcher(),
-    };
-
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
 

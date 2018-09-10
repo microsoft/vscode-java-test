@@ -28,9 +28,6 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
-import com.microsoft.java.test.plugin.internal.JUnit4TestSearcher;
-import com.microsoft.java.test.plugin.internal.JUnit5TestSearcher;
-import com.microsoft.java.test.plugin.internal.JUnitTestSearcher;
 import com.microsoft.java.test.plugin.internal.JUnitUtility;
 import com.microsoft.java.test.plugin.internal.searcher.model.SearchResult;
 import com.microsoft.java.test.plugin.internal.searcher.model.TestTreeNodeType;

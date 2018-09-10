@@ -8,7 +8,7 @@
  * Contributors:
  *     Microsoft Corporation - initial API and implementation
  *******************************************************************************/
-package com.microsoft.java.test.plugin.internal;
+package com.microsoft.java.test.plugin.internal.searcher;
 
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchPattern;
