@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017 Microsoft Corporation and others.
+* Copyright (c) 2018 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -17,6 +17,12 @@ public class SearchResult {
     private TestSuite suite;
     private String displayName;
     private TestTreeNodeType nodeType;
+
+    public SearchResult(TestSuite suite, String displayName, TestTreeNodeType nodeType) {
+        this.suite = suite;
+        this.displayName = displayName;
+        this.nodeType = nodeType;
+    }
 
     public TestSuite getSuite() {
         return suite;
@@ -39,12 +45,6 @@ public class SearchResult {
     }
 
     public void setNodeType(TestTreeNodeType nodeType) {
-        this.nodeType = nodeType;
-    }
-
-    public SearchResult(TestSuite suite, String displayName, TestTreeNodeType nodeType) {
-        this.suite = suite;
-        this.displayName = displayName;
         this.nodeType = nodeType;
     }
 }

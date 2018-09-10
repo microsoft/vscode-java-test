@@ -19,7 +19,7 @@ import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
 
 import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.internal.searcher.TestSearchUtility;
-import com.microsoft.java.test.plugin.internal.searcher.model.SearchEntriesRequest;
+import com.microsoft.java.test.plugin.internal.searcher.model.SearchRequest;
 import com.microsoft.java.test.plugin.internal.testsuit.TestSuite;
 
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
@@ -49,7 +49,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return Collections.<TestSuite>emptyList();
             }
             final Gson gson = new Gson();
-            final SearchEntriesRequest request = gson.fromJson((String) arguments.get(0), SearchEntriesRequest.class);
+            final SearchRequest request = gson.fromJson((String) arguments.get(0), SearchRequest.class);
             return TestSearchUtility.searchTestEntries(request, monitor);
         default:
             throw new UnsupportedOperationException(String.format("Java test plugin doesn't support the command '%s'.", commandId));

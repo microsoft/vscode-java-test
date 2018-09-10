@@ -11,7 +11,7 @@
 
 package com.microsoft.java.test.plugin.internal.searcher.model;
 
-public class SearchEntriesRequest {
+public class SearchRequest {
     private TestTreeNodeType nodeType;
 
     private String uri;

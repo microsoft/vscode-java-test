@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Range;
 
-import com.microsoft.java.test.plugin.internal.searcher.model.SearchEntriesRequest;
+import com.microsoft.java.test.plugin.internal.searcher.model.SearchRequest;
 import com.microsoft.java.test.plugin.internal.searcher.model.SearchResult;
 import com.microsoft.java.test.plugin.internal.searcher.model.TestTreeNodeType;
 
@@ -44,7 +44,7 @@ public class TestSearchUtility {
         return map;
     }
 
-    public static List<SearchResult> searchTestEntries(SearchEntriesRequest request, IProgressMonitor monitor) throws JavaModelException, CoreException, URISyntaxException {
+    public static List<SearchResult> searchTestEntries(SearchRequest request, IProgressMonitor monitor) throws JavaModelException, CoreException, URISyntaxException {
         final List<SearchResult> response = new ArrayList<>();
         final TestEntrySearcher[] searchers = searcherMap.get(request.getType());
         if (searchers != null ) {
