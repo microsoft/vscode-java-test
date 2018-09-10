@@ -14,7 +14,7 @@ export class ProjectManager {
         if (!workspace.workspaceFolders) {
             return;
         }
-        workspace.workspaceFolders.map(async (workspaceFolder) => {
+        await Promise.all(workspace.workspaceFolders.map(async (workspaceFolder) => {
             try {
                 const infos: ProjectInfo[] = await this.getProjectInfo(workspaceFolder.uri);
                 for (const info of infos) {
@@ -28,7 +28,7 @@ export class ProjectManager {
                 Logger.error(`Failed to refresh project mapping. Details: ${error}.`);
                 throw error;
             }
-        });
+        }));
     }
 
     public storeProjects(wkspace: Uri, infos: ProjectInfo[]): void {

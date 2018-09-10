@@ -16,9 +16,9 @@ export class ClassPathManager {
         if (!workspace.workspaceFolders) {
             return;
         }
-        this._projectManager.getAll().map(async (info) => {
+        await this._projectManager.refresh();
+        await Promise.all(this._projectManager.getAll().map(async (info) => {
             try {
-                await this._projectManager.refresh();
                 this.storeClassPath(info.path, await calculateClassPath(info.path));
             } catch (error) {
                 if (token && token.isCancellationRequested) {
@@ -27,7 +27,7 @@ export class ClassPathManager {
                 Logger.error(`Failed to refresh class path. Details: ${error}.`);
                 throw error;
             }
-        });
+        }));
     }
 
     public dispose() {
