@@ -17,11 +17,14 @@ export class TestStatusBarProvider {
 
     private constructor() {
         this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, Number.MIN_VALUE);
-        this.statusBarItem.show();
     }
 
     public dispose() {
         this.statusBarItem.dispose();
+    }
+
+    public show() {
+        this.statusBarItem.show();
     }
 
     public update(tests: TestSuite[], action: Thenable<void>) {
