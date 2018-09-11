@@ -7,13 +7,7 @@ import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
 import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 
-export interface ITestStatusBar {
-    update(tests: TestSuite[], action: Thenable<void>): Thenable<void>;
-    dispose(): void;
-    show(): void;
-}
-
-class TestStatusBar implements ITestStatusBar {
+class TestStatusBar {
     private readonly statusBarItem: StatusBarItem;
 
     constructor() {
@@ -78,4 +72,4 @@ class TestStatusBar implements ITestStatusBar {
     }
 }
 
-export const testStatusBar: ITestStatusBar = new TestStatusBar();
+export const testStatusBar: TestStatusBar = new TestStatusBar();
