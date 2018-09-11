@@ -39,35 +39,35 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         if (!element) {
             const folders = workspace.workspaceFolders;
             return folders.map((folder) => new TestTreeNode(folder.name, folder.name, TestTreeNodeType.Folder, folder.uri.toString()));
-        } else if (!element.children) {
-            return new Promise(async (resolve: (res: TestTreeNode[]) => void): Promise<void> => {
-                const results: SearchResults[] = await FetchTestsUtility.searchTestEntries({
-                    nodeType: element.type,
-                    uri: element.uri,
-                    fullName: element.fullName,
-                });
-                const parentSuite: TestSuite = this.toTestSuite(element);
-                if (parentSuite) {
-                    const childSuites: TestSuite[] = results.map((result) => result.suite);
-                    for (const childSuite of childSuites) {
-                        childSuite.parent = parentSuite;
-                    }
-                    parentSuite.children = childSuites;
-                    this.updateTestStorage(childSuites);
-                }
-                element.children = results.map((result) => new TestTreeNode(
-                    result.displayName,
-                    result.suite.test,
-                    result.nodeType,
-                    result.suite.uri,
-                    result.suite.range,
-                    element,
-                ));
-                resolve(element.children);
-            });
-        } else {
+        } else if (element.children) {
             return element.children;
         }
+
+        return new Promise(async (resolve: (res: TestTreeNode[]) => void): Promise<void> => {
+            const results: SearchResults[] = await FetchTestsUtility.searchTestEntries({
+                nodeType: element.type,
+                uri: element.uri,
+                fullName: element.fullName,
+            });
+            const parentSuite: TestSuite = this.toTestSuite(element);
+            if (parentSuite) {
+                const childSuites: TestSuite[] = results.map((result) => result.suite);
+                for (const childSuite of childSuites) {
+                    childSuite.parent = parentSuite;
+                }
+                parentSuite.children = childSuites;
+                this.updateTestStorage(childSuites);
+            }
+            element.children = results.map((result) => new TestTreeNode(
+                result.displayName,
+                result.suite.test,
+                result.nodeType,
+                result.suite.uri,
+                result.suite.range,
+                element,
+            ));
+            resolve(element.children);
+        });
     }
 
     public select(element: TestTreeNode) {
