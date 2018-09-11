@@ -3,7 +3,7 @@
 
 import { TextDocument } from 'vscode';
 import * as Commands from '../Constants/commands';
-import { TestSuite } from '../Models/protocols';
+import { SearchRequest, SearchResults, TestSuite } from '../Models/protocols';
 
 export function fetchTests(document: TextDocument): Thenable<TestSuite[]> {
     return Commands.executeJavaLanguageServerCommand(Commands.JAVA_FETCH_TEST, document.uri.toString()).then((tests: TestSuite[]) => {
@@ -13,6 +13,11 @@ export function fetchTests(document: TextDocument): Thenable<TestSuite[]> {
     (reason) => {
         return Promise.reject(reason);
     });
+}
+
+export async function searchTestEntries(request: SearchRequest): Promise<SearchResults[]> {
+    const serialized: string = JSON.stringify(request);
+    return Commands.executeJavaLanguageServerCommand<SearchResults[]>(Commands.JAVA_SEARCH_TEST_ENTRY, serialized);
 }
 
 export function searchAllTests(): Thenable<any> {
