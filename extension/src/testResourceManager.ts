@@ -3,8 +3,6 @@
 
 import { Event, EventEmitter, Uri } from 'vscode';
 import { Test, TestSuite } from './Models/protocols';
-import * as FetchTestsUtility from './Utils/fetchTestUtility';
-import * as Logger from './Utils/Logger/logger';
 
 export class TestResourceManager {
     private testsIndexedByFileUri = new Map<string, Test | null | undefined>();
