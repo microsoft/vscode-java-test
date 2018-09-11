@@ -7,15 +7,10 @@ import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
 import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 
-export class TestStatusBarProvider {
-    public static getInstance(): TestStatusBarProvider {
-        return TestStatusBarProvider.instance;
-    }
-    private static readonly instance: TestStatusBarProvider = new TestStatusBarProvider();
+class TestStatusBar {
+    private readonly statusBarItem: StatusBarItem;
 
-    private statusBarItem: StatusBarItem;
-
-    private constructor() {
+    constructor() {
         this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, Number.MIN_VALUE);
     }
 
@@ -37,10 +32,9 @@ export class TestStatusBarProvider {
                 Logger.info('User canceled the long running operation');
                 commands.executeCommand(Commands.JAVA_TEST_CANCEL);
             });
-            p.report({ message: 'Running tests...', increment: 0 });
+            p.report({ message: 'Running tests...' });
             return action.then(() => {
                 this.updateStatus(tests);
-                p.report({ increment: 100 });
             },
             (reason) => {
                 this.statusBarItem.text = 'Failed to run tests';
@@ -77,3 +71,5 @@ export class TestStatusBarProvider {
         this.statusBarItem.command = CommandUtility.getCommandWithArgs(Commands.JAVA_TEST_SHOW_REPORT, [tests]);
     }
 }
+
+export const testStatusBar: TestStatusBar = new TestStatusBar();
