@@ -4,7 +4,7 @@
 import * as cp from 'child_process';
 import * as kill from 'tree-kill';
 import { window } from 'vscode';
-import { TestStatusBarProvider } from '../testStatusBarProvider';
+import { testStatusBar } from '../testStatusBarProvider';
 import * as Configs from '../Constants/configs';
 import { TestKind, TestLevel, TestResult, TestStatus, TestSuite } from '../Models/protocols';
 import { RunConfigItem } from '../Models/testConfig';
@@ -26,7 +26,7 @@ export class TestRunnerWrapper {
         TestRunnerWrapper.running = true;
         try {
             TestRunnerWrapper.classifyTests(tests);
-            await TestStatusBarProvider.getInstance().update(tests, (async () => {
+            await testStatusBar.update(tests, (async () => {
                 for (const [runner, t] of this.runners.entries()) {
                     if (config && config.preLaunchTask.length > 0) {
                         try {
