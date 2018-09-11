@@ -52,7 +52,6 @@ export async function activate(context: ExtensionContext) {
             new OutputTransport({ level: 'info', channel: outputChannel, name: 'output' }),
         ],
     );
-    await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);

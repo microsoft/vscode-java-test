@@ -17,24 +17,11 @@ export class TestStatusBarProvider {
 
     private constructor() {
         this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, Number.MIN_VALUE);
+        this.statusBarItem.show();
     }
 
     public dispose() {
         this.statusBarItem.dispose();
-    }
-
-    public init(action: Thenable<void>): Thenable<void> {
-        return window.withProgress({ location: ProgressLocation.Window }, (p) => {
-            p.report({message: 'Loading tests...'});
-            this.statusBarItem.show();
-            return action.then(null,
-            (reason) => {
-                this.statusBarItem.text = 'Failed to load tests';
-                Logger.error('Failed to load tests.', {
-                    error: reason,
-                });
-            });
-        });
     }
 
     public update(tests: TestSuite[], action: Thenable<void>) {
