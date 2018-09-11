@@ -128,6 +128,7 @@ export async function activate(context: ExtensionContext) {
         TestRunnerWrapper.registerRunner(
             TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         await classPathManager.refresh();
+        await commands.executeCommand('setContext', 'java.test.activated', true);
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
         Logger.error("couldn't find Java home.", {
