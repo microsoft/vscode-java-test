@@ -46,7 +46,7 @@
                 {
                     "id": "testExplorer",
                     "name": "Test Explorer",
-                    "when": "resourceExtname == '.java'"
+                    "when": "java.test.activated"
                 }
             ]
         },
