@@ -34,7 +34,13 @@
         "onCommand:java.test.open.log",
         "onCommand:java.test.run.config",
         "onCommand:java.test.debug.config",
-        "onCommand:java.test.configure"
+        "onCommand:java.test.configure",
+        "onCommand:java.test.cancel",
+        "onCommand:java.test.explorer.run",
+        "onCommand:java.test.explorer.debug",
+        "onCommand:java.test.explorer.run.config",
+        "onCommand:java.test.explorer.debug.config",
+        "onCommand:java.classpath.refresh"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -83,6 +89,24 @@
                     "command": "java.test.explorer.debug.config",
                     "when": "view == testExplorer",
                     "group": "testExplorer@3"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "java.test.explorer.run",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.run.config",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.debug.config",
+                    "when": "never"
                 }
             ]
         },
