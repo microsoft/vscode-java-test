@@ -23,18 +23,8 @@ export class TestStatusBarProvider {
         this.statusBarItem.dispose();
     }
 
-    public init(action: Thenable<void>): Thenable<void> {
-        return window.withProgress({ location: ProgressLocation.Window }, (p) => {
-            p.report({message: 'Loading tests...'});
-            this.statusBarItem.show();
-            return action.then(null,
-            (reason) => {
-                this.statusBarItem.text = 'Failed to load tests';
-                Logger.error('Failed to load tests.', {
-                    error: reason,
-                });
-            });
-        });
+    public show() {
+        this.statusBarItem.show();
     }
 
     public update(tests: TestSuite[], action: Thenable<void>) {

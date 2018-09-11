@@ -3,8 +3,6 @@
 
 import { Event, EventEmitter, Uri } from 'vscode';
 import { Test, TestSuite } from './Models/protocols';
-import * as FetchTestsUtility from './Utils/fetchTestUtility';
-import * as Logger from './Utils/Logger/logger';
 
 export class TestResourceManager {
     private testsIndexedByFileUri = new Map<string, Test | null | undefined>();
@@ -50,28 +48,6 @@ export class TestResourceManager {
             allTests = allTests.concat(value.tests);
         });
         return allTests;
-    }
-    public refresh(): Thenable<void> {
-        return FetchTestsUtility.searchAllTests().then((tests: TestSuite[]) => {
-            this.testsIndexedByFileUri.clear();
-            const map = new Map<string, TestSuite[]>();
-            tests.forEach((test) => {
-                const key: string = test.uri;
-                const collection: TestSuite[] = map.get(key);
-                if (!collection) {
-                    map.set(key, [test]);
-                } else {
-                    collection.push(test);
-                }
-            });
-            map.forEach((value, key) => {
-                this.storeTests(Uri.parse(key), value);
-            });
-        },
-        (reason) => {
-            Logger.error(`Failed to refresh test storage. Details: ${reason}.`);
-            return Promise.reject(reason);
-        });
     }
     public dispose() {
         this.testsIndexedByFileUri.clear();

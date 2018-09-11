@@ -52,7 +52,6 @@ export async function activate(context: ExtensionContext) {
             new OutputTransport({ level: 'info', channel: outputChannel, name: 'output' }),
         ],
     );
-    await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
@@ -128,6 +127,7 @@ export async function activate(context: ExtensionContext) {
         TestRunnerWrapper.registerRunner(
             TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         await classPathManager.refresh();
+        testStatusBarItem.show();
         await commands.executeCommand('setContext', 'java.test.activated', true);
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
