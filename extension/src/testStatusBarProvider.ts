@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, window, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
+import { commands, window, Disposable, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
 import * as Commands from './Constants/commands';
 import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
 import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 
-class TestStatusBar {
+class TestStatusBar implements Disposable {
     private readonly statusBarItem: StatusBarItem;
 
     constructor() {
