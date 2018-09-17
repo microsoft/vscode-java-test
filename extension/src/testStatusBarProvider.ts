@@ -47,10 +47,9 @@ export class TestStatusBarProvider {
                 Logger.info('User canceled the long running operation');
                 commands.executeCommand(Commands.JAVA_TEST_CANCEL);
             });
-            p.report({ message: 'Running tests...', increment: 0 });
+            p.report({ message: 'Running tests...'});
             return action.then(() => {
                 this.updateStatus(tests);
-                p.report({ increment: 100 });
             },
             (reason) => {
                 this.statusBarItem.text = 'Failed to run tests';
