@@ -2,23 +2,10 @@
 // Licensed under the MIT license.
 
 import { Range } from 'vscode';
-import { TestTreeNodeType } from '../Explorer/testTreeNode';
 
 export type Test = {
     tests: TestSuite[];
     dirty: boolean;
-};
-
-export type SearchRequest = {
-    nodeType: TestTreeNodeType;
-    uri: string;
-    fullName: string;
-};
-
-export type SearchResults = {
-    suite: TestSuite;
-    displayName: string;
-    nodeType: TestTreeNodeType;
 };
 
 export type TestSuite = {

@@ -6,12 +6,11 @@ import { Range } from 'vscode';
 export class TestTreeNode {
     constructor(
         private _name: string,
-        private _fullName: string,
-        private _type: TestTreeNodeType,
         private _uri?: string,
         private _range?: Range,
         private _parent?: TestTreeNode,
-        private _children?: TestTreeNode[]) {
+        private _children?: TestTreeNode[],
+        private _level: TestTreeNodeType = TestTreeNodeType.Method) {
     }
 
     public get name(): string {
@@ -19,7 +18,11 @@ export class TestTreeNode {
     }
 
     public get fullName(): string {
-        return this._fullName;
+        const prefix: string = this._parent && this._parent.level !== TestTreeNodeType.Folder ? `${this._parent.fullName}` : '';
+        if (prefix === '') {
+            return this._name;
+        }
+        return prefix + (this.level === TestTreeNodeType.Method ? '#' : '.') + this._name;
     }
 
     public get uri(): string {
@@ -30,8 +33,8 @@ export class TestTreeNode {
         return this._range;
     }
 
-    public get isMethod(): boolean {
-        return this.type === TestTreeNodeType.Method;
+    public get isFolder(): boolean {
+        return this.level !== TestTreeNodeType.Method;
     }
 
     public get children(): TestTreeNode[] {
@@ -50,14 +53,14 @@ export class TestTreeNode {
         this._parent = c;
     }
 
-    public get type(): TestTreeNodeType {
-        return this._type;
+    public get level(): TestTreeNodeType {
+        return this._level;
     }
 }
 
 export enum TestTreeNodeType {
-    Method = 0,
-    Class = 1,
-    Package = 2,
-    Folder = 3,
+    Method,
+    Class,
+    Package,
+    Folder,
 }
