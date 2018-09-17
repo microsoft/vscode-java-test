@@ -6,7 +6,7 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from 'vscode';
 import { TestResourceManager } from './testResourceManager';
 import * as Commands from './Constants/commands';
-import { TestResult, TestStatus, TestSuite } from './Models/protocols';
+import { TestStatus, TestSuite } from './Models/protocols';
 import * as FetchTestsUtility from './Utils/fetchTestUtility';
 import * as Logger from './Utils/Logger/logger';
 
@@ -21,19 +21,7 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
-        let testsFromCache = this._testCollectionStorage.getTests(document.uri);
-        if (testsFromCache && !testsFromCache.dirty) {
-            return getCodeLens(testsFromCache.tests);
-        }
         return FetchTestsUtility.fetchTests(document).then((tests: TestSuite[]) => {
-            // check again in case the storage updated during fetching
-            testsFromCache = this._testCollectionStorage.getTests(document.uri);
-            if (testsFromCache && !testsFromCache.dirty) {
-                return getCodeLens(testsFromCache.tests);
-            }
-            if (testsFromCache) {
-                this.mergeTestResult(testsFromCache.tests, tests);
-            }
             this._testCollectionStorage.storeTests(document.uri, tests);
             return getCodeLens(tests);
         },
@@ -44,15 +32,6 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
             }
             Logger.error(`Failed to get test codelens. Details: ${reason}.`);
             return Promise.reject(reason);
-        });
-    }
-
-    private mergeTestResult(cache: TestSuite[], cur: TestSuite[]): void {
-        const dict = new Map(cache.map((t): [string, TestResult | undefined] => [t.test, t.result]));
-        cur.map((testSuite) => {
-            if (!testSuite.result && dict.has(testSuite.test)) {
-                testSuite.result = dict.get(testSuite.test);
-            }
         });
     }
 }
