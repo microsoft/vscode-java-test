@@ -39,8 +39,6 @@ export const JAVA_FETCH_TEST = 'vscode.java.test.fetch';
 
 export const JAVA_SEARCH_ALL_TESTS = 'vscode.java.test.search.all';
 
-export const JAVA_SEARCH_TEST_ENTRY = 'vscode.java.test.search.entries';
-
 export const JAVA_CALCULATE_CLASS_PATH = 'vscode.java.test.runtime.classpath';
 
 export const JAVA_GET_PROJECT_INFO = 'vscode.java.test.project.info';

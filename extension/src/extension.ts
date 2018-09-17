@@ -15,7 +15,7 @@ import { ProjectManager } from './projectManager';
 import { TestConfigManager } from './testConfigManager';
 import { encodeTestSuite, parseTestReportName, TestReportProvider } from './testReportProvider';
 import { TestResourceManager } from './testResourceManager';
-import { testStatusBar } from './testStatusBarProvider';
+import { TestStatusBarProvider } from './testStatusBarProvider';
 import * as Commands from './Constants/commands';
 import * as Configs from './Constants/configs';
 import * as Constants from './Constants/constants';
@@ -34,6 +34,7 @@ import { TelemetryTransport } from './Utils/Logger/telemetryTransport';
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
+const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
 const testResourceManager: TestResourceManager = new TestResourceManager();
 const projectManager: ProjectManager = new ProjectManager();
@@ -51,7 +52,7 @@ export async function activate(context: ExtensionContext) {
             new OutputTransport({ level: 'info', channel: outputChannel, name: 'output' }),
         ],
     );
-    context.subscriptions.push(testStatusBar);
+    await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
     const testReportProvider: TestReportProvider = new TestReportProvider(context, testResourceManager);
@@ -127,7 +128,6 @@ export async function activate(context: ExtensionContext) {
         TestRunnerWrapper.registerRunner(
             TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         await classPathManager.refresh();
-        testStatusBar.show();
         await commands.executeCommand('setContext', 'java.test.activated', true);
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
@@ -141,6 +141,7 @@ export async function activate(context: ExtensionContext) {
 export function deactivate() {
     testResourceManager.dispose();
     classPathManager.dispose();
+    testStatusBarItem.dispose();
     CommandUtility.clearCommandsCache();
 }
 

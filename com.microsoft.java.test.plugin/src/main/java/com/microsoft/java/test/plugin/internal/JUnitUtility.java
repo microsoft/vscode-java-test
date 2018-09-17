@@ -47,7 +47,9 @@ public class JUnitUtility {
             if (Flags.isAbstract(type.getFlags())) {
                 return false;
             }
-            return Arrays.stream(type.getMethods()).anyMatch(m -> isTestMethod(m, annotation));
+            List<IMethod> tests = Arrays.stream(type.getMethods()).filter(m -> isTestMethod(m, annotation))
+                    .collect(Collectors.toList());
+            return tests.size() > 0;
         } catch (JavaModelException e) {
             return false;
         }

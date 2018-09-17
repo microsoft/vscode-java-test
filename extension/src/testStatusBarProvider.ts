@@ -1,16 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, window, Disposable, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
+import { commands, window, ProgressLocation, StatusBarAlignment, StatusBarItem } from 'vscode';
 import * as Commands from './Constants/commands';
 import { TestLevel, TestStatus, TestSuite } from './Models/protocols';
 import { CommandUtility } from './Utils/commandUtility';
 import * as Logger from './Utils/Logger/logger';
 
-class TestStatusBar implements Disposable {
-    private readonly statusBarItem: StatusBarItem;
+export class TestStatusBarProvider {
+    public static getInstance(): TestStatusBarProvider {
+        return TestStatusBarProvider.instance;
+    }
+    private static readonly instance: TestStatusBarProvider = new TestStatusBarProvider();
 
-    constructor() {
+    private statusBarItem: StatusBarItem;
+
+    private constructor() {
         this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, Number.MIN_VALUE);
     }
 
@@ -18,8 +23,18 @@ class TestStatusBar implements Disposable {
         this.statusBarItem.dispose();
     }
 
-    public show() {
-        this.statusBarItem.show();
+    public init(action: Thenable<void>): Thenable<void> {
+        return window.withProgress({ location: ProgressLocation.Window }, (p) => {
+            p.report({message: 'Loading tests...'});
+            this.statusBarItem.show();
+            return action.then(null,
+            (reason) => {
+                this.statusBarItem.text = 'Failed to load tests';
+                Logger.error('Failed to load tests.', {
+                    error: reason,
+                });
+            });
+        });
     }
 
     public update(tests: TestSuite[], action: Thenable<void>) {
@@ -32,9 +47,10 @@ class TestStatusBar implements Disposable {
                 Logger.info('User canceled the long running operation');
                 commands.executeCommand(Commands.JAVA_TEST_CANCEL);
             });
-            p.report({ message: 'Running tests...' });
+            p.report({ message: 'Running tests...', increment: 0 });
             return action.then(() => {
                 this.updateStatus(tests);
+                p.report({ increment: 100 });
             },
             (reason) => {
                 this.statusBarItem.text = 'Failed to run tests';
@@ -71,5 +87,3 @@ class TestStatusBar implements Disposable {
         this.statusBarItem.command = CommandUtility.getCommandWithArgs(Commands.JAVA_TEST_SHOW_REPORT, [tests]);
     }
 }
-
-export const testStatusBar: TestStatusBar = new TestStatusBar();
