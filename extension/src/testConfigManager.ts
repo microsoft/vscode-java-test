@@ -4,8 +4,7 @@
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
-import { window, workspace, ExtensionContext, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-
+import { window, workspace, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { ProjectInfo, ProjectManager } from './projectManager';
 import * as Configs from './Constants/configs';
 import { TestSuite } from './Models/protocols';
@@ -30,7 +29,7 @@ export class TestConfigManager {
                 if (readErr) {
                     Logger.error(`Failed to read the test config! Details: ${readErr.message}.`, {
                         error: readErr,
-                    });
+                    }, true);
                     return reject(readErr);
                 }
                 try {
@@ -39,7 +38,7 @@ export class TestConfigManager {
                 } catch (ex) {
                     Logger.error(`Failed to parse the test config! Details: ${ex.message}.`, {
                         error: ex,
-                    });
+                    }, true);
                     reject(ex);
                 }
             });
@@ -51,9 +50,9 @@ export class TestConfigManager {
             throw new Error('Not supported without a folder!');
         }
         const editor = window.activeTextEditor;
-        let folder = workspace.getWorkspaceFolder(editor.document.uri);
+        let folder = editor && workspace.getWorkspaceFolder(editor.document.uri);
         if (!folder) {
-            Logger.warn(`Active file isn't within a folder, use first folder instead.`);
+            Logger.warn(`Active file isn't within a folder, use first folder instead.`, undefined, true);
             folder = workspace.workspaceFolders[0];
         }
         return this.createTestConfigIfNotExisted(folder).then((fullPath) => {

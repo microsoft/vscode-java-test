@@ -4,12 +4,12 @@
     <groupId>com.microsoft.java.test</groupId>
     <artifactId>parent</artifactId>
     <name>${base.name} :: Parent</name>
-    <version>0.7.1</version>
+    <version>0.8.0</version>
     <packaging>pom</packaging>
     <properties>
         <base.name>Java Test Runner</base.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <tycho-version>1.0.0</tycho-version>
+        <tycho-version>1.2.0</tycho-version>
     </properties>
     <modules>
         <module>com.microsoft.java.test.plugin</module>
@@ -75,9 +75,9 @@
     </build>
     <repositories>
         <repository>
-            <id>oxygen</id>
+            <id>photon</id>
             <layout>p2</layout>
-            <url>http://download.eclipse.org/releases/oxygen</url>
+            <url>http://download.eclipse.org/releases/photon</url>
         </repository>
         <repository>
             <id>oss.sonatype.org</id>

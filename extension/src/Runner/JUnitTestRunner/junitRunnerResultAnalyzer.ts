@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel, TestResult, TestStatus } from '../../Models/protocols';
+import { TestLevel, TestStatus } from '../../Models/protocols';
 import * as Logger from '../../Utils/Logger/logger';
 import { ITestInfo, ITestResult } from '../testModel';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
@@ -13,13 +13,13 @@ const TEST_FAIL: string = 'testFailed';
 const TEST_FINISH: string = 'testFinished';
 
 export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
+    public static regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/gm;
     private _suiteName: string;
 
     public analyzeData(data: string): void {
-        const regex = /@@<({[^@]*})>/gm;
         let match;
         do {
-            match = regex.exec(data);
+            match = JUnitRunnerResultAnalyzer.regex.exec(data);
             if (match) {
                 try {
                     this.analyzeDataCore(match[1]);
@@ -32,8 +32,24 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         } while (match);
     }
 
+    public analyzeError(error: string): void {
+        let match;
+        do {
+            match = JUnitRunnerResultAnalyzer.regex.exec(error);
+            if (match) {
+                try {
+                    Logger.error(`Error occurred: ${match[1]}`);
+                } catch (ex) {
+                    // ignore error output by tests.
+                    Logger.info(error);
+                }
+            } else {
+                Logger.info(error);
+            }
+        } while (match);
+    }
+
     public feedBack(isCancelled: boolean): ITestResult[] {
-        const toAggregate = new Set();
         const result: ITestResult[] = [];
         this._tests.forEach((t) => {
             if (t.level === TestLevel.Class) {
@@ -107,6 +123,7 @@ export class JUnitRunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
 }
 
 export type JUnitTestResultInfo = {
+    type: TestOutputType;
     name: string;
     attributes: JUnitTestAttributes;
 };
@@ -118,3 +135,8 @@ export type JUnitTestAttributes = {
     message: string;
     details: string;
 };
+
+export enum TestOutputType {
+    Info,
+    Error,
+}

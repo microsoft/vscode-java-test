@@ -28,12 +28,12 @@ export class JUnitTestRunner extends JarFileTestRunner {
         return 'com.microsoft.java.test.runner.JUnitLauncher';
     }
 
-    public async constructCommand(params: IJarFileTestRunnerParameters): Promise<string> {
+    public async constructCommand(params: IJarFileTestRunnerParameters): Promise<string[]> {
         let commandParams = [];
-        commandParams.push('"' + path.resolve(this._javaHome + '/bin/java') + '"');
+        commandParams.push(path.resolve(this._javaHome + '/bin/java'));
         commandParams.push('-cp');
         const classpathStr: string = params.classpathStr;
-        commandParams.push('"' + classpathStr + '"');
+        commandParams.push(classpathStr);
 
         if (params.isDebugMode) {
             const debugParams = [];
@@ -55,7 +55,7 @@ export class JUnitTestRunner extends JarFileTestRunner {
         commandParams.push(this.runnerClassName);
         const suites: string[] = params.tests.map((t) => t.test);
         commandParams = [...commandParams, ...suites];
-        return commandParams.join(' ');
+        return commandParams;
     }
 
     public getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer {

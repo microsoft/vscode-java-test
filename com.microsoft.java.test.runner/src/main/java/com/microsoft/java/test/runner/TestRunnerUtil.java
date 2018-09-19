@@ -27,6 +27,8 @@ public class TestRunnerUtil {
      * @param suites array of test classes or test method (if args.length == 1) to execute
      * @return list of {@link JUnit4TestReference}
      */
+    private static TestOutputStream stream = TestOutputStream.instance();
+
     public static List<JUnit4TestReference> createTestReferences(String[] suites) {
         if (suites.length == 0) {
             return emptyList();
@@ -50,7 +52,8 @@ public class TestRunnerUtil {
             Runner runner = request.getRunner();
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
-            System.err.printf("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            stream.println(new TestMessageItem(message, e));
             return emptyList();
         }
     }
@@ -61,7 +64,8 @@ public class TestRunnerUtil {
             Runner runner = request.getRunner();
             return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
         } catch (ClassNotFoundException e) {
-            System.err.printf("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            String message = String.format("No test found to run for suite %s. Details: %s.", suite, e.getMessage());
+            stream.println(new TestMessageItem(message, e));
             return emptyList();
         }
     }
@@ -75,11 +79,12 @@ public class TestRunnerUtil {
                 Runner runner = request.getRunner();
                 suites.add(new JUnit4TestReference(runner, runner.getDescription()));
             } catch (ClassNotFoundException ignored) {
-                System.err.printf("Failed to parse tests for suite %s. Details: %s.", classFqn, ignored.getMessage());
+                String message = String.format("Failed to parse tests for suite %s. Details: %s.", classFqn, ignored.getMessage());
+                stream.println(new TestMessageItem(message, ignored));
             }
         }
         if (suites.isEmpty()) {
-            System.err.print("No test found to run.");
+            stream.println(new TestMessageItem("No test found to run.", null));
             return emptyList();
         }
         return suites;

@@ -7,25 +7,26 @@ import * as Commands from './Constants/commands';
 import * as Logger from './Utils/Logger/logger';
 
 export class ClassPathManager {
-    // mapping from project folder uri to classpaths.
-    private _classPathCache = new Map<Uri, string[]>();
+    // mapping from project folder path to classpaths.
+    private _classPathCache = new Map<string, string[]>();
     constructor(private readonly _projectManager: ProjectManager) {
     }
 
-    public async refresh(token?: CancellationToken): Promise<void[]> {
+    public async refresh(token?: CancellationToken): Promise<void> {
         if (!workspace.workspaceFolders) {
             return;
         }
         await this._projectManager.refresh();
-        return Promise.all(this._projectManager.getAll().map((info) => {
-            return calculateClassPath(info.path).then((classpath: string[]) => this.storeClassPath(info.path, classpath),
-            (reason) => {
-                if (token.isCancellationRequested) {
+        await Promise.all(this._projectManager.getAll().map(async (info) => {
+            try {
+                this.storeClassPath(info.path, await calculateClassPath(info.path));
+            } catch (error) {
+                if (token && token.isCancellationRequested) {
                     return;
                 }
-                Logger.error(`Failed to refresh class path. Details: ${reason}.`);
-                return Promise.reject(reason);
-            });
+                Logger.error(`Failed to refresh class path. Details: ${error}.`);
+                throw error;
+            }
         }));
     }
 
@@ -35,20 +36,20 @@ export class ClassPathManager {
 
     public getClassPath(resource: Uri): string[] | undefined {
         const path = this._projectManager.getProjectPath(resource);
-        return this._classPathCache.has(path) ? this._classPathCache.get(path) : undefined;
+        return this._classPathCache.has(path.fsPath) ? this._classPathCache.get(path.fsPath) : undefined;
     }
 
     public getClassPaths(resources: Uri[]): string[] | undefined {
-        const set = new Set(resources.map((r) => this._projectManager.getProjectPath(r)).filter((p) => p && this._classPathCache.has(p)));
-        return [...set].map((p) => this._classPathCache.get(p)).reduce((a, b) => a.concat(b), []);
+        const set = new Set(resources.map((r) => this._projectManager.getProjectPath(r)).filter((p) => p && this._classPathCache.has(p.fsPath)));
+        return [...set].map((p) => this._classPathCache.get(p.fsPath)).reduce((a, b) => a.concat(b), []);
     }
 
     public storeClassPath(resource: Uri, classPath: string[]): void {
         const path = this._projectManager.getProjectPath(resource);
-        this._classPathCache.set(path, classPath);
+        this._classPathCache.set(path.fsPath, classPath);
     }
 }
 
-function calculateClassPath(folder: Uri) {
-    return Commands.executeJavaLanguageServerCommand(Commands.JAVA_CALCULATE_CLASS_PATH, folder.toString());
+function calculateClassPath(folder: Uri): Thenable<string[]> {
+    return Commands.executeJavaLanguageServerCommand<string[]>(Commands.JAVA_CALCULATE_CLASS_PATH, folder.toString());
 }

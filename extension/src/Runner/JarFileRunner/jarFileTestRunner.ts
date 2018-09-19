@@ -1,20 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ClassPathManager } from '../../classPathManager';
-import { ProjectManager } from '../../projectManager';
-import { TestStatusBarProvider } from '../../testStatusBarProvider';
-import * as Configs from '../../Constants/configs';
-import { TestSuite } from '../../Models/protocols';
-import { RunConfigItem, TestConfig } from '../../Models/testConfig';
-import { ClassPathUtility } from '../../Utils/classPathUtility';
-import * as Logger from '../../Utils/Logger/logger';
-import { ITestResult } from '../testModel';
-import { ITestRunner } from '../testRunner';
-import { ITestRunnerParameters } from '../testRunnerParameters';
-import { IJarFileTestRunnerParameters } from './jarFileRunnerParameters';
-import { JarFileRunnerResultAnalyzer } from './jarFileRunnerResultAnalyzer';
-
 import * as cp from 'child_process';
 import * as getPort from 'get-port';
 import * as os from 'os';
@@ -22,6 +8,17 @@ import * as path from 'path';
 import * as rimraf from 'rimraf';
 import * as kill from 'tree-kill';
 import { debug, window, workspace, EventEmitter, Uri } from 'vscode';
+import { ClassPathManager } from '../../classPathManager';
+import { ProjectManager } from '../../projectManager';
+import { TestSuite } from '../../Models/protocols';
+import { RunConfigItem } from '../../Models/testConfig';
+import { ClassPathUtility } from '../../Utils/classPathUtility';
+import * as Logger from '../../Utils/Logger/logger';
+import { ITestResult } from '../testModel';
+import { ITestRunner } from '../testRunner';
+import { ITestRunnerParameters } from '../testRunnerParameters';
+import { IJarFileTestRunnerParameters } from './jarFileRunnerParameters';
+import { JarFileRunnerResultAnalyzer } from './jarFileRunnerResultAnalyzer';
 
 export abstract class JarFileTestRunner implements ITestRunner {
     private _process: cp.ChildProcess;
@@ -37,7 +34,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
     public abstract get debugConfigName(): string;
     public abstract get runnerJarFilePath(): string;
     public abstract get runnerClassName(): string;
-    public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string>;
+    public abstract constructCommand(params: IJarFileTestRunnerParameters): Promise<string[]>;
     public abstract getTestResultAnalyzer(params: IJarFileTestRunnerParameters): JarFileRunnerResultAnalyzer;
     public abstract clone(): ITestRunner;
 
@@ -74,13 +71,13 @@ export abstract class JarFileTestRunner implements ITestRunner {
         if (!jarParams) {
             return Promise.reject('Illegal env type, should pass in IJarFileTestRunnerParameters!');
         }
-        const command: string = await this.constructCommandWithWrapper(jarParams);
+        const command: string[] = await this.constructCommandWithWrapper(jarParams);
         const cwd = env.config ? env.config.workingDirectory : this._projectManager.getProjectPath(Uri.parse(env.tests[0].uri)).fsPath;
-        const options = { maxBuffer: Configs.CHILD_PROCESS_MAX_BUFFER_SIZE, cwd, env: process.env };
+        const options = { cwd, env: process.env };
         if (env.config && env.config.env) {
             options.env = {...env.config.env, ...options.env};
         }
-        this._process = cp.exec(command, options);
+        this._process = cp.spawn(command[0], command.slice(1), options);
         return new Promise<ITestResult[]>((resolve, reject) => {
             const testResultAnalyzer: JarFileRunnerResultAnalyzer = this.getTestResultAnalyzer(jarParams);
             let bufferred: string = '';
@@ -95,17 +92,15 @@ export abstract class JarFileTestRunner implements ITestRunner {
                 reject([err]);
             });
             this._process.stderr.on('data', (data) => {
-                Logger.error(`Error occurred: ${data.toString()}`);
+                testResultAnalyzer.analyzeError(data.toString());
             });
             this._process.stdout.on('data', (data) => {
                 Logger.info(data.toString());
-                const toConsume = bufferred + data.toString();
-                const index = toConsume.lastIndexOf(os.EOL);
+                bufferred = bufferred.concat(data.toString());
+                const index = bufferred.lastIndexOf(os.EOL);
                 if (index >= 0) {
-                    testResultAnalyzer.analyzeData(toConsume.substring(0, index));
-                    bufferred = toConsume.substring(index + os.EOL.length);
-                } else {
-                    bufferred = toConsume;
+                    testResultAnalyzer.analyzeData(bufferred.substring(0, index));
+                    bufferred = bufferred.substring(index + os.EOL.length);
                 }
             });
             this._process.on('close', (signal) => {
@@ -156,7 +151,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
 
     public cancel(): Promise<void> {
         if (this._process) {
-            Logger.warn('Cancelling this test run...');
+            Logger.warn('Cancelling this test run...', undefined, true);
             return new Promise((resolve, reject) => {
                 this._isCancelled = true;
                 kill(this._process.pid, 'SIGTERM', (err) => {
@@ -181,7 +176,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
             window.showErrorMessage(message);
             Logger.error(message, {
                 error: ex,
-            });
+            }, true);
             throw ex;
         }
     }
@@ -194,7 +189,7 @@ export abstract class JarFileTestRunner implements ITestRunner {
         return ClassPathUtility.getClassPathStr(classpaths, separator, storageForThisRun);
     }
 
-    private async constructCommandWithWrapper(params: IJarFileTestRunnerParameters): Promise<string> {
+    private async constructCommandWithWrapper(params: IJarFileTestRunnerParameters): Promise<string[]> {
         try {
             return await this.constructCommand(params);
         } catch (ex) {

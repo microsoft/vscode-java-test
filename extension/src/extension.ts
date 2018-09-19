@@ -3,25 +3,12 @@
 
 'use strict';
 
-import * as archiver from 'archiver';
-import * as cp from 'child_process';
 import * as expandHomeDir from 'expand-home-dir';
-import * as fileUrl from 'file-url';
 import * as findJavaHome from 'find-java-home';
-import * as fs from 'fs';
-import * as getPort from 'get-port';
-import * as glob from 'glob';
-import * as mkdirp from 'mkdirp';
-import * as net from 'net';
-import * as os from 'os';
 import * as path from 'path';
 import * as pathExists from 'path-exists';
-import * as rimraf from 'rimraf';
-// tslint:disable-next-line
-import { commands, debug, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, ProgressLocation, Uri, ViewColumn } from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
-import { Session, TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
-
+import { commands, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
+import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { ProjectManager } from './projectManager';
@@ -34,7 +21,7 @@ import * as Configs from './Constants/configs';
 import * as Constants from './Constants/constants';
 import { TestExplorer } from './Explorer/testExplorer';
 import { TestTreeNode } from './Explorer/testTreeNode';
-import { TestKind, TestLevel, TestSuite } from './Models/protocols';
+import { TestKind, TestSuite } from './Models/protocols';
 import { RunConfig, RunConfigItem, TestConfig } from './Models/testConfig';
 import { TestRunnerWrapper } from './Runner/testRunnerWrapper';
 import { JUnit5TestRunner } from './Runner/JUnitTestRunner/junit5TestRunner';
@@ -59,7 +46,13 @@ const testConfigManager: TestConfigManager = new TestConfigManager(projectManage
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     activateTelemetry(context);
-    Logger.configure(context, [new TelemetryTransport({ level: 'warn' }), new OutputTransport({ level: 'info', channel: outputChannel })]);
+    Logger.configure(
+        context,
+        [
+            new TelemetryTransport({ level: 'warn', name: 'telemetry' }),
+            new OutputTransport({ level: 'info', channel: outputChannel, name: 'output' }),
+        ],
+    );
     await testStatusBarItem.init(testResourceManager.refresh());
     const codeLensProvider = new JUnitCodeLensProvider(onDidChange, testResourceManager);
     context.subscriptions.push(languages.registerCodeLensProvider(Configs.LANGUAGE, codeLensProvider));
@@ -67,20 +60,17 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(workspace.registerTextDocumentContentProvider(TestReportProvider.scheme, testReportProvider));
     const testExplorer = new TestExplorer(context, testResourceManager);
     context.subscriptions.push(window.registerTreeDataProvider(Constants.TEST_EXPLORER_VIEW_ID, testExplorer));
-    testResourceManager.onDidChangeTestStorage((e) => {
+    testResourceManager.onDidChangeTestStorage(() => {
         testExplorer.refresh();
     });
-
-    workspace.onDidChangeTextDocument((event) => {
-        const uri = event.document.uri;
-        testResourceManager.setDirty(uri);
-        // onDidChange.fire();
-    });
-
-    workspace.onDidSaveTextDocument((document) => {
-        const uri = document.uri;
+    const watcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
+    context.subscriptions.push(watcher);
+    watcher.onDidChange((uri) => {
         testResourceManager.setDirty(uri);
         onDidChange.fire();
+    });
+    watcher.onDidDelete((uri) => {
+        testResourceManager.removeTests(uri);
     });
 
     const reports = new Set();
@@ -141,11 +131,12 @@ export async function activate(context: ExtensionContext) {
         TestRunnerWrapper.registerRunner(
             TestKind.TestNG, new TestNGTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
         await classPathManager.refresh();
+        await commands.executeCommand('setContext', 'java.test.activated', true);
     }).catch((err) => {
         window.showErrorMessage("couldn't find Java home...");
         Logger.error("couldn't find Java home.", {
             error: err,
-        });
+        }, true);
     });
 }
 

@@ -6,18 +6,16 @@ import * as Logger from '../../Utils/Logger/logger';
 import { ITestInfo, ITestResult } from '../testModel';
 import { JarFileRunnerResultAnalyzer } from '../JarFileRunner/jarFileRunnerResultAnalyzer';
 
-import * as path from 'path';
-
 const TEST_START: string = 'testStarted';
 const TEST_SKIP: string = 'testSkipped';
 const TEST_FINISH: string = 'testFinished';
 
 export class JUnit5RunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
+    public static regex: RegExp = /@@<({[^@]*})>/gm;
     public analyzeData(data: string): void {
-        const regex = /@@<([^@]*)>/gm;
         let match;
         do {
-            match = regex.exec(data);
+            match = JUnit5RunnerResultAnalyzer.regex.exec(data);
             if (match) {
                 try {
                     this.analyzeDataCore(match[1]);
@@ -30,8 +28,11 @@ export class JUnit5RunnerResultAnalyzer extends JarFileRunnerResultAnalyzer {
         } while (match);
     }
 
+    public analyzeError(error: string): void {
+        Logger.error(`Error occurred: ${error}`);
+    }
+
     public feedBack(isCancelled: boolean): ITestResult[] {
-        const toAggregate = new Set();
         const result: ITestResult[] = [];
         this._tests.forEach((t) => {
             if (t.level === TestLevel.Class) {

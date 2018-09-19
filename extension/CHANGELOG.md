@@ -4,6 +4,15 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 - 2018-08-08
+
+### Changed
+- Refine the logic to consume test output for JUnit test runner.
+
+### Fixed
+- Add project info into `TestSuite`, and run the tests per project to avoid the conflict of classpaths between projects.
+- Fix the issue that test output would be truncated when it exceeds buffer size.
+
 ## 0.7.1 - 2018-07-11
 
 ### Fixed

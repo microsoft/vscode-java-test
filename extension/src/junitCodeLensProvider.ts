@@ -3,8 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, ProviderResult, TextDocument } from 'vscode';
-
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from 'vscode';
 import { TestResourceManager } from './testResourceManager';
 import * as Commands from './Constants/commands';
 import { TestResult, TestStatus, TestSuite } from './Models/protocols';
@@ -22,16 +21,8 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
-        let testsFromCache = this._testCollectionStorage.getTests(document.uri);
-        if (testsFromCache && !testsFromCache.dirty) {
-            return getCodeLens(testsFromCache.tests);
-        }
         return FetchTestsUtility.fetchTests(document).then((tests: TestSuite[]) => {
-            // check again in case the storage updated during fetching
-            testsFromCache = this._testCollectionStorage.getTests(document.uri);
-            if (testsFromCache && !testsFromCache.dirty) {
-                return getCodeLens(testsFromCache.tests);
-            }
+            const testsFromCache = this._testCollectionStorage.getTests(document.uri);
             if (testsFromCache) {
                 this.mergeTestResult(testsFromCache.tests, tests);
             }
@@ -40,7 +31,7 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
         },
         (reason) => {
             if (token.isCancellationRequested) {
-                Logger.error('test codelens request is cancelled.');
+                Logger.error('test codelens request is cancelled.', undefined, true);
                 return [];
             }
             Logger.error(`Failed to get test codelens. Details: ${reason}.`);

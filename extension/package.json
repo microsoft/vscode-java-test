@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.7.1",
+    "version": "0.8.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -34,19 +34,25 @@
         "onCommand:java.test.open.log",
         "onCommand:java.test.run.config",
         "onCommand:java.test.debug.config",
-        "onCommand:java.test.configure"
+        "onCommand:java.test.configure",
+        "onCommand:java.test.cancel",
+        "onCommand:java.test.explorer.run",
+        "onCommand:java.test.explorer.debug",
+        "onCommand:java.test.explorer.run.config",
+        "onCommand:java.test.explorer.debug.config",
+        "onCommand:java.classpath.refresh"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.7.1.jar"
+            "./server/com.microsoft.java.test.plugin-0.8.0.jar"
         ],
         "views": {
             "test": [
                 {
                     "id": "testExplorer",
                     "name": "Test Explorer",
-                    "when": "resourceExtname == '.java'"
+                    "when": "java.test.activated"
                 }
             ]
         },
@@ -83,6 +89,24 @@
                     "command": "java.test.explorer.debug.config",
                     "when": "view == testExplorer",
                     "group": "testExplorer@3"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "java.test.explorer.run",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.run.config",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.debug.config",
+                    "when": "never"
                 }
             ]
         },
@@ -187,6 +211,8 @@
         "@types/node": "^6.0.110",
         "bootstrap": "^4.1.1",
         "gulp": "^3.9.1",
+        "gulp-decompress": "^2.0.2",
+        "gulp-download": "0.0.1",
         "gulp-sass": "^3.2.1",
         "gulp-tslint": "^8.1.3",
         "mocha": "^2.3.3",
