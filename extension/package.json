@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.8.0",
+    "version": "0.9.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
