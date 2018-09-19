@@ -21,16 +21,8 @@ export class JUnitCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
-        let testsFromCache = this._testCollectionStorage.getTests(document.uri);
-        if (testsFromCache && !testsFromCache.dirty) {
-            return getCodeLens(testsFromCache.tests);
-        }
         return FetchTestsUtility.fetchTests(document).then((tests: TestSuite[]) => {
-            // check again in case the storage updated during fetching
-            testsFromCache = this._testCollectionStorage.getTests(document.uri);
-            if (testsFromCache && !testsFromCache.dirty) {
-                return getCodeLens(testsFromCache.tests);
-            }
+            const testsFromCache = this._testCollectionStorage.getTests(document.uri);
             if (testsFromCache) {
                 this.mergeTestResult(testsFromCache.tests, tests);
             }
