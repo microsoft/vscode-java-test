@@ -52,7 +52,7 @@ public class JavaModelEventProvider implements IElementChangedListener {
           JDTLanguageServer ls = JavaLanguageServerPlugin.getInstance().getProtocol();
           ((JDTLanguageServer) ls)
               .getClientConnection()
-              .executeClientCommand(
+              .sendNotification(
                   CLIENT_UPDATE_CLASSPATH,
                   (Object[]) projectLocations.toArray(new String[projectLocations.size()]));
         } catch (Exception e) {
