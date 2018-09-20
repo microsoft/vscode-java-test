@@ -4,7 +4,7 @@
   <parent>
   	<groupId>com.microsoft.java.test</groupId>
     <artifactId>parent</artifactId>
-    <version>0.8.0</version>
+    <version>0.9.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>com.microsoft.java.test.runner.junit5</artifactId>
