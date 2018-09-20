@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Test explorer will always show in the Activity Bar after the extension is activated. [#271](https://github.com/Microsoft/vscode-java-test/issues/271)
 
 ### Fixed
+- Fix a bug that Java Test Runner will interfere with Java language server. [#260](https://github.com/Microsoft/vscode-java-test/issues/260)
 - Fix 'command not found error' when triggering commands. [#289](https://github.com/Microsoft/vscode-java-test/issues/289)
 
 ## 0.8.0 - 2018-08-08
