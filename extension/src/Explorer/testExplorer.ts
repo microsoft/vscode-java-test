@@ -35,20 +35,23 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     public getChildren(element?: TestTreeNode): TestTreeNode[] | Thenable<TestTreeNode[]> {
+        let children: TestTreeNode[];
         if (element) {
-            return element.children;
+            children = element.children;
+        } else {
+            const tests: TestSuite[] = this._testCollectionStorage.getAll().filter((t) => t.level === TestLevel.Method);
+            children = this.createTestTreeNode(tests, undefined, TestTreeNodeType.Folder);
         }
-        const tests: TestSuite[] = this._testCollectionStorage.getAll().filter((t) => t.level === TestLevel.Method);
-        return this.createTestTreeNode(tests, undefined, TestTreeNodeType.Folder);
+        return children.sort((a, b) => a.fullName.localeCompare(b.fullName));
     }
 
     public select(element: TestTreeNode) {
         const uri = Uri.parse(element.uri);
         workspace.openTextDocument(uri).then((doc) => {
             return window.showTextDocument(doc, {
-                    preserveFocus: true,
-                    selection: element.range,
-                });
+                preserveFocus: true,
+                selection: element.range,
+            });
         });
     }
 
@@ -61,7 +64,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             return (this.getChildren(element) as TestTreeNode[]).map((f) => this.resolveTestSuites(f)).reduce((a, b) => a.concat(b));
         }
         if (element.level === TestTreeNodeType.Class || element.level === TestTreeNodeType.Method) {
-            return[this.toTestSuite(element)];
+            return [this.toTestSuite(element)];
         }
         return element.children.map((c) => this.resolveTestSuites(c)).reduce((a, b) => a.concat(b));
     }
@@ -129,25 +132,25 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return element.name;
     }
 
-    private getIconPath(element: TestTreeNode): string | Uri | {dark: string | Uri, light: string | Uri} {
+    private getIconPath(element: TestTreeNode): string | Uri | { dark: string | Uri, light: string | Uri } {
         switch (element.level) {
             case TestTreeNodeType.Method:
-            return {
-                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'method.svg')),
-                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'method.svg')),
-            };
+                return {
+                    dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'method.svg')),
+                    light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'method.svg')),
+                };
             case TestTreeNodeType.Class:
-            return {
-                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'class.svg')),
-                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'class.svg')),
-            };
+                return {
+                    dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'class.svg')),
+                    light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'class.svg')),
+                };
             case TestTreeNodeType.Package:
-            return {
-                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'package.svg')),
-                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'package.svg')),
-            };
+                return {
+                    dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'package.svg')),
+                    light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'package.svg')),
+                };
             default:
-            return undefined;
+                return undefined;
         }
     }
 
