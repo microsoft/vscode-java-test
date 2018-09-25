@@ -25,6 +25,7 @@ before_install:
 # - npm install
 
 # script:
+  - echo "CI for Java Test Runner"
 # - gulp tslint
 # - vsce package
 # - npm test --silent
