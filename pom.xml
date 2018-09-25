@@ -41,7 +41,7 @@
                     </configuration>
                     <executions>
                         <execution>
-                            <phase>package</phase>
+                            <phase>verify</phase>
                             <goals>
                                 <goal>check</goal>
                             </goals>
