@@ -11,7 +11,21 @@
 
 package com.microsoft.java.test.plugin.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public enum TestLevel {
-    Method,
-    Class
+    @SerializedName("0")
+    FOLDER,
+
+    @SerializedName("1")
+    PACKAGE,
+
+    @SerializedName("2")
+    CLASS,
+
+    @SerializedName("3")
+    NESTED_CLASS,
+
+    @SerializedName("4")
+    METHOD;
 }
