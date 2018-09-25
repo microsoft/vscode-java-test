@@ -31,14 +31,15 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
 
         switch (commandId) {
-        case FETCH_TEST:
-            return new JUnitTestFetcher().fetchTests(arguments, monitor);
-        case COMPUTE_RUNTIME_CLASSPATH:
-            return new RuntimeClassPathResolver().resolveRunTimeClassPath(arguments);
-        case GET_PROJECT_INFO:
-            return ProjectInfoFetcher.getProjectInfo(arguments);
-        default:
-            throw new UnsupportedOperationException(String.format("Java test plugin doesn't support the command '%s'.", commandId));
+            case FETCH_TEST:
+                return new JUnitTestFetcher().fetchTests(arguments, monitor);
+            case COMPUTE_RUNTIME_CLASSPATH:
+                return new RuntimeClassPathResolver().resolveRunTimeClassPath(arguments);
+            case GET_PROJECT_INFO:
+                return ProjectInfoFetcher.getProjectInfo(arguments);
+            default:
+                throw new UnsupportedOperationException(
+                        String.format("Java test plugin doesn't support the command '%s'.", commandId));
         }
     }
 }
