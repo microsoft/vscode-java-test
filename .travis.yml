@@ -16,15 +16,15 @@ before_install:
       sh -e /etc/init.d/xvfb start;
       sleep 3;
   fi
-- cd  extension
+# - cd extension
 
-install:
-- npm install -g vsce
-- npm install -g typescript
-- npm install -g gulp
-- npm install
+# install:
+# - npm install -g vsce
+# - npm install -g typescript
+# - npm install -g gulp
+# - npm install
 
-script:
-- gulp tslint
-- vsce package
-- npm test --silent
+# script:
+# - gulp tslint
+# - vsce package
+# - npm test --silent
