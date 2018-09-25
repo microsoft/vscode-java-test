@@ -24,7 +24,7 @@ before_install:
 # - npm install -g gulp
 # - npm install
 
-# script:
+script:
   - echo "CI for Java Test Runner"
 # - gulp tslint
 # - vsce package
