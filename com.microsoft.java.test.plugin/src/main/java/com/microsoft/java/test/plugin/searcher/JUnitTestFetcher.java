@@ -84,7 +84,7 @@ public class JUnitTestFetcher {
                     final String test = type.getFullyQualifiedName();
                     final TestKind kind = children.size() > 0 ? children.get(0).getKind() : TestKind.JUnit;
                     final TestSuite cur = new TestSuite(getRange(unit, element), uri, test,
-                            type.getPackageFragment().getElementName(), TestLevel.Class, kind, project);
+                            type.getPackageFragment().getElementName(), TestLevel.CLASS, kind, project);
                     final List<TestSuite> directChildren = children.stream().filter(c -> c.getParent() == null)
                             .collect(Collectors.toList());
                     relations.children.put(cur, directChildren);
@@ -101,7 +101,7 @@ public class JUnitTestFetcher {
                     final IType type = ((IMethod) element).getDeclaringType();
                     final String test = type.getFullyQualifiedName() + "#" + element.getElementName();
                     suites.add(new TestSuite(getRange(unit, element), uri, test,
-                            type.getPackageFragment().getElementName(), TestLevel.Method,
+                            type.getPackageFragment().getElementName(), TestLevel.METHOD,
                             isJunit4 ? TestKind.JUnit : TestKind.JUnit5, project));
                 }
             }
