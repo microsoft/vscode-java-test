@@ -17,7 +17,6 @@ import com.microsoft.java.test.plugin.model.TestLevel;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -31,10 +30,10 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 @SuppressWarnings("restriction")
-public class ClassSearcherInPackage extends TestItemSearcher {
+public class NestedClassSearcher extends TestItemSearcher {
 
-    public ClassSearcherInPackage() {
-        super(IJavaSearchConstants.CLASS, TestLevel.Class);
+    public NestedClassSearcher() {
+        super(IJavaSearchConstants.CLASS, TestLevel.NestedClass);
     }
 
     @Override
@@ -44,9 +43,9 @@ public class ClassSearcherInPackage extends TestItemSearcher {
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
                 if (element instanceof IType) {
-                    final IType type = (IType) element;
-                    if (type.getParent() instanceof ICompilationUnit) {
-                        entryList.add(parseSearchItems(type));
+                    final IType child = (IType) element;
+                    if (isDirectInnerClass(child, fullyqualifiedName)) {
+                        entryList.add(parseSearchItems(child));
                     }
                 }
             }
@@ -55,8 +54,12 @@ public class ClassSearcherInPackage extends TestItemSearcher {
 
     @Override
     protected IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException {
-        final IPackageFragment packageFragment = JDTUtils.resolvePackage(uri);
-        final IJavaElement[] elements = packageFragment.getChildren();
-        return SearchEngine.createJavaSearchScope(elements, IJavaSearchScope.SOURCES);
+        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(uri);
+        return SearchEngine.createJavaSearchScope(new IJavaElement[] { compilationUnit }, IJavaSearchScope.SOURCES);
+    }
+
+    private boolean isDirectInnerClass(IType child, String fullName) {
+        return child.getParent() instanceof IType &&
+                ((IType) child.getParent()).getFullyQualifiedName().equals(fullName);
     }
 }

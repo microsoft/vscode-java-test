@@ -17,6 +17,7 @@ import com.microsoft.java.test.plugin.model.TestLevel;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -30,10 +31,10 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 @SuppressWarnings("restriction")
-public class ClassSearcherInClass extends TestItemSearcher {
+public class ClassSearcher extends TestItemSearcher {
 
-    public ClassSearcherInClass() {
-        super(IJavaSearchConstants.CLASS, TestLevel.NestedClass);
+    public ClassSearcher() {
+        super(IJavaSearchConstants.CLASS, TestLevel.Class);
     }
 
     @Override
@@ -43,9 +44,9 @@ public class ClassSearcherInClass extends TestItemSearcher {
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
                 if (element instanceof IType) {
-                    final IType child = (IType) element;
-                    if (isDirectInnerClass(child, fullyqualifiedName)) {
-                        entryList.add(parseSearchItems(child));
+                    final IType type = (IType) element;
+                    if (type.getParent() instanceof ICompilationUnit) {
+                        entryList.add(parseSearchItems(type));
                     }
                 }
             }
@@ -54,12 +55,8 @@ public class ClassSearcherInClass extends TestItemSearcher {
 
     @Override
     protected IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException {
-        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(uri);
-        return SearchEngine.createJavaSearchScope(new IJavaElement[] { compilationUnit }, IJavaSearchScope.SOURCES);
-    }
-
-    private boolean isDirectInnerClass(IType child, String fullName) {
-        return child.getParent() instanceof IType &&
-                ((IType) child.getParent()).getFullyQualifiedName().equals(fullName);
+        final IPackageFragment packageFragment = JDTUtils.resolvePackage(uri);
+        final IJavaElement[] elements = packageFragment.getChildren();
+        return SearchEngine.createJavaSearchScope(elements, IJavaSearchScope.SOURCES);
     }
 }
