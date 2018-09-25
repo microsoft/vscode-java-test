@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class PackageSearcher extends TestItemSearcher {
 
     public PackageSearcher() {
-        super(IJavaSearchConstants.PACKAGE, TestLevel.Package);
+        super(IJavaSearchConstants.PACKAGE, TestLevel.PACKAGE);
     }
 
     @Override

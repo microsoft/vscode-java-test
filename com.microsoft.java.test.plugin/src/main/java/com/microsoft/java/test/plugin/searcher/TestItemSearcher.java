@@ -85,11 +85,11 @@ public abstract class TestItemSearcher {
 
     private String parseTestItemFullName(IJavaElement element) {
         switch (this.searchResultLevel) {
-            case Class:
-            case NestedClass:
+            case CLASS:
+            case NESTED_CLASS:
                 final IType type = (IType) element;
                 return type.getFullyQualifiedName();
-            case Method:
+            case METHOD:
                 final IMethod method = (IMethod) element;
                 return method.getDeclaringType().getFullyQualifiedName() + "#" + method.getElementName();
             default:
@@ -99,11 +99,11 @@ public abstract class TestItemSearcher {
 
     private Range parseTestItemRange(IJavaElement element) throws JavaModelException {
         switch (this.searchResultLevel) {
-            case Class:
-            case NestedClass:
+            case CLASS:
+            case NESTED_CLASS:
                 final IType type = (IType) element;
                 return TestSearchUtils.getRange(type.getCompilationUnit(), type);
-            case Method:
+            case METHOD:
                 final IMethod method = (IMethod) element;
                 return TestSearchUtils.getRange(method.getCompilationUnit(), method);
             default:

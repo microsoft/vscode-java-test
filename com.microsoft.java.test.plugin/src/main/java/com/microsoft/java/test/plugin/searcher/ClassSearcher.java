@@ -34,7 +34,7 @@ import java.util.List;
 public class ClassSearcher extends TestItemSearcher {
 
     public ClassSearcher() {
-        super(IJavaSearchConstants.CLASS, TestLevel.Class);
+        super(IJavaSearchConstants.CLASS, TestLevel.CLASS);
     }
 
     @Override

@@ -36,7 +36,7 @@ import java.util.List;
 public class MethodSearcher extends TestItemSearcher {
 
     public MethodSearcher() {
-        super(IJavaSearchConstants.METHOD, TestLevel.Method);
+        super(IJavaSearchConstants.METHOD, TestLevel.METHOD);
     }
 
     private static final JUnitTestSearcher[] SEARCHERS = new JUnitTestSearcher[] {

@@ -33,7 +33,7 @@ import java.util.List;
 public class NestedClassSearcher extends TestItemSearcher {
 
     public NestedClassSearcher() {
-        super(IJavaSearchConstants.CLASS, TestLevel.NestedClass);
+        super(IJavaSearchConstants.CLASS, TestLevel.NESTED_CLASS);
     }
 
     @Override
