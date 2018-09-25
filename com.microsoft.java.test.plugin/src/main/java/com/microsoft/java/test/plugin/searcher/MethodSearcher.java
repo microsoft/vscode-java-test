@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.searcher;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitUtility;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.Flags;
@@ -36,7 +37,7 @@ import java.util.List;
 public class MethodSearcher extends TestItemSearcher {
 
     public MethodSearcher() {
-        super(IJavaSearchConstants.METHOD, TestLevel.METHOD);
+        super(IJavaSearchConstants.METHOD);
     }
 
     private static final JUnitTestSearcher[] SEARCHERS = new JUnitTestSearcher[] {
@@ -45,7 +46,7 @@ public class MethodSearcher extends TestItemSearcher {
     };
 
     @Override
-    protected SearchRequestor resolveSeartchRequestor(List<TestItem> entryList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
@@ -61,7 +62,8 @@ public class MethodSearcher extends TestItemSearcher {
                     }
                     for (final JUnitTestSearcher searcher : SEARCHERS) {
                         if (JUnitUtility.isTestMethod(method, searcher.getTestMethodAnnotation())) {
-                            entryList.add(parseSearchItems(method, searcher.getTestKind()));
+                            itemList.add(TestSearchUtils.constructTestItem(method,
+                                    TestLevel.METHOD, searcher.getTestKind()));
                             break;
                         }
                     }

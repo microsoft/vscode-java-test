@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.searcher;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.ProjectUtils;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -42,11 +43,11 @@ import java.util.stream.Collectors;
 public class PackageSearcher extends TestItemSearcher {
 
     public PackageSearcher() {
-        super(IJavaSearchConstants.PACKAGE, TestLevel.PACKAGE);
+        super(IJavaSearchConstants.PACKAGE);
     }
 
     @Override
-    protected SearchRequestor resolveSeartchRequestor(List<TestItem> entryList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
@@ -54,7 +55,7 @@ public class PackageSearcher extends TestItemSearcher {
                 if (element instanceof IPackageFragment) {
                     final IPackageFragment packageFragment = (IPackageFragment) element;
                     if (packageFragment.getCompilationUnits().length > 0) {
-                        entryList.add(parseSearchItems(packageFragment));
+                        itemList.add(TestSearchUtils.constructTestItem(packageFragment, TestLevel.PACKAGE));
                     }
                 }
             }
@@ -62,8 +63,9 @@ public class PackageSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException {
-        final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(uri));
+    protected IJavaSearchScope resolveSearchScope(String workspaceFolderUri)
+            throws JavaModelException, URISyntaxException {
+        final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(workspaceFolderUri));
         final List<IJavaElement> elementList = new ArrayList<>();
         for (final IJavaProject project : projectSet) {
             final IClasspathEntry[] entries = project.getRawClasspath();
