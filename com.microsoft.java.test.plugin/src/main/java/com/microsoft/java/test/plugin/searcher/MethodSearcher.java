@@ -56,7 +56,7 @@ public class MethodSearcher extends TestItemSearcher {
                     if (method.getParent() instanceof IType) {
                         final IType parentClass = (IType) method.getParent();
                         if (!JUnitUtility.isAccessibleClass(parentClass) || Flags.isAbstract(parentClass.getFlags()) ||
-                                parentClass.getFullyQualifiedName().equals(fullyQualifiedName)) {
+                                !parentClass.getFullyQualifiedName().equals(fullyQualifiedName)) {
                             return;
                         }
                     }
