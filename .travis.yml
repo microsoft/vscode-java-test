@@ -1,14 +1,11 @@
 language: node_js
 
 node_js:
-- '--lts'
+- 'lts/*'
 
 os:
 - linux
 - osx
-
-env:
-- CODE_VERSION="1.23.0"
 
 before_install:
 - if [ $TRAVIS_OS_NAME == "linux" ]; then
@@ -16,16 +13,15 @@ before_install:
       sh -e /etc/init.d/xvfb start;
       sleep 3;
   fi
-# - cd extension
+- chmod +x mvnw
+- cd extension
 
-# install:
-# - npm install -g vsce
-# - npm install -g typescript
-# - npm install -g gulp
-# - npm install
+install:
+- npm install -g vsce
+- npm install
 
 script:
-  - echo "CI for Java Test Runner"
-# - gulp tslint
-# - vsce package
-# - npm test --silent
+- gulp lint
+- gulp build-server
+- vsce package
+- npm test --silent
