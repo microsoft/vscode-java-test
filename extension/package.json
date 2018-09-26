@@ -1,0 +1,62 @@
+{
+    "name": "vscode-java-test",
+    "displayName": "Java Test Runner",
+    "description": "Run and debug JUnit test cases.",
+    "repository": {
+        "url": "https://github.com/Microsoft/vscode-java-test"
+    },
+    "version": "0.9.0",
+    "publisher": "vscjava",
+    "bugs": {
+        "url": "https://github.com/Microsoft/vscode-java-test/issues"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-java-test/blob/master/extension/README.md",
+    "preview": true,
+    "icon": "resources/logo.png",
+    "keywords": [
+        "java",
+        "test",
+        "junit",
+        "debug"
+    ],
+    "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
+    "engines": {
+        "vscode": "^1.23.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onLanguage:java"
+    ],
+    "main": "./out/src/extension",
+    "scripts": {
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "compile": "tsc -watch -p ./",
+        "test": "gulp install-dependency && node ./node_modules/vscode/bin/test",
+        "lint": "gulp lint",
+        "buildserver": "gulp build-server",
+        "sass": "gulp sass",
+        "vscode:prepublish": "gulp sass && tsc -p ./"
+    },
+    "extensionDependencies": [
+        "vscjava.vscode-java-debug"
+    ],
+    "devDependencies": {
+        "@types/fs-extra": "^5.0.4",
+        "@types/mocha": "^2.2.48",
+        "@types/node": "^6.0.110",
+        "gulp": "^4.0.0",
+        "gulp-decompress": "^2.0.2",
+        "gulp-download": "0.0.1",
+        "gulp-sass": "^3.2.1",
+        "gulp-tslint": "^8.1.3",
+        "mocha": "^5.2.0",
+        "tslint": "^5.10.0",
+        "typescript": "^2.8.3",
+        "vscode": "^1.1.17"
+    },
+    "dependencies": {
+        "fs-extra": "^7.0.0"
+    }
+}
