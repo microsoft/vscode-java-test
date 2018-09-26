@@ -13,6 +13,7 @@ package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,19 +34,19 @@ import java.util.List;
 public class NestedClassSearcher extends TestItemSearcher {
 
     public NestedClassSearcher() {
-        super(IJavaSearchConstants.CLASS, TestLevel.NESTED_CLASS);
+        super(IJavaSearchConstants.CLASS);
     }
 
     @Override
-    protected SearchRequestor resolveSeartchRequestor(List<TestItem> entryList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
                 if (element instanceof IType) {
                     final IType child = (IType) element;
-                    if (isDirectInnerClass(child, fullyqualifiedName)) {
-                        entryList.add(parseSearchItems(child));
+                    if (isDirectInnerClass(child, fullyQualifiedName)) {
+                        itemList.add(TestSearchUtils.constructTestItem(child, TestLevel.NESTED_CLASS));
                     }
                 }
             }
@@ -53,8 +54,8 @@ public class NestedClassSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException {
-        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(uri);
+    protected IJavaSearchScope resolveSearchScope(String classFileUri) throws JavaModelException, URISyntaxException {
+        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(classFileUri);
         return SearchEngine.createJavaSearchScope(new IJavaElement[] { compilationUnit }, IJavaSearchScope.SOURCES);
     }
 
