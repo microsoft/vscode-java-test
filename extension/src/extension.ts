@@ -2,8 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { ExtensionContext } from 'vscode';
 
 export function activate(context: ExtensionContext): void {
