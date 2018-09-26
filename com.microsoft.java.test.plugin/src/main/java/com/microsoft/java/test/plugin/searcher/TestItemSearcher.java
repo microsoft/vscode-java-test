@@ -36,20 +36,20 @@ public abstract class TestItemSearcher {
         this.searchFor = searchFor;
     }
 
-    public List<TestItem> search(String scopeUri, String fullyqualifiedName, IProgressMonitor monitor)
+    public List<TestItem> search(String scopeUri, String fullyQualifiedName, IProgressMonitor monitor)
             throws JavaModelException, CoreException, URISyntaxException {
         final List<TestItem> entryList = new ArrayList<>();
-        this.searchEngine.search(this.resolveSearchPattern(fullyqualifiedName), this.searchParticipants,
-                this.resolveSearchScope(scopeUri), this.resolveSearchRequestor(entryList, fullyqualifiedName), monitor);
+        this.searchEngine.search(this.resolveSearchPattern(fullyQualifiedName), this.searchParticipants,
+                this.resolveSearchScope(scopeUri), this.resolveSearchRequestor(entryList, fullyQualifiedName), monitor);
         return entryList;
     }
 
-    protected SearchPattern resolveSearchPattern(String fullyqualifiedName) {
+    protected SearchPattern resolveSearchPattern(String fullyQualifiedName) {
         return SearchPattern.createPattern("*", this.searchFor, IJavaSearchConstants.DECLARATIONS,
                 SearchPattern.R_PATTERN_MATCH);
     }
 
-    protected abstract SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName);
+    protected abstract SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName);
 
     protected abstract IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException;
 }

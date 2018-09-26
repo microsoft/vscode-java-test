@@ -38,14 +38,14 @@ public class NestedClassSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
                 if (element instanceof IType) {
                     final IType child = (IType) element;
-                    if (isDirectInnerClass(child, fullyqualifiedName)) {
+                    if (isDirectInnerClass(child, fullyQualifiedName)) {
                         itemList.add(TestSearchUtils.constructTestItem(child, TestLevel.NESTED_CLASS));
                     }
                 }

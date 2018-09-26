@@ -47,7 +47,7 @@ public class PackageSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {

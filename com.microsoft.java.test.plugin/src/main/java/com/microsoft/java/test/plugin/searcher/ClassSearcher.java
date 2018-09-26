@@ -39,12 +39,12 @@ public class ClassSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
-                if (isTopLevelClass(match.getElement())) {
+                if (isTopLevelClass(element)) {
                     itemList.add(TestSearchUtils.constructTestItem((IType) element, TestLevel.CLASS));
                 }
             }
@@ -57,7 +57,7 @@ public class ClassSearcher extends TestItemSearcher {
         final IJavaElement[] elements = packageFragment.getChildren();
         return SearchEngine.createJavaSearchScope(elements, IJavaSearchScope.SOURCES);
     }
-    
+
     private boolean isTopLevelClass(Object element) {
         if (element instanceof IType) {
             final IType type = (IType) element;

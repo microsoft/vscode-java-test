@@ -46,7 +46,7 @@ public class MethodSearcher extends TestItemSearcher {
     };
 
     @Override
-    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
@@ -56,7 +56,7 @@ public class MethodSearcher extends TestItemSearcher {
                     if (method.getParent() instanceof IType) {
                         final IType parentClass = (IType) method.getParent();
                         if (!JUnitUtility.isAccessibleClass(parentClass) || Flags.isAbstract(parentClass.getFlags()) ||
-                                parentClass.getFullyQualifiedName().equals(fullyqualifiedName)) {
+                                parentClass.getFullyQualifiedName().equals(fullyQualifiedName)) {
                             return;
                         }
                     }
@@ -73,8 +73,8 @@ public class MethodSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException {
-        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(uri);
+    protected IJavaSearchScope resolveSearchScope(String classFileUri) throws JavaModelException, URISyntaxException {
+        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(classFileUri);
         return SearchEngine.createJavaSearchScope(new IJavaElement[] { compilationUnit }, IJavaSearchScope.SOURCES);
     }
 }
