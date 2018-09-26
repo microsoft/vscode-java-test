@@ -90,8 +90,9 @@ export async function activate(context: ExtensionContext) {
 
     const javaHome: string = await getJavaHome();
     if (!javaHome) {
-        window.showErrorMessage("couldn't find Java home...");
-        Logger.error("couldn't find Java home.", {}, true);
+        const errMsg: string = 'Could not find Java home...';
+        Logger.error(errMsg, {}, true);
+        throw new Error(errMsg);
     }
 
     context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
