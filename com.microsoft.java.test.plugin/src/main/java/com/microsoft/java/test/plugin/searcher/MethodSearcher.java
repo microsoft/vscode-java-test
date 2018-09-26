@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.searcher;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitUtility;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.Flags;
@@ -36,7 +37,7 @@ import java.util.List;
 public class MethodSearcher extends TestItemSearcher {
 
     public MethodSearcher() {
-        super(IJavaSearchConstants.METHOD, TestLevel.METHOD);
+        super(IJavaSearchConstants.METHOD);
     }
 
     private static final JUnitTestSearcher[] SEARCHERS = new JUnitTestSearcher[] {
@@ -45,7 +46,7 @@ public class MethodSearcher extends TestItemSearcher {
     };
 
     @Override
-    protected SearchRequestor resolveSeartchRequestor(List<TestItem> entryList, String fullyqualifiedName) {
+    protected SearchRequestor resolveSearchRequestor(List<TestItem> itemList, String fullyQualifiedName) {
         return new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
@@ -55,13 +56,14 @@ public class MethodSearcher extends TestItemSearcher {
                     if (method.getParent() instanceof IType) {
                         final IType parentClass = (IType) method.getParent();
                         if (!JUnitUtility.isAccessibleClass(parentClass) || Flags.isAbstract(parentClass.getFlags()) ||
-                                parentClass.getFullyQualifiedName().equals(fullyqualifiedName)) {
+                                parentClass.getFullyQualifiedName().equals(fullyQualifiedName)) {
                             return;
                         }
                     }
                     for (final JUnitTestSearcher searcher : SEARCHERS) {
                         if (JUnitUtility.isTestMethod(method, searcher.getTestMethodAnnotation())) {
-                            entryList.add(parseSearchItems(method, searcher.getTestKind()));
+                            itemList.add(TestSearchUtils.constructTestItem(method,
+                                    TestLevel.METHOD, searcher.getTestKind()));
                             break;
                         }
                     }
@@ -71,8 +73,8 @@ public class MethodSearcher extends TestItemSearcher {
     }
 
     @Override
-    protected IJavaSearchScope resolveSearchScope(String uri) throws JavaModelException, URISyntaxException {
-        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(uri);
+    protected IJavaSearchScope resolveSearchScope(String classFileUri) throws JavaModelException, URISyntaxException {
+        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(classFileUri);
         return SearchEngine.createJavaSearchScope(new IJavaElement[] { compilationUnit }, IJavaSearchScope.SOURCES);
     }
 }
