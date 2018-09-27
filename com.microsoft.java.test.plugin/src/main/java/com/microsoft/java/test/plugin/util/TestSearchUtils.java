@@ -22,7 +22,6 @@ import com.microsoft.java.test.plugin.searcher.NestedClassSearcher;
 import com.microsoft.java.test.plugin.searcher.PackageSearcher;
 import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -35,7 +34,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Range;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +67,7 @@ public class TestSearchUtils {
             for (final TestItemSearcher searcher : searchers) {
                 try {
                     resultList.addAll(searcher.search(request.getUri(), request.getFullName(), monitor));
-                } catch (CoreException | URISyntaxException e) {
+                } catch (final Exception e) {
                     // swallow the exceptions
                     e.printStackTrace();
                 }
