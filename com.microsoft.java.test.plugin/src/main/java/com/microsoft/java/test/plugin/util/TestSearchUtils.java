@@ -24,6 +24,7 @@ import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -43,15 +44,16 @@ import java.util.Map;
 
 @SuppressWarnings("restriction")
 public class TestSearchUtils {
-    private static final Map<TestLevel, TestItemSearcher[]> searcherMap = initializeSearcherMap();
+    private static final Map<TestLevel, TestItemSearcher[]> searcherMap;
 
-    private static Map<TestLevel, TestItemSearcher[]> initializeSearcherMap() {
-        final Map<TestLevel, TestItemSearcher[]> map = new HashMap<TestLevel, TestItemSearcher[]>();
-        map.put(TestLevel.FOLDER, new TestItemSearcher[] {new PackageSearcher()});
-        map.put(TestLevel.PACKAGE, new TestItemSearcher[] {new ClassSearcher()});
-        map.put(TestLevel.CLASS, new TestItemSearcher[] {new NestedClassSearcher(), new MethodSearcher()});
-        map.put(TestLevel.NESTED_CLASS, new TestItemSearcher[] {new NestedClassSearcher(), new MethodSearcher()});
-        return map;
+    static {
+        searcherMap = new HashMap<TestLevel, TestItemSearcher[]>();
+        searcherMap.put(TestLevel.FOLDER, new TestItemSearcher[] {new PackageSearcher()});
+        searcherMap.put(TestLevel.PACKAGE, new TestItemSearcher[] {new ClassSearcher()});
+        searcherMap.put(TestLevel.CLASS, new TestItemSearcher[] {new NestedClassSearcher(), new MethodSearcher()});
+        searcherMap.put(TestLevel.NESTED_CLASS, new TestItemSearcher[] {
+            new NestedClassSearcher(), new MethodSearcher()
+        });
     }
 
     public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor) {
@@ -83,6 +85,10 @@ public class TestSearchUtils {
 
     public static TestItem constructTestItem(IJavaElement element, TestLevel level) throws JavaModelException {
         return constructTestItem(element, level, null);
+    }
+
+    public static boolean isAccessibleAndNonAbstractType(IType type) throws JavaModelException {
+        return JUnitUtility.isAccessibleClass(type) && !Flags.isAbstract(type.getFlags());
     }
 
     public static TestItem constructTestItem(IJavaElement element, TestLevel level, TestKind kind)

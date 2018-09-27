@@ -17,7 +17,6 @@ import com.microsoft.java.test.plugin.util.JUnitUtility;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -55,7 +54,7 @@ public class MethodSearcher extends TestItemSearcher {
                     final IMethod method = (IMethod) element;
                     if (method.getParent() instanceof IType) {
                         final IType parentClass = (IType) method.getParent();
-                        if (!JUnitUtility.isAccessibleClass(parentClass) || Flags.isAbstract(parentClass.getFlags()) ||
+                        if (!TestSearchUtils.isAccessibleAndNonAbstractType(parentClass) ||
                                 !parentClass.getFullyQualifiedName().equals(fullyQualifiedName)) {
                             return;
                         }
