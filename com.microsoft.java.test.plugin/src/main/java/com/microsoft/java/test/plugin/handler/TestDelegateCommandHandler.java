@@ -40,7 +40,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
             case GET_PROJECT_INFO:
                 return ProjectInfoFetcher.getProjectInfo(arguments);
             case SEARCH_TEST_ITEMS:
-                return TestSearchUtils.searchTestEntries(arguments, monitor);
+                return TestSearchUtils.searchTestItems(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));

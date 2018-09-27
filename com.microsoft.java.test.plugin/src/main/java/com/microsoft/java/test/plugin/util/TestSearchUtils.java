@@ -48,19 +48,19 @@ public class TestSearchUtils {
     private static Map<TestLevel, TestItemSearcher[]> initializeSearcherMap() {
         final Map<TestLevel, TestItemSearcher[]> map = new HashMap<TestLevel, TestItemSearcher[]>();
         map.put(TestLevel.FOLDER, new TestItemSearcher[] {new PackageSearcher()});
-        map.put(TestLevel.PACKAGE, new TestItemSearcher[] {new ClassSearcher() });
+        map.put(TestLevel.PACKAGE, new TestItemSearcher[] {new ClassSearcher()});
         map.put(TestLevel.CLASS, new TestItemSearcher[] {new NestedClassSearcher(), new MethodSearcher()});
         map.put(TestLevel.NESTED_CLASS, new TestItemSearcher[] {new NestedClassSearcher(), new MethodSearcher()});
         return map;
     }
 
-    public static List<TestItem> searchTestEntries(List<Object> arguments, IProgressMonitor monitor) {
+    public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor) {
         if (arguments == null || arguments.size() == 0) {
             return Collections.<TestItem>emptyList();
         }
         final Gson gson = new Gson();
         final SearchRequest request = gson.fromJson((String) arguments.get(0), SearchRequest.class);
-        final List<TestItem> resultList = searchTestEntries(request.getLevel(),
+        final List<TestItem> resultList = searchTestItems(request.getLevel(),
                 request.getUri(), request.getFullName(), monitor);
         if (request.isFetchAll()) {
             for (final TestItem entry: resultList) {
@@ -70,7 +70,7 @@ public class TestSearchUtils {
         return resultList;
     }
 
-    private static List<TestItem> searchTestEntries(TestLevel parentType, String uriString, String fullName,
+    private static List<TestItem> searchTestItems(TestLevel parentType, String uriString, String fullName,
             IProgressMonitor monitor) {
         final List<TestItem> resultList = new ArrayList<>();
         final TestItemSearcher[] searchers = searcherMap.get(parentType);
@@ -91,7 +91,7 @@ public class TestSearchUtils {
         if (parent.getLevel() == TestLevel.METHOD) {
             return;
         }
-        final List<TestItem> childrenList = searchTestEntries(parent.getLevel(),
+        final List<TestItem> childrenList = searchTestItems(parent.getLevel(),
                 parent.getUri(), parent.getFullName(), monitor);
         parent.setChildren(childrenList);
         for (final TestItem child : childrenList) {
