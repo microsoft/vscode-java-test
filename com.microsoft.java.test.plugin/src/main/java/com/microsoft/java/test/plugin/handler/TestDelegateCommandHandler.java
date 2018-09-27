@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.handler;
 import com.microsoft.java.test.plugin.searcher.JUnitTestFetcher;
 import com.microsoft.java.test.plugin.util.ProjectInfoFetcher;
 import com.microsoft.java.test.plugin.util.RuntimeClassPathResolver;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
@@ -26,6 +27,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String FETCH_TEST = "vscode.java.test.fetch";
     private static final String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
     private static final String GET_PROJECT_INFO = "vscode.java.test.project.info";
+    private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -37,6 +39,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return new RuntimeClassPathResolver().resolveRunTimeClassPath(arguments);
             case GET_PROJECT_INFO:
                 return ProjectInfoFetcher.getProjectInfo(arguments);
+            case SEARCH_TEST_ITEMS:
+                return TestSearchUtils.searchTestItems(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));
