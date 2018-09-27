@@ -12,7 +12,7 @@
 package com.microsoft.java.test.plugin.util;
 
 import com.google.gson.Gson;
-import com.microsoft.java.test.plugin.model.SearchRequest;
+import com.microsoft.java.test.plugin.model.SearchChildrenNodeRequest;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
@@ -59,25 +59,14 @@ public class TestSearchUtils {
             return Collections.<TestItem>emptyList();
         }
         final Gson gson = new Gson();
-        final SearchRequest request = gson.fromJson((String) arguments.get(0), SearchRequest.class);
-        final List<TestItem> resultList = searchTestItems(request.getLevel(),
-                request.getUri(), request.getFullName(), monitor);
-        if (request.isFetchAll()) {
-            for (final TestItem entry: resultList) {
-                searchChildren(resultList, entry, monitor);
-            }
-        }
-        return resultList;
-    }
-
-    private static List<TestItem> searchTestItems(TestLevel parentType, String uriString, String fullName,
-            IProgressMonitor monitor) {
+        final SearchChildrenNodeRequest request = gson.fromJson((String) arguments.get(0),
+                SearchChildrenNodeRequest.class);
         final List<TestItem> resultList = new ArrayList<>();
-        final TestItemSearcher[] searchers = searcherMap.get(parentType);
+        final TestItemSearcher[] searchers = searcherMap.get(request.getLevel());
         if (searchers != null) {
             for (final TestItemSearcher searcher : searchers) {
                 try {
-                    resultList.addAll(searcher.search(uriString, fullName, monitor));
+                    resultList.addAll(searcher.search(request.getUri(), request.getFullName(), monitor));
                 } catch (CoreException | URISyntaxException e) {
                     // swallow the exceptions
                     e.printStackTrace();
@@ -85,18 +74,6 @@ public class TestSearchUtils {
             }
         }
         return resultList;
-    }
-
-    private static void searchChildren(List<TestItem> resultList, TestItem parent, IProgressMonitor monitor) {
-        if (parent.getLevel() == TestLevel.METHOD) {
-            return;
-        }
-        final List<TestItem> childrenList = searchTestItems(parent.getLevel(),
-                parent.getUri(), parent.getFullName(), monitor);
-        parent.setChildren(childrenList);
-        for (final TestItem child : childrenList) {
-            searchChildren(resultList, child, monitor);
-        }
     }
 
     public static Range getRange(ICompilationUnit typeRoot, IJavaElement element) throws JavaModelException {

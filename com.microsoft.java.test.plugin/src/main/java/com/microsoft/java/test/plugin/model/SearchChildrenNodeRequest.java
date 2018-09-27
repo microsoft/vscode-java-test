@@ -11,14 +11,12 @@
 
 package com.microsoft.java.test.plugin.model;
 
-public class SearchRequest {
+public class SearchChildrenNodeRequest {
     private TestLevel level;
 
     private String uri;
 
     private String fullName;
-
-    private boolean fetchAll;
 
     public TestLevel getLevel() {
         return level;
@@ -42,13 +40,5 @@ public class SearchRequest {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
-    }
-
-    public boolean isFetchAll() {
-        return fetchAll;
-    }
-
-    public void setFetchAll(boolean fetchAll) {
-        this.fetchAll = fetchAll;
     }
 }
