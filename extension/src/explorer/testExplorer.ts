@@ -17,6 +17,10 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
 
     private _context: ExtensionContext;
 
+    public initialize(context: ExtensionContext): void {
+        this._context = context;
+    }
+
     public getTreeItem(element: TestTreeNode): TreeItem | Thenable<TreeItem> {
         return {
             label: element.name,
@@ -44,10 +48,6 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             element.children = undefined;
         }
         this.onDidChangeTreeDataEventEmitter.fire(element);
-    }
-
-    public initialize(context: ExtensionContext): void {
-        this._context = context;
     }
 
     private async getChildrenOfTreeNode(element: TestTreeNode): Promise<TestTreeNode[]> {
