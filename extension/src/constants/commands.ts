@@ -8,3 +8,7 @@ export enum JavaLanguageServerCommands {
 export enum JavaTestRunnerDelegateCommands {
     SearchTestItems = 'vscode.java.test.search.items',
 }
+
+export enum JavaTestRunnerCommands {
+    ClickExplorerNode = 'java.test.explorer.select',
+}

@@ -21,7 +21,10 @@ install:
 - npm install
 
 script:
-- gulp lint
-- gulp build-server
+- npm run lint
+- npm run buildserver
 - vsce package
 - npm test --silent
+
+after_failure:
+  - cat /home/travis/.npm/_logs/*-debug.log
