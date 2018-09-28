@@ -11,7 +11,7 @@ import { TestTreeNode } from './TestTreeNode';
 export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     public readonly testExplorerViewId: string = 'testExplorer';
 
-    private onDidChangeTreeDataEventEmitter: EventEmitter<TestTreeNode | null| undefined> = new EventEmitter<TestTreeNode | null| undefined>();
+    private onDidChangeTreeDataEventEmitter: EventEmitter<TestTreeNode | null| undefined> = new EventEmitter<TestTreeNode | null | undefined>();
     // tslint:disable-next-line:member-ordering
     public readonly onDidChangeTreeData: Event<TestTreeNode | null | undefined> = this.onDidChangeTreeDataEventEmitter.event;
 
@@ -46,7 +46,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         this.onDidChangeTreeDataEventEmitter.fire(element);
     }
 
-    public set context(context: ExtensionContext) {
+    public initialize(context: ExtensionContext): void {
         this._context = context;
     }
 

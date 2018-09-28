@@ -5,7 +5,7 @@ import { commands, ExtensionContext, window } from 'vscode';
 import { testExplorer } from './explorer/testExplorer';
 
 export async function activate(context: ExtensionContext): Promise<void> {
-    testExplorer.context = context;
+    testExplorer.initialize(context);
     context.subscriptions.push(window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer));
     await commands.executeCommand('setContext', 'java.test.activated', true);
 }
