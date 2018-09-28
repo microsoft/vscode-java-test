@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { TextDocument, Uri, window, workspace } from 'vscode';
-import { TestTreeNode } from '../explorer/testTreeNode';
+import { TestTreeNode } from '../explorer/TestTreeNode';
 
 export async function select(node: TestTreeNode): Promise<void> {
     const document: TextDocument = await workspace.openTextDocument(Uri.file(node.fsPath));
