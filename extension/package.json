@@ -30,6 +30,20 @@
         "onLanguage:java"
     ],
     "main": "./out/src/extension",
+    "contributes": {
+        "javaExtensions": [
+            "./server/com.microsoft.java.test.plugin-0.9.0.jar"
+        ],
+        "views": {
+            "test": [
+                {
+                    "id": "testExplorer",
+                    "name": "Test Explorer",
+                    "when": "java.test.activated"
+                }
+            ]
+        }
+    },
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install",
         "compile": "tsc -watch -p ./",
