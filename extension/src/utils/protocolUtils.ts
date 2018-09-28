@@ -5,11 +5,10 @@ import { Uri } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { ISearchChildrenNodeRequest } from '../protocols';
 
-export function serializeSearchChildrenNodeRequest(node: TestTreeNode): string {
-    const searchRequest: ISearchChildrenNodeRequest = {
+export function constructSearchChildrenNodeRequest(node: TestTreeNode): ISearchChildrenNodeRequest {
+    return {
         uri: Uri.file(node.fsPath).toString(),
         level: node.level,
         fullName: node.fullName,
     };
-    return JSON.stringify(searchRequest);
 }

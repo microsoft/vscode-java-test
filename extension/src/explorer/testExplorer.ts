@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Event, EventEmitter, ExtensionContext, ProviderResult, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
-import { ITestItem, TestLevel } from '../protocols';
+import { Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { ISearchChildrenNodeRequest, ITestItem, TestLevel } from '../protocols';
 import { searchTestItems } from '../utils/commandUtils';
-import { serializeSearchChildrenNodeRequest } from '../utils/protocolUtils';
+import { constructSearchChildrenNodeRequest } from '../utils/protocolUtils';
 import { TestTreeNode } from './TestTreeNode';
 
 export class TestExplorer implements TreeDataProvider<TestTreeNode> {
@@ -26,30 +26,17 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         };
     }
 
-    public getChildren(element?: TestTreeNode): ProviderResult<TestTreeNode[]> {
+    public async getChildren(element?: TestTreeNode): Promise<TestTreeNode[]> {
         if (!element) {
             const folders: WorkspaceFolder[] | undefined = workspace.workspaceFolders;
             if (folders) {
                 return folders.map((folder: WorkspaceFolder) => new TestTreeNode(folder.name, folder.name, TestLevel.Folder, folder.uri.fsPath));
             }
             return [];
-        } else if (element.children) {
-            return element.children;
+        } else if (!element.children) {
+            element.children = await this.getChildrenOfTreeNode(element);
         }
-
-        return new Promise(async (resolve: (res: TestTreeNode[]) => void): Promise<void> => {
-            const requestString: string = serializeSearchChildrenNodeRequest(element);
-            const results: ITestItem[] = await searchTestItems(requestString);
-            element.children = results.map((result: ITestItem) => new TestTreeNode(
-                result.displayName,
-                result.fullName,
-                result.level,
-                Uri.parse(result.uri).fsPath,
-                result.range,
-                element,
-            ));
-            resolve(element.children);
-        });
+        return element.children;
     }
 
     public refresh(element?: TestTreeNode): void {
@@ -61,6 +48,18 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
 
     public set context(context: ExtensionContext) {
         this._context = context;
+    }
+
+    private async getChildrenOfTreeNode(element: TestTreeNode): Promise<TestTreeNode[]> {
+        const requestString: ISearchChildrenNodeRequest = constructSearchChildrenNodeRequest(element);
+        const results: ITestItem[] = await searchTestItems(requestString);
+        return results.map((result: ITestItem) => new TestTreeNode(
+            result.displayName,
+            result.fullName,
+            result.level,
+            Uri.parse(result.uri).fsPath,
+            result.range,
+        ));
     }
 
     private resolveCollapsibleState(element: TestTreeNode): TreeItemCollapsibleState {

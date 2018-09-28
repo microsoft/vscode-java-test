@@ -3,12 +3,12 @@
 
 import { commands } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
-import { ITestItem } from '../protocols';
+import { ISearchChildrenNodeRequest, ITestItem } from '../protocols';
 
-export async function searchTestItems(requestString: string): Promise<ITestItem[]> {
+export async function searchTestItems(request: ISearchChildrenNodeRequest): Promise<ITestItem[]> {
     const entries: ITestItem[] | undefined = await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SearchTestItems, requestString);
-    return entries ? entries : [];
+        JavaTestRunnerDelegateCommands.SearchTestItems, JSON.stringify(request));
+    return entries || [];
 }
 
 function executeJavaLanguageServerCommand<T>(...rest: any[]): Thenable<T | undefined> {
