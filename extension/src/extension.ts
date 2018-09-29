@@ -3,7 +3,7 @@
 
 import { commands, Disposable, ExtensionContext, window } from 'vscode';
 import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
-import { select } from './commands/explorerSelect';
+import { openTextDocumentForNode } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
@@ -21,7 +21,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     testExplorer.initialize(context);
     context.subscriptions.push(
         window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.ClickExplorerNode, async (node: TestTreeNode) => await select(node)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
     );
     await commands.executeCommand('setContext', 'java.test.activated', true);
 }

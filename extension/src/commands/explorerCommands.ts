@@ -4,7 +4,7 @@
 import { TextDocument, Uri, window, workspace } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
 
-export async function select(node: TestTreeNode): Promise<void> {
+export async function openTextDocumentForNode(node: TestTreeNode): Promise<void> {
     const document: TextDocument = await workspace.openTextDocument(Uri.file(node.fsPath));
     await window.showTextDocument(document, {preserveFocus: true, selection: node.range});
 }
