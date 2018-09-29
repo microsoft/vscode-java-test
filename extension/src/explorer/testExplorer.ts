@@ -7,6 +7,7 @@ import { JavaTestRunnerCommands } from '../constants/commands';
 import { ISearchChildrenNodeRequest, ITestItem, TestLevel } from '../protocols';
 import { searchTestItems } from '../utils/commandUtils';
 import { constructSearchChildrenNodeRequest } from '../utils/protocolUtils';
+import { explorerNodeManager } from './explorerNodeManager';
 import { TestTreeNode } from './TestTreeNode';
 
 export class TestExplorer implements TreeDataProvider<TestTreeNode> {
@@ -41,6 +42,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             return [];
         } else if (!element.children) {
             element.children = await this.getChildrenOfTreeNode(element);
+            explorerNodeManager.storeNodes(...element.children);
         }
         return element.children;
     }
