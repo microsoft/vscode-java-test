@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, ExtensionContext, window } from 'vscode';
+import { commands, Disposable, ExtensionContext, FileSystemWatcher, Uri, window, workspace } from 'vscode';
 import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { openTextDocumentForNode } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
+import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
 
@@ -19,8 +20,25 @@ export function deactivate(): void {
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
     testExplorer.initialize(context);
+    const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
+    watcher.onDidChange((uri: Uri) => {
+        const node: TestTreeNode | undefined = explorerNodeManager.getNode(uri.fsPath);
+        if (node) {
+            testExplorer.refresh(node);
+        }
+    });
+    watcher.onDidDelete((uri: Uri) => {
+        explorerNodeManager.removeNode(uri.fsPath);
+        testExplorer.refresh();
+    });
+    watcher.onDidCreate(() => {
+        testExplorer.refresh();
+    });
+
     context.subscriptions.push(
         window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
+        explorerNodeManager,
+        watcher,
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
     );
     await commands.executeCommand('setContext', 'java.test.activated', true);
