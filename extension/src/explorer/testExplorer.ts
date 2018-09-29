@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { Command, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { JavaTestRunnerCommands } from '../constants/commands';
 import { ISearchChildrenNodeRequest, ITestItem, TestLevel } from '../protocols';
 import { searchTestItems } from '../utils/commandUtils';
 import { constructSearchChildrenNodeRequest } from '../utils/protocolUtils';
@@ -25,6 +26,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
         return {
             label: element.name,
             collapsibleState: this.resolveCollapsibleState(element),
+            command: this.resolveCommand(element),
             iconPath: this.resolveIconPath(element),
             contextValue: element.level.toString(),
         };
@@ -90,6 +92,17 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             default:
                 return undefined;
         }
+    }
+
+    private resolveCommand(element: TestTreeNode): Command | undefined {
+        if (element.level >= TestLevel.Class) {
+            return {
+                command: JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE,
+                title: '',
+                arguments: [element],
+            };
+        }
+        return undefined;
     }
 }
 

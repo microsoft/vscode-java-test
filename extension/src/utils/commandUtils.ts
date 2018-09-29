@@ -7,10 +7,10 @@ import { ISearchChildrenNodeRequest, ITestItem } from '../protocols';
 
 export async function searchTestItems(request: ISearchChildrenNodeRequest): Promise<ITestItem[]> {
     const entries: ITestItem[] | undefined = await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SearchTestItems, JSON.stringify(request));
+        JavaTestRunnerDelegateCommands.ESEARCH_TEST_ITEMS, JSON.stringify(request));
     return entries || [];
 }
 
 function executeJavaLanguageServerCommand<T>(...rest: any[]): Thenable<T | undefined> {
-    return commands.executeCommand<T>(JavaLanguageServerCommands.ExecuteWorkspaceCommand, ...rest);
+    return commands.executeCommand<T>(JavaLanguageServerCommands.EXECUTE_WORKSPACE_COMMAND, ...rest);
 }
