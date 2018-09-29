@@ -11,4 +11,5 @@ export namespace JavaTestRunnerDelegateCommands {
 
 export namespace JavaTestRunnerCommands {
     export const OPEN_DOCUMENT_FOR_NODE: string = 'java.test.explorer.select';
+    export const REFRESH_EXPLORER: string = 'java.test.explorer.refresh';
 }

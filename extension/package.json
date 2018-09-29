@@ -27,7 +27,8 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:java"
+        "onLanguage:java",
+        "onCommand:java.test.explorer.refresh"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -42,7 +43,34 @@
                     "when": "java.test.activated"
                 }
             ]
-        }
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "view == testExplorer",
+                    "group": "navigation@0"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@0"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "java.test.explorer.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/media/light/refresh.svg",
+                    "dark": "resources/media/dark/refresh.svg"
+                },
+                "category": "Java"
+            }
+        ]
     },
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install",
