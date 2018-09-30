@@ -17,8 +17,6 @@ import com.microsoft.java.test.plugin.util.ProjectUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -28,16 +26,12 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.internal.core.ClasspathEntry;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
 public class PackageSearcher extends TestItemSearcher {
@@ -68,23 +62,7 @@ public class PackageSearcher extends TestItemSearcher {
         final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(workspaceFolderUri));
         final List<IJavaElement> elementList = new ArrayList<>();
         for (final IJavaProject project : projectSet) {
-            final IClasspathEntry[] entries = project.getRawClasspath();
-            final List<IPath> testPathList = Arrays.stream(entries)
-                    .filter(entry -> entry.isTest() && entry.getEntryKind() == ClasspathEntry.CPE_SOURCE)
-                    .map(entry -> entry.getPath())
-                    .collect(Collectors.toList());
-            if (testPathList.size() > 0) {
-                elementList.addAll(testPathList.stream()
-                        .map(path -> {
-                            try {
-                                return project.findPackageFragmentRoot(path);
-                            } catch (final JavaModelException e) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()));
-            }
+            elementList.addAll(ProjectUtils.getPackageFragmentRootForTest(project));
         }
         return SearchEngine.createJavaSearchScope(elementList.toArray(new IJavaElement[elementList.size()]),
                 IJavaSearchScope.SOURCES);

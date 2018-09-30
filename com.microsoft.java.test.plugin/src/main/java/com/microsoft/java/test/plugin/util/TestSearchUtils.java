@@ -17,28 +17,38 @@ import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.searcher.ClassSearcher;
+import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
+import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.MethodSearcher;
 import com.microsoft.java.test.plugin.searcher.NestedClassSearcher;
 import com.microsoft.java.test.plugin.searcher.PackageSearcher;
 import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
 public class TestSearchUtils {
@@ -76,6 +86,46 @@ public class TestSearchUtils {
         return resultList;
     }
 
+    public static List<TestItem> searchCodeLens(List<Object> arguments, IProgressMonitor monitor)
+            throws OperationCanceledException, InterruptedException, JavaModelException {
+        final List<TestItem> resultList = new ArrayList<>();
+        if (arguments == null || arguments.size() == 0) {
+            return resultList;
+        }
+        final String uri = (String) arguments.get(0);
+        final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
+        if (unit == null || !unit.getResource().exists() || !isInTestScope(unit) || monitor.isCanceled()) {
+            return resultList;
+        }
+
+        // wait for the LS finishing to update the compilation unit
+        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, new NullProgressMonitor());
+        final IType[] childrenTypes = unit.getAllTypes();
+        for (final IType type : childrenTypes) {
+            if (!isAccessibleAndNonAbstractType(type)) {
+                continue;
+            }
+            final List<IMethod> testMethods = getTestMethods(type);
+            if (testMethods.size() > 0) {
+                final TestItem parent = constructTestItem(type, getTestLevelForIType(type));
+                parent.setChildren(testMethods.stream()
+                        .map(m -> {
+                            try {
+                                return constructTestItem(m, TestLevel.METHOD);
+                            } catch (final JavaModelException e) {
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList())
+                );
+                resultList.add(parent);
+            }
+        }
+
+        return resultList;
+    }
+
     public static Range getRange(ICompilationUnit typeRoot, IJavaElement element) throws JavaModelException {
         final ISourceRange range = ((ISourceReference) element).getNameRange();
         return JDTUtils.toRange(typeRoot, range.getOffset(), range.getLength());
@@ -100,7 +150,31 @@ public class TestSearchUtils {
                 kind,
                 element.getJavaProject().getProject().getName()
         );
+    }
 
+    private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
+        final IJavaProject project = element.getJavaProject();
+        for (final IJavaElement packageRoot : ProjectUtils.getPackageFragmentRootForTest(project)) {
+            if (packageRoot.getPath().isPrefixOf(element.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<IMethod> getTestMethods(IType type) throws JavaModelException {
+        return Arrays.stream(type.getMethods())
+                .filter(m -> JUnitUtility.isTestMethod(m, JUnit4TestSearcher.JUNIT_TEST_ANNOTATION) ||
+                        JUnitUtility.isTestMethod(m, JUnit5TestSearcher.JUNIT_TEST_ANNOTATION))
+                .collect(Collectors.toList());
+    }
+
+    private static TestLevel getTestLevelForIType(IType type) {
+        if (type.getParent() instanceof ICompilationUnit) {
+            return TestLevel.CLASS;
+        } else {
+            return TestLevel.NESTED_CLASS;
+        }
     }
 
     private static String parseTestItemFullName(IJavaElement element, TestLevel level) {

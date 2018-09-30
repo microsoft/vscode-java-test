@@ -18,8 +18,8 @@ import org.eclipse.jdt.core.search.SearchPattern;
 
 public class JUnit4TestSearcher extends JUnitTestSearcher {
 
-    private static final String JUNIT_TEST_ANNOTATION = "org.junit.Test";
-    private static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
+    public static final String JUNIT_TEST_ANNOTATION = "org.junit.Test";
+    public static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
 
     @Override
     public SearchPattern getSearchPattern() {

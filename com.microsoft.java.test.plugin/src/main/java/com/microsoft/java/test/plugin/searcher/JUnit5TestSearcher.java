@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 
 public class JUnit5TestSearcher extends JUnitTestSearcher {
 
-    private static final String JUNIT_TEST_ANNOTATION = "org.junit.jupiter.api.Test";
+    public static final String JUNIT_TEST_ANNOTATION = "org.junit.jupiter.api.Test";
 
     @Override
     public SearchPattern getSearchPattern() {
