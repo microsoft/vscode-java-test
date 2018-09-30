@@ -40,6 +40,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         explorerNodeManager,
         watcher,
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
     );
     await commands.executeCommand('setContext', 'java.test.activated', true);
 }
