@@ -3,11 +3,7 @@
 
 'use strict';
 
-import * as expandHomeDir from 'expand-home-dir';
-import * as findJavaHome from 'find-java-home';
-import * as path from 'path';
-import * as pathExists from 'path-exists';
-import { commands, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
+import { commands, extensions, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
 import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
@@ -31,8 +27,6 @@ import * as Logger from './Utils/Logger/logger';
 import { OutputTransport } from './Utils/Logger/outputTransport';
 import { TelemetryTransport } from './Utils/Logger/telemetryTransport';
 
-const isWindows = process.platform.indexOf('win') === 0;
-const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const onDidChange: EventEmitter<void> = new EventEmitter<void>();
 const testStatusBarItem: TestStatusBarProvider = TestStatusBarProvider.getInstance();
 const outputChannel: OutputChannel = window.createOutputChannel('Test Output');
@@ -94,47 +88,47 @@ export async function activate(context: ExtensionContext) {
         }
     });
 
-    await checkJavaHome().then(async (javaHome) => {
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, false, true)));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
-            runTest(suites, true, true)));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
-            showDetails(test)));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
-            outputChannel.show()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
-            testExplorer.select(node)));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
-            runTestFromExplorer(testExplorer, node, false, true)));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
-            runTestFromExplorer(testExplorer, node, true, true)));
-        context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, (node: TestTreeNode) =>
-            runTestFromExplorer(testExplorer, node, false, false)));
-        context.subscriptions.push(
-            TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, (node: TestTreeNode) =>
-            runTestFromExplorer(testExplorer, node, true, false)));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
-            openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
-            testConfigManager.editConfig()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_CANCEL, () =>
-            TestRunnerWrapper.cancel()));
-        context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CLASSPATH_REFRESH, () =>
-            classPathManager.refresh()));
-        TestRunnerWrapper.registerRunner(
-            TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
-        TestRunnerWrapper.registerRunner(
-            TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
-        await classPathManager.refresh();
-        await commands.executeCommand('setContext', 'java.test.activated', true);
-    }).catch((err) => {
-        window.showErrorMessage("couldn't find Java home...");
-        Logger.error("couldn't find Java home.", {
-            error: err,
-        }, true);
-    });
+    const javaHome: string = await getJavaHome();
+    if (!javaHome) {
+        const errMsg: string = 'Could not find Java home...';
+        Logger.error(errMsg, {}, true);
+        throw new Error(errMsg);
+    }
+
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+        runTest(suites, false, true)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+        runTest(suites, true, true)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
+        showDetails(test)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
+        outputChannel.show()));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
+        testExplorer.select(node)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
+        runTestFromExplorer(testExplorer, node, false, true)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
+        runTestFromExplorer(testExplorer, node, true, true)));
+    context.subscriptions.push(
+        TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, (node: TestTreeNode) =>
+        runTestFromExplorer(testExplorer, node, false, false)));
+    context.subscriptions.push(
+        TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, (node: TestTreeNode) =>
+        runTestFromExplorer(testExplorer, node, true, false)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
+        openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
+        testConfigManager.editConfig()));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_CANCEL, () =>
+        TestRunnerWrapper.cancel()));
+    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CLASSPATH_REFRESH, () =>
+        classPathManager.refresh()));
+    TestRunnerWrapper.registerRunner(
+        TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
+    TestRunnerWrapper.registerRunner(
+        TestKind.JUnit5, new JUnit5TestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
+    await classPathManager.refresh();
+    await commands.executeCommand('setContext', 'java.test.activated', true);
 }
 
 // this method is called when your extension is deactivated
@@ -161,33 +155,17 @@ function activateTelemetry(context: ExtensionContext) {
     }
 }
 
-function checkJavaHome(): Promise<string> {
-    return new Promise((resolve, reject) => {
-        let javaHome: string = readJavaConfig();
-        if (!javaHome) {
-            javaHome = process.env[Constants.JDK_HOME];
-            if (!javaHome) {
-                javaHome = process.env[Constants.JAVA_HOME];
-            }
+async function getJavaHome(): Promise<string> {
+    const extension = extensions.getExtension('redhat.java');
+    try {
+        const extensionApi = await extension.activate();
+        if (extensionApi && extensionApi.javaRequirement) {
+            return extensionApi.javaRequirement.java_home;
         }
-        if (javaHome) {
-            javaHome = expandHomeDir(javaHome);
-            if (pathExists.sync(javaHome) && pathExists.sync(path.resolve(javaHome, 'bin', JAVAC_FILENAME))) {
-                return resolve(javaHome);
-            }
-        }
-        findJavaHome((err, home) => {
-            if (err) {
-                reject(err);
-            }
-            resolve(home);
-        });
-    });
-}
+    } catch (ex) {
+    }
 
-function readJavaConfig(): string {
-    const config = workspace.getConfiguration();
-    return config.get<string>('java.home', null);
+    return '';
 }
 
 async function runTest(tests: TestSuite[] | TestSuite, isDebugMode: boolean, defaultConfig: boolean) {
