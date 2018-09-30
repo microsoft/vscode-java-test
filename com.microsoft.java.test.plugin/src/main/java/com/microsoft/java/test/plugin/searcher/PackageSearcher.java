@@ -17,6 +17,7 @@ import com.microsoft.java.test.plugin.util.ProjectUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -31,7 +32,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
 public class PackageSearcher extends TestItemSearcher {
@@ -62,7 +65,17 @@ public class PackageSearcher extends TestItemSearcher {
         final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(workspaceFolderUri));
         final List<IJavaElement> elementList = new ArrayList<>();
         for (final IJavaProject project : projectSet) {
-            elementList.addAll(ProjectUtils.getPackageFragmentRootForTest(project));
+            final List<IPath> testPathList = ProjectUtils.getTestPath(project);
+            elementList.addAll(testPathList.stream()
+                    .map(path -> {
+                        try {
+                            return project.findPackageFragmentRoot(path);
+                        } catch (final JavaModelException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList()));
         }
         return SearchEngine.createJavaSearchScope(elementList.toArray(new IJavaElement[elementList.size()]),
                 IJavaSearchScope.SOURCES);

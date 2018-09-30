@@ -24,6 +24,7 @@ import com.microsoft.java.test.plugin.searcher.NestedClassSearcher;
 import com.microsoft.java.test.plugin.searcher.PackageSearcher;
 import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -154,8 +155,8 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
-        for (final IJavaElement packageRoot : ProjectUtils.getPackageFragmentRootForTest(project)) {
-            if (packageRoot.getPath().isPrefixOf(element.getPath())) {
+        for (final IPath testRootPath : ProjectUtils.getTestPath(project)) {
+            if (testRootPath.isPrefixOf(element.getPath())) {
                 return true;
             }
         }
