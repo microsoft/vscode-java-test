@@ -22,6 +22,8 @@ import java.util.stream.IntStream;
 import javax.swing.ProgressMonitor;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -32,6 +34,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
+import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Range;
 
 import com.microsoft.java.test.plugin.internal.testsuit.TestKind;
@@ -50,6 +53,8 @@ public class JUnitTestFetcher {
             return Collections.emptyList();
         }
         try {
+            // wait for the LS finishing to update the compilation unit
+            Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, new NullProgressMonitor());
             IJavaElement[] elements = unit.getChildren();
             RelationShipCache relations = new RelationShipCache();
             List<TestSuite> lenses = fetchCore(unit, elements, monitor, relations);
@@ -58,7 +63,7 @@ public class JUnitTestFetcher {
                 lenses.clear();
             }
             return lenses;
-        } catch (JavaModelException e) {
+        } catch (final Exception e) {
             System.out.println("Problem getting code lenses for" + unit.getElementName());
         }
         return Collections.emptyList();
