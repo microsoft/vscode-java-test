@@ -5,7 +5,8 @@
 
 import { commands, extensions, languages, window, workspace, Disposable,
     EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
-import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation,
+    TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { ProjectManager } from './projectManager';
@@ -39,6 +40,7 @@ const testConfigManager: TestConfigManager = new TestConfigManager(projectManage
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
+    TelemetryWrapper.initilizeFromJsonFile(context.asAbsolutePath('./package.json'));
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'));
     await instrumentOperation('activation', doActivate)(context);
 }
@@ -147,7 +149,7 @@ export function deactivate() {
 
 function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
     const instrumented: (...args: any[]) => any = instrumentOperation(name, async (_operationId: string, ...args: any[]) => cb(...args));
-    return commands.registerCommand(name, instrumented);
+    return TelemetryWrapper.registerCommand(name, instrumented);
 }
 
 async function getJavaHome(): Promise<string> {
