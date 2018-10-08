@@ -3,8 +3,9 @@
 
 'use strict';
 
-import { commands, extensions, languages, window, workspace, EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
-import { TelemetryWrapper } from 'vscode-extension-telemetry-wrapper';
+import { commands, extensions, languages, window, workspace, Disposable,
+    EventEmitter, ExtensionContext, OutputChannel, Uri, ViewColumn } from 'vscode';
+import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { ClassPathManager } from './classPathManager';
 import { JUnitCodeLensProvider } from './junitCodeLensProvider';
 import { ProjectManager } from './projectManager';
@@ -38,7 +39,11 @@ const testConfigManager: TestConfigManager = new TestConfigManager(projectManage
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
-    activateTelemetry(context);
+    await initializeFromJsonFile(context.asAbsolutePath('./package.json'));
+    await instrumentOperation('activation', doActivate)(context);
+}
+
+async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
     Logger.configure(
         context,
         [
@@ -95,33 +100,33 @@ export async function activate(context: ExtensionContext) {
         throw new Error(errMsg);
     }
 
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_RUN_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
         runTest(suites, false, true)));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_DEBUG_TEST_COMMAND, (suites: TestSuite[] | TestSuite) =>
         runTest(suites, true, true)));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_SHOW_REPORT, (test: TestSuite[] | TestSuite) =>
         showDetails(test)));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_SHOW_OUTPUT, () =>
         outputChannel.show()));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_EXPLORER_SELECT, (node: TestTreeNode) =>
         testExplorer.select(node)));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST, (node: TestTreeNode) =>
         runTestFromExplorer(testExplorer, node, false, true)));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST, (node: TestTreeNode) =>
         runTestFromExplorer(testExplorer, node, true, true)));
     context.subscriptions.push(
-        TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, (node: TestTreeNode) =>
+        instrumentAndRegisterCommand(Commands.JAVA_TEST_EXPLORER_RUN_TEST_WITH_CONFIG, (node: TestTreeNode) =>
         runTestFromExplorer(testExplorer, node, false, false)));
     context.subscriptions.push(
-        TelemetryWrapper.registerCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, (node: TestTreeNode) =>
+        instrumentAndRegisterCommand(Commands.JAVA_TEST_EXPLORER_DEBUG_TEST_WITH_CONFIG, (node: TestTreeNode) =>
         runTestFromExplorer(testExplorer, node, true, false)));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_OPEN_LOG, () =>
         openTestLogFile(context.asAbsolutePath(Configs.LOG_FILE_NAME))));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_CONFIGURE_TEST_COMMAND, () =>
         testConfigManager.editConfig()));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_TEST_CANCEL, () =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_TEST_CANCEL, () =>
         TestRunnerWrapper.cancel()));
-    context.subscriptions.push(TelemetryWrapper.registerCommand(Commands.JAVA_CLASSPATH_REFRESH, () =>
+    context.subscriptions.push(instrumentAndRegisterCommand(Commands.JAVA_CLASSPATH_REFRESH, () =>
         classPathManager.refresh()));
     TestRunnerWrapper.registerRunner(
         TestKind.JUnit, new JUnitTestRunner(javaHome, context.storagePath, classPathManager, projectManager, onDidChange));
@@ -137,22 +142,12 @@ export function deactivate() {
     classPathManager.dispose();
     testStatusBarItem.dispose();
     CommandUtility.clearCommandsCache();
+    disposeTelemetryWrapper(); /* dispose the telemetry wrapper */
 }
 
-function activateTelemetry(context: ExtensionContext) {
-    const extensionPackage = require(context.asAbsolutePath('./package.json'));
-    if (extensionPackage) {
-        const packageInfo = {
-            publisher: extensionPackage.publisher,
-            name: extensionPackage.name,
-            version: extensionPackage.version,
-            aiKey: extensionPackage.aiKey,
-        };
-        if (packageInfo.aiKey) {
-            TelemetryWrapper.initilize(packageInfo.publisher, packageInfo.name, packageInfo.version, packageInfo.aiKey);
-            TelemetryWrapper.sendTelemetryEvent(Constants.TELEMETRY_ACTIVATION_SCOPE, {});
-        }
-    }
+function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
+    const instrumented: (...args: any[]) => any = instrumentOperation(name, async (_operationId: string, ...args: any[]) => cb(...args));
+    return commands.registerCommand(name, instrumented);
 }
 
 async function getJavaHome(): Promise<string> {
