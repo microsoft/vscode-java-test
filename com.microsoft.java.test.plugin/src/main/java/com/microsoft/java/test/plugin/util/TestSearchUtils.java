@@ -95,7 +95,7 @@ public class TestSearchUtils {
         }
         final String uri = (String) arguments.get(0);
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
-        if (unit == null || !unit.getResource().exists() || !isInTestScope(unit) || monitor.isCanceled()) {
+        if (!isJavaElementExist(unit) || !isInTestScope(unit) || monitor.isCanceled()) {
             return resultList;
         }
 
@@ -151,6 +151,10 @@ public class TestSearchUtils {
                 kind,
                 element.getJavaProject().getProject().getName()
         );
+    }
+
+    private static boolean isJavaElementExist(IJavaElement element) {
+        return element != null && element.getResource() != null && element.getResource().exists();
     }
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
