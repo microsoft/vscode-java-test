@@ -142,7 +142,7 @@ export function deactivate() {
     classPathManager.dispose();
     testStatusBarItem.dispose();
     CommandUtility.clearCommandsCache();
-    disposeTelemetryWrapper(); /* dispose the telemetry wrapper */
+    disposeTelemetryWrapper();
 }
 
 function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
