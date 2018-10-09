@@ -41,6 +41,7 @@ const testConfigManager: TestConfigManager = new TestConfigManager(projectManage
 // your extension is activated the very first time the command is executed
 export async function activate(context: ExtensionContext) {
     TelemetryWrapper.initilizeFromJsonFile(context.asAbsolutePath('./package.json'));
+    context.subscriptions.push(TelemetryWrapper.getReporter());
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'));
     await instrumentOperation('activation', doActivate)(context);
 }
