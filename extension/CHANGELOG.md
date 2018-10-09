@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Get JAVA_HOME location through calling the API exposed by the Java Language Server. [#319](https://github.com/Microsoft/vscode-java-test/issues/319)
 
 ## Fixed
-- Fix a bug that code Lenses are not in the correct place. [#36](https://github.com/Microsoft/vscode-java-test/issues/36)
+- Fix a bug that code lenses are not in the correct place. [#36](https://github.com/Microsoft/vscode-java-test/issues/36)
 
 ## 0.9.0 - 2018-09-20
 
