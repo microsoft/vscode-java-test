@@ -22,6 +22,7 @@ import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.MethodSearcher;
 import com.microsoft.java.test.plugin.searcher.NestedClassSearcher;
 import com.microsoft.java.test.plugin.searcher.PackageSearcher;
+import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 
 import org.eclipse.core.runtime.IPath;
@@ -54,6 +55,10 @@ import java.util.stream.Collectors;
 @SuppressWarnings("restriction")
 public class TestSearchUtils {
     private static final Map<TestLevel, TestItemSearcher[]> searcherMap;
+    private static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
+        new JUnit4TestSearcher(),
+        new JUnit5TestSearcher(),
+    };
 
     static {
         searcherMap = new HashMap<TestLevel, TestItemSearcher[]>();
@@ -93,6 +98,7 @@ public class TestSearchUtils {
         if (arguments == null || arguments.size() == 0) {
             return resultList;
         }
+
         final String uri = (String) arguments.get(0);
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
         if (!isJavaElementExist(unit) || !isInTestScope(unit) || monitor.isCanceled()) {
@@ -106,20 +112,20 @@ public class TestSearchUtils {
             if (!isAccessibleAndNonAbstractType(type)) {
                 continue;
             }
-            final List<IMethod> testMethods = getTestMethods(type);
-            if (testMethods.size() > 0) {
+            final List<TestItem> testMethodList = Arrays.stream(type.getMethods()).map(m -> {
+                try {
+                    final TestKind kind = resolveTestKindForMethod(m);
+                    if (kind != null) {
+                        return constructTestItem(m, TestLevel.METHOD, kind);
+                    }
+                    return null;
+                } catch (final JavaModelException e) {
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toList());
+            if (testMethodList.size() > 0) {
                 final TestItem parent = constructTestItem(type, getTestLevelForIType(type));
-                parent.setChildren(testMethods.stream()
-                        .map(m -> {
-                            try {
-                                return constructTestItem(m, TestLevel.METHOD);
-                            } catch (final JavaModelException e) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList())
-                );
+                parent.setChildren(testMethodList);
                 resultList.add(parent);
             }
         }
@@ -153,6 +159,15 @@ public class TestSearchUtils {
         );
     }
 
+    public static TestKind resolveTestKindForMethod(IMethod method) {
+        for (final TestFrameworkSearcher searcher : frameworkSearchers) {
+            if (searcher.isTestMethod(method)) {
+                return searcher.getTestKind();
+            }
+        }
+        return null;
+    }
+
     private static boolean isJavaElementExist(IJavaElement element) {
         return element != null && element.getResource() != null && element.getResource().exists();
     }
@@ -165,13 +180,6 @@ public class TestSearchUtils {
             }
         }
         return false;
-    }
-
-    private static List<IMethod> getTestMethods(IType type) throws JavaModelException {
-        return Arrays.stream(type.getMethods())
-                .filter(m -> JUnitUtility.isTestMethod(m, JUnit4TestSearcher.JUNIT_TEST_ANNOTATION) ||
-                        JUnitUtility.isTestMethod(m, JUnit5TestSearcher.JUNIT_TEST_ANNOTATION))
-                .collect(Collectors.toList());
     }
 
     private static TestLevel getTestLevelForIType(IType type) {

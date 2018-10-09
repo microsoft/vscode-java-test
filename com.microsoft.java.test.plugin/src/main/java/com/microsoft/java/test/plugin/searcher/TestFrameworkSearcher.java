@@ -13,14 +13,17 @@ package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
 
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.search.SearchPattern;
 
-public abstract class JUnitTestSearcher {
+public interface TestFrameworkSearcher {
 
-    public abstract SearchPattern getSearchPattern();
+    SearchPattern getSearchPattern();
 
-    public abstract TestKind getTestKind();
+    TestKind getTestKind();
 
-    public abstract String getTestMethodAnnotation();
+    String getTestMethodAnnotation();
+
+    boolean isTestMethod(IMethod method);
 
 }
