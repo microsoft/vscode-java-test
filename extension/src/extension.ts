@@ -139,13 +139,12 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     await commands.executeCommand('setContext', 'java.test.activated', true);
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {
+export async function deactivate() {
     testResourceManager.dispose();
     classPathManager.dispose();
     testStatusBarItem.dispose();
     CommandUtility.clearCommandsCache();
-    disposeTelemetryWrapper();
+    await disposeTelemetryWrapper();
 }
 
 function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
