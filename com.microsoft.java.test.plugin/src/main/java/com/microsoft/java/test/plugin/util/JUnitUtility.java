@@ -75,7 +75,7 @@ public class JUnitUtility {
         }
     }
 
-    static boolean hasTestAnnotation(IMethod method, String annotation) {
+    public static boolean hasTestAnnotation(IMethod method, String annotation) {
         try {
             final Optional<IAnnotation> matched = Arrays.stream(method.getAnnotations())
                     .filter(a -> annotation.endsWith(a.getElementName())).findAny();
