@@ -21,42 +21,10 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class JUnitUtility {
-    public static boolean isTestMethod(IMethod method, String annotation) {
-        final int flags;
-        try {
-            flags = method.getFlags();
-            // 'V' is void signature
-            return !(method.isConstructor() || !(annotation.contains("jupiter") ? true : Flags.isPublic(flags)) ||
-                    Flags.isAbstract(flags) || Flags.isStatic(flags) || !"V".equals(method.getReturnType())) &&
-                    hasTestAnnotation(method, annotation);
-        } catch (final JavaModelException e) {
-            // ignore
-            return false;
-        }
-    }
-
-    public static boolean isTestClass(IType type, String annotation) {
-        try {
-            if (!isAccessibleClass(type)) {
-                return false;
-            }
-            if (Flags.isAbstract(type.getFlags())) {
-                return false;
-            }
-            final List<IMethod> tests = Arrays.stream(type.getMethods()).filter(m -> isTestMethod(m, annotation))
-                    .collect(Collectors.toList());
-            return tests.size() > 0;
-        } catch (final JavaModelException e) {
-            return false;
-        }
-
-    }
-
     public static boolean isAccessibleClass(IType type) throws JavaModelException {
         int flags = type.getFlags();
         if (Flags.isInterface(flags)) {
