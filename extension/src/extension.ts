@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, ExtensionContext, FileSystemWatcher, Uri, window, workspace } from 'vscode';
+import { commands, Disposable, ExtensionContext, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
 import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import { testCodeLensProvider } from './codeLensProvider';
 import { openTextDocumentForNode } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
@@ -39,6 +40,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
         explorerNodeManager,
         watcher,
+        languages.registerCodeLensProvider('java', testCodeLensProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
     );
