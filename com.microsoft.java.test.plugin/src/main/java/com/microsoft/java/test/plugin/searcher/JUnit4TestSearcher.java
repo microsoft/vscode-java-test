@@ -12,25 +12,16 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.util.JUnitUtility;
 
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
 
-public class JUnit4TestSearcher extends JUnitTestSearcher {
+public class JUnit4TestSearcher implements TestFrameworkSearcher {
 
-    private static final String JUNIT_TEST_ANNOTATION = "org.junit.Test";
-    private static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
-
-    @Override
-    public SearchPattern getSearchPattern() {
-        final SearchPattern runWithPattern = SearchPattern.createPattern(JUNIT_RUN_WITH_ANNOTATION,
-                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        final SearchPattern testPattern = SearchPattern.createPattern(JUNIT_TEST_ANNOTATION,
-                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        return SearchPattern.createOrPattern(runWithPattern, testPattern);
-    }
+    public static final String JUNIT_TEST_ANNOTATION = "org.junit.Test";
+    public static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
 
     @Override
     public TestKind getTestKind() {
@@ -38,8 +29,17 @@ public class JUnit4TestSearcher extends JUnitTestSearcher {
     }
 
     @Override
-    public String getTestMethodAnnotation() {
-        return JUNIT_TEST_ANNOTATION;
+    public boolean isTestMethod(IMethod method) {
+        final int flags;
+        try {
+            flags = method.getFlags();
+            // 'V' is void signature
+            return !(method.isConstructor() || !Flags.isPublic(flags) || Flags.isAbstract(flags) ||
+                    Flags.isStatic(flags) || !"V".equals(method.getReturnType())) &&
+                    JUnitUtility.hasTestAnnotation(method, JUNIT_TEST_ANNOTATION);
+        } catch (final JavaModelException e) {
+            // ignore
+            return false;
+        }
     }
-
 }

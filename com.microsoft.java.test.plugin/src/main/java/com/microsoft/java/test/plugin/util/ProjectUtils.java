@@ -17,12 +17,16 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
 
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,6 +69,14 @@ public class ProjectUtils {
             return Path.fromOSString(Paths.get(uri).toString());
         }
         return null;
+    }
+
+    public static List<IPath> getTestPath(IJavaProject project) throws JavaModelException {
+        final IClasspathEntry[] entries = project.getRawClasspath();
+        return Arrays.stream(entries)
+                .filter(entry -> entry.isTest() && entry.getEntryKind() == ClasspathEntry.CPE_SOURCE)
+                .map(entry -> entry.getPath())
+                .collect(Collectors.toList());
     }
 
 }
