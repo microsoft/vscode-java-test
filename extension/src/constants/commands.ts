@@ -6,7 +6,7 @@ export namespace JavaLanguageServerCommands {
 }
 
 export namespace JavaTestRunnerDelegateCommands {
-    export const ESEARCH_TEST_ITEMS: string = 'vscode.java.test.search.items';
+    export const SEARCH_TEST_ITEMS: string = 'vscode.java.test.search.items';
     export const SEARCH_TEST_CODE_LENS: string = 'vscode.java.test.search.codelens';
 }
 
