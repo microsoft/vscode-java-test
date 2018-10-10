@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, EventEmitter, TextDocument } from 'vscode';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { ITestItem } from './protocols';
 import { searchTestCodeLens } from './utils/commandUtils';
@@ -9,23 +9,16 @@ import { searchTestCodeLens } from './utils/commandUtils';
 class TestCodeLensProvider implements CodeLensProvider {
     private _onDidChangeCodeLenses: EventEmitter<void> = new EventEmitter<void>();
 
-    get onDidChangeCodeLenses(): Event<void> {
-        return this._onDidChangeCodeLenses.event;
-    }
-
     public refresh(): void {
         this._onDidChangeCodeLenses.fire();
     }
 
-    public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
+    public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
         try {
             const testItems: ITestItem[] = await searchTestCodeLens(document.uri.toString());
             const codeLenses: CodeLens[] = [];
-            for (const test of testItems) {
-                if (token.isCancellationRequested) {
-                    break;
-                }
-                codeLenses.push(...this.getCodeLenses(test));
+            for (const testClass of testItems) {
+                codeLenses.push(...this.getCodeLenses(testClass));
             }
             return codeLenses;
         } catch (error) {
@@ -33,12 +26,12 @@ class TestCodeLensProvider implements CodeLensProvider {
         }
     }
 
-    private getCodeLenses(test: ITestItem): CodeLens[] {
+    private getCodeLenses(testClass: ITestItem): CodeLens[] {
         const result: CodeLens[] = [];
-        result.push(...this.parseCodeLenses(test));
-        if (test.children) {
-            for (const child of test.children) {
-                result.push(...this.parseCodeLenses(child));
+        result.push(...this.parseCodeLenses(testClass));
+        if (testClass.children) {
+            for (const testMethod of testClass.children) {
+                result.push(...this.parseCodeLenses(testMethod));
             }
         }
         return result;
