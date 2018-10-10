@@ -7,12 +7,6 @@ import { ITestItem } from './protocols';
 import { searchTestCodeLens } from './utils/commandUtils';
 
 class TestCodeLensProvider implements CodeLensProvider {
-    private _onDidChangeCodeLenses: EventEmitter<void> = new EventEmitter<void>();
-
-    public refresh(): void {
-        this._onDidChangeCodeLenses.fire();
-    }
-
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
         try {
             const testItems: ITestItem[] = await searchTestCodeLens(document.uri.toString());
