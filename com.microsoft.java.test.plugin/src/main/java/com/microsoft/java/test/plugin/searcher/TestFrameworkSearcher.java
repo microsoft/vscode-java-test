@@ -14,15 +14,10 @@ package com.microsoft.java.test.plugin.searcher;
 import com.microsoft.java.test.plugin.model.TestKind;
 
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.search.SearchPattern;
 
 public interface TestFrameworkSearcher {
 
-    SearchPattern getSearchPattern();
-
     TestKind getTestKind();
-
-    String getTestMethodAnnotation();
 
     boolean isTestMethod(IMethod method);
 

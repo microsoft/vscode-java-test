@@ -17,29 +17,14 @@ import com.microsoft.java.test.plugin.util.JUnitUtility;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchPattern;
 
 public class JUnit5TestSearcher implements TestFrameworkSearcher {
 
     public static final String JUNIT_TEST_ANNOTATION = "org.junit.jupiter.api.Test";
 
     @Override
-    public SearchPattern getSearchPattern() {
-        final SearchPattern testPattern = SearchPattern.createPattern(JUNIT_TEST_ANNOTATION,
-                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-        return testPattern;
-    }
-
-    @Override
     public TestKind getTestKind() {
         return TestKind.JUnit5;
-    }
-
-    @Override
-    public String getTestMethodAnnotation() {
-        return JUNIT_TEST_ANNOTATION;
     }
 
     @Override
