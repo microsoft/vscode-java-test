@@ -7,7 +7,7 @@ import { ISearchChildrenNodeRequest, ITestItem } from '../protocols';
 
 export async function searchTestItems(request: ISearchChildrenNodeRequest): Promise<ITestItem[]> {
     const entries: ITestItem[] | undefined = await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.ESEARCH_TEST_ITEMS, JSON.stringify(request));
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(request));
     return entries || [];
 }
 
