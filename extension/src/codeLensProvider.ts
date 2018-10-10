@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, CodeLens, CodeLensProvider, EventEmitter, TextDocument } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, TextDocument } from 'vscode';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { ITestItem } from './protocols';
 import { searchTestCodeLens } from './utils/commandUtils';
