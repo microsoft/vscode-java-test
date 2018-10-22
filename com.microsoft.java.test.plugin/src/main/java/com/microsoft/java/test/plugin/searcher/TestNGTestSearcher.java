@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2017 Microsoft Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     Microsoft Corporation - initial API and implementation
- *******************************************************************************/
+* Copyright (c) 2018 Microsoft Corporation and others.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*     Microsoft Corporation - initial API and implementation
+*******************************************************************************/
 
 package com.microsoft.java.test.plugin.searcher;
 
@@ -18,14 +18,13 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
 
-public class JUnit4TestSearcher implements TestFrameworkSearcher {
+public class TestNGTestSearcher implements TestFrameworkSearcher {
 
-    public static final String TEST_METHOD_ANNOTATION = "org.junit.Test";
-    public static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
+    public static final String TEST_METHOD_ANNOTATION = "org.testng.annotations.Test";
 
     @Override
     public TestKind getTestKind() {
-        return TestKind.JUnit;
+        return TestKind.TestNG;
     }
 
     @Override
@@ -42,4 +41,5 @@ public class JUnit4TestSearcher implements TestFrameworkSearcher {
             return false;
         }
     }
+
 }
