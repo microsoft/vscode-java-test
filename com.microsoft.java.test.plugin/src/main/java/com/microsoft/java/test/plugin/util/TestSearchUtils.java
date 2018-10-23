@@ -24,6 +24,7 @@ import com.microsoft.java.test.plugin.searcher.NestedClassSearcher;
 import com.microsoft.java.test.plugin.searcher.PackageSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
+import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -31,6 +32,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotation;
+import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -50,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
@@ -58,6 +62,7 @@ public class TestSearchUtils {
     private static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
         new JUnit4TestSearcher(),
         new JUnit5TestSearcher(),
+        new TestNGTestSearcher()
     };
 
     static {
@@ -109,7 +114,7 @@ public class TestSearchUtils {
         Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, new NullProgressMonitor());
         final IType[] childrenTypes = unit.getAllTypes();
         for (final IType type : childrenTypes) {
-            if (!isAccessibleAndNonAbstractType(type)) {
+            if (!isTestableClass(type)) {
                 continue;
             }
             final List<TestItem> testMethodList = Arrays.stream(type.getMethods()).map(m -> {
@@ -126,6 +131,7 @@ public class TestSearchUtils {
             if (testMethodList.size() > 0) {
                 final TestItem parent = constructTestItem(type, getTestLevelForIType(type));
                 parent.setChildren(testMethodList);
+                parent.setKind(testMethodList.get(0).getKind());
                 resultList.add(parent);
             }
         }
@@ -142,8 +148,23 @@ public class TestSearchUtils {
         return constructTestItem(element, level, null);
     }
 
-    public static boolean isAccessibleAndNonAbstractType(IType type) throws JavaModelException {
-        return JUnitUtility.isAccessibleClass(type) && !Flags.isAbstract(type.getFlags());
+    public static boolean isTestableClass(IType type) throws JavaModelException {
+        int flags = type.getFlags();
+        if (Flags.isInterface(flags)) {
+            return false;
+        }
+        IJavaElement parent = type.getParent();
+        while (true) {
+            if (parent instanceof ICompilationUnit || parent instanceof IClassFile) {
+                return true;
+            }
+            if (!(parent instanceof IType) || !Flags.isStatic(flags) || !Flags.isPublic(flags) ||
+                    !Flags.isAbstract(flags)) {
+                return false;
+            }
+            flags = ((IType) parent).getFlags();
+            parent = parent.getParent();
+        }
     }
 
     public static TestItem constructTestItem(IJavaElement element, TestLevel level, TestKind kind)
@@ -166,6 +187,30 @@ public class TestSearchUtils {
             }
         }
         return null;
+    }
+
+    public static boolean hasTestAnnotation(IMethod method, String annotation) {
+        try {
+            final Optional<IAnnotation> matched = Arrays.stream(method.getAnnotations())
+                    .filter(a -> annotation.endsWith(a.getElementName())).findAny();
+            if (!matched.isPresent()) {
+                return false;
+            }
+            final IAnnotation anno = matched.get();
+            if (!anno.exists()) {
+                return false;
+            }
+            final String name = anno.getElementName();
+            final String[][] fullNameArr = method.getDeclaringType().resolveType(name);
+            if (fullNameArr == null) {
+                final ICompilationUnit cu = method.getCompilationUnit();
+                return cu != null && cu.getImport(annotation).exists();
+            }
+            final String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
+            return fullName.equals(annotation);
+        } catch (final JavaModelException e) {
+            return false;
+        }
     }
 
     private static boolean isJavaElementExist(IJavaElement element) {

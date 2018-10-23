@@ -12,15 +12,13 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.JUnitUtility;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.JavaModelException;
 
-public class JUnit5TestSearcher implements TestFrameworkSearcher {
+public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
-    public static final String JUNIT_TEST_ANNOTATION = "org.junit.jupiter.api.Test";
+    public static final String TEST_METHOD_ANNOTATION = "org.junit.jupiter.api.Test";
 
     @Override
     public TestKind getTestKind() {
@@ -29,16 +27,6 @@ public class JUnit5TestSearcher implements TestFrameworkSearcher {
 
     @Override
     public boolean isTestMethod(IMethod method) {
-        final int flags;
-        try {
-            flags = method.getFlags();
-            // 'V' is void signature
-            return !(method.isConstructor() || Flags.isAbstract(flags) ||
-                    Flags.isStatic(flags) || !"V".equals(method.getReturnType())) &&
-                    JUnitUtility.hasTestAnnotation(method, JUNIT_TEST_ANNOTATION);
-        } catch (final JavaModelException e) {
-            // ignore
-            return false;
-        }
+        return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
     }
 }
