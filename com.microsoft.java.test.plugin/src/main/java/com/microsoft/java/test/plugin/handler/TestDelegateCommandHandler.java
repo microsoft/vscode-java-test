@@ -33,7 +33,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
         switch (commandId) {
             case COMPUTE_RUNTIME_CLASSPATH:
-                return new RuntimeClassPathResolver().resolveRunTimeClassPath(arguments);
+            return RuntimeClassPathUtils.resolveRuntimeClassPath(arguments);
             case GET_PROJECT_INFO:
                 return ProjectInfoFetcher.getProjectInfo(arguments);
             case SEARCH_TEST_ITEMS:
