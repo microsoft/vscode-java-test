@@ -49,7 +49,7 @@ public class MethodSearcher extends TestItemSearcher {
                     final IMethod method = (IMethod) element;
                     if (method.getParent() instanceof IType) {
                         final IType parentClass = (IType) method.getParent();
-                        if (!TestSearchUtils.isAccessibleAndNonAbstractType(parentClass) ||
+                        if (!TestSearchUtils.isTestableClass(parentClass) ||
                                 !parentClass.getFullyQualifiedName().equals(fullyQualifiedName)) {
                             return;
                         }
