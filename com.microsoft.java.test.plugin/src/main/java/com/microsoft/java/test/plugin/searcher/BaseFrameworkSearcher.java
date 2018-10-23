@@ -15,11 +15,14 @@ import com.microsoft.java.test.plugin.model.TestKind;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+
 public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
+
     @Override
-   public abstract TestKind getTestKind();
+    public abstract TestKind getTestKind();
+
     @Override
-   public boolean isTestMethod(IMethod method) {
+    public boolean isTestMethod(IMethod method) {
        try {
            final int flags = method.getFlags();
            if (Flags.isAbstract(flags) || Flags.isStatic(flags)) {
