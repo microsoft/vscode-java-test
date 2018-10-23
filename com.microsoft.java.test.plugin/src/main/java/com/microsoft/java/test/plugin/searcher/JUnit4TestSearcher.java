@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
 
-public class JUnit4TestSearcher implements TestFrameworkSearcher {
+public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
     public static final String TEST_METHOD_ANNOTATION = "org.junit.Test";
     public static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
@@ -30,13 +30,12 @@ public class JUnit4TestSearcher implements TestFrameworkSearcher {
 
     @Override
     public boolean isTestMethod(IMethod method) {
-        final int flags;
         try {
-            flags = method.getFlags();
-            // 'V' is void signature
-            return !(method.isConstructor() || !Flags.isPublic(flags) || Flags.isAbstract(flags) ||
-                    Flags.isStatic(flags) || !"V".equals(method.getReturnType())) &&
-                    TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
+            final int flags = method.getFlags();
+            if (!Flags.isPublic(flags)) {
+                return false;
+            }
+            return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
         } catch (final JavaModelException e) {
             // ignore
             return false;
