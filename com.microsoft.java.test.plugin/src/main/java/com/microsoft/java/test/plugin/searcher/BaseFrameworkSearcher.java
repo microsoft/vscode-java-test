@@ -23,19 +23,19 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
     @Override
     public boolean isTestMethod(IMethod method) {
-       try {
-           final int flags = method.getFlags();
-           if (Flags.isAbstract(flags) || Flags.isStatic(flags)) {
-               return false;
-           }
+        try {
+            final int flags = method.getFlags();
+            if (Flags.isAbstract(flags) || Flags.isStatic(flags)) {
+                return false;
+            }
             // 'V' is void signature
-           if (method.isConstructor() || !"V".equals(method.getReturnType())) {
-               return false;
-           }
+            if (method.isConstructor() || !"V".equals(method.getReturnType())) {
+                return false;
+            }
             return true;
-       } catch (final JavaModelException e) {
-           // ignore
-           return false;
-       }
-   }
+        } catch (final JavaModelException e) {
+            // ignore
+            return false;
+        }
+    }
 }
