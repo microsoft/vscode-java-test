@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Microsoft Corporation and others.
+ * Copyright (c) 2018 Microsoft Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,30 +12,27 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
-
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
 
-public class JUnit4TestSearcher extends BaseFrameworkSearcher {
-
-    public static final String TEST_METHOD_ANNOTATION = "org.junit.Test";
-    public static final String JUNIT_RUN_WITH_ANNOTATION = "org.junit.runner.RunWith";
+public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
     @Override
-    public TestKind getTestKind() {
-        return TestKind.JUnit;
-    }
+    public abstract TestKind getTestKind();
 
     @Override
     public boolean isTestMethod(IMethod method) {
         try {
             final int flags = method.getFlags();
-            if (!Flags.isPublic(flags)) {
+            if (Flags.isAbstract(flags) || Flags.isStatic(flags)) {
                 return false;
             }
-            return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
+            // 'V' is void signature
+            if (method.isConstructor() || !"V".equals(method.getReturnType())) {
+                return false;
+            }
+            return true;
         } catch (final JavaModelException e) {
             // ignore
             return false;
