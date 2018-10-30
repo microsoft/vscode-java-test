@@ -11,8 +11,6 @@
 
 package com.microsoft.java.test.runner.testng;
 
-import com.microsoft.java.test.runner.common.TestRunnerMessageHelper;
-
 import org.testng.ITestListener;
 import org.testng.TestNG;
 import org.testng.xml.XmlClass;
@@ -35,7 +33,6 @@ public class TestNGRunner {
         final TestNG testNG = new TestNG();
         final ITestListener listener = new TestNGListener();
         testNG.addListener(listener);
-        TestRunnerMessageHelper.reporterAttached();
         testNG.setXmlSuites(Collections.singletonList(suite));
         testNG.run();
     }
