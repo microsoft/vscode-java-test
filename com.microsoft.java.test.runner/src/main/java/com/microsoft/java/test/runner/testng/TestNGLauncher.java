@@ -21,7 +21,7 @@ import java.util.Map;
 public class TestNGLauncher implements ITestLauncher {
 
     @Override
-    public int execute(String[] args) throws Exception {
+    public int execute(String[] args) throws ClassNotFoundException  {
         if (args == null || args.length == 0) {
             throw new RuntimeException("No test found to run.");
         }
@@ -30,7 +30,7 @@ public class TestNGLauncher implements ITestLauncher {
         return 0;
     }
 
-    private Map<String, List<String>> parse(String[] args) throws Exception {
+    private Map<String, List<String>> parse(String[] args) throws ClassNotFoundException {
         final Map<String, List<String>> classToMethodsMap = new HashMap<>();
         for (final String arg : args) {
             if (arg.indexOf("#") >= 0) {
@@ -44,15 +44,15 @@ public class TestNGLauncher implements ITestLauncher {
         return classToMethodsMap;
     }
 
-    private static String getClassName(String clazz) throws Exception {
+    private static String getClassName(String clazz) throws ClassNotFoundException {
         return Class.forName(clazz).getCanonicalName();
     }
 
-    private static String getClassNameFromMethod(String clazz) throws Exception {
+    private static String getClassNameFromMethod(String clazz) throws ClassNotFoundException {
         return Class.forName(clazz.substring(0, clazz.lastIndexOf("#"))).getCanonicalName();
     }
 
-    private static String getMethodName(String clazz) throws Exception {
+    private static String getMethodName(String clazz) {
         return clazz.substring(clazz.lastIndexOf("#") + 1);
     }
 }
