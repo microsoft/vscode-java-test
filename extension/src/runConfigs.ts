@@ -12,7 +12,6 @@ export interface IExecutionConfig {
 }
 
 export interface IExecutionConfigGroup {
-    default: string;
     items: IExecutionConfig[];
 }
 
