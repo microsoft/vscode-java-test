@@ -103,6 +103,9 @@
         "archiver": "^3.0.0",
         "file-url": "^2.0.2",
         "fs-extra": "^7.0.0",
+        "get-port": "^4.0.0",
+        "glob-promise": "^3.4.0",
+        "tree-kill": "^1.2.0",
         "vscode-extension-telemetry-wrapper": "^0.3.1"
     }
 }
