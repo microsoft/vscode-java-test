@@ -18,16 +18,12 @@ class TestConfigManager {
     }
 
     public async loadRunConfig(tests: ITestItem[], isDebug: boolean): Promise<IExecutionConfigGroup[]> {
-        const folders: WorkspaceFolder[] = this.getFoldersOfTests(tests);
+        const folderSet: Set<WorkspaceFolder> = this.getFoldersOfTests(tests);
         const configs: ITestConfig[] = [];
-        for (const folder of folders) {
+        for (const folder of folderSet.values()) {
             const configFullPath: string = await this.createTestConfigIfNotExisted(folder);
             const content: string = await fse.readFile(configFullPath, 'utf-8');
-            try {
-                configs.push(JSON.parse(content) as ITestConfig);
-            } catch (error) {
-                throw error;
-            }
+            configs.push(JSON.parse(content) as ITestConfig);
         }
         if (isDebug) {
             return configs.map((c: ITestConfig) => c.debug);
@@ -40,7 +36,7 @@ class TestConfigManager {
         if (!await fse.pathExists(configFullPath)) {
             await fse.ensureDir(path.dirname(configFullPath));
             const config: ITestConfig = await this.createDefaultTestConfig(folder.uri);
-            await fse.writeFile(configFullPath, JSON.stringify(config, null, 4));
+            await fse.writeFile(configFullPath, JSON.stringify(config, null, 4 /* space size */));
         }
         return configFullPath;
     }
@@ -79,7 +75,7 @@ class TestConfigManager {
         };
     }
 
-    private getFoldersOfTests(tests: ITestItem[]): WorkspaceFolder[] {
+    private getFoldersOfTests(tests: ITestItem[]): Set<WorkspaceFolder> {
         const workspaceFolderSet: Set<WorkspaceFolder> = new Set<WorkspaceFolder>();
         for (const test of tests) {
             const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
@@ -87,7 +83,7 @@ class TestConfigManager {
                 workspaceFolderSet.add(workspaceFolder);
             }
         }
-        return [...workspaceFolderSet];
+        return workspaceFolderSet;
     }
 }
 
