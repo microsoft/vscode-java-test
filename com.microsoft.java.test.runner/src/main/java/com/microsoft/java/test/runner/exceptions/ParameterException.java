@@ -9,8 +9,10 @@
 *     Microsoft Corporation - initial API and implementation
 *******************************************************************************/
 
-package com.microsoft.java.test.runner.common;
+package com.microsoft.java.test.runner.exceptions;
 
-public interface ITestLauncher {
-    void execute(String[] args);
+public class ParameterException extends RuntimeException {
+    public ParameterException(String errorMessage) {
+        super(errorMessage);
+    }
 }
