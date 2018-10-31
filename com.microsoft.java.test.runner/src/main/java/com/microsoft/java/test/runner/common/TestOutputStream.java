@@ -32,16 +32,6 @@ public class TestOutputStream implements TestStream {
     }
 
     @Override
-    public void print(TestMessageItem item) {
-        final String content = toJson(item);
-        if (item.type == TestMessageType.Error) {
-            this.err.print(content);
-        } else {
-            this.out.print(content);
-        }
-    }
-
-    @Override
     public void println(TestMessageItem item) {
         final String content = toJson(item);
         if (item.type == TestMessageType.Error) {

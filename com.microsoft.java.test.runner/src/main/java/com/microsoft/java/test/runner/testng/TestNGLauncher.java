@@ -12,6 +12,8 @@
 package com.microsoft.java.test.runner.testng;
 
 import com.microsoft.java.test.runner.common.ITestLauncher;
+import com.microsoft.java.test.runner.common.TestMessageItem;
+import com.microsoft.java.test.runner.common.TestOutputStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,13 +23,16 @@ import java.util.Map;
 public class TestNGLauncher implements ITestLauncher {
 
     @Override
-    public int execute(String[] args) throws ClassNotFoundException  {
-        if (args == null || args.length == 0) {
-            throw new RuntimeException("No test found to run.");
+    public void execute(String[] args) {
+        try {
+            if (args == null || args.length == 0) {
+                throw new RuntimeException("No test found to run.");
+            }
+            final TestNGRunner runner = new TestNGRunner();
+            runner.run(parse(args));
+        } catch (final ClassNotFoundException ex) {
+            TestOutputStream.instance().println(new TestMessageItem("Failed to run TestNG tests", ex));
         }
-        final TestNGRunner runner = new TestNGRunner();
-        runner.run(parse(args));
-        return 0;
     }
 
     private Map<String, List<String>> parse(String[] args) throws ClassNotFoundException {

@@ -42,7 +42,7 @@ public class CustomizedConsoleTestExecutor {
             launcher.execute(discoveryRequest);
             return 0;
         });
-        
+
     }
 
     private Optional<ClassLoader> createCustomClassLoader() {
