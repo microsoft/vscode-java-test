@@ -1,20 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
-import { ISearchChildrenNodeRequest, ITestItem } from '../protocols';
+import { IProjectInfo, ISearchChildrenNodeRequest, ITestItem } from '../protocols';
 
 export async function searchTestItems(request: ISearchChildrenNodeRequest): Promise<ITestItem[]> {
-    const entries: ITestItem[] | undefined = await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(request));
-    return entries || [];
+    return await executeJavaLanguageServerCommand<ITestItem[]>(
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(request)) || [];
 }
 
 export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {
-    const entries: ITestItem[] | undefined = await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri);
-    return entries || [];
+    return await executeJavaLanguageServerCommand<ITestItem[]>(
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri) || [];
+}
+
+export async function getProjectInfo(folderUri: Uri): Promise<IProjectInfo[]> {
+    return await executeJavaLanguageServerCommand<IProjectInfo[]>(
+        JavaTestRunnerDelegateCommands.GET_PROJECT_INFO, folderUri.toString()) || [];
 }
 
 function executeJavaLanguageServerCommand<T>(...rest: any[]): Thenable<T | undefined> {
