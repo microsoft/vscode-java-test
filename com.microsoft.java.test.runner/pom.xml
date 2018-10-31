@@ -27,6 +27,12 @@
       <artifactId>junit-platform-console-standalone</artifactId>
       <version>1.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>6.14.3</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
