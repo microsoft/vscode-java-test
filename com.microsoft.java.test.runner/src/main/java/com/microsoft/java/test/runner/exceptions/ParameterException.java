@@ -11,7 +11,7 @@
 
 package com.microsoft.java.test.runner.exceptions;
 
-public class ParameterException extends Exception {
+public class ParameterException extends RuntimeException {
     public ParameterException(String errorMessage) {
         super(errorMessage);
     }
