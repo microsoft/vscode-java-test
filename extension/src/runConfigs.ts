@@ -1,0 +1,21 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
+export interface IExecutionConfig {
+    name: string;
+    projectName: string;
+    workingDirectory: string;
+    args: any[];
+    vmargs: any[];
+    env: { [key: string]: string; };
+    preLaunchTask: string;
+}
+
+export interface IExecutionConfigGroup {
+    items: IExecutionConfig[];
+}
+
+export interface ITestConfig {
+    run: IExecutionConfigGroup;
+    debug: IExecutionConfigGroup;
+}
