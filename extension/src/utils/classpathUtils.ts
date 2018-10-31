@@ -7,9 +7,10 @@ import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { MAX_CLASS_PATH_LENGTH } from '../constants/configs';
+import { isDarwin, isLinux } from './platformUtils';
 
 export async function getClassPathString(classpaths: string[], storagePath: string): Promise<string> {
-    const separator: string = process.platform === 'darwin' || process.platform === 'linux' ? ':' : ';';
+    const separator: string = (isDarwin() || isLinux()) ? ':' : ';';
     const joinedClassPath: string = classpaths.join(separator);
     if (joinedClassPath.length <= MAX_CLASS_PATH_LENGTH) {
         return joinedClassPath;
