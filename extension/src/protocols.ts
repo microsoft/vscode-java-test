@@ -3,10 +3,13 @@
 
 import { Range, Uri } from 'vscode';
 
-export interface ITestItem {
-    displayName: string;
+export interface ITestItemBase {
     fullName: string;
     uri: string;
+}
+
+export interface ITestItem extends ITestItemBase {
+    displayName: string;
     range: Range;
     children: ITestItem[];
     parent: ITestItem;
@@ -15,10 +18,8 @@ export interface ITestItem {
     level: TestLevel;
 }
 
-export interface ISearchChildrenNodeRequest {
+export interface ISearchChildrenNodeRequest extends ITestItemBase {
     level: TestLevel;
-    uri: string;
-    fullName: string;
 }
 
 export interface IProjectInfo {
