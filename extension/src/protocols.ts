@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range } from 'vscode';
+import { Range, Uri } from 'vscode';
 
 export interface ITestItem {
     displayName: string;
@@ -19,6 +19,11 @@ export interface ISearchChildrenNodeRequest {
     level: TestLevel;
     uri: string;
     fullName: string;
+}
+
+export interface IProjectInfo {
+    path: Uri;
+    name: string;
 }
 
 export enum TestLevel {
