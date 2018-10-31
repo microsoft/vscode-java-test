@@ -18,5 +18,5 @@ export interface ITestResultDetails {
 export enum TestStatus {
     Pass = 'Pass',
     Fail = 'Fail',
-    Skipped = 'Skipped',
+    Skip = 'Skip',
 }

@@ -3,9 +3,9 @@
 
 import { commands, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
-import { IProjectInfo, ISearchChildrenNodeRequest, ITestItem } from '../protocols';
+import { IProjectInfo, ISearchChildrenNodeParams, ITestItem } from '../protocols';
 
-export async function searchTestItems(request: ISearchChildrenNodeRequest): Promise<ITestItem[]> {
+export async function searchTestItems(request: ISearchChildrenNodeParams): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
         JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(request)) || [];
 }
