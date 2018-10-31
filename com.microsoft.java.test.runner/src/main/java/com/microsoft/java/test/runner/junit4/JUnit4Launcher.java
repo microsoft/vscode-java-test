@@ -19,7 +19,7 @@ import com.microsoft.java.test.runner.common.TestRunnerMessageHelper;
 public class JUnit4Launcher implements ITestLauncher {
 
     @Override
-    public int execute(String[] args) {
+    public void execute(String[] args) {
         final TestOutputStream stream = TestOutputStream.instance();
         try {
             if (args.length == 0) {
@@ -29,10 +29,8 @@ public class JUnit4Launcher implements ITestLauncher {
                 final CustomizedJUnit4CoreRunner jUnitCore = new CustomizedJUnit4CoreRunner();
                 jUnitCore.run(args);
             }
-            return 0;
-        } catch (final Throwable e) {
-            stream.println(new TestMessageItem("Failed to launch Junit", e));
-            return 1;
+        } catch (final Exception ex) {
+            stream.println(new TestMessageItem("Failed to run Junit tests", ex));
         } finally {
             stream.flush();
         }
