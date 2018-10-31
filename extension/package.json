@@ -85,6 +85,7 @@
         "vscjava.vscode-java-debug"
     ],
     "devDependencies": {
+        "@types/archiver": "^2.1.2",
         "@types/fs-extra": "^5.0.4",
         "@types/mocha": "^2.2.48",
         "@types/node": "^6.0.110",
@@ -99,6 +100,8 @@
         "vscode": "^1.1.17"
     },
     "dependencies": {
+        "archiver": "^3.0.0",
+        "file-url": "^2.0.2",
         "fs-extra": "^7.0.0",
         "vscode-extension-telemetry-wrapper": "^0.3.1"
     }
