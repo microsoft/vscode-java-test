@@ -31,8 +31,6 @@ public class JUnit4Launcher implements ITestLauncher {
             }
         } catch (final Exception ex) {
             stream.println(new TestMessageItem("Failed to run Junit tests", ex));
-        } finally {
-            stream.flush();
         }
     }
 }
