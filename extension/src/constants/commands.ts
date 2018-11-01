@@ -8,6 +8,7 @@ export namespace JavaLanguageServerCommands {
 export namespace JavaTestRunnerDelegateCommands {
     export const SEARCH_TEST_ITEMS: string = 'vscode.java.test.search.items';
     export const SEARCH_TEST_CODE_LENS: string = 'vscode.java.test.search.codelens';
+    export const RESOLVE_RUNTIME_CLASSPATH: string = 'vscode.java.test.runtime.classpath';
     export const GET_PROJECT_INFO: string = 'vscode.java.test.project.info';
 }
 
