@@ -4,7 +4,7 @@
 import { ITestItem } from '../../protocols';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { JUnit4RunnerResultAnalyzer } from './Junit4RunnerResultAnalyzer';
+import { JUnit4RunnerResultAnalyzer } from './JUnit4RunnerResultAnalyzer';
 
 export class JUnit4Runner extends BaseRunner {
     public constructCommandParams(): string[] {
