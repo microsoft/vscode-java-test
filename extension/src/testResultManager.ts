@@ -5,7 +5,7 @@ import { Disposable, Uri } from 'vscode';
 import { ITestResult, ITestResultDetails } from './runners/models';
 
 class TestResultManager implements Disposable {
-    private testResultMap: Map<string, IResultsInUri> = new Map<string, IResultsInUri>();
+    private testResultMap: Map<string, IResultsInFsPath> = new Map<string, IResultsInFsPath>();
 
     public storeResult(...results: ITestResult[]): void {
         for (const result of results) {
@@ -21,9 +21,9 @@ class TestResultManager implements Disposable {
     }
 
     public getResult(fsPath: string, testFullName: string): ITestResultDetails | undefined {
-        const resultsInUri: IResultsInUri | undefined = this.testResultMap.get(fsPath);
-        if (resultsInUri) {
-            return resultsInUri.methodsMap.get(testFullName);
+        const resultsInFsPath: IResultsInFsPath | undefined = this.testResultMap.get(fsPath);
+        if (resultsInFsPath) {
+            return resultsInFsPath.methodsMap.get(testFullName);
         }
         return undefined;
     }
@@ -37,7 +37,7 @@ class TestResultManager implements Disposable {
     }
 }
 
-interface IResultsInUri {
+interface IResultsInFsPath {
     methodsMap: Map<string, ITestResultDetails>;
     isDirty: boolean;
 }
