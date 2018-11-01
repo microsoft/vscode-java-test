@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, ExtensionContext, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
 import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { openTextDocumentForNode } from './commands/explorerCommands';
@@ -22,6 +22,11 @@ export function deactivate(): void {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
+    const javaHome: string = await getJavaHome();
+    if (!javaHome) {
+        throw new Error('Could not find Java home.');
+    }
+
     testExplorer.initialize(context);
     testStatusBarProvider.show();
     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
@@ -55,4 +60,18 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
     const instrumented: (...args: any[]) => any = instrumentOperation(name, async (_operationId: string, ...args: any[]) => await cb(...args));
     return commands.registerCommand(name, instrumented);
+}
+
+async function getJavaHome(): Promise<string> {
+    const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
+    try {
+        const extensionApi: any = await extension!.activate();
+        if (extensionApi && extensionApi.javaRequirement) {
+            return extensionApi.javaRequirement.java_home;
+        }
+    } catch (error) {
+        // Swallow the error
+    }
+
+    return '';
 }
