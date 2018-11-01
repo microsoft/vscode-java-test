@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, ExtensionContext, FileSystemWatcher, languages, Uri, window, workspace, Extension, extensions } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
 import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { openTextDocumentForNode } from './commands/explorerCommands';
