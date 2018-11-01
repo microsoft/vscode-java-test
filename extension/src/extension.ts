@@ -9,6 +9,7 @@ import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
+import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
 
 export async function activate(context: ExtensionContext): Promise<void> {
@@ -42,6 +43,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
         explorerNodeManager,
         testStatusBarProvider,
+        testResultManager,
         watcher,
         languages.registerCodeLensProvider('java', testCodeLensProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
