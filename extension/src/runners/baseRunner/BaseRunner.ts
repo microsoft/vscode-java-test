@@ -29,15 +29,16 @@ export abstract class BaseRunner implements ITestRunner {
 
     constructor(
         protected javaHome: string,
-        protected storagePath: string) {}
+        protected storagePath: string,
+        protected extensionPath: string) {}
 
     public abstract getTestResultAnalyzer(): BaseRunnerResultAnalyzer;
 
-    public get serverHome(): string {
-        return path.join(__dirname, '..', '..', '..', '..', 'server');
+    public get runnerDir(): string {
+        return path.join(this.extensionPath, 'server');
     }
 
-    public get runnerClassName(): string {
+    public get runnerMainClassName(): string {
         return 'com.microsoft.java.test.runner.Launcher';
     }
 
@@ -141,14 +142,14 @@ export abstract class BaseRunner implements ITestRunner {
             }
         }
 
-        commandParams.push(this.runnerClassName);
+        commandParams.push(this.runnerMainClassName);
         return commandParams;
     }
 
     private async getRunnerJarFilePath(): Promise<string> {
-        const launcher: string[] = await glob.promise('**/com.microsoft.java.test.runner-*-jar-with-dependencies.jar', { cwd: this.serverHome });
+        const launcher: string[] = await glob.promise('**/com.microsoft.java.test.runner-*-jar-with-dependencies.jar', { cwd: this.runnerDir });
         if (launcher.length) {
-            return path.resolve(this.serverHome, launcher[0]);
+            return path.resolve(this.runnerDir, launcher[0]);
         }
         throw new Error('Failed to find runner jar file.');
     }
