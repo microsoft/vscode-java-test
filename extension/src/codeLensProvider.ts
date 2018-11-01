@@ -78,7 +78,8 @@ class TestCodeLensProvider implements CodeLensProvider {
         if (test.level === TestLevel.Method) {
             testMethods.push(test);
         } else {
-            testMethods.push(...test.children.map((testChild: ITestItem) => testChild));
+            // Get methods from class
+            testMethods.push(...test.children);
         }
         return new CodeLens(
             test.range,
