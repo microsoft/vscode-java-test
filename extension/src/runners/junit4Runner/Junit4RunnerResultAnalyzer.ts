@@ -11,7 +11,6 @@ const TEST_FINISH: string = 'testFinished';
 export class JUnit4RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
-        let res: ITestResultDetails | undefined;
         const outputData: IJUnit4TestOutputData = JSON.parse(data) as IJUnit4TestOutputData;
         switch (outputData.name) {
             case TEST_START:
@@ -20,23 +19,23 @@ export class JUnit4RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 });
                 break;
             case TEST_FAIL:
-                res = this.testResults.get(outputData.attributes.name);
-                if (!res) {
+                const failedResult: ITestResultDetails | undefined = this.testResults.get(outputData.attributes.name);
+                if (!failedResult) {
                     return;
                 }
-                res.status = TestStatus.Fail;
-                res.message = this.decodeContent(outputData.attributes.message);
-                res.details = this.decodeContent(outputData.attributes.details);
+                failedResult.status = TestStatus.Fail;
+                failedResult.message = this.decodeContent(outputData.attributes.message);
+                failedResult.details = this.decodeContent(outputData.attributes.details);
                 break;
             case TEST_FINISH:
-                res = this.testResults.get(outputData.attributes.name);
-                if (!res) {
+                const finishedResult: ITestResultDetails | undefined = this.testResults.get(outputData.attributes.name);
+                if (!finishedResult) {
                     return;
                 }
-                if (!res.status) {
-                    res.status = TestStatus.Pass;
+                if (!finishedResult.status) {
+                    finishedResult.status = TestStatus.Pass;
                 }
-                res.duration = outputData.attributes.duration;
+                finishedResult.duration = outputData.attributes.duration;
                 break;
         }
     }
