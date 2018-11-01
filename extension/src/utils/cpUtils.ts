@@ -9,9 +9,9 @@ export function killProcess(process: cp.ChildProcess): Promise<void> {
         if (process) {
             kill(process.pid, 'SIGTERM', (error: Error | undefined) => {
                 if (error) {
-                    reject(error);
+                    return reject(error);
                 }
-                resolve();
+                return resolve();
             });
         }
         resolve();
