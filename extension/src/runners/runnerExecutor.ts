@@ -12,7 +12,7 @@ import { testStatusBarProvider } from '../testStatusBarProvider';
 import { killProcess } from '../utils/cpUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
-import { JUnit5Runner } from './junit5Runner/Junit5Runner';
+import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
 import { ITestResult } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
