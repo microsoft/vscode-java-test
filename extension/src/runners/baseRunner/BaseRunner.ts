@@ -29,7 +29,7 @@ export abstract class BaseRunner implements ITestRunner {
 
     constructor(
         protected javaHome: string,
-        protected storagePath: string,
+        protected storagePath: string | undefined,
         protected extensionPath: string) {}
 
     public abstract getTestResultAnalyzer(): BaseRunnerResultAnalyzer;
@@ -49,7 +49,7 @@ export abstract class BaseRunner implements ITestRunner {
         this.isDebug = isDebug;
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.uri).fsPath);
         const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), runnerJarFilePath];
-        this.storagePathForCurrentSession = path.join(this.storagePath, new Date().getTime().toString());
+        this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
         this.classpath = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
         this.config = config;
     }
