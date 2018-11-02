@@ -1,0 +1,41 @@
+include ./report_method_table.pug
+doctype html
+html(lang="en")
+    head
+        meta(http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; style-src * 'unsafe-inline'; script-src 'nonce-check';")
+        meta(charset="utf-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
+        link(rel="stylesheet", nonce="check", href=cssFile)
+        script(nonce="check", src="https://code.jquery.com/jquery-3.2.1.slim.min.js", integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN", crossorigin="anonymous")
+        script(nonce="check", src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js", integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh", crossorigin="anonymous")
+        script(nonce="check", src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js", integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ", crossorigin="anonymous")
+    body.bg-dark(style='padding-top:70px;')
+        .navbar.navbar-dark.bg-dark.fixed-top.navbar-expand-sm
+            a.navbar-brand(href='#') Test Report
+            if isLegacy
+                div.text-warning Test file has been changed, try rerun the test again...
+            if showFilters
+                div.collapse.navbar-collapse
+                    ul.navbar-nav
+                        li.nav-item(class= type === 0 ? "active" : "")
+                            a.nav-link(href=uri, title="All tests") All
+                        li.nav-item(class= type === 2 ? "active" : "")
+                            a.nav-link(href=failedUri, title="Failed tests") Failed
+                        li.nav-item(class= type === 1 ? "active" : "")
+                            a.nav-link(href=passedUri, title="Passed tests") Passed
+        .container
+            .row
+                .col
+                    .progress
+                        .progress-bar.bg-success(role='progressbar', style='width:25%', aria-valuenow='15', aria-valuemin='0', aria-valuemax='100') #{passCount} Passed
+                        .progress-bar.bg-danger(role='progresssbar', style='width:50%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{failedCount} Failed
+                        .progress-bar.bg-light.text-dark(role='progresssbar', style='width:30%', aria-valuenow='30', aria-valuemin='0', aria-valuemax='100') #{skippedCount} Skipped
+            if name
+                .row
+                    .col
+                        .navbar.bg-dark
+                            .navbar-text.lead.text-light #{name}
+            .row
+                .col
+                    #children
+                        +collapseMethodTable(tests)
