@@ -45,6 +45,7 @@ class TestConfigManager {
         const projects: IProjectInfo[] = await getProjectInfo(folderUri);
         return {
             run: {
+                default: '',
                 items: projects.map((project: IProjectInfo) => {
                     return {
                         name: project.name,
@@ -58,6 +59,7 @@ class TestConfigManager {
                 }),
             },
             debug: {
+                default: '',
                 items: projects.map((project: IProjectInfo) => {
                     return {
                         name: project.name,
