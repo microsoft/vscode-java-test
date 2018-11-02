@@ -11,13 +11,11 @@ import { decodeTestReportUri, encodeTestReportUri, TestReportType } from './util
 
 class TestReportProvider implements TextDocumentContentProvider {
     private compiledReportTemplate: pug.compileTemplate;
-    // private compiledErrorTemplate: pug.compileTemplate;
     private context: ExtensionContext;
 
     public initialize(context: ExtensionContext): void {
         this.context = context;
         this.compiledReportTemplate = pug.compileFile(this.context.asAbsolutePath(path.join('resources', 'templates', 'report.pug')));
-        // this.compiledErrorTemplate = pug.compileFile(this.context.asAbsolutePath(path.join('resources', 'templates', 'report_error.pug')));
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
