@@ -17,15 +17,11 @@ import { ITestResult } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
 export class RunnerExecutor {
-    private readonly javaHome: string;
-    private readonly context: ExtensionContext;
     private isRunning: boolean;
     private preLaunchTask: cp.ChildProcess | undefined;
     private runnerMap: Map<ITestRunner, ITestItem[]> | undefined;
 
-    constructor(javaHome: string, context: ExtensionContext) {
-        this.javaHome = javaHome;
-        this.context = context;
+    constructor(private _javaHome: string, private _context: ExtensionContext) {
     }
 
     public async run(testItems: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
@@ -118,11 +114,11 @@ export class RunnerExecutor {
     private getRunnerByKind(kind: TestKind): ITestRunner | undefined {
         switch (kind) {
             case TestKind.JUnit:
-                return new JUnit4Runner(this.javaHome, this.context.storagePath, this.context.extensionPath);
+                return new JUnit4Runner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             case TestKind.JUnit5:
-                return new JUnit5Runner(this.javaHome, this.context.storagePath, this.context.extensionPath);
+                return new JUnit5Runner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             case TestKind.TestNG:
-                return new TestNGRunner(this.javaHome, this.context.storagePath, this.context.extensionPath);
+                return new TestNGRunner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             default:
                 return undefined;
         }
