@@ -15,7 +15,19 @@ export async function runTests(runnerExecutor: RunnerExecutor, tests: ITestItem[
 async function getTestConfig(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
     const configGroups: IExecutionConfigGroup[] = await testConfigManager.loadRunConfig(tests, isDebug);
     if (isDefaultConfig) {
-        return undefined;
+        if (configGroups.length !== 1 || !configGroups[0].default) {
+            return undefined;
+        }
+        const runConfig: IExecutionConfigGroup = configGroups[0];
+        const candidates: IExecutionConfig[] = runConfig.items.filter((item: IExecutionConfig) => item.name === runConfig.default);
+        if (candidates.length === 0) {
+            window.showWarningMessage(`There is no config with name: ${runConfig.default}.`);
+            return undefined;
+        }
+        if (candidates.length > 1) {
+            window.showWarningMessage(`Duplicate configs with default name: ${runConfig.default}.`);
+        }
+        return candidates[0];
     }
 
     if (configGroups.length > 1) {
