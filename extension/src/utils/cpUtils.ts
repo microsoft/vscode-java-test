@@ -9,7 +9,7 @@ export function killProcess(process: cp.ChildProcess): Promise<void> {
         if (process) {
             kill(process.pid, 'SIGTERM', (error: Error | undefined) => {
                 if (error) {
-                    return reject(error);
+                    // TODO: Log
                 }
                 return resolve();
             });
