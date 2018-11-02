@@ -5,11 +5,11 @@ import * as cp from 'child_process';
 import * as kill from 'tree-kill';
 
 export function killProcess(process: cp.ChildProcess): Promise<void> {
-    return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
+    return new Promise<void>((resolve: () => void): void => {
         if (process) {
             kill(process.pid, 'SIGTERM', (error: Error | undefined) => {
                 if (error) {
-                    return reject(error);
+                    // TODO: Log
                 }
                 return resolve();
             });
