@@ -63,6 +63,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(runnerExecutor, tests, false, true)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(runnerExecutor, tests, true, true)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, (tests: ITestItem[]) => showReport(tests)),
     );
     await commands.executeCommand('setContext', 'java.test.activated', true);
