@@ -7,6 +7,7 @@ import { testCodeLensProvider } from '../codeLensProvider';
 import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../constants/configs';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
+import { testOutputChannel } from '../testOutputChannel';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { killProcess } from '../utils/cpUtils';
@@ -74,7 +75,7 @@ export class RunnerExecutor {
             }
             await Promise.all(promises);
         } catch (error) {
-            // Swallow
+            testOutputChannel.error(`Failed to clean up. ${error}`);
         }
         this.isRunning = false;
     }
@@ -128,14 +129,14 @@ export class RunnerExecutor {
         return new Promise<number>((resolve: (ret: number) => void, reject: (err: Error) => void): void => {
             if (this.preLaunchTask) {
                 this.preLaunchTask.on('error', (err: Error) => {
-                    // TODO: Log
+                    testOutputChannel.error(`Failed to run pre-launch task. ${err}`);
                     reject(err);
                 });
-                this.preLaunchTask.stderr.on('data', (_data: Buffer) => {
-                    // TODO: Log
+                this.preLaunchTask.stderr.on('data', (data: Buffer) => {
+                    testOutputChannel.error(data.toString());
                 });
-                this.preLaunchTask.stdout.on('data', (_data: Buffer) => {
-                    // TODO: Log
+                this.preLaunchTask.stdout.on('data', (data: Buffer) => {
+                    testOutputChannel.info(data.toString());
                 });
                 this.preLaunchTask.on('close', (signal: number) => {
                     if (signal && signal !== 0) {
