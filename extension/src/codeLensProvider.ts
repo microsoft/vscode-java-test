@@ -5,6 +5,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, Tex
 import { JavaTestRunnerCommands } from './constants/commands';
 import { ITestItem, TestLevel } from './protocols';
 import { ITestResultDetails, TestStatus } from './runners/models';
+import { testOutputChannel } from './testOutputChannel';
 import { testResultManager } from './testResultManager';
 import { searchTestCodeLens } from './utils/commandUtils';
 import { isDarwin } from './utils/platformUtils';
@@ -29,6 +30,7 @@ class TestCodeLensProvider implements CodeLensProvider {
             }
             return codeLenses;
         } catch (error) {
+            testOutputChannel.error(`${error}`);
             return [];
         }
     }
