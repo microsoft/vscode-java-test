@@ -3,6 +3,7 @@
 
 import { Uri } from 'vscode';
 import { ITestItem, TestLevel } from '../../protocols';
+import { testOutputChannel } from '../../testOutputChannel';
 import { ITestResult, ITestResultDetails, TestStatus } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
@@ -13,21 +14,22 @@ export abstract class BaseRunnerResultAnalyzer {
     }
 
     public analyzeData(data: string): void {
+        testOutputChannel.info(data);
         let match: RegExpExecArray | null;
         do {
             match = this.regex.exec(data);
             if (match) {
                 try {
                     this.processData(match[1]);
-                } catch (ex) {
-                    // Swallow
+                } catch (error) {
+                    testOutputChannel.error(`Failed to parse output data: ${data}`, error);
                 }
             }
         } while (match);
     }
 
-    public analyzeError(_error: string): void {
-        // TODO: add implementation when add Logger
+    public analyzeError(error: string): void {
+        testOutputChannel.error(error);
     }
 
     public feedBack(isCanceled: boolean): ITestResult[] {

@@ -67,6 +67,11 @@
         },
         "commands": [
             {
+                "command": "java.test.show.output",
+                "title": "Show test output",
+                "category": "Java"
+            },
+            {
                 "command": "java.test.explorer.refresh",
                 "title": "Refresh",
                 "icon": {
