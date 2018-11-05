@@ -19,4 +19,5 @@ export namespace JavaTestRunnerCommands {
     export const DEBUG_TEST_FROM_CODELENS: string = 'java.test.debug';
     export const SHOW_TEST_REPORT: string = 'java.test.show.report';
     export const SHOW_TEST_OUTPUT: string = 'java.test.show.output';
+    export const JAVA_TEST_CANCEL: string = 'java.test.cancel';
 }
