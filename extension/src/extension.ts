@@ -13,6 +13,7 @@ import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
 import { ITestItem } from './protocols';
 import { RunnerExecutor } from './runners/runnerExecutor';
+import { testOutputChannel } from './testOutputChannel';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
@@ -58,6 +59,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testStatusBarProvider,
         testResultManager,
         watcher,
+        testOutputChannel,
         languages.registerCodeLensProvider('java', testCodeLensProvider),
         workspace.registerTextDocumentContentProvider(testReportProvider.scheme, testReportProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
@@ -65,6 +67,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(runnerExecutor, tests, false, true)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(runnerExecutor, tests, true, true)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, (tests: ITestItem[]) => showReport(tests)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => testOutputChannel.show()),
     );
     await commands.executeCommand('setContext', 'java.test.activated', true);
 }
