@@ -10,8 +10,8 @@ class TestOutputChannel implements Disposable {
         this.appendLine(`[INFO] ${info}`);
     }
 
-    public error(error: string): void {
-        this.appendLine(`[ERROR] ${error}`);
+    public error(message: string, error?: Error): void {
+        this.appendLine(`[ERROR] ${message}.${error ? ' ' + error : ''}`);
     }
 
     public show(): void {

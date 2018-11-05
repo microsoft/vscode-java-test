@@ -66,7 +66,7 @@ export abstract class BaseRunner implements ITestRunner {
             let buffer: string = '';
             this.process = cp.spawn(path.join(this.javaHome, 'bin', 'java'), commandParams, options);
             this.process.on('error', (error: Error) => {
-                testOutputChannel.error(error.message);
+                testOutputChannel.error('Failed to launch the runner', error);
                 reject(error);
             });
             this.process.stderr.on('data', (data: Buffer) => {
@@ -123,7 +123,7 @@ export abstract class BaseRunner implements ITestRunner {
                 this.storagePathForCurrentSession = undefined;
             }
         } catch (error) {
-            testOutputChannel.error(`Failed to clean up. ${error}`);
+            testOutputChannel.error('Failed to clean up', error);
         }
     }
 

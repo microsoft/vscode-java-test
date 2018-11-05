@@ -22,7 +22,7 @@ export abstract class BaseRunnerResultAnalyzer {
                 try {
                     this.processData(match[1]);
                 } catch (error) {
-                    testOutputChannel.error(`Failed to parse data: ${data}. ${error}`);
+                    testOutputChannel.error(`Failed to parse output data: ${data}`, error);
                 }
             }
         } while (match);

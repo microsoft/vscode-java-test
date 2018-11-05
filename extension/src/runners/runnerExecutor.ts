@@ -75,7 +75,7 @@ export class RunnerExecutor {
             }
             await Promise.all(promises);
         } catch (error) {
-            testOutputChannel.error(`Failed to clean up. ${error}`);
+            testOutputChannel.error('Failed to clean up', error);
         }
         this.isRunning = false;
     }
@@ -129,7 +129,7 @@ export class RunnerExecutor {
         return new Promise<number>((resolve: (ret: number) => void, reject: (err: Error) => void): void => {
             if (this.preLaunchTask) {
                 this.preLaunchTask.on('error', (err: Error) => {
-                    testOutputChannel.error(`Failed to run pre-launch task. ${err}`);
+                    testOutputChannel.error('Failed to run pre-launch task', err);
                     reject(err);
                 });
                 this.preLaunchTask.stderr.on('data', (data: Buffer) => {
