@@ -30,7 +30,7 @@ class TestCodeLensProvider implements CodeLensProvider {
             }
             return codeLenses;
         } catch (error) {
-            testOutputChannel.error(`${error}`);
+            testOutputChannel.error('Failed to provide Code Lens', error);
             return [];
         }
     }

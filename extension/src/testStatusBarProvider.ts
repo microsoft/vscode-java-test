@@ -22,6 +22,10 @@ class TestStatusBarProvider implements Disposable {
         this.update('$(sync~spin) Running tests...', 'white', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
     }
 
+    public showRunningFail(): void {
+        this.update('Failed to run tests', 'red', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
+    }
+
     public showTestResult(results: ITestResult[]): void {
         let failedNum: number = 0;
         let passedNum: number = 0;
@@ -31,6 +35,11 @@ class TestStatusBarProvider implements Disposable {
             } else if (result.result.status === TestStatus.Pass) {
                 passedNum++;
             }
+        }
+
+        if (failedNum + passedNum === 0) {
+            this.statusBarItem.text = '';
+            return;
         }
 
         this.statusBarItem.text = `$(x) ${failedNum} $(check) ${passedNum}`;

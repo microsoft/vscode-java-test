@@ -81,10 +81,13 @@ export abstract class BaseRunner implements ITestRunner {
                 }
             });
             this.process.on('close', (signal: number) => {
+                if (this.isCanceled) {
+                    return resolve([]);
+                }
                 if (buffer.length > 0) {
                     testResultAnalyzer.analyzeData(buffer);
                 }
-                const result: ITestResult[] = testResultAnalyzer.feedBack(this.isCanceled);
+                const result: ITestResult[] = testResultAnalyzer.feedBack();
                 if (signal && signal !== 0) {
                     reject(new Error(`Runner exited with code ${signal}.`));
                 } else {
@@ -107,12 +110,8 @@ export abstract class BaseRunner implements ITestRunner {
         });
     }
 
-    public async cancel(): Promise<void> {
-        this.isCanceled = true;
-        await this.cleanUp();
-    }
-
-    public async cleanUp(): Promise<void> {
+    public async cleanUp(isCancel: boolean): Promise<void> {
+        this.isCanceled = isCancel;
         try {
             if (this.process) {
                 await killProcess(this.process);

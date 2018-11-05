@@ -32,12 +32,9 @@ export abstract class BaseRunnerResultAnalyzer {
         testOutputChannel.error(error);
     }
 
-    public feedBack(isCanceled: boolean): ITestResult[] {
+    public feedBack(): ITestResult[] {
         const result: ITestResult[] = [];
         for (const test of this.tests) {
-            if (isCanceled) {
-                return result;
-            }
             if (test.level === TestLevel.Class) {
                 test.children.forEach((method: ITestItem) => result.push(this.processMethod(method)));
             } else {
