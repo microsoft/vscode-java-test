@@ -35,13 +35,17 @@ export abstract class BaseRunnerResultAnalyzer {
     public feedBack(): ITestResult[] {
         const result: ITestResult[] = [];
         for (const test of this.tests) {
-            if (test.level === TestLevel.Class) {
-                test.children.forEach((method: ITestItem) => result.push(this.processMethod(method)));
-            } else {
-                result.push(this.processMethod(test));
-            }
+            this.processTestItemRecursively(test, result);
         }
         return result;
+    }
+
+    protected processTestItemRecursively(testItem: ITestItem, resultList: ITestResult[]): void {
+        if (testItem.level === TestLevel.Method) {
+            resultList.push(this.processMethod(testItem));
+        } else {
+            testItem.children.forEach((child: ITestItem) => this.processTestItemRecursively(child, resultList));
+        }
     }
 
     protected abstract processData(data: string): void;
