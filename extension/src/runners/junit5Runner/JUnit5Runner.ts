@@ -18,7 +18,7 @@ export class JUnit5Runner extends BaseRunner {
     private constructParamsForTests(): string[] {
         const params: string[] = [];
         for (const test of this.tests) {
-            if (test.level === TestLevel.Class) {
+            if (test.level === TestLevel.Class || test.level === TestLevel.NestedClass) {
                 params.push('-c', test.fullName);
             } else if (test.level === TestLevel.Method) {
                 params.push('-m', test.fullName);
