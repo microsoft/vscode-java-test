@@ -37,11 +37,6 @@ class TestStatusBarProvider implements Disposable {
             }
         }
 
-        if (failedNum + passedNum === 0) {
-            this.statusBarItem.text = '';
-            return;
-        }
-
         this.statusBarItem.text = `$(x) ${failedNum} $(check) ${passedNum}`;
         this.statusBarItem.color = failedNum > 0 ? 'red' : '#66ff66';
         this.statusBarItem.tooltip = 'View test report';
