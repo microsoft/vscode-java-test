@@ -53,7 +53,7 @@ export class RunnerExecutor {
             }
         } catch (error) {
             window.showErrorMessage(`${error}`);
-            testStatusBarProvider.showRunningFail();
+            testStatusBarProvider.showFailure();
         } finally {
             await this.cleanUp(false);
         }
