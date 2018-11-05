@@ -53,12 +53,13 @@ export class RunnerExecutor {
             }
         } catch (error) {
             window.showErrorMessage(`${error}`);
+            testStatusBarProvider.showFailure();
         } finally {
-            await this.cleanUp();
+            await this.cleanUp(false);
         }
     }
 
-    private async cleanUp(): Promise<void> {
+    public async cleanUp(isCancel: boolean): Promise<void> {
         try {
             if (this.preLaunchTask) {
                 await killProcess(this.preLaunchTask);
@@ -68,7 +69,7 @@ export class RunnerExecutor {
             const promises: Array<Promise<void>> = [];
             if (this.runnerMap) {
                 for (const runner of this.runnerMap.keys()) {
-                    promises.push(runner.cleanUp());
+                    promises.push(runner.cleanUp(isCancel));
                 }
                 this.runnerMap.clear();
                 this.runnerMap = undefined;

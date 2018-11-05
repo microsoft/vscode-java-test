@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { QuickPickItem, window } from 'vscode';
+import { CancellationToken, commands, Progress, ProgressLocation, QuickPickItem, window } from 'vscode';
+import { JavaTestRunnerCommands } from '../constants/commands';
 import { ITestItem } from '../protocols';
 import { IExecutionConfig, IExecutionConfigGroup } from '../runConfigs';
 import { RunnerExecutor } from '../runners/runnerExecutor';
@@ -9,7 +10,16 @@ import { testConfigManager } from '../testConfigManager';
 
 export async function runTests(runnerExecutor: RunnerExecutor, tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<void> {
     const config: IExecutionConfig | undefined = await getTestConfig(tests, isDebug, isDefaultConfig);
-    return runnerExecutor.run(tests, isDebug, config);
+    window.withProgress(
+        { location: ProgressLocation.Notification, cancellable: true },
+        (progress: Progress<any>, token: CancellationToken): Promise<void> => {
+            token.onCancellationRequested(() => {
+                commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
+            });
+            progress.report({ message: 'Running tests...'});
+            return runnerExecutor.run(tests, isDebug, config);
+        },
+    );
 }
 
 async function getTestConfig(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
