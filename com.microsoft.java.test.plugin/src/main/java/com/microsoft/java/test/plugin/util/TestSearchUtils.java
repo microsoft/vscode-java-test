@@ -150,7 +150,7 @@ public class TestSearchUtils {
 
     public static boolean isTestableClass(IType type) throws JavaModelException {
         int flags = type.getFlags();
-        if (Flags.isInterface(flags)) {
+        if (Flags.isInterface(flags) || Flags.isAbstract(flags)) {
             return false;
         }
         IJavaElement parent = type.getParent();
@@ -158,8 +158,7 @@ public class TestSearchUtils {
             if (parent instanceof ICompilationUnit || parent instanceof IClassFile) {
                 return true;
             }
-            if (!(parent instanceof IType) || !Flags.isStatic(flags) || !Flags.isPublic(flags) ||
-                    !Flags.isAbstract(flags)) {
+            if (!(parent instanceof IType) || !Flags.isStatic(flags) || !Flags.isPublic(flags)) {
                 return false;
             }
             flags = ((IType) parent).getFlags();
