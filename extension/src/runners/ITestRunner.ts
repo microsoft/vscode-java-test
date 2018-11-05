@@ -8,6 +8,5 @@ import { ITestResult } from './models';
 export interface ITestRunner {
     setup(tests: ITestItem[], isDebug: boolean, config?: IExecutionConfig): Promise<void>;
     run(): Promise<ITestResult[]>;
-    cancel(): Promise<void>;
-    cleanUp(): Promise<void>;
+    cleanUp(isCancel: boolean): Promise<void>;
 }
