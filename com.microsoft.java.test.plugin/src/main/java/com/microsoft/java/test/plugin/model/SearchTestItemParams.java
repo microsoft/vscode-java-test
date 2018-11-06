@@ -11,7 +11,7 @@
 
 package com.microsoft.java.test.plugin.model;
 
-public class SearchChildrenNodeRequest {
+public class SearchTestItemParams {
     private TestLevel level;
 
     private String uri;

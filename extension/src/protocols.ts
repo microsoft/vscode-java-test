@@ -18,7 +18,7 @@ export interface ITestItem extends ITestItemBase {
     level: TestLevel;
 }
 
-export interface ISearchChildrenNodeParams {
+export interface ISearchTestItemParams {
     level: TestLevel;
     fullName: string;
     uri: string;
