@@ -30,11 +30,12 @@ export interface IProjectInfo {
 }
 
 export enum TestLevel {
-    Folder = 0,
-    Package = 1,
-    Class = 2,
-    NestedClass = 3,
-    Method = 4,
+    Root = 0,
+    Folder = 1,
+    Package = 2,
+    Class = 3,
+    NestedClass = 4,
+    Method = 5,
 }
 
 export enum TestKind {

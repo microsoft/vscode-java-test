@@ -30,6 +30,7 @@
         "onLanguage:java",
         "onCommand:java.test.explorer.refresh",
         "onCommand:java.test.explorer.select",
+        "onCommand:java.test.explorer.run",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
         "onCommand:java.test.show.report",
@@ -52,16 +53,32 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "java.test.explorer.refresh",
+                    "command": "java.test.explorer.run",
                     "when": "view == testExplorer",
                     "group": "navigation@0"
+                },
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "view == testExplorer",
+                    "group": "navigation@1"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "java.test.explorer.refresh",
+                    "command": "java.test.explorer.run",
                     "when": "view == testExplorer",
                     "group": "testExplorer@0"
+                },
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@1"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "java.test.explorer.run",
+                    "when": "never"
                 }
             ]
         },
@@ -69,6 +86,15 @@
             {
                 "command": "java.test.show.output",
                 "title": "Show test output",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.run",
+                "title": "Run Test",
+                "icon": {
+                    "light": "resources/media/light/run.svg",
+                    "dark": "resources/media/dark/run.svg"
+                },
                 "category": "Java"
             },
             {
