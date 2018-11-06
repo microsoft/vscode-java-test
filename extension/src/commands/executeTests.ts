@@ -9,7 +9,7 @@ import { runnerExecutor } from '../runners/runnerExecutor';
 import { testConfigManager } from '../testConfigManager';
 
 export async function runTests(tests: ITestItem[]): Promise<void> {
-    window.withProgress(
+    return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         (progress: Progress<any>, token: CancellationToken): Promise<void> => {
             return executeTests(tests, false /* isDebug */, true /* isDefaultConfig */, progress, token);
@@ -18,7 +18,7 @@ export async function runTests(tests: ITestItem[]): Promise<void> {
 }
 
 export async function debugTests(tests: ITestItem[]): Promise<void> {
-    window.withProgress(
+    return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         (progress: Progress<any>, token: CancellationToken): Promise<void> => {
             return executeTests(tests, true /* isDebug */, true /* isDefaultConfig */, progress, token);

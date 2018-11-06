@@ -3,12 +3,19 @@
 
 import { Uri } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
-import { ISearchTestItemParams } from '../protocols';
+import { ISearchTestItemParams, TestLevel } from '../protocols';
 
-export function constructSearchTestItemParams(node: TestTreeNode): ISearchTestItemParams {
+export function constructSearchTestItemParams(node?: TestTreeNode): ISearchTestItemParams {
+    if (node) {
+        return {
+            uri: Uri.file(node.fsPath).toString(),
+            level: node.level,
+            fullName: node.fullName,
+        };
+    }
     return {
-        uri: Uri.file(node.fsPath).toString(),
-        level: node.level,
-        fullName: node.fullName,
+        uri: '',
+        level: TestLevel.Root,
+        fullName: '',
     };
 }
