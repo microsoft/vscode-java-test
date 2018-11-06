@@ -20,6 +20,9 @@ export async function runTestsFromExplorer(node?: TestTreeNode): Promise<void> {
             progress.report('Searching test items...');
             const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
             const tests: ITestItem[] = await searchTestItemsAll(searchParam);
+            if (token.isCancellationRequested) {
+                return;
+            }
             return executeTests(tests, false /* isDebug */, true /* isDefaultConfig */, progress, token);
         },
     );
