@@ -3,11 +3,11 @@
 
 import { commands, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
-import { IProjectInfo, ISearchChildrenNodeParams, ITestItem } from '../protocols';
+import { IProjectInfo, ISearchTestItemParams, ITestItem } from '../protocols';
 
-export async function searchTestItems(request: ISearchChildrenNodeParams): Promise<ITestItem[]> {
+export async function searchTestItems(params: ISearchTestItemParams): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(request)) || [];
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(params)) || [];
 }
 
 export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {
