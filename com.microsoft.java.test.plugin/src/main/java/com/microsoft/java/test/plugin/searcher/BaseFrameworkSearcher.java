@@ -55,8 +55,7 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
     @Override
     public SearchPattern getSearchPattern() {
-        return SearchPattern.createPattern(this.getTestMethodAnnotation(),
-                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
-                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
+        return SearchPattern.createPattern(this.getTestMethodAnnotation(), IJavaSearchConstants.ANNOTATION_TYPE,
+                IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH);
     }
 }

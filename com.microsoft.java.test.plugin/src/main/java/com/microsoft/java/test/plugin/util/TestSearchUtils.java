@@ -150,14 +150,16 @@ public class TestSearchUtils {
         }
         final Gson gson = new Gson();
         final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
-        final Map<String, TestItem> classMap = new HashMap<>();
+
         final IJavaSearchScope scope = createSearchScope(params);
+
         SearchPattern pattern = frameworkSearchers[0].getSearchPattern();
         for (int i = 1; i < frameworkSearchers.length; i++) {
             pattern = SearchPattern.createOrPattern(pattern, frameworkSearchers[i].getSearchPattern());
         }
-        final SearchRequestor requestor = new SearchRequestor() {
 
+        final Map<String, TestItem> classMap = new HashMap<>();
+        final SearchRequestor requestor = new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
@@ -178,8 +180,10 @@ public class TestSearchUtils {
             }
 
         };
+
         new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 scope, requestor, monitor);
+
         return Arrays.asList(classMap.values().toArray(new TestItem[classMap.values().size()]));
     }
 
