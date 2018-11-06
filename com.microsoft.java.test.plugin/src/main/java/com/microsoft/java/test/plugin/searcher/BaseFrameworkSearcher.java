@@ -12,14 +12,28 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
+
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchPattern;
 
 public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
+    protected String testMethodAnnotation;
+
+    public BaseFrameworkSearcher(String annotation) {
+        this.testMethodAnnotation = annotation;
+    }
+
     @Override
     public abstract TestKind getTestKind();
+
+    @Override
+    public String getTestMethodAnnotation() {
+        return this.testMethodAnnotation;
+    }
 
     @Override
     public boolean isTestMethod(IMethod method) {
@@ -37,5 +51,11 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
             // ignore
             return false;
         }
+    }
+
+    @Override
+    public SearchPattern getSearchPattern() {
+        return SearchPattern.createPattern(this.getTestMethodAnnotation(), IJavaSearchConstants.ANNOTATION_TYPE,
+                IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH);
     }
 }
