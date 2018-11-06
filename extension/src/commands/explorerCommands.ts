@@ -14,6 +14,22 @@ export async function openTextDocumentForNode(node: TestTreeNode): Promise<void>
 }
 
 export async function runTestsFromExplorer(node?: TestTreeNode): Promise<void> {
+    return executeTestsFromExplorer(false /* isDebug */, true /* isDefaultConfig */, node);
+}
+
+export async function debugTestsFromExplorer(node?: TestTreeNode): Promise<void> {
+    return executeTestsFromExplorer(true /* isDebug */, true /* isDefaultConfig */, node);
+}
+
+export async function runTestsWithConfigFromExplorer(node?: TestTreeNode): Promise<void> {
+    return executeTestsFromExplorer(false /* isDebug */, false /* isDefaultConfig */, node);
+}
+
+export async function debugTestsWithFromExplorer(node?: TestTreeNode): Promise<void> {
+    return executeTestsFromExplorer(true /* isDebug */, false /* isDefaultConfig */, node);
+}
+
+async function executeTestsFromExplorer(isDebug: boolean, isDefaultConfig: boolean, node?: TestTreeNode): Promise<void> {
     return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
@@ -23,7 +39,7 @@ export async function runTestsFromExplorer(node?: TestTreeNode): Promise<void> {
             if (token.isCancellationRequested) {
                 return;
             }
-            return executeTests(tests, false /* isDebug */, true /* isDefaultConfig */, progress, token);
+            return executeTests(tests, isDebug, isDefaultConfig, progress, token);
         },
     );
 }

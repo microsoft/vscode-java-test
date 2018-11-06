@@ -31,6 +31,9 @@
         "onCommand:java.test.explorer.refresh",
         "onCommand:java.test.explorer.select",
         "onCommand:java.test.explorer.run",
+        "onCommand:java.test.explorer.debug",
+        "onCommand:java.test.explorer.run.config",
+        "onCommand:java.test.explorer.debug.config",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
         "onCommand:java.test.show.report",
@@ -58,9 +61,14 @@
                     "group": "navigation@0"
                 },
                 {
-                    "command": "java.test.explorer.refresh",
+                    "command": "java.test.explorer.debug",
                     "when": "view == testExplorer",
                     "group": "navigation@1"
+                },
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "view == testExplorer",
+                    "group": "navigation@2"
                 }
             ],
             "view/item/context": [
@@ -70,14 +78,41 @@
                     "group": "testExplorer@0"
                 },
                 {
-                    "command": "java.test.explorer.refresh",
+                    "command": "java.test.explorer.debug",
                     "when": "view == testExplorer",
                     "group": "testExplorer@1"
+                },
+                {
+                    "command": "java.test.explorer.run.config",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@2"
+                },
+                {
+                    "command": "java.test.explorer.debug.config",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@3"
+                },
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "view == testExplorer",
+                    "group": "testExplorer@4"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "java.test.explorer.run",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.run.config",
+                    "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.debug.config",
                     "when": "never"
                 }
             ]
@@ -95,6 +130,25 @@
                     "light": "resources/media/light/run.svg",
                     "dark": "resources/media/dark/run.svg"
                 },
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.debug",
+                "title": "Debug Test",
+                "icon": {
+                    "light": "resources/media/light/debug.svg",
+                    "dark": "resources/media/dark/debug.svg"
+                },
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.run.config",
+                "title": "Run With Config",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.debug.config",
+                "title": "Debug With Config",
                 "category": "Java"
             },
             {
