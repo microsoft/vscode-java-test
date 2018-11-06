@@ -166,7 +166,7 @@ public class TestSearchUtils {
                 if (element instanceof IMethod) {
                     final IMethod method = (IMethod) element;
                     final TestItem methodItem = constructTestItem(method, TestLevel.METHOD,
-                            getTestKindForIMethod(method));
+                            resolveTestKindForMethod(method));
                     final IType type = (IType) method.getParent();
                     final TestItem classItem = classMap.get(type.getFullyQualifiedName());
                     if (classItem != null) {
@@ -184,6 +184,11 @@ public class TestSearchUtils {
         new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 scope, requestor, monitor);
 
+        for (final TestItem testClass : classMap.values()) {
+            if (testClass.getChildren() != null && testClass.getChildren().size() > 0) {
+                testClass.setKind(testClass.getChildren().get(0).getKind());
+            }
+        }
         return Arrays.asList(classMap.values().toArray(new TestItem[classMap.values().size()]));
     }
 
@@ -230,25 +235,26 @@ public class TestSearchUtils {
         return null;
     }
 
-    public static boolean hasTestAnnotation(IMethod method, String annotation) {
+    public static boolean hasTestAnnotation(IMethod method, String methodAnnotation) {
         try {
             final Optional<IAnnotation> matched = Arrays.stream(method.getAnnotations())
-                    .filter(a -> annotation.endsWith(a.getElementName())).findAny();
+                    .filter(annotation -> methodAnnotation.endsWith(annotation.getElementName())).findAny();
             if (!matched.isPresent()) {
                 return false;
             }
-            final IAnnotation anno = matched.get();
-            if (!anno.exists()) {
+            final IAnnotation annotation = matched.get();
+            if (!annotation.exists()) {
                 return false;
             }
-            final String name = anno.getElementName();
+
+            final String name = annotation.getElementName();
             final String[][] fullNameArr = method.getDeclaringType().resolveType(name);
             if (fullNameArr == null) {
                 final ICompilationUnit cu = method.getCompilationUnit();
-                return cu != null && cu.getImport(annotation).exists();
+                return cu != null && cu.getImport(methodAnnotation).exists();
             }
             final String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
-            return fullName.equals(annotation);
+            return fullName.equals(methodAnnotation);
         } catch (final JavaModelException e) {
             return false;
         }
@@ -274,15 +280,6 @@ public class TestSearchUtils {
         } else {
             return TestLevel.NESTED_CLASS;
         }
-    }
-
-    private static TestKind getTestKindForIMethod(IMethod method) {
-        for (final TestFrameworkSearcher frameworkSearcher : frameworkSearchers) {
-            if (method.getAnnotation(frameworkSearcher.getTestMethodAnnotation()) != null) {
-                return frameworkSearcher.getTestKind();
-            }
-        }
-        throw new RuntimeException("Failed to get the test framework of method: " + method.getElementName());
     }
 
     private static IJavaSearchScope createSearchScope(SearchTestItemParams params) throws JavaModelException {
