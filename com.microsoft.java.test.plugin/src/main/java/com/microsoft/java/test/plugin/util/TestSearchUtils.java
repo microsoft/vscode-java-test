@@ -26,6 +26,8 @@ import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -41,7 +43,14 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Range;
@@ -60,19 +69,15 @@ import java.util.stream.Collectors;
 public class TestSearchUtils {
     private static final Map<TestLevel, TestItemSearcher[]> searcherMap;
     private static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
-        new JUnit4TestSearcher(),
-        new JUnit5TestSearcher(),
-        new TestNGTestSearcher()
-    };
+        new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
 
     static {
         searcherMap = new HashMap<TestLevel, TestItemSearcher[]>();
-        searcherMap.put(TestLevel.FOLDER, new TestItemSearcher[] {new PackageSearcher()});
-        searcherMap.put(TestLevel.PACKAGE, new TestItemSearcher[] {new ClassSearcher()});
-        searcherMap.put(TestLevel.CLASS, new TestItemSearcher[] {new NestedClassSearcher(), new MethodSearcher()});
-        searcherMap.put(TestLevel.NESTED_CLASS, new TestItemSearcher[] {
-            new NestedClassSearcher(), new MethodSearcher()
-        });
+        searcherMap.put(TestLevel.FOLDER, new TestItemSearcher[] { new PackageSearcher() });
+        searcherMap.put(TestLevel.PACKAGE, new TestItemSearcher[] { new ClassSearcher() });
+        searcherMap.put(TestLevel.CLASS, new TestItemSearcher[] { new NestedClassSearcher(), new MethodSearcher() });
+        searcherMap.put(TestLevel.NESTED_CLASS,
+                new TestItemSearcher[] { new NestedClassSearcher(), new MethodSearcher() });
     }
 
     public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor) {
@@ -80,8 +85,7 @@ public class TestSearchUtils {
             return Collections.<TestItem>emptyList();
         }
         final Gson gson = new Gson();
-        final SearchTestItemParams params = gson.fromJson((String) arguments.get(0),
-                SearchTestItemParams.class);
+        final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
         final List<TestItem> resultList = new ArrayList<>();
         final TestItemSearcher[] searchers = searcherMap.get(params.getLevel());
         if (searchers != null) {
@@ -139,6 +143,46 @@ public class TestSearchUtils {
         return resultList;
     }
 
+    public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
+            throws CoreException {
+        if (arguments == null || arguments.size() == 0) {
+            return Collections.<TestItem>emptyList();
+        }
+        final Gson gson = new Gson();
+        final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
+        final Map<String, TestItem> classMap = new HashMap<>();
+        final IJavaSearchScope scope = createSearchScope(params);
+        SearchPattern pattern = frameworkSearchers[0].getSearchPattern();
+        for (int i = 1; i < frameworkSearchers.length; i++) {
+            pattern = SearchPattern.createOrPattern(pattern, frameworkSearchers[i].getSearchPattern());
+        }
+        final SearchRequestor requestor = new SearchRequestor() {
+
+            @Override
+            public void acceptSearchMatch(SearchMatch match) throws CoreException {
+                final Object element = match.getElement();
+                if (element instanceof IMethod) {
+                    final IMethod method = (IMethod) element;
+                    final TestItem methodItem = constructTestItem(method, TestLevel.METHOD,
+                            getTestKindForIMethod(method));
+                    final IType type = (IType) method.getParent();
+                    final TestItem classItem = classMap.get(type.getFullyQualifiedName());
+                    if (classItem != null) {
+                        classItem.addChild(methodItem);
+                    } else {
+                        final TestItem newClassItem = constructTestItem(type, getTestLevelForIType(type));
+                        newClassItem.addChild(methodItem);
+                        classMap.put(type.getFullyQualifiedName(), newClassItem);
+                    }
+                }
+            }
+
+        };
+        new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
+                scope, requestor, monitor);
+        return Arrays.asList(classMap.values().toArray(new TestItem[classMap.values().size()]));
+    }
+
     public static Range getRange(ICompilationUnit typeRoot, IJavaElement element) throws JavaModelException {
         final ISourceRange range = ((ISourceReference) element).getNameRange();
         return JDTUtils.toRange(typeRoot, range.getOffset(), range.getLength());
@@ -168,15 +212,9 @@ public class TestSearchUtils {
 
     public static TestItem constructTestItem(IJavaElement element, TestLevel level, TestKind kind)
             throws JavaModelException {
-        return new TestItem(
-                element.getElementName(),
-                parseTestItemFullName(element, level),
-                JDTUtils.getFileURI(element.getResource()),
-                parseTestItemRange(element, level),
-                level,
-                kind,
-                element.getJavaProject().getProject().getName()
-        );
+        return new TestItem(element.getElementName(), parseTestItemFullName(element, level),
+                JDTUtils.getFileURI(element.getResource()), parseTestItemRange(element, level), level, kind,
+                element.getJavaProject().getProject().getName());
     }
 
     public static TestKind resolveTestKindForMethod(IMethod method) {
@@ -231,6 +269,45 @@ public class TestSearchUtils {
             return TestLevel.CLASS;
         } else {
             return TestLevel.NESTED_CLASS;
+        }
+    }
+
+    private static TestKind getTestKindForIMethod(IMethod method) {
+        for (final TestFrameworkSearcher frameworkSearcher : frameworkSearchers) {
+            if (method.getAnnotation(frameworkSearcher.getTestMethodAnnotation()) != null) {
+                return frameworkSearcher.getTestKind();
+            }
+        }
+        throw new RuntimeException("Failed to get the test framework of method: " + method.getElementName());
+    }
+
+    private static IJavaSearchScope createSearchScope(SearchTestItemParams params) throws JavaModelException {
+        switch (params.getLevel()) {
+            case ROOT:
+                final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
+                        .getJavaProjects();
+                return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
+            case FOLDER:
+                final IJavaElement project = JavaCore.create(JDTUtils.findFolder(params.getUri()));
+                return SearchEngine.createJavaSearchScope(new IJavaElement[] { project }, IJavaSearchScope.SOURCES);
+            case PACKAGE:
+                final IJavaElement packageElement = JDTUtils.resolvePackage(params.getUri());
+                return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
+                        IJavaSearchScope.SOURCES);
+            case CLASS:
+            case NESTED_CLASS:
+                final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
+                final IType[] types = compilationUnit.getAllTypes();
+                for (final IType type : types) {
+                    if (type.getFullyQualifiedName().equals(params.getFullName())) {
+                        return SearchEngine.createJavaSearchScope(new IJavaElement[] { type },
+                                IJavaSearchScope.SOURCES);
+                    }
+                }
+                throw new RuntimeException("Cannot find IType with name: " + params.getFullName());
+            case METHOD:
+            default:
+                return null;
         }
     }
 

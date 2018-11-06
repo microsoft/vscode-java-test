@@ -20,7 +20,11 @@ import org.eclipse.jdt.core.JavaModelException;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
-    public static final String TEST_METHOD_ANNOTATION = "org.testng.annotations.Test";
+    protected static final String TEST_METHOD_ANNOTATION = "org.testng.annotations.Test";
+
+    public TestNGTestSearcher() {
+        super(TEST_METHOD_ANNOTATION);
+    }
 
     @Override
     public TestKind getTestKind() {

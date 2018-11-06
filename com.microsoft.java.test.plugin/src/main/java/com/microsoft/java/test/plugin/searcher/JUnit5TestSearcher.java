@@ -18,7 +18,11 @@ import org.eclipse.jdt.core.IMethod;
 
 public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
-    public static final String TEST_METHOD_ANNOTATION = "org.junit.jupiter.api.Test";
+    protected static final String TEST_METHOD_ANNOTATION = "org.junit.jupiter.api.Test";
+
+    public JUnit5TestSearcher() {
+        super(TEST_METHOD_ANNOTATION);
+    }
 
     @Override
     public TestKind getTestKind() {

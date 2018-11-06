@@ -13,6 +13,7 @@ package com.microsoft.java.test.plugin.model;
 
 import org.eclipse.lsp4j.Range;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TestItem {
@@ -115,5 +116,12 @@ public class TestItem {
 
     public void setProject(String project) {
         this.project = project;
+    }
+
+    public void addChild(TestItem child) {
+        if (this.children == null) {
+            this.children = new ArrayList<>();
+        }
+        this.children.add(child);
     }
 }
