@@ -5,21 +5,34 @@ import { CancellationToken, commands, Progress, ProgressLocation, QuickPickItem,
 import { JavaTestRunnerCommands } from '../constants/commands';
 import { ITestItem } from '../protocols';
 import { IExecutionConfig, IExecutionConfigGroup } from '../runConfigs';
-import { RunnerExecutor } from '../runners/runnerExecutor';
+import { runnerExecutor } from '../runners/runnerExecutor';
 import { testConfigManager } from '../testConfigManager';
 
-export async function runTests(runnerExecutor: RunnerExecutor, tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<void> {
-    const config: IExecutionConfig | undefined = await getTestConfig(tests, isDebug, isDefaultConfig);
+export async function runTests(tests: ITestItem[]): Promise<void> {
     window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-            token.onCancellationRequested(() => {
-                commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
-            });
-            progress.report({ message: 'Running tests...'});
-            return runnerExecutor.run(tests, isDebug, config);
+            return executeTests(tests, false /* isDebug */, true /* isDefaultConfig */, progress, token);
         },
     );
+}
+
+export async function debugTests(tests: ITestItem[]): Promise<void> {
+    window.withProgress(
+        { location: ProgressLocation.Notification, cancellable: true },
+        (progress: Progress<any>, token: CancellationToken): Promise<void> => {
+            return executeTests(tests, true /* isDebug */, true /* isDefaultConfig */, progress, token);
+        },
+    );
+}
+
+export async function executeTests(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean, progress: Progress<any>, token: CancellationToken): Promise<void> {
+    const config: IExecutionConfig | undefined = await getTestConfig(tests, isDebug, isDefaultConfig);
+    token.onCancellationRequested(() => {
+        commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
+    });
+    progress.report({ message: 'Running tests...'});
+    return runnerExecutor.run(tests, isDebug, config);
 }
 
 async function getTestConfig(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
