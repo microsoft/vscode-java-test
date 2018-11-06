@@ -12,7 +12,7 @@
 package com.microsoft.java.test.plugin.util;
 
 import com.google.gson.Gson;
-import com.microsoft.java.test.plugin.model.SearchChildrenNodeRequest;
+import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
@@ -80,14 +80,14 @@ public class TestSearchUtils {
             return Collections.<TestItem>emptyList();
         }
         final Gson gson = new Gson();
-        final SearchChildrenNodeRequest request = gson.fromJson((String) arguments.get(0),
-                SearchChildrenNodeRequest.class);
+        final SearchTestItemParams params = gson.fromJson((String) arguments.get(0),
+                SearchTestItemParams.class);
         final List<TestItem> resultList = new ArrayList<>();
-        final TestItemSearcher[] searchers = searcherMap.get(request.getLevel());
+        final TestItemSearcher[] searchers = searcherMap.get(params.getLevel());
         if (searchers != null) {
             for (final TestItemSearcher searcher : searchers) {
                 try {
-                    resultList.addAll(searcher.search(request.getUri(), request.getFullName(), monitor));
+                    resultList.addAll(searcher.search(params.getUri(), params.getFullName(), monitor));
                 } catch (final Exception e) {
                     // swallow the exceptions
                     e.printStackTrace();

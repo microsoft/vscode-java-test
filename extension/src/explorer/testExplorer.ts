@@ -4,9 +4,9 @@
 import * as path from 'path';
 import { Command, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
-import { ISearchChildrenNodeParams, ITestItem, TestLevel } from '../protocols';
+import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
 import { searchTestItems } from '../utils/commandUtils';
-import { constructSearchChildrenNodeRequest } from '../utils/protocolUtils';
+import { constructSearchTestItemParams } from '../utils/protocolUtils';
 import { explorerNodeManager } from './explorerNodeManager';
 import { TestTreeNode } from './TestTreeNode';
 
@@ -55,8 +55,8 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     private async getChildrenOfTreeNode(element: TestTreeNode): Promise<TestTreeNode[]> {
-        const requestString: ISearchChildrenNodeParams = constructSearchChildrenNodeRequest(element);
-        const results: ITestItem[] = await searchTestItems(requestString);
+        const searchParams: ISearchTestItemParams = constructSearchTestItemParams(element);
+        const results: ITestItem[] = await searchTestItems(searchParams);
         return results.map((result: ITestItem) => new TestTreeNode(
             result.displayName,
             result.fullName,

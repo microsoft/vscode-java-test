@@ -3,9 +3,9 @@
 
 import { Uri } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
-import { ISearchChildrenNodeParams } from '../protocols';
+import { ISearchTestItemParams } from '../protocols';
 
-export function constructSearchChildrenNodeRequest(node: TestTreeNode): ISearchChildrenNodeParams {
+export function constructSearchTestItemParams(node: TestTreeNode): ISearchTestItemParams {
     return {
         uri: Uri.file(node.fsPath).toString(),
         level: node.level,
