@@ -15,17 +15,20 @@ import com.google.gson.annotations.SerializedName;
 
 public enum TestLevel {
     @SerializedName("0")
-    FOLDER,
+    ROOT,
 
     @SerializedName("1")
-    PACKAGE,
+    FOLDER,
 
     @SerializedName("2")
-    CLASS,
+    PACKAGE,
 
     @SerializedName("3")
-    NESTED_CLASS,
+    CLASS,
 
     @SerializedName("4")
+    NESTED_CLASS,
+
+    @SerializedName("5")
     METHOD;
 }

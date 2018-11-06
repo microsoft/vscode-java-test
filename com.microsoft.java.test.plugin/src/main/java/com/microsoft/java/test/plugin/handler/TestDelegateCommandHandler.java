@@ -26,6 +26,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
     private static final String GET_PROJECT_INFO = "vscode.java.test.project.info";
     private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
+    private static final String SEARCH_TEST_ALL_ITEMS = "vscode.java.test.search.items.all";
     private static final String SEARCH_TEST_CODE_LENS = "vscode.java.test.search.codelens";
 
     @Override
@@ -38,6 +39,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return ProjectInfoFetcher.getProjectInfo(arguments);
             case SEARCH_TEST_ITEMS:
                 return TestSearchUtils.searchTestItems(arguments, monitor);
+            case SEARCH_TEST_ALL_ITEMS:
+                return TestSearchUtils.searchAllTestItems(arguments, monitor);
             case SEARCH_TEST_CODE_LENS:
                 return TestSearchUtils.searchCodeLens(arguments, monitor);
             default:
