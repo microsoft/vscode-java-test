@@ -17,26 +17,30 @@ import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
 import { ITestResult } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
-export class RunnerExecutor {
-    private isRunning: boolean;
-    private preLaunchTask: cp.ChildProcess | undefined;
-    private runnerMap: Map<ITestRunner, ITestItem[]> | undefined;
+class RunnerExecutor {
+    private _javaHome: string;
+    private _context: ExtensionContext;
+    private _isRunning: boolean;
+    private _preLaunchTask: cp.ChildProcess | undefined;
+    private _runnerMap: Map<ITestRunner, ITestItem[]> | undefined;
 
-    constructor(private _javaHome: string, private _context: ExtensionContext) {
+    public initialize(javaHome: string, context: ExtensionContext): void {
+        this._javaHome = javaHome;
+        this._context = context;
     }
 
     public async run(testItems: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
-        if (this.isRunning) {
+        if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
         }
-        this.isRunning = true;
+        this._isRunning = true;
         testStatusBarProvider.showRunningTest();
         try {
-            this.runnerMap = this.classifyTestsByKind(testItems);
-            for (const [runner, tests] of this.runnerMap.entries()) {
+            this._runnerMap = this.classifyTestsByKind(testItems);
+            for (const [runner, tests] of this._runnerMap.entries()) {
                 if (config && config.preLaunchTask.length > 0) {
-                    this.preLaunchTask = cp.exec(
+                    this._preLaunchTask = cp.exec(
                         config.preLaunchTask,
                         {
                             maxBuffer: CHILD_PROCESS_MAX_BUFFER_SIZE,
@@ -61,24 +65,24 @@ export class RunnerExecutor {
 
     public async cleanUp(isCancel: boolean): Promise<void> {
         try {
-            if (this.preLaunchTask) {
-                await killProcess(this.preLaunchTask);
-                this.preLaunchTask = undefined;
+            if (this._preLaunchTask) {
+                await killProcess(this._preLaunchTask);
+                this._preLaunchTask = undefined;
             }
 
             const promises: Array<Promise<void>> = [];
-            if (this.runnerMap) {
-                for (const runner of this.runnerMap.keys()) {
+            if (this._runnerMap) {
+                for (const runner of this._runnerMap.keys()) {
                     promises.push(runner.cleanUp(isCancel));
                 }
-                this.runnerMap.clear();
-                this.runnerMap = undefined;
+                this._runnerMap.clear();
+                this._runnerMap = undefined;
             }
             await Promise.all(promises);
         } catch (error) {
             testOutputChannel.error('Failed to clean up', error);
         }
-        this.isRunning = false;
+        this._isRunning = false;
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {
@@ -128,18 +132,18 @@ export class RunnerExecutor {
 
     private async execPreLaunchTask(): Promise<number> {
         return new Promise<number>((resolve: (ret: number) => void, reject: (err: Error) => void): void => {
-            if (this.preLaunchTask) {
-                this.preLaunchTask.on('error', (err: Error) => {
+            if (this._preLaunchTask) {
+                this._preLaunchTask.on('error', (err: Error) => {
                     testOutputChannel.error('Failed to run pre-launch task', err);
                     reject(err);
                 });
-                this.preLaunchTask.stderr.on('data', (data: Buffer) => {
+                this._preLaunchTask.stderr.on('data', (data: Buffer) => {
                     testOutputChannel.error(data.toString());
                 });
-                this.preLaunchTask.stdout.on('data', (data: Buffer) => {
+                this._preLaunchTask.stdout.on('data', (data: Buffer) => {
                     testOutputChannel.info(data.toString());
                 });
-                this.preLaunchTask.on('close', (signal: number) => {
+                this._preLaunchTask.on('close', (signal: number) => {
                     if (signal && signal !== 0) {
                         reject(new Error(`Prelaunch task exited with code ${signal}.`));
                     } else {
@@ -150,3 +154,5 @@ export class RunnerExecutor {
         });
     }
 }
+
+export const runnerExecutor: RunnerExecutor = new RunnerExecutor();
