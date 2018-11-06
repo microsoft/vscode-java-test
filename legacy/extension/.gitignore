@@ -1,6 +1,0 @@
-out
-node_modules
-*.vsix
-.vscode-test
-.vscode
-resources/templates/css/*.css

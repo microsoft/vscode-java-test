@@ -4,6 +4,24 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.10.0 - 2018-10-10
+
+## Changed
+- Sort packages alphabetically in Test Explorer. [#310](https://github.com/Microsoft/vscode-java-test/issues/310)
+- Get JAVA_HOME location through calling the API exposed by the Java Language Server. [#319](https://github.com/Microsoft/vscode-java-test/issues/319)
+
+## Fixed
+- Fix a bug that code lenses are not in the correct place. [#36](https://github.com/Microsoft/vscode-java-test/issues/36)
+
+## 0.9.0 - 2018-09-20
+
+### Changed
+- Test explorer will always show in the Activity Bar after the extension is activated. [#271](https://github.com/Microsoft/vscode-java-test/issues/271)
+
+### Fixed
+- Fix a bug that Java Test Runner will interfere with Java language server. [#260](https://github.com/Microsoft/vscode-java-test/issues/260)
+- Fix 'command not found error' when triggering commands. [#289](https://github.com/Microsoft/vscode-java-test/issues/289)
+
 ## 0.8.0 - 2018-08-08
 
 ### Changed
