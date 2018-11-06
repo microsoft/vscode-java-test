@@ -4,15 +4,15 @@
 import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
 import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
+import { debugTests, runTests } from './commands/executeTests';
 import { openTextDocumentForNode } from './commands/explorerCommands';
 import { showReport } from './commands/reportCommands';
-import { runTests } from './commands/runTests';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
 import { ITestItem } from './protocols';
-import { RunnerExecutor } from './runners/runnerExecutor';
+import { runnerExecutor } from './runners/runnerExecutor';
 import { testOutputChannel } from './testOutputChannel';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
@@ -50,7 +50,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testExplorer.refresh();
     });
 
-    const runnerExecutor: RunnerExecutor = new RunnerExecutor(javaHome, context);
+    runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
 
     context.subscriptions.push(
@@ -64,8 +64,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         workspace.registerTextDocumentContentProvider(testReportProvider.scheme, testReportProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(runnerExecutor, tests, false, true)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(runnerExecutor, tests, true, true)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(tests)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await debugTests(tests)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestItem[]) => await showReport(tests)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => testOutputChannel.show()),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
