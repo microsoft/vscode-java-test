@@ -10,6 +10,11 @@ export async function searchTestItems(params: ISearchTestItemParams): Promise<IT
         JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(params)) || [];
 }
 
+export async function searchTestItemsAll(request: ISearchTestItemParams): Promise<ITestItem[]> {
+    return await executeJavaLanguageServerCommand<ITestItem[]>(
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS_ALL, JSON.stringify(request)) || [];
+}
+
 export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
         JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri) || [];
