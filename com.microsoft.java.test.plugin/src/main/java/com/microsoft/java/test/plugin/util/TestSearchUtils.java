@@ -135,6 +135,7 @@ public class TestSearchUtils {
             if (testMethodList.size() > 0) {
                 final TestItem parent = constructTestItem(type, getTestLevelForIType(type));
                 parent.setChildren(testMethodList);
+                // Assume the kinds of all methods are the same.
                 parent.setKind(testMethodList.get(0).getKind());
                 resultList.add(parent);
             }
@@ -186,6 +187,7 @@ public class TestSearchUtils {
 
         for (final TestItem testClass : classMap.values()) {
             if (testClass.getChildren() != null && testClass.getChildren().size() > 0) {
+                // Assume the kinds of all methods are the same.
                 testClass.setKind(testClass.getChildren().get(0).getKind());
             }
         }
