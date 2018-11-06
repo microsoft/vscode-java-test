@@ -14,7 +14,7 @@ export async function openTextDocumentForNode(node: TestTreeNode): Promise<void>
 }
 
 export async function runTestsFromExplorer(node?: TestTreeNode): Promise<void> {
-    window.withProgress(
+    return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
             progress.report('Searching test items...');
