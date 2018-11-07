@@ -39,6 +39,7 @@ class RunnerExecutor {
         testStatusBarProvider.showRunningTest();
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
+            const finalResults: ITestResult[] = [];
             for (const [runner, tests] of this._runnerMap.entries()) {
                 if (config && config.preLaunchTask.length > 0) {
                     this._preLaunchTask = cp.exec(
@@ -53,10 +54,11 @@ class RunnerExecutor {
                 await runner.setup(tests, isDebug, config);
                 const results: ITestResult[] = await runner.run();
                 testResultManager.storeResult(...results);
-                testStatusBarProvider.showTestResult(results);
-                testCodeLensProvider.refresh();
-                testReportProvider.refresh();
+                finalResults.push(...results);
             }
+            testStatusBarProvider.showTestResult(finalResults);
+            testCodeLensProvider.refresh();
+            testReportProvider.refresh();
         } catch (error) {
             window.showErrorMessage(`${error}`);
             testStatusBarProvider.showFailure();
