@@ -12,7 +12,6 @@ export interface ITestItem extends ITestItemBase {
     displayName: string;
     range: Range;
     children: ITestItem[];
-    parent: ITestItem;
     kind: TestKind;
     project: string;
     level: TestLevel;
