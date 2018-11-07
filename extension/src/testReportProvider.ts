@@ -3,19 +3,31 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { ExtensionContext, TextDocumentContentProvider, Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { Disposable, Event, EventEmitter, ExtensionContext, TextDocumentContentProvider, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { ITestItemBase } from './protocols';
 import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
 import { decodeTestReportUri, encodeTestReportUri, TestReportType } from './utils/testReportUtils';
 
-class TestReportProvider implements TextDocumentContentProvider {
+class TestReportProvider implements TextDocumentContentProvider, Disposable {
+    private onDidChangeReportEmitter: EventEmitter<Uri> = new EventEmitter<Uri>();
+    private reports: Set<Uri> = new Set<Uri>();
     private compiledReportTemplate: pug.compileTemplate;
     private context: ExtensionContext;
 
     public initialize(context: ExtensionContext): void {
         this.context = context;
         this.compiledReportTemplate = pug.compileFile(this.context.asAbsolutePath(path.join('resources', 'templates', 'report.pug')));
+    }
+
+    get onDidChange(): Event<Uri> {
+        return this.onDidChangeReportEmitter.event;
+    }
+
+    public refresh(): void {
+        for (const uri of this.reports) {
+            this.onDidChangeReportEmitter.fire(uri);
+        }
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
@@ -27,7 +39,19 @@ class TestReportProvider implements TextDocumentContentProvider {
                 resultsToRender.push({uri: uriArray[i].toString(), fullName: fullNameArray[i], result});
             }
         }
-        return this.report(resultsToRender, reportType, false);
+        return this.report(resultsToRender, reportType);
+    }
+
+    public addReport(uri: Uri): void {
+        this.reports.add(uri);
+    }
+
+    public deleteReport(uri: Uri): void {
+        this.reports.delete(uri);
+    }
+
+    public dispose(): void {
+        this.reports.clear();
     }
 
     public get scheme(): string {
@@ -35,10 +59,10 @@ class TestReportProvider implements TextDocumentContentProvider {
     }
 
     public get testReportName(): string {
-        return 'Test Report';
+        return 'Java Test Report';
     }
 
-    private report(results: ITestResult[], type: TestReportType, isLegacy: boolean): string {
+    private report(results: ITestResult[], type: TestReportType): string {
         const passedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Pass);
         const failedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Fail);
         const skippedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Skip);
@@ -50,7 +74,6 @@ class TestReportProvider implements TextDocumentContentProvider {
             type,
             name: results.length === 1 ? results[0].fullName.replace('#', '.') : undefined,
             showFilters: results.length > 1,
-            isLegacy,
             cssFile: this.cssTheme(),
             totalCount: results.length,
             passCount: passedTests.length,

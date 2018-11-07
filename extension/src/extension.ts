@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, TextDocument, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTests, runTests } from './commands/executeTests';
@@ -50,6 +50,19 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testExplorer.refresh();
     });
 
+    workspace.onDidOpenTextDocument((document: TextDocument) => {
+        const uri: Uri = document.uri;
+        if (uri.scheme === testReportProvider.scheme) {
+            testReportProvider.addReport(uri);
+        }
+    });
+    workspace.onDidCloseTextDocument((document: TextDocument) => {
+        const uri: Uri = document.uri;
+        if (uri.scheme === testReportProvider.scheme) {
+            testReportProvider.deleteReport(uri);
+        }
+    });
+
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
 
@@ -58,6 +71,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         explorerNodeManager,
         testStatusBarProvider,
         testResultManager,
+        testReportProvider,
         watcher,
         testOutputChannel,
         languages.registerCodeLensProvider('java', testCodeLensProvider),

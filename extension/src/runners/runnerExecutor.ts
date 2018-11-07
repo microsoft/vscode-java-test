@@ -8,6 +8,7 @@ import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../constants/configs';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { testOutputChannel } from '../testOutputChannel';
+import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { killProcess } from '../utils/cpUtils';
@@ -54,6 +55,7 @@ class RunnerExecutor {
                 testResultManager.storeResult(...results);
                 testStatusBarProvider.showTestResult(results);
                 testCodeLensProvider.refresh();
+                testReportProvider.refresh();
             }
         } catch (error) {
             window.showErrorMessage(`${error}`);
