@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
-import { initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTests, runTests } from './commands/executeTests';
 import { debugTestsFromExplorer, debugTestsWithFromExplorer, openTextDocumentForNode, runTestsFromExplorer, runTestsWithConfigFromExplorer } from './commands/explorerCommands';
@@ -23,8 +23,8 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await instrumentOperation('activation', doActivate)(context);
 }
 
-export function deactivate(): void {
-    // do nothing
+export async function deactivate(): Promise<void> {
+    await disposeTelemetryWrapper();
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
