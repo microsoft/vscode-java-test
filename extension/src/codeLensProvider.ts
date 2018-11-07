@@ -23,9 +23,9 @@ class TestCodeLensProvider implements CodeLensProvider {
 
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
         try {
-            const testItems: ITestItem[] = await searchTestCodeLens(document.uri.toString());
+            const testCLasses: ITestItem[] = await searchTestCodeLens(document.uri.toString());
             const codeLenses: CodeLens[] = [];
-            for (const testClass of testItems) {
+            for (const testClass of testCLasses) {
                 codeLenses.push(...this.getCodeLenses(testClass));
             }
             return codeLenses;
@@ -69,10 +69,19 @@ class TestCodeLensProvider implements CodeLensProvider {
             ),
         );
 
-        if (testResultManager.hasResultWithUri(Uri.parse(test.uri).fsPath)) {
+        if (this.hasTestResult(test)) {
             codeLenses.push(this.parseCodeLensForTestResult(test));
         }
         return codeLenses;
+    }
+
+    private hasTestResult(test: ITestItem): boolean {
+        if (test.level === TestLevel.Method) {
+            return testResultManager.hasResultWithFsPathAndFullName(Uri.parse(test.uri).fsPath, test.fullName);
+        } else if (test.level === TestLevel.Class || test.level === TestLevel.NestedClass) {
+            return testResultManager.hasResultWithFsPath(Uri.parse(test.uri).fsPath);
+        }
+        return false;
     }
 
     private parseCodeLensForTestResult(test: ITestItem): CodeLens {
@@ -97,9 +106,7 @@ class TestCodeLensProvider implements CodeLensProvider {
     private getTestStatusIcon(testMethods: ITestItem[]): string {
         for (const method of testMethods) {
             const testResult: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(method.uri).fsPath, method.fullName);
-            if (!testResult) {
-                return '❓';
-            } else if (testResult.status === TestStatus.Skip) {
+            if (!testResult || testResult.status === TestStatus.Skip) {
                 return '❔';
             } else if (testResult.status === TestStatus.Fail) {
                 return '❌';
