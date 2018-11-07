@@ -23,9 +23,9 @@ class TestCodeLensProvider implements CodeLensProvider {
 
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
         try {
-            const testCLasses: ITestItem[] = await searchTestCodeLens(document.uri.toString());
+            const testClasses: ITestItem[] = await searchTestCodeLens(document.uri.toString());
             const codeLenses: CodeLens[] = [];
-            for (const testClass of testCLasses) {
+            for (const testClass of testClasses) {
                 codeLenses.push(...this.getCodeLenses(testClass));
             }
             return codeLenses;
