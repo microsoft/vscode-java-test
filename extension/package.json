@@ -115,13 +115,17 @@
                 {
                     "command": "java.test.explorer.debug.config",
                     "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.refresh",
+                    "when": "never"
                 }
             ]
         },
         "commands": [
             {
                 "command": "java.test.show.output",
-                "title": "Show test output",
+                "title": "Show Test Output",
                 "category": "Java"
             },
             {
