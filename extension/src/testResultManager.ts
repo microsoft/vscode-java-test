@@ -33,7 +33,7 @@ class TestResultManager implements Disposable {
     }
 
     public hasResultWithFsPathAndFullName(fsPath: string, testFullName: string): boolean {
-        return this.getResult(fsPath, testFullName) !== undefined;
+        return !!this.getResult(fsPath, testFullName);
     }
 
     public dispose(): void {
