@@ -27,8 +27,6 @@ public class TestItem {
 
     private List<TestItem> children;
 
-    private TestItem parent;
-
     private TestLevel level;
 
     private TestKind kind;
@@ -84,14 +82,6 @@ public class TestItem {
 
     public void setChildren(List<TestItem> children) {
         this.children = children;
-    }
-
-    public TestItem getParent() {
-        return parent;
-    }
-
-    public void setParent(TestItem parent) {
-        this.parent = parent;
     }
 
     public TestLevel getLevel() {
