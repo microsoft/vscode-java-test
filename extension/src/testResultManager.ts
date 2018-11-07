@@ -28,8 +28,12 @@ class TestResultManager implements Disposable {
         return undefined;
     }
 
-    public hasResultWithUri(uriString: string): boolean {
-        return this.testResultMap.has(uriString);
+    public hasResultWithFsPath(fsPath: string): boolean {
+        return this.testResultMap.has(fsPath);
+    }
+
+    public hasResultWithFsPathAndFullName(fsPath: string, testFullName: string): boolean {
+        return !!this.getResult(fsPath, testFullName);
     }
 
     public dispose(): void {
