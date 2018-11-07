@@ -34,17 +34,20 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     }
 
     public async getChildren(element?: TestTreeNode): Promise<TestTreeNode[]> {
+        let children: TestTreeNode[] = [];
         if (!element) {
             const folders: WorkspaceFolder[] | undefined = workspace.workspaceFolders;
             if (folders) {
-                return folders.map((folder: WorkspaceFolder) => new TestTreeNode(folder.name, folder.name, TestLevel.Folder, folder.uri.fsPath));
+                children = folders.map((folder: WorkspaceFolder) => new TestTreeNode(folder.name, folder.name, TestLevel.Folder, folder.uri.fsPath));
             }
-            return [];
-        } else if (!element.children) {
-            element.children = await this.getChildrenOfTreeNode(element);
-            explorerNodeManager.storeNodes(...element.children);
+        } else {
+            if (!element.children) {
+                element.children = await this.getChildrenOfTreeNode(element);
+                explorerNodeManager.storeNodes(...element.children);
+            }
+            children = element.children;
         }
-        return element.children;
+        return children.sort((a: TestTreeNode, b: TestTreeNode) => a.fullName.localeCompare(b.fullName));
     }
 
     public refresh(element?: TestTreeNode): void {
