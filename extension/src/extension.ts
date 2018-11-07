@@ -34,7 +34,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     }
 
     testExplorer.initialize(context);
-    testStatusBarProvider.show();
     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
     watcher.onDidChange((uri: Uri) => {
         const node: TestTreeNode | undefined = explorerNodeManager.getNode(uri.fsPath);

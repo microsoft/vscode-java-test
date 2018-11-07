@@ -27,6 +27,11 @@ class TestStatusBarProvider implements Disposable {
     }
 
     public showTestResult(results: ITestResult[]): void {
+        if (results.length === 0) {
+            this.statusBarItem.hide();
+            return;
+        }
+
         let failedNum: number = 0;
         let passedNum: number = 0;
         for (const result of results) {
@@ -37,10 +42,7 @@ class TestStatusBarProvider implements Disposable {
             }
         }
 
-        this.statusBarItem.text = `$(x) ${failedNum} $(check) ${passedNum}`;
-        this.statusBarItem.color = failedNum > 0 ? 'red' : '#66ff66';
-        this.statusBarItem.tooltip = 'View test report';
-        this.statusBarItem.command = this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]);
+        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, failedNum > 0 ? 'red' : '#66ff66', 'View test report', this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]));
     }
 
     public update(text: string, color?: string, tooltip?: string, command?: string, args?: any[]): void {
@@ -48,6 +50,7 @@ class TestStatusBarProvider implements Disposable {
         this.statusBarItem.color = color;
         this.statusBarItem.tooltip = tooltip;
         this.statusBarItem.command = this.getCommandWithArgs(command, args);
+        this.statusBarItem.show();
     }
 
     public dispose(): void {
