@@ -33,7 +33,7 @@ async function executeTestsFromExplorer(isDebug: boolean, isDefaultConfig: boole
     return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-            progress.report('Searching test items...');
+            progress.report({ message: 'Searching test items...' });
             const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
             const tests: ITestItem[] = await searchTestItemsAll(searchParam);
             if (token.isCancellationRequested) {
