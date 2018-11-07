@@ -36,6 +36,7 @@
         "onCommand:java.test.explorer.debug.config",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
+        "onCommand:java.test.cancel",
         "onCommand:java.test.show.report",
         "onCommand:java.test.show.output"
     ],
@@ -152,6 +153,11 @@
                 "category": "Java"
             },
             {
+                "command": "java.test.cancel",
+                "title": "Cancel Test",
+                "category": "Java"
+            },
+            {
                 "command": "java.test.explorer.refresh",
                 "title": "Refresh",
                 "icon": {
@@ -160,7 +166,28 @@
                 },
                 "category": "Java"
             }
-        ]
+        ],
+        "jsonValidation": [
+            {
+                "fileMatch": "launch.test.json",
+                "url": "./launch.test.schema.json"
+            }
+        ],
+        "configuration": {
+            "title": "Java Test configuration",
+            "properties": {
+                "java.test.report.position": {
+                    "type": "string",
+                    "enum": [
+                        "sideView",
+                        "currentView"
+                    ],
+                    "default": "sideView",
+                    "description": "Specify where to show the test report",
+                    "scope": "window"
+                }
+            }
+        }
     },
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install",
@@ -199,6 +226,6 @@
         "glob-promise": "^3.4.0",
         "pug": "^2.0.3",
         "tree-kill": "^1.2.0",
-        "vscode-extension-telemetry-wrapper": "^0.3.1"
+        "vscode-extension-telemetry-wrapper": "^0.3.3"
     }
 }
