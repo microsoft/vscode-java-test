@@ -1,7 +1,7 @@
 {
     "name": "vscode-java-test",
     "displayName": "Java Test Runner",
-    "description": "Run and debug JUnit test cases.",
+    "description": "Run and debug JUnit/TestNG test cases.",
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
@@ -17,6 +17,7 @@
         "java",
         "test",
         "junit",
+        "testng",
         "debug"
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
@@ -148,17 +149,17 @@
             },
             {
                 "command": "java.test.explorer.run.config",
-                "title": "Run With Config",
+                "title": "Run With Configuration",
                 "category": "Java"
             },
             {
                 "command": "java.test.explorer.debug.config",
-                "title": "Debug With Config",
+                "title": "Debug With Configuration",
                 "category": "Java"
             },
             {
                 "command": "java.test.cancel",
-                "title": "Cancel Test",
+                "title": "Cancel Test Job",
                 "category": "Java"
             },
             {
