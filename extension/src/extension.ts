@@ -25,6 +25,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
 export async function deactivate(): Promise<void> {
     await disposeTelemetryWrapper();
+    await runnerExecutor.cleanUp(false  /* isCancel */);
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
