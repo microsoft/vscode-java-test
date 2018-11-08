@@ -103,7 +103,7 @@ class RunnerExecutor {
     private mapTestsByProjectAndKind(tests: ITestItem[]): Map<string, ITestItem[]> {
         const map: Map<string, ITestItem[]> = new Map<string, ITestItem[]>();
         for (const test of tests) {
-            if (!test.kind) {
+            if (test.kind === undefined || test.kind === null) {
                 testOutputChannel.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
             }
