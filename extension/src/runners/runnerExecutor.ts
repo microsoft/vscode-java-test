@@ -35,6 +35,12 @@ class RunnerExecutor {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
         }
+
+        if (testItems.length === 0) {
+            testOutputChannel.info('No test items found.');
+            return;
+        }
+
         this._isRunning = true;
         testStatusBarProvider.showRunningTest();
         try {
