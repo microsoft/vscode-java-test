@@ -309,6 +309,17 @@ public class TestSearchUtils {
                 }
                 throw new RuntimeException("Cannot find IType with name: " + params.getFullName());
             case METHOD:
+                final String fullName = params.getFullName();
+                final String className = fullName.substring(0, fullName.lastIndexOf("#") - 1);
+                final String methodName =  fullName.substring(fullName.lastIndexOf("#"));
+                final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(params.getUri());
+                final IType[] allTypes = unit.getAllTypes();
+                for (final IType type : allTypes) {
+                    if (type.getFullyQualifiedName().equals(className)) {
+                        return SearchEngine.createJavaSearchScope(new IJavaElement[] { type },
+                                IJavaSearchScope.SOURCES);
+                    }
+                }
             default:
                 return null;
         }
