@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
-final public class ProjectUtils {
+public final class ProjectUtils {
 
     private static final String TEST_SCOPE = "test";
     private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
