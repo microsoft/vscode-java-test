@@ -14,9 +14,7 @@ package com.microsoft.java.test.plugin.searcher;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.JavaModelException;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
@@ -33,15 +31,6 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
     @Override
     public boolean isTestMethod(IMethod method) {
-        try {
-            final int flags = method.getFlags();
-            if (!Flags.isPublic(flags)) {
-                return false;
-            }
-            return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
-        } catch (final JavaModelException e) {
-            // ignore
-            return false;
-        }
+        return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
     }
 }
