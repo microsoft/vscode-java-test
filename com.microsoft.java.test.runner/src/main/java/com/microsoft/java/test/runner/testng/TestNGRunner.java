@@ -31,6 +31,7 @@ public class TestNGRunner {
         createTests(map, suite);
 
         final TestNG testNG = new TestNG();
+        testNG.setUseDefaultListeners(false);
         final ITestListener listener = new TestNGListener();
         testNG.addListener(listener);
         testNG.setXmlSuites(Collections.singletonList(suite));
