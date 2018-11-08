@@ -11,7 +11,6 @@ export class TestTreeNode {
         private _level: TestLevel,
         private _fsPath: string,
         private _range?: Range,
-        private _parent?: TestTreeNode,
         private _children?: TestTreeNode[]) {
     }
 
@@ -45,13 +44,5 @@ export class TestTreeNode {
 
     public set children(children: TestTreeNode[] | undefined) {
         this._children = children;
-    }
-
-    public get parent(): TestTreeNode | undefined {
-        return this._parent;
-    }
-
-    public set parent(parent: TestTreeNode | undefined) {
-        this._parent = parent;
     }
 }
