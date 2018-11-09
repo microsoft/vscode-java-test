@@ -24,7 +24,7 @@ export interface ISearchTestItemParams {
 }
 
 export interface IProjectInfo {
-    path: Uri;
+    path: string;
     name: string;
 }
 
