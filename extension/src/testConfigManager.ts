@@ -50,7 +50,7 @@ class TestConfigManager {
                     return {
                         name: project.name,
                         projectName: project.name,
-                        workingDirectory: project.path.fsPath,
+                        workingDirectory: Uri.parse(project.path).fsPath,
                         args: [],
                         vmargs: [],
                         env: {},
@@ -64,7 +64,7 @@ class TestConfigManager {
                     return {
                         name: project.name,
                         projectName: project.name,
-                        workingDirectory: project.path.fsPath,
+                        workingDirectory: Uri.parse(project.path).fsPath,
                         args: [],
                         vmargs: [],
                         env: {},
