@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range, Uri } from 'vscode';
+import { Range } from 'vscode';
 
 export interface ITestItemBase {
     fullName: string;
@@ -24,7 +24,7 @@ export interface ISearchTestItemParams {
 }
 
 export interface IProjectInfo {
-    path: Uri;
+    path: string;
     name: string;
 }
 
