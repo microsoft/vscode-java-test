@@ -30,7 +30,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
@@ -80,12 +79,17 @@ public class TestSearchUtils {
                 new TestItemSearcher[] { new NestedClassSearcher(), new MethodSearcher() });
     }
 
-    public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor) {
+    public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor)
+            throws OperationCanceledException, InterruptedException {
         if (arguments == null || arguments.size() == 0) {
             return Collections.<TestItem>emptyList();
         }
         final Gson gson = new Gson();
         final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
+
+        // wait for the LS finishing updating
+        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
+
         final List<TestItem> resultList = new ArrayList<>();
         final TestItemSearcher[] searchers = searcherMap.get(params.getLevel());
         if (searchers != null) {
@@ -109,13 +113,15 @@ public class TestSearchUtils {
         }
 
         final String uri = (String) arguments.get(0);
+
+        // wait for the LS finishing updating
+        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
+
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
         if (!isJavaElementExist(unit) || !isInTestScope(unit) || monitor.isCanceled()) {
             return resultList;
         }
 
-        // wait for the LS finishing to update the compilation unit
-        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, new NullProgressMonitor());
         final IType[] childrenTypes = unit.getAllTypes();
         for (final IType type : childrenTypes) {
             if (!isTestableClass(type)) {
@@ -145,12 +151,15 @@ public class TestSearchUtils {
     }
 
     public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
-            throws CoreException {
+            throws CoreException, OperationCanceledException, InterruptedException {
         if (arguments == null || arguments.size() == 0) {
             return Collections.<TestItem>emptyList();
         }
         final Gson gson = new Gson();
         final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
+
+        // wait for the LS finishing updating
+        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
 
         final IJavaSearchScope scope = createSearchScope(params);
 
