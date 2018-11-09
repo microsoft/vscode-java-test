@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add TestNG support.
 
 ## Changed
-- Test explorer change to lazy-load machanism
+- Test explorer change to lazy-load machanism.
 - Always resolve the classpath before running test jobs - no need to trigger `Refresh Classpath` any more.
 
 ## 0.10.0 - 2018-10-10
