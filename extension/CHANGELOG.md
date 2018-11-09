@@ -4,6 +4,15 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.11.0
+
+## Added
+- Add TestNG support.
+
+## Changed
+- Test explorer change to lazy-load machanism
+- Always resolve the classpath before running test jobs - no need to trigger `Refresh Classpath` any more.
+
 ## 0.10.0 - 2018-10-10
 
 ## Changed
