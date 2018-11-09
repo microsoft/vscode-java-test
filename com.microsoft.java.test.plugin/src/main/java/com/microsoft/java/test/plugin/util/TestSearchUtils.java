@@ -307,6 +307,7 @@ public class TestSearchUtils {
                                 IJavaSearchScope.SOURCES);
                     }
                 }
+                break;
             case METHOD:
                 final String fullName = params.getFullName();
                 final String className = fullName.substring(0, fullName.lastIndexOf("#"));
