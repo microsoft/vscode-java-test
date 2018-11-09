@@ -89,6 +89,10 @@ class RunnerExecutor {
                 this._runnerMap = undefined;
             }
             await Promise.all(promises);
+
+            if (isCancel) {
+                testOutputChannel.info('Test job canceled.');
+            }
         } catch (error) {
             testOutputChannel.error('Failed to clean up', error);
         }
