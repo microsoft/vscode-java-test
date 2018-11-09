@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, TextDocument, Uri, window, workspace } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, TextDocument, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
-import { testCodeLensProvider } from './codeLensProvider';
+import { testCodeLensContainer } from './codeLensContainer';
 import { debugTests, runTests } from './commands/executeTests';
 import { debugTestsFromExplorer, debugTestsWithFromExplorer, openTextDocumentForNode, runTestsFromExplorer, runTestsWithConfigFromExplorer } from './commands/explorerCommands';
 import { showReport } from './commands/reportCommands';
@@ -74,7 +74,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testReportProvider,
         watcher,
         testOutputChannel,
-        languages.registerCodeLensProvider('java', testCodeLensProvider),
+        testCodeLensContainer,
         workspace.registerTextDocumentContentProvider(testReportProvider.scheme, testReportProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),

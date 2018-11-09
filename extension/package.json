@@ -190,6 +190,11 @@
                     "default": "sideView",
                     "description": "Specify where to show the test report",
                     "scope": "window"
+                },
+                "java.test.settings.enableTestCodeLens": {
+                    "type": "boolean",
+                    "description": "Enable the test code lens providers over test methods.",
+                    "default": true
                 }
             }
         }

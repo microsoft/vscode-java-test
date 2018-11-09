@@ -6,7 +6,7 @@
 
 A lightweight extension to run and debug Java test cases in Visual Studio Code. It works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
 
-- Support JUnit (v4.8.0+) test cases 
+- Support JUnit (v4.8.0+) test cases
 - Run test cases
 - Debug test cases
 - View test logs
@@ -28,6 +28,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 ## Supported VSCode settings
 
 - `java.test.report.position`: Specify where to show the test report. Supported values are `sideView`, `currentView`. The default value is `sideView`.
+- `java.test.settings.enableTestCodeLens`: enable the code lens provider for the test and debug buttons over test entry points, defaults to `true`.
 
 ## Requirements
 
