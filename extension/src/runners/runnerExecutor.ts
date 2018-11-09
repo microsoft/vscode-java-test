@@ -91,7 +91,7 @@ class RunnerExecutor {
             await Promise.all(promises);
 
             if (isCancel) {
-                testOutputChannel.info('Test job canceled.');
+                testOutputChannel.info('Test job is canceled.');
             }
         } catch (error) {
             testOutputChannel.error('Failed to clean up', error);
