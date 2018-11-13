@@ -66,6 +66,8 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
 public class TestSearchUtils {
+    protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
+
     private static final Map<TestLevel, TestItemSearcher[]> searcherMap;
     private static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
         new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
@@ -232,7 +234,15 @@ public class TestSearchUtils {
 
     public static TestItem constructTestItem(IJavaElement element, TestLevel level, TestKind kind)
             throws JavaModelException {
-        return new TestItem(element.getElementName(), parseTestItemFullName(element, level),
+        String displayName = element.getElementName();
+        if (kind == TestKind.JUnit5 && element instanceof IMethod) {
+            Optional<IAnnotation> annotation = getAnnotation((IMethod) element, DISPLAY_NAME_ANNOTATION_JUNIT5);
+            if (annotation.isPresent()) {
+                displayName = (String) annotation.get().getMemberValuePairs()[0].getValue();
+            }
+        }
+
+        return new TestItem(displayName, parseTestItemFullName(element, level),
                 JDTUtils.getFileURI(element.getResource()), parseTestItemRange(element, level), level, kind,
                 element.getJavaProject().getProject().getName());
     }
@@ -246,29 +256,37 @@ public class TestSearchUtils {
         return null;
     }
 
-    public static boolean hasTestAnnotation(IMethod method, String methodAnnotation) {
+    public static Optional<IAnnotation> getAnnotation(IMethod method, String methodAnnotation) {
         try {
             final Optional<IAnnotation> matched = Arrays.stream(method.getAnnotations())
                     .filter(annotation -> methodAnnotation.endsWith(annotation.getElementName())).findAny();
             if (!matched.isPresent()) {
-                return false;
+                return Optional.empty();
             }
             final IAnnotation annotation = matched.get();
             if (!annotation.exists()) {
-                return false;
+                return Optional.empty();
             }
 
             final String name = annotation.getElementName();
             final String[][] fullNameArr = method.getDeclaringType().resolveType(name);
             if (fullNameArr == null) {
                 final ICompilationUnit cu = method.getCompilationUnit();
-                return cu != null && cu.getImport(methodAnnotation).exists();
+                if (cu != null && cu.getImport(methodAnnotation).exists())
+                    return Optional.of(annotation);
+                else
+                    return Optional.empty();
             }
             final String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
-            return fullName.equals(methodAnnotation);
+            return fullName.equals(methodAnnotation) ?
+                Optional.of(annotation) : Optional.empty();
         } catch (final JavaModelException e) {
-            return false;
+            return Optional.empty();
         }
+    }
+
+    public static boolean hasAnnotation(IMethod method, String methodAnnotation) {
+        return getAnnotation(method, methodAnnotation).isPresent();
     }
 
     private static boolean isJavaElementExist(IJavaElement element) {

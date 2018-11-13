@@ -31,6 +31,6 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
     @Override
     public boolean isTestMethod(IMethod method) {
-        return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
+        return super.isTestMethod(method) && TestSearchUtils.hasAnnotation(method, TEST_METHOD_ANNOTATION);
     }
 }
