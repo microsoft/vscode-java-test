@@ -193,7 +193,7 @@
                 },
                 "java.test.settings.enableTestCodeLens": {
                     "type": "boolean",
-                    "description": "Enable the test code lens providers over test methods.",
+                    "description": "Enable the test code lens providers over test methods and classes.",
                     "default": true
                 }
             }

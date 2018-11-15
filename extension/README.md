@@ -28,7 +28,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 ## Supported VSCode settings
 
 - `java.test.report.position`: Specify where to show the test report. Supported values are `sideView`, `currentView`. The default value is `sideView`.
-- `java.test.settings.enableTestCodeLens`: enable the code lens provider for the test and debug buttons over test entry points, defaults to `true`.
+- `java.test.settings.enableTestCodeLens`: Enable the code lens provider for the test and debug buttons over test entry points, defaults to `true`.
 
 ## Requirements
 
