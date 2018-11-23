@@ -38,7 +38,7 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
             if (!Flags.isPublic(flags)) {
                 return false;
             }
-            return super.isTestMethod(method) && TestSearchUtils.hasTestAnnotation(method, TEST_METHOD_ANNOTATION);
+            return super.isTestMethod(method) && TestSearchUtils.hasAnnotation(method, TEST_METHOD_ANNOTATION);
         } catch (final JavaModelException e) {
             // ignore
             return false;
