@@ -11,7 +11,6 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -38,14 +37,15 @@ public class RuntimeClassPathUtils {
                 .map(fsPath -> new Path(fsPath))
                 .toArray(IPath[]::new);
 
-        final List<IProject> projectList = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
-                .filter(project -> project != null && project.exists())
+        final List<IJavaProject> javaProjectList = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
+                .map(project -> ProjectUtils.getJavaProject(project))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        final Set<IProject> projectsToTest = Arrays.stream(testPaths)
+        final Set<IJavaProject> projectsToTest = Arrays.stream(testPaths)
                 .map(testPath -> {
-                    for (final IProject project : projectList) {
-                        if (project.getLocation().isPrefixOf(testPath)) {
+                    for (final IJavaProject project : javaProjectList) {
+                        if (project.getProject().getLocation().isPrefixOf(testPath)) {
                             return project;
                         }
                     }
@@ -55,9 +55,8 @@ public class RuntimeClassPathUtils {
                 .collect(Collectors.toSet());
 
         final List<String> classPathList = new ArrayList<>();
-        for (final IProject projectPath : projectsToTest) {
-            final IJavaProject javaProject = ProjectUtils.getJavaProject(projectPath);
-            classPathList.addAll(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(javaProject)));
+        for (final IJavaProject project : projectsToTest) {
+            classPathList.addAll(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
         }
         return classPathList.toArray(new String[classPathList.size()]);
     }
