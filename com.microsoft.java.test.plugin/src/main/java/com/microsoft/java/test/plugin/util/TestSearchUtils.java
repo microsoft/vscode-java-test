@@ -241,7 +241,7 @@ public class TestSearchUtils {
             throws JavaModelException {
         String displayName = element.getElementName();
         if (kind == TestKind.JUnit5 && element instanceof IMethod) {
-            Optional<IAnnotation> annotation = getAnnotation((IMethod) element, DISPLAY_NAME_ANNOTATION_JUNIT5);
+            final Optional<IAnnotation> annotation = getAnnotation((IMethod) element, DISPLAY_NAME_ANNOTATION_JUNIT5);
             if (annotation.isPresent()) {
                 displayName = (String) annotation.get().getMemberValuePairs()[0].getValue();
             }
@@ -277,10 +277,11 @@ public class TestSearchUtils {
             final String[][] fullNameArr = method.getDeclaringType().resolveType(name);
             if (fullNameArr == null) {
                 final ICompilationUnit cu = method.getCompilationUnit();
-                if (cu != null && cu.getImport(methodAnnotation).exists())
+                if (cu != null && cu.getImport(methodAnnotation).exists()) {
                     return Optional.of(annotation);
-                else
+                } else {
                     return Optional.empty();
+                }
             }
             final String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
             return fullName.equals(methodAnnotation) ?
