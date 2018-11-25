@@ -201,13 +201,19 @@ public class TestSearchUtils {
         new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 scope, requestor, monitor);
 
+        final List<TestItem> searchResult = new ArrayList<>();
         for (final TestItem testClass : classMap.values()) {
-            if (testClass.getChildren() != null && testClass.getChildren().size() > 0) {
+            if (testClass.getChildren() == null || testClass.getChildren().size() <= 0) {
+                continue;
+            } else if (testClass.getChildren().size() == 1) {
+                searchResult.add(testClass.getChildren().get(0));
+            } else {
                 // Assume the kinds of all methods are the same.
                 testClass.setKind(testClass.getChildren().get(0).getKind());
+                searchResult.add(testClass);
             }
         }
-        return Arrays.asList(classMap.values().toArray(new TestItem[classMap.values().size()]));
+        return searchResult;
     }
 
     public static Range getRange(ICompilationUnit typeRoot, IJavaElement element) throws JavaModelException {
