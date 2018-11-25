@@ -4,26 +4,27 @@
 
 ## Overview
 
-A lightweight extension to run and debug Java test cases in Visual Studio Code. It works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
+A lightweight extension to run and debug Java test cases in Visual Studio Code. The extension support following test frameworks:
 
-- Support JUnit (v4.8.0+) test cases 
+- JUnit (v4.8.0+)
+- TestNG (v6.8.0+)
+
+The `Java Test Runner` works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
+
 - Run test cases
 - Debug test cases
-- View test logs
 - View test report
-- Test Explorer
-- Test Configuration
-- Cancel a test run
+- View tests in Test Explorer
 
-## Use
+## Usage
 
 ![Run/debug JUnit test](https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/extension/demo/junit-demo-2-11.gif)
 
 ## Available commands
 
-- `Java:Show test output`: open the test output window.
-- `Java:Open Log`: open extension log file.
-- `Java:Edit Test Configuration`: edit test configuration.
+You can find the following commands in the Command Palette(<kbd>**F1**</kbd> or <kbd>**Ctrl**</kbd> + <kbd>**Shift**</kbd> + <kbd>**P**</kbd>):
+- `Java: Show Test Output`: Open the test output window.
+- `Java: Cancel Test Job`: Cancel the currently being executed test task.
 
 ## Supported VSCode settings
 
@@ -35,7 +36,6 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 - VS Code (version 1.23.0 or later)
 - [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) (version 0.14.0 or later)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
-- JUnit4: 4.8.0 or later
 
 ## Feedback and Questions
 
