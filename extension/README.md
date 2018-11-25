@@ -22,7 +22,7 @@ The `Java Test Runner` works with [Language Support for Java by Red Hat](https:/
 
 ## Available commands
 
-You can find the following commands in the Command Palette(<kbd>**F1**</kbd> or <kbd>**Ctrl**</kbd> + <kbd>**Shift**</kbd> + <kbd>**P**</kbd>):
+You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / <kbd>**Ctrl + Shift + P**</kbd>):
 - `Java: Show Test Output`: Open the test output window.
 - `Java: Cancel Test Job`: Cancel the currently being executed test task.
 
