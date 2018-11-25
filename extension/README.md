@@ -9,7 +9,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 - JUnit (v4.8.0+)
 - TestNG (v6.8.0+)
 
-The `Java Test Runner` works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
+The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test) works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
 
 - Run test cases
 - Debug test cases
