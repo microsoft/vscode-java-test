@@ -4,7 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## 0.11.0
+## 0.11.1 - Nov 2018
+
+## Added
+- Add JUnit 5's @DisplayName support in test explorer. (Thanks for [@BaerMitUmlaut](https://github.com/BaerMitUmlaut))
+
+## Fixed
+- "Cannot read property 'indexOf' of undefined" bug when running JUnit 5 tests. [#455](https://github.com/Microsoft/vscode-java-test/issues/455)
+- Will run all tests in class if triggering test from method level in test explorer. [#441](https://github.com/Microsoft/vscode-java-test/issues/441)
+- Cannot run tests when the project is a multi-module Maven project. [#443](https://github.com/Microsoft/vscode-java-test/issues/443)
+
+## 0.11.0 - Nov 2018
 
 ## Added
 - Add TestNG support.
