@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Fixed
 - "Cannot read property 'indexOf' of undefined" bug when running JUnit 5 tests. [#455](https://github.com/Microsoft/vscode-java-test/issues/455)
-- Will run all tests under current class if trigger test from method level in test explorer. [#441](https://github.com/Microsoft/vscode-java-test/issues/441)
+- Will run all tests in class if triggering test from method level in test explorer. [#441](https://github.com/Microsoft/vscode-java-test/issues/441)
 - Cannot run tests when the project is a multi-module Maven project. [#443](https://github.com/Microsoft/vscode-java-test/issues/443)
 
 ## 0.11.0 - Nov 2018
