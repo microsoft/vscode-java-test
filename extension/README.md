@@ -6,7 +6,9 @@
 
 A lightweight extension to run and debug Java test cases in Visual Studio Code. The extension support following test frameworks:
 
-- JUnit (v4.8.0+)
+- JUnit 4 (v4.8.0+)
+- JUnit 5 (v5.1.0+)
+> Note: Currently some of the JUnit 5 features, for example: @ParameterizedTest is not supported yet.
 - TestNG (v6.8.0+)
 
 The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test) works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
