@@ -46,17 +46,13 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         }
         const regex: RegExp = /\[class:(.*?)\]\/\[method:(.*)\]/gm;
         const match: RegExpExecArray | null = regex.exec(id);
-        if (match) {
-            if (match.length === 2) {
-                return match[1];
-            } else if (match.length === 3) {
-                let methodName: string = match[2];
-                const index: number = methodName.indexOf('(');
-                if (index >= 0) {
-                    methodName = methodName.substring(0, index);
-                }
-                return `${match[1]}#${methodName}`;
+        if (match && match.length === 3) {
+            let methodName: string = match[2];
+            const index: number = methodName.indexOf('(');
+            if (index >= 0) {
+                methodName = methodName.substring(0, index);
             }
+            return `${match[1]}#${methodName}`;
         }
         return '';
     }
