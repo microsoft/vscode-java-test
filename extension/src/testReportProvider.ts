@@ -7,7 +7,7 @@ import { Disposable, Event, EventEmitter, ExtensionContext, TextDocumentContentP
 import { ITestItemBase } from './protocols';
 import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
-import { decodeTestReportUri, encodeTestReportUri, TestReportType } from './utils/testReportUtils';
+import { decodeTestReportUri } from './utils/testReportUtils';
 
 class TestReportProvider implements TextDocumentContentProvider, Disposable {
     private onDidChangeReportEmitter: EventEmitter<Uri> = new EventEmitter<Uri>();
@@ -31,7 +31,7 @@ class TestReportProvider implements TextDocumentContentProvider, Disposable {
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
-        const [uriArray, fullNameArray, reportType] = decodeTestReportUri(uri);
+        const [uriArray, fullNameArray] = decodeTestReportUri(uri);
         const resultsToRender: ITestResult[] = [];
         for (let i: number = 0; i < uriArray.length; i++) {
             const result: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(uriArray[i]).fsPath, fullNameArray[i]);
@@ -39,7 +39,7 @@ class TestReportProvider implements TextDocumentContentProvider, Disposable {
                 resultsToRender.push({uri: uriArray[i].toString(), fullName: fullNameArray[i], result});
             }
         }
-        return this.report(resultsToRender, reportType);
+        return this.report(resultsToRender);
     }
 
     public addReport(uri: Uri): void {
@@ -62,22 +62,15 @@ class TestReportProvider implements TextDocumentContentProvider, Disposable {
         return 'Java Test Report';
     }
 
-    private report(results: ITestResult[], type: TestReportType): string {
+    private report(results: ITestResult[]): string {
         const passedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Pass);
         const failedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Fail);
         const skippedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Skip);
         return this.render({
-            tests: type === TestReportType.All ? results : (type === TestReportType.Failed ? failedTests : passedTests),
-            uri: `command:vscode.previewHtml?${encodeURIComponent(JSON.stringify(encodeTestReportUri(results, TestReportType.All)))}`,
-            passedUri: `command:vscode.previewHtml?${encodeURIComponent(JSON.stringify(encodeTestReportUri(results, TestReportType.Passed)))}`,
-            failedUri: 'command:vscode.previewHtml?' + encodeURIComponent(JSON.stringify(encodeTestReportUri(results, TestReportType.Failed))),
-            type,
-            name: results.length === 1 ? results[0].fullName.replace('#', '.') : undefined,
-            showFilters: results.length > 1,
+            tests: results,
+            passedTests,
+            failedTests,
             cssFile: this.cssTheme(),
-            totalCount: results.length,
-            passCount: passedTests.length,
-            failedCount: failedTests.length,
             skippedCount: skippedTests.length,
         }, this.compiledReportTemplate);
     }
