@@ -27,7 +27,6 @@ class TestReportProvider implements Disposable {
                     Uri.file(path.join(this.context.extensionPath, 'resources', 'templates', 'css')),
                 ],
                 enableScripts: true,
-                enableCommandUris: true,
                 retainContextWhenHidden: true,
                 enableFindWidget: true,
             });
