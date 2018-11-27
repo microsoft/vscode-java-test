@@ -64,7 +64,7 @@ class RunnerExecutor {
             }
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensProvider.refresh();
-            testReportProvider.refresh(finalResults);
+            testReportProvider.update(finalResults);
         } catch (error) {
             window.showErrorMessage(`${error}`);
             testStatusBarProvider.showFailure();
