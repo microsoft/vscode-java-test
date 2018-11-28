@@ -1,5 +1,5 @@
 mixin collapseMethodTable(children)
-    table.table.table-hover.table-dark.bg-dark
+    table.table
         thead
             tr
                 th(scope="col") Method
@@ -23,7 +23,7 @@ mixin collapseMethodTable(children)
                     td #{child.result && child.result.duration ? child.result.duration + "ms" : "N/A"}
                 tr.accordion-body(id="collapse" + index, class="collapse")
                     td(colspan="3")
-                        table.table.table-dark.bg-dark
+                        table.table-sm
                             tbody
                                 tr
                                     th(scope="col") Message:
