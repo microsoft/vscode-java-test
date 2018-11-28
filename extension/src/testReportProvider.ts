@@ -31,12 +31,12 @@ class TestReportProvider implements Disposable {
                 enableFindWidget: true,
             });
 
-            this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
-
             this.panel.onDidDispose(() => {
                 this.panel = undefined;
             }, null, this.context.subscriptions);
         }
+
+        this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
     }
 
     public async update(tests: ITestItemBase[]): Promise<void> {
