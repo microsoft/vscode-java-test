@@ -3,87 +3,82 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, Event, EventEmitter, ExtensionContext, TextDocumentContentProvider, Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { Disposable, ExtensionContext, Uri, WebviewPanel, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { ITestItemBase } from './protocols';
 import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
-import { decodeTestReportUri } from './utils/testReportUtils';
+import { getReportPosition } from './utils/testReportUtils';
 
-class TestReportProvider implements TextDocumentContentProvider, Disposable {
-    private onDidChangeReportEmitter: EventEmitter<Uri> = new EventEmitter<Uri>();
-    private reports: Set<Uri> = new Set<Uri>();
+class TestReportProvider implements Disposable {
+
     private compiledReportTemplate: pug.compileTemplate;
     private context: ExtensionContext;
+    private panel: WebviewPanel | undefined;
 
     public initialize(context: ExtensionContext): void {
         this.context = context;
         this.compiledReportTemplate = pug.compileFile(this.context.asAbsolutePath(path.join('resources', 'templates', 'report.pug')));
     }
 
-    get onDidChange(): Event<Uri> {
-        return this.onDidChangeReportEmitter.event;
-    }
+    public async report(tests: ITestItemBase[]): Promise<void> {
+        if (!this.panel) {
+            this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', getReportPosition(), {
+                localResourceRoots: [
+                    Uri.file(path.join(this.context.extensionPath, 'resources', 'templates', 'css')),
+                ],
+                enableScripts: true,
+                retainContextWhenHidden: true,
+                enableFindWidget: true,
+            });
 
-    public refresh(): void {
-        for (const uri of this.reports) {
-            this.onDidChangeReportEmitter.fire(uri);
+            this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
+
+            this.panel.onDidDispose(() => {
+                this.panel = undefined;
+            }, null, this.context.subscriptions);
         }
     }
 
-    public async provideTextDocumentContent(uri: Uri): Promise<string> {
-        const [uriArray, fullNameArray] = decodeTestReportUri(uri);
-        const resultsToRender: ITestResult[] = [];
-        for (let i: number = 0; i < uriArray.length; i++) {
-            const result: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(uriArray[i]).fsPath, fullNameArray[i]);
+    public async update(tests: ITestItemBase[]): Promise<void> {
+        if (this.panel) {
+            this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
+        }
+    }
+
+    public async provideHtmlContent(tests: ITestItemBase[]): Promise<string> {
+        const results: ITestResult[] = [];
+        for (const test of tests) {
+            const result: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(test.uri).fsPath, test.fullName);
             if (result) {
-                resultsToRender.push({uri: uriArray[i].toString(), fullName: fullNameArray[i], result});
+                results.push({uri: test.uri, fullName: test.fullName, result});
             }
         }
-        return this.report(resultsToRender);
-    }
 
-    public addReport(uri: Uri): void {
-        this.reports.add(uri);
-    }
-
-    public deleteReport(uri: Uri): void {
-        this.reports.delete(uri);
-    }
-
-    public dispose(): void {
-        this.reports.clear();
-    }
-
-    public get scheme(): string {
-        return 'test-report';
-    }
-
-    public get testReportName(): string {
-        return 'Java Test Report';
-    }
-
-    private report(results: ITestResult[]): string {
         const passedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Pass);
         const failedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Fail);
         const skippedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Skip);
-        return this.render({
+
+        return this.compiledReportTemplate({
             tests: results,
             passedTests,
             failedTests,
-            cssFile: this.cssTheme(),
+            cssFile: this.cssFileUri,
             skippedCount: skippedTests.length,
-        }, this.compiledReportTemplate);
+        });
     }
 
-    private render(data: {}, template: pug.compileTemplate): string {
-        return template(data);
+    public dispose(): void {
+        if (this.panel) {
+            this.panel.dispose();
+        }
     }
 
-    private cssTheme(): string {
+    private get cssFileUri(): string {
         const config: WorkspaceConfiguration = workspace.getConfiguration();
         const theme: string | undefined = config.get<string>('workbench.colorTheme');
         const reportTheme: string = theme && theme.toLowerCase().indexOf('light') !== -1 ? 'light.css' : 'dark.css';
-        return this.context.asAbsolutePath(path.join('resources', 'templates', 'css', reportTheme));
+        const cssFilePath: string = this.context.asAbsolutePath(path.join('resources', 'templates', 'css', reportTheme));
+        return Uri.file(cssFilePath).with({ scheme: 'vscode-resource' }).toString();
     }
 }
 

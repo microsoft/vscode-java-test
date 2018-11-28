@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, TextDocument, Uri, window, workspace } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTests, runTests } from './commands/executeTests';
 import { debugTestsFromExplorer, debugTestsWithFromExplorer, openTextDocumentForNode, runTestsFromExplorer, runTestsWithConfigFromExplorer } from './commands/explorerCommands';
-import { showReport } from './commands/reportCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
@@ -50,19 +49,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testExplorer.refresh();
     });
 
-    workspace.onDidOpenTextDocument((document: TextDocument) => {
-        const uri: Uri = document.uri;
-        if (uri.scheme === testReportProvider.scheme) {
-            testReportProvider.addReport(uri);
-        }
-    });
-    workspace.onDidCloseTextDocument((document: TextDocument) => {
-        const uri: Uri = document.uri;
-        if (uri.scheme === testReportProvider.scheme) {
-            testReportProvider.deleteReport(uri);
-        }
-    });
-
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
 
@@ -75,7 +61,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         watcher,
         testOutputChannel,
         languages.registerCodeLensProvider('java', testCodeLensProvider),
-        workspace.registerTextDocumentContentProvider(testReportProvider.scheme, testReportProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(tests)),
@@ -84,7 +69,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await debugTestsFromExplorer(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_WITH_CONFIG_FROM_EXPLORER, async (node?: TestTreeNode) => await runTestsWithConfigFromExplorer(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_WITH_CONFIG_FROM_EXPLORER, async (node?: TestTreeNode) => await debugTestsWithFromExplorer(node)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestItem[]) => await showReport(tests)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestItem[]) => await testReportProvider.report(tests)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => testOutputChannel.show()),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
     );

@@ -1,17 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Uri } from 'vscode';
-import { ITestItem, ITestItemBase } from '../protocols';
-import { testReportProvider } from '../testReportProvider';
+import { ViewColumn, workspace, WorkspaceConfiguration } from 'vscode';
 
-export function encodeTestReportUri(tests: ITestItemBase[], type: TestReportType = TestReportType.All): Uri {
-    const queryString: string = JSON.stringify([tests.map((test: ITestItem) => Uri.parse(test.uri).toString()), tests.map((test: ITestItem) => test.fullName), type]);
-    return Uri.parse(`${testReportProvider.scheme}:${testReportProvider.testReportName}?${encodeURIComponent(queryString)}`);
-}
-
-export function decodeTestReportUri(uri: Uri): [string[], string[], TestReportType] {
-    return JSON.parse(decodeURIComponent(uri.query)) as [string[], string[], TestReportType];
+export function getReportPosition(): ViewColumn {
+    const config: WorkspaceConfiguration = workspace.getConfiguration();
+    const position: string = config.get<string>('java.test.report.position', 'sideView');
+    return position === 'sideView' ? ViewColumn.Two : ViewColumn.Active;
 }
 
 export enum TestReportType {
