@@ -221,7 +221,7 @@
         "mocha": "^5.2.0",
         "tslint": "^5.10.0",
         "typescript": "^2.8.3",
-        "vscode": "^1.1.17"
+        "vscode": "^1.1.22"
     },
     "dependencies": {
         "archiver": "^3.0.0",
