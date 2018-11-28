@@ -62,7 +62,7 @@ class TestReportProvider implements Disposable {
             tests: results,
             passedTests,
             failedTests,
-            cssFile: this.cssUriString(),
+            cssFile: this.cssFileUri,
             skippedCount: skippedTests.length,
         });
     }
@@ -73,7 +73,7 @@ class TestReportProvider implements Disposable {
         }
     }
 
-    private cssUriString(): string {
+    private get cssFileUri(): string {
         const config: WorkspaceConfiguration = workspace.getConfiguration();
         const theme: string | undefined = config.get<string>('workbench.colorTheme');
         const reportTheme: string = theme && theme.toLowerCase().indexOf('light') !== -1 ? 'light.css' : 'dark.css';
