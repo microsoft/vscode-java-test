@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, Uri, WebviewPanel, window, workspace, WorkspaceConfiguration } from 'vscode';
+import { Disposable, ExtensionContext, Uri, WebviewPanel, window } from 'vscode';
 import { ITestItemBase } from './protocols';
 import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
@@ -74,10 +74,7 @@ class TestReportProvider implements Disposable {
     }
 
     private get cssFileUri(): string {
-        const config: WorkspaceConfiguration = workspace.getConfiguration();
-        const theme: string | undefined = config.get<string>('workbench.colorTheme');
-        const reportTheme: string = theme && theme.toLowerCase().indexOf('light') !== -1 ? 'light.css' : 'dark.css';
-        const cssFilePath: string = this.context.asAbsolutePath(path.join('resources', 'templates', 'css', reportTheme));
+        const cssFilePath: string = this.context.asAbsolutePath(path.join('resources', 'templates', 'css', 'report.css'));
         return Uri.file(cssFilePath).with({ scheme: 'vscode-resource' }).toString();
     }
 }

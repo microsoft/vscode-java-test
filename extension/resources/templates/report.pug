@@ -9,7 +9,7 @@ html(lang="en")
         script(nonce="check", src="https://code.jquery.com/jquery-3.2.1.slim.min.js", integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN", crossorigin="anonymous")
         script(nonce="check", src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js", integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh", crossorigin="anonymous")
         script(nonce="check", src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js", integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ", crossorigin="anonymous")
-    body.container.bg-dark
+    body.container
         .progress.mt-4
             .progress-bar.bg-success(role='progressbar', style='width:33%', aria-valuenow='33', aria-valuemin='0', aria-valuemax='100') #{passedTests.length} Passed
             .progress-bar.bg-danger(role='progresssbar', style='width:34%', aria-valuenow='34', aria-valuemin='0', aria-valuemax='100') #{failedTests.length} Failed
@@ -23,7 +23,7 @@ html(lang="en")
            li.nav-item
                a.nav-link(id='pass-tab', data-toggle='pill', href='#pass', role='tab', aria-controls='pass') Passed
 
-        div.tab-content.mt-1
+        div.tab-content.mt-3
             div.tab-pane.fade.show.active(id='all', role='tabpanel', aria-labelledby='all-tab')
                 +collapseMethodTable(tests)
             div.tab-pane.fade(id='fail', role='tabpanel', aria-labelledby='fail-tab')

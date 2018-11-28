@@ -1,0 +1,13 @@
+$body-bg: var(--vscode-editor-background);
+$body-color: var(--vscode-foreground);
+$link-color: var(--vscode-textLink-foreground);
+$link-hover-color: $link-color;
+$link-hover-decoration: none !default;
+
+$table-bg:               var(--vscode-notifications-background);
+$table-border-color:     transparent !default;
+$table-color:            var(--vscode-foreground);
+
+$font-size-base: .85rem !default;
+
+@import "../../../node_modules/bootstrap/scss/bootstrap";
