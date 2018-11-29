@@ -4,7 +4,6 @@
 import * as cp from 'child_process';
 import * as fse from 'fs-extra';
 import * as getPort from 'get-port';
-import * as glob from 'glob-promise';
 import * as os from 'os';
 import * as path from 'path';
 import { debug, Uri, workspace } from 'vscode';
@@ -148,9 +147,9 @@ export abstract class BaseRunner implements ITestRunner {
     }
 
     private async getRunnerJarFilePath(): Promise<string> {
-        const launcher: string[] = await glob.promise('**/com.microsoft.java.test.runner-*-jar-with-dependencies.jar', { cwd: this.runnerDir });
-        if (launcher.length) {
-            return path.resolve(this.runnerDir, launcher[0]);
+        const runnerPath: string = path.join(this.runnerDir, 'com.microsoft.java.test.runner-jar-with-dependencies.jar');
+        if (await fse.pathExists(runnerPath)) {
+            return runnerPath;
         }
         throw new Error('Failed to find runner jar file.');
     }
