@@ -25,8 +25,8 @@ html(lang="en")
 
         div.tab-content.mt-3
             div.tab-pane.fade.show.active(id='all', role='tabpanel', aria-labelledby='all-tab')
-                +collapseMethodTable(tests)
+                +collapseMethodTable(tests, 'detail-all')
             div.tab-pane.fade(id='fail', role='tabpanel', aria-labelledby='fail-tab')
-                +collapseMethodTable(failedTests)
+                +collapseMethodTable(failedTests, 'detail-fail')
             div.tab-pane.fade(id='pass', role='tabpanel', aria-labelledby='pass-tab')
-                +collapseMethodTable(passedTests)
+                +collapseMethodTable(passedTests, 'detail-pass')
