@@ -48,4 +48,4 @@ out
 node_modules
 *.vsix
 .vscode-test
-resources/templates/css/*.css
+resources/templates/css/**
