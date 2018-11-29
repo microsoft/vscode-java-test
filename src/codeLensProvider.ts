@@ -107,7 +107,7 @@ class TestCodeLensProvider implements CodeLensProvider {
         for (const method of testMethods) {
             const testResult: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(method.uri).fsPath, method.fullName);
             if (!testResult || testResult.status === TestStatus.Skip) {
-                return '❔';
+                return '?';
             } else if (testResult.status === TestStatus.Fail) {
                 return '❌';
             }
