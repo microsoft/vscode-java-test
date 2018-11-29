@@ -13,8 +13,6 @@ before_install:
       sh -e /etc/init.d/xvfb start;
       sleep 3;
   fi
-- chmod +x mvnw
-- cd extension
 
 install:
 - npm install -g vsce

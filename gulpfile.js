@@ -11,7 +11,7 @@ const path = require('path');
 const fse = require('fs-extra');
 const os = require('os');
 
-const serverDir = path.join(__dirname, '..');
+const serverDir = path.join(__dirname, 'java-extension');
 const vscodeExtensionsPath = path.join(os.homedir(), '.vscode', 'extensions');
 
 gulp.task('build-plugin', (done) => {
