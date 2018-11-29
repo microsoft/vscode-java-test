@@ -28,7 +28,6 @@ hs_err_pid*
 **/.idea/
 **/node_modules/
 .DS_Store
-.idea
 target/
 .classpath
 .project
@@ -44,3 +43,9 @@ server/
 jdtls/
 
 !.mvn/wrapper/maven-wrapper.jar
+
+out
+node_modules
+*.vsix
+.vscode-test
+resources/templates/css/*.css

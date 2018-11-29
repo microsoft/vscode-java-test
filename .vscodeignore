@@ -9,3 +9,6 @@ src/**
 tsconfig.json
 tslint.json
 package-lock.json
+java-extension/**
+gulpfile.js
+resources/templates/scss/**
