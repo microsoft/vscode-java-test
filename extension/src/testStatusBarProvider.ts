@@ -19,11 +19,11 @@ class TestStatusBarProvider implements Disposable {
     }
 
     public showRunningTest(): void {
-        this.update('$(sync~spin) Running tests...', 'white', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
+        this.update('$(sync~spin) Running tests...', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
     }
 
     public showFailure(): void {
-        this.update('Failed to run tests', 'red', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
+        this.update('$(issue-opened) Failed to run tests', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
     }
 
     public showTestResult(results: ITestResult[]): void {
@@ -42,12 +42,11 @@ class TestStatusBarProvider implements Disposable {
             }
         }
 
-        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, failedNum > 0 ? 'red' : '#66ff66', 'View test report', this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]));
+        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'View test report', this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]));
     }
 
-    public update(text: string, color?: string, tooltip?: string, command?: string, args?: any[]): void {
+    public update(text: string, tooltip?: string, command?: string, args?: any[]): void {
         this.statusBarItem.text = text;
-        this.statusBarItem.color = color;
         this.statusBarItem.tooltip = tooltip;
         this.statusBarItem.command = this.getCommandWithArgs(command, args);
         this.statusBarItem.show();
