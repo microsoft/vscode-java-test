@@ -1,4 +1,4 @@
-mixin collapseMethodTable(children)
+mixin collapseMethodTable(children, tableName)
     table.table
         thead
             tr
@@ -9,7 +9,7 @@ mixin collapseMethodTable(children)
             - var index = 0
             each child in children
                 - index++
-                tr.accordion-toggle(data-toggle="collapse", data-target="#collapse" + index, style="cursor:pointer", title="View details")
+                tr.accordion-toggle(data-toggle="collapse", data-target=`#${tableName}${index}`, style="cursor:pointer", title="View details")
                     td #{child.fullName.replace("#", ".")}
                     td
                         if !child.result
@@ -21,7 +21,7 @@ mixin collapseMethodTable(children)
                         else
                             span.badge.badge-secondary Skipped
                     td #{child.result && child.result.duration ? child.result.duration + "ms" : "N/A"}
-                tr.accordion-body(id="collapse" + index, class="collapse")
+                tr.accordion-body(id=`${tableName}${index}`, class="collapse")
                     td(colspan="3")
                         table.table-sm
                             tbody
