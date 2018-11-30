@@ -10,4 +10,6 @@ $table-color:            var(--vscode-foreground);
 
 $font-size-base: .85rem !default;
 
+div.cell { padding-bottom:.6rem }
+
 @import "../../../node_modules/bootstrap/scss/bootstrap";

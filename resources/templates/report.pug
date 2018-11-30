@@ -13,22 +13,22 @@ html(lang="en")
         ul.nav.nav-pills.mt-3(role='tablist')
             li.nav-item
                 button.btn.btn-sm.btn-info.active(id='all-tab', data-toggle='pill', href='#all', role='tab', aria-controls='all') All
-                    span.badge.badge-light.ml-2 #{passedTests.length+failedTests.length+skippedCount}
-            if failedTests.length
+                    span.badge.badge-light.ml-2 #{allCount}
+            if failedCount
                 li.nav-item
                     button.btn.btn-sm.btn-danger.ml-3(id='fail-tab', data-toggle='pill', href='#fail', role='tab', aria-controls='fail') Failed
-                        span.badge.badge-light.ml-2 #{failedTests.length}
-            if passedTests.length
+                        span.badge.badge-light.ml-2 #{failedCount}
+            if passedCount
                 li.nav-item
                     button.btn.btn-sm.btn-success.ml-3(id='pass-tab', data-toggle='pill', href='#pass', role='tab', aria-controls='pass') Passed
-                        span.badge.badge-light.ml-2 #{passedTests.length}
+                        span.badge.badge-light.ml-2 #{passedCount}
 
         div.tab-content.mt-3
             div.tab-pane.fade.show.active(id='all', role='tabpanel', aria-labelledby='all-tab')
                 +collapseMethodTable(tests, 'detail-all')
-            if failedTests.length
+            if failedCount
                 div.tab-pane.fade(id='fail', role='tabpanel', aria-labelledby='fail-tab')
                     +collapseMethodTable(failedTests, 'detail-fail')
-            if passedTests.length
+            if passedCount
                 div.tab-pane.fade(id='pass', role='tabpanel', aria-labelledby='pass-tab')
                     +collapseMethodTable(passedTests, 'detail-pass')
