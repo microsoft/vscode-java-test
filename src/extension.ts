@@ -60,7 +60,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testReportProvider,
         watcher,
         testOutputChannel,
-        languages.registerCodeLensProvider('java', testCodeLensProvider),
+        languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(tests)),
