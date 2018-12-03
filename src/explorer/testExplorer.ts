@@ -47,7 +47,7 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             }
             children = element.children;
         }
-        return children.sort((a: TestTreeNode, b: TestTreeNode) => a.fullName.localeCompare(b.fullName));
+        return children.sort((a: TestTreeNode, b: TestTreeNode) => a.name.localeCompare(b.name));
     }
 
     public refresh(element?: TestTreeNode): void {
