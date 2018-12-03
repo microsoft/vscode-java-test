@@ -18,10 +18,10 @@ import org.eclipse.jdt.core.IMethod;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
-    protected static final String TEST_METHOD_ANNOTATION = "org.testng.annotations.Test";
+    protected static final String[] TEST_METHOD_ANNOTATIONS = { "org.testng.annotations.Test" };
 
     public TestNGTestSearcher() {
-        super(TEST_METHOD_ANNOTATION);
+        super(TEST_METHOD_ANNOTATIONS);
     }
 
     @Override
@@ -31,6 +31,15 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
     @Override
     public boolean isTestMethod(IMethod method) {
-        return super.isTestMethod(method) && TestSearchUtils.hasAnnotation(method, TEST_METHOD_ANNOTATION);
+        if (!super.isTestMethod(method)) {
+            return false;
+        }
+
+        for (final String annotation : TEST_METHOD_ANNOTATIONS) {
+            if (TestSearchUtils.hasAnnotation(method, annotation)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

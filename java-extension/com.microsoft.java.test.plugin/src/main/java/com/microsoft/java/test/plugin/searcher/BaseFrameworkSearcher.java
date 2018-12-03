@@ -21,9 +21,9 @@ import org.eclipse.jdt.core.search.SearchPattern;
 
 public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
-    protected String testMethodAnnotation;
+    protected String[] testMethodAnnotation;
 
-    public BaseFrameworkSearcher(String annotation) {
+    public BaseFrameworkSearcher(String[] annotation) {
         this.testMethodAnnotation = annotation;
     }
 
@@ -31,7 +31,7 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
     public abstract TestKind getTestKind();
 
     @Override
-    public String getTestMethodAnnotation() {
+    public String[] getTestMethodAnnotation() {
         return this.testMethodAnnotation;
     }
 
@@ -55,7 +55,14 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
     @Override
     public SearchPattern getSearchPattern() {
-        return SearchPattern.createPattern(this.getTestMethodAnnotation(), IJavaSearchConstants.ANNOTATION_TYPE,
-                IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH);
+        SearchPattern searchPattern = SearchPattern.createPattern(this.getTestMethodAnnotation()[0],
+                IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
+                SearchPattern.R_EXACT_MATCH);
+        for (int i = 1; i < this.getTestMethodAnnotation().length; i++) {
+            searchPattern = SearchPattern.createOrPattern(searchPattern,
+                    SearchPattern.createPattern(this.getTestMethodAnnotation()[i], IJavaSearchConstants.ANNOTATION_TYPE,
+                            IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH));
+        }
+        return searchPattern;
     }
 }
