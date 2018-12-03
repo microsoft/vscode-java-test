@@ -12,7 +12,6 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
@@ -35,15 +34,7 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
     public boolean isTestMethod(IMethod method) {
         try {
             final int flags = method.getFlags();
-            if (!Flags.isPublic(flags) || !super.isTestMethod(method)) {
-                return false;
-            }
-            for (final String annotation : TEST_METHOD_ANNOTATIONS) {
-                if (TestSearchUtils.hasAnnotation(method, annotation)) {
-                    return true;
-                }
-            }
-            return false;
+            return Flags.isPublic(flags) && super.isTestMethod(method);
         } catch (final JavaModelException e) {
             // ignore
             return false;

@@ -12,9 +12,6 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
-
-import org.eclipse.jdt.core.IMethod;
 
 public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
@@ -30,19 +27,5 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
     @Override
     public TestKind getTestKind() {
         return TestKind.JUnit5;
-    }
-
-    @Override
-    public boolean isTestMethod(IMethod method) {
-        if (!super.isTestMethod(method)) {
-            return false;
-        }
-
-        for (final String annotation : TEST_METHOD_ANNOTATIONS) {
-            if (TestSearchUtils.hasAnnotation(method, annotation)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

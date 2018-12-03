@@ -22,7 +22,7 @@ public interface TestFrameworkSearcher {
 
     boolean isTestMethod(IMethod method);
 
-    String[] getTestMethodAnnotation();
+    String[] getTestMethodAnnotations();
 
     SearchPattern getSearchPattern();
 }

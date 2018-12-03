@@ -12,6 +12,7 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
@@ -21,18 +22,18 @@ import org.eclipse.jdt.core.search.SearchPattern;
 
 public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
-    protected String[] testMethodAnnotation;
+    protected String[] testMethodAnnotations;
 
-    public BaseFrameworkSearcher(String[] annotation) {
-        this.testMethodAnnotation = annotation;
+    public BaseFrameworkSearcher(String[] annotations) {
+        this.testMethodAnnotations = annotations;
     }
 
     @Override
     public abstract TestKind getTestKind();
 
     @Override
-    public String[] getTestMethodAnnotation() {
-        return this.testMethodAnnotation;
+    public String[] getTestMethodAnnotations() {
+        return this.testMethodAnnotations;
     }
 
     @Override
@@ -46,7 +47,12 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
             if (method.isConstructor() || !"V".equals(method.getReturnType())) {
                 return false;
             }
-            return true;
+            for (final String annotation : this.getTestMethodAnnotations()) {
+                if (TestSearchUtils.hasAnnotation(method, annotation)) {
+                    return true;
+                }
+            }
+            return false;
         } catch (final JavaModelException e) {
             // ignore
             return false;
@@ -55,13 +61,18 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
     @Override
     public SearchPattern getSearchPattern() {
-        SearchPattern searchPattern = SearchPattern.createPattern(this.getTestMethodAnnotation()[0],
+        if (this.getTestMethodAnnotations().length <= 0) {
+            throw new RuntimeException(
+                    "Failed to initialize the supported test annotations for " + this.getClass().getName());
+        }
+        SearchPattern searchPattern = SearchPattern.createPattern(this.getTestMethodAnnotations()[0],
                 IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
                 SearchPattern.R_EXACT_MATCH);
-        for (int i = 1; i < this.getTestMethodAnnotation().length; i++) {
+        for (int i = 1; i < this.getTestMethodAnnotations().length; i++) {
             searchPattern = SearchPattern.createOrPattern(searchPattern,
-                    SearchPattern.createPattern(this.getTestMethodAnnotation()[i], IJavaSearchConstants.ANNOTATION_TYPE,
-                            IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH));
+                    SearchPattern.createPattern(this.getTestMethodAnnotations()[i],
+                            IJavaSearchConstants.ANNOTATION_TYPE, IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE,
+                            SearchPattern.R_EXACT_MATCH));
         }
         return searchPattern;
     }
