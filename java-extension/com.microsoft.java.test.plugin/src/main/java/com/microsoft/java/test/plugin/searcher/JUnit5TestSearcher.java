@@ -12,25 +12,20 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
-
-import org.eclipse.jdt.core.IMethod;
 
 public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
-    protected static final String TEST_METHOD_ANNOTATION = "org.junit.jupiter.api.Test";
+    protected static final String[] TEST_METHOD_ANNOTATIONS = {
+        "org.junit.jupiter.api.Test",
+        "org.junit.jupiter.params.ParameterizedTest"
+    };
 
     public JUnit5TestSearcher() {
-        super(TEST_METHOD_ANNOTATION);
+        super(TEST_METHOD_ANNOTATIONS);
     }
 
     @Override
     public TestKind getTestKind() {
         return TestKind.JUnit5;
-    }
-
-    @Override
-    public boolean isTestMethod(IMethod method) {
-        return super.isTestMethod(method) && TestSearchUtils.hasAnnotation(method, TEST_METHOD_ANNOTATION);
     }
 }

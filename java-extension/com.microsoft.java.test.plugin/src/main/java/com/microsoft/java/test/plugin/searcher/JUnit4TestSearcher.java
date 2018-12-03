@@ -12,7 +12,6 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
@@ -20,10 +19,10 @@ import org.eclipse.jdt.core.JavaModelException;
 
 public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
-    protected static final String TEST_METHOD_ANNOTATION = "org.junit.Test";
+    protected static final String[] TEST_METHOD_ANNOTATIONS = { "org.junit.Test" };
 
     public JUnit4TestSearcher() {
-        super(TEST_METHOD_ANNOTATION);
+        super(TEST_METHOD_ANNOTATIONS);
     }
 
     @Override
@@ -35,10 +34,7 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
     public boolean isTestMethod(IMethod method) {
         try {
             final int flags = method.getFlags();
-            if (!Flags.isPublic(flags)) {
-                return false;
-            }
-            return super.isTestMethod(method) && TestSearchUtils.hasAnnotation(method, TEST_METHOD_ANNOTATION);
+            return Flags.isPublic(flags) && super.isTestMethod(method);
         } catch (final JavaModelException e) {
             // ignore
             return false;
