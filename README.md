@@ -20,7 +20,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ## Usage
 
-![Run/debug JUnit test](https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/extension/demo/junit-demo-2-11.gif)
+![Run/debug JUnit test](./demo/demo.gif)
 
 ## Available commands
 
