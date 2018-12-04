@@ -55,9 +55,7 @@ public class Launcher {
             exitStatus = EXIT_WITH_INVALID_INPUT_CODE;
             System.err.println(e.getMessage());
         } finally {
-            if (exitStatus != 0) {
-                System.exit(exitStatus);
-            }
+            System.exit(exitStatus);
         }
     }
 }
