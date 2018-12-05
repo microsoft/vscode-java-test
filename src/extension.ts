@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as os from 'os';
+import * as path from 'path';
 import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTests, runTests } from './commands/executeTests';
 import { debugTestsFromExplorer, debugTestsWithFromExplorer, openTextDocumentForNode, runTestsFromExplorer, runTestsWithConfigFromExplorer } from './commands/explorerCommands';
+import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
+import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
 import { runnerExecutor } from './runners/runnerExecutor';
-import { testOutputChannel } from './testOutputChannel';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
@@ -33,7 +36,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         throw new Error('Could not find Java home.');
     }
 
-    testExplorer.initialize(context);
     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
     watcher.onDidChange((uri: Uri) => {
         const node: TestTreeNode | undefined = explorerNodeManager.getNode(uri.fsPath);
@@ -49,8 +51,12 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testExplorer.refresh();
     });
 
+    testExplorer.initialize(context);
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
+
+    const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
+    logger.initialize(storagePath);
 
     context.subscriptions.push(
         window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
@@ -58,8 +64,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testStatusBarProvider,
         testResultManager,
         testReportProvider,
+        logger,
         watcher,
-        testOutputChannel,
         languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
@@ -70,7 +76,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_WITH_CONFIG_FROM_EXPLORER, async (node?: TestTreeNode) => await runTestsWithConfigFromExplorer(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_WITH_CONFIG_FROM_EXPLORER, async (node?: TestTreeNode) => await debugTestsWithFromExplorer(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestItem[]) => await testReportProvider.report(tests)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => testOutputChannel.show()),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => showOutputChannel()),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
     );
     await commands.executeCommand('setContext', 'java.test.activated', true);

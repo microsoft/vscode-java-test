@@ -3,9 +3,9 @@
 
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, Uri } from 'vscode';
 import { JavaTestRunnerCommands } from './constants/commands';
+import { logger } from './logger/logger';
 import { ITestItem, TestLevel } from './protocols';
 import { ITestResultDetails, TestStatus } from './runners/models';
-import { testOutputChannel } from './testOutputChannel';
 import { testResultManager } from './testResultManager';
 import { searchTestCodeLens } from './utils/commandUtils';
 import { isDarwin } from './utils/platformUtils';
@@ -30,7 +30,7 @@ class TestCodeLensProvider implements CodeLensProvider {
             }
             return codeLenses;
         } catch (error) {
-            testOutputChannel.error('Failed to provide Code Lens', error);
+            logger.error('Failed to provide Code Lens', error);
             return [];
         }
     }
