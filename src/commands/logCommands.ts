@@ -11,7 +11,7 @@ import { outputChannelTransport } from '../logger/outputChannelTransport';
 export async function openLogFile(storagePath: string): Promise<void> {
     const logFilePath: string = path.join(storagePath, LOG_FILE_NAME);
     if (!await fse.pathExists(logFilePath)) {
-        const errorMsg: string = 'The log file does not exists.';
+        const errorMsg: string = 'The log file does not exist.';
         logger.error(errorMsg);
         await window.showErrorMessage(errorMsg);
         return;
