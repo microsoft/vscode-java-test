@@ -7,9 +7,9 @@ import * as getPort from 'get-port';
 import * as os from 'os';
 import * as path from 'path';
 import { debug, Uri, workspace } from 'vscode';
+import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
-import { testOutputChannel } from '../../testOutputChannel';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
 import { killProcess } from '../../utils/cpUtils';
@@ -65,7 +65,7 @@ export abstract class BaseRunner implements ITestRunner {
             let buffer: string = '';
             this.process = cp.spawn(path.join(this.javaHome, 'bin', 'java'), commandParams, options);
             this.process.on('error', (error: Error) => {
-                testOutputChannel.error('Failed to launch the runner', error);
+                logger.error('Failed to launch the runner', error);
                 reject(error);
             });
             this.process.stderr.on('data', (data: Buffer) => {
@@ -121,7 +121,7 @@ export abstract class BaseRunner implements ITestRunner {
                 this.storagePathForCurrentSession = undefined;
             }
         } catch (error) {
-            testOutputChannel.error('Failed to clean up', error);
+            logger.error('Failed to clean up', error);
         }
     }
 

@@ -5,9 +5,9 @@ import * as cp from 'child_process';
 import { ExtensionContext, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../constants/configs';
+import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
-import { testOutputChannel } from '../testOutputChannel';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
@@ -37,7 +37,7 @@ class RunnerExecutor {
         }
 
         if (testItems.length === 0) {
-            testOutputChannel.info('No test items found.');
+            logger.info('No test items found.');
             return;
         }
 
@@ -91,10 +91,10 @@ class RunnerExecutor {
             await Promise.all(promises);
 
             if (isCancel) {
-                testOutputChannel.info('Test job is canceled.');
+                logger.info('Test job is canceled.');
             }
         } catch (error) {
-            testOutputChannel.error('Failed to clean up', error);
+            logger.error('Failed to clean up', error);
         }
         this._isRunning = false;
     }
@@ -108,7 +108,7 @@ class RunnerExecutor {
         const map: Map<string, ITestItem[]> = new Map<string, ITestItem[]>();
         for (const test of tests) {
             if (!(test.kind in TestKind)) {
-                testOutputChannel.error(`Unkonwn kind of test item: ${test.fullName}`);
+                logger.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
             }
             const key: string = test.project.concat(test.kind.toString());
@@ -152,14 +152,14 @@ class RunnerExecutor {
         return new Promise<number>((resolve: (ret: number) => void, reject: (err: Error) => void): void => {
             if (this._preLaunchTask) {
                 this._preLaunchTask.on('error', (err: Error) => {
-                    testOutputChannel.error('Failed to run pre-launch task', err);
+                    logger.error('Failed to run pre-launch task', err);
                     reject(err);
                 });
                 this._preLaunchTask.stderr.on('data', (data: Buffer) => {
-                    testOutputChannel.error(data.toString());
+                    logger.info(data.toString());
                 });
                 this._preLaunchTask.stdout.on('data', (data: Buffer) => {
-                    testOutputChannel.info(data.toString());
+                    logger.info(data.toString());
                 });
                 this._preLaunchTask.on('close', (signal: number) => {
                     if (signal && signal !== 0) {

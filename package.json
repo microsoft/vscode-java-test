@@ -39,7 +39,8 @@
         "onCommand:java.test.debug",
         "onCommand:java.test.cancel",
         "onCommand:java.test.show.report",
-        "onCommand:java.test.show.output"
+        "onCommand:java.test.show.output",
+        "onCommand:java.test.open.log"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -127,6 +128,11 @@
             {
                 "command": "java.test.show.output",
                 "title": "Show Test Output",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.open.log",
+                "title": "Open Test Runner Log",
                 "category": "Java"
             },
             {
@@ -230,6 +236,8 @@
         "get-port": "^4.0.0",
         "pug": "^2.0.3",
         "tree-kill": "^1.2.0",
-        "vscode-extension-telemetry-wrapper": "^0.3.6"
+        "vscode-extension-telemetry-wrapper": "^0.3.6",
+        "winston": "^3.1.0",
+        "winston-transport": "^4.2.0"
     }
 }
