@@ -4,6 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.12.0 - Dec 2018
+
+## Added
+- Add a way to persist logs into log files. [#452](https://github.com/Microsoft/vscode-java-test/issues/452)
+- Add @DisplayName support in the test report for JUnit 5. [#446](https://github.com/Microsoft/vscode-java-test/issues/446)
+- Add @ParameterizedTest support for JUnit 5. [#107](https://github.com/Microsoft/vscode-java-test/issues/107)
+
+## Changed
+- Improve the test report page. ([#397](https://github.com/Microsoft/vscode-java-test/issues/397), [#486](https://github.com/Microsoft/vscode-java-test/issues/486), [#489](https://github.com/Microsoft/vscode-java-test/issues/489))
+- Change the foreground color of the status bar items. [#467](https://github.com/Microsoft/vscode-java-test/issues/467)
+
 ## 0.11.1 - Nov 2018
 
 ## Added
