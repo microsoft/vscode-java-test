@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## 0.12.0 - Dec 2018
 
 ## Added
-- Add a way to persist logs into log files. [#452](https://github.com/Microsoft/vscode-java-test/issues/452)
+- Add a way to persist test logs into log files. [#452](https://github.com/Microsoft/vscode-java-test/issues/452)
 - Add @DisplayName support in the test report for JUnit 5. [#446](https://github.com/Microsoft/vscode-java-test/issues/446)
 - Add @ParameterizedTest support for JUnit 5. [#107](https://github.com/Microsoft/vscode-java-test/issues/107)
 
