@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
@@ -56,6 +57,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     testReportProvider.initialize(context);
 
     const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
+    await fse.ensureDir(storagePath);
     logger.initialize(storagePath);
 
     context.subscriptions.push(
