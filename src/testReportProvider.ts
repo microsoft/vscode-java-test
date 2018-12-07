@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, Uri, WebviewPanel, window } from 'vscode';
+import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import { ITestItemBase } from './protocols';
 import { ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
@@ -21,8 +21,9 @@ class TestReportProvider implements Disposable {
     }
 
     public async report(tests: ITestItemBase[]): Promise<void> {
+        const position: ViewColumn = getReportPosition();
         if (!this.panel) {
-            this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', getReportPosition(), {
+            this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', position, {
                 localResourceRoots: [
                     Uri.file(path.join(this.context.extensionPath, 'resources', 'templates', 'css')),
                 ],
@@ -37,7 +38,7 @@ class TestReportProvider implements Disposable {
         }
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
-        this.panel.reveal();
+        this.panel.reveal(position);
     }
 
     public async update(tests: ITestItemBase[]): Promise<void> {
