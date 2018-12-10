@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { Disposable } from 'vscode';
 import * as winston from 'winston';
-import { LOG_FILE_MAX_NUMBER, LOG_FILE_MAX_SIZE, LOG_FILE_NAME } from '../constants/configs';
+import { LOG_FILE_LEVEL, LOG_FILE_MAX_NUMBER, LOG_FILE_MAX_SIZE, LOG_FILE_NAME } from '../constants/configs';
 import { outputChannelTransport } from './outputChannelTransport';
 
 class Logger implements Disposable {
@@ -16,7 +16,7 @@ class Logger implements Disposable {
         this.logger = winston.createLogger({
             transports: [
                 new (winston.transports.File)({
-                    level: 'info',
+                    level: LOG_FILE_LEVEL,
                     filename: path.join(this.storagePath, LOG_FILE_NAME),
                     maxsize: LOG_FILE_MAX_SIZE,
                     maxFiles: LOG_FILE_MAX_NUMBER,
