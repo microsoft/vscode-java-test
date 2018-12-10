@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improve the test report page. ([#397](https://github.com/Microsoft/vscode-java-test/issues/397), [#486](https://github.com/Microsoft/vscode-java-test/issues/486), [#489](https://github.com/Microsoft/vscode-java-test/issues/489))
 - Change the foreground color of the status bar items. [#467](https://github.com/Microsoft/vscode-java-test/issues/467)
 
+## Fixed
+- Fix the test runners cannot stop bug. ([#482](https://github.com/Microsoft/vscode-java-test/issues/482))
+
 ## 0.11.1 - Nov 2018
 
 ## Added
