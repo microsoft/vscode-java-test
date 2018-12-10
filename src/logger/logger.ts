@@ -15,7 +15,7 @@ class Logger implements Disposable {
         this.storagePath = storagePath;
         this.logger = winston.createLogger({
             transports: [
-                new (winston.transports.File)({level: 'info', filename: path.join(this.storagePath, LOG_FILE_NAME)}),
+                new (winston.transports.File)({level: 'info', filename: path.join(this.storagePath, LOG_FILE_NAME), maxsize: 5 * 1024 * 1024, maxFiles: 2, tailable: true}),
                 outputChannelTransport,
             ],
         });
