@@ -17,7 +17,7 @@ div.row-custom {
     padding-top: 0.6rem;
 }
 div.row-custom:hover {
-    background: var(--vscode-input-background);
+    background: var(--vscode-list-hoverBackground);
 }
 
 @import "../../../node_modules/bootstrap/scss/bootstrap";
