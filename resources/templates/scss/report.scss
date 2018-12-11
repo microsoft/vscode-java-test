@@ -15,5 +15,8 @@ $font-size-base: .85rem !default;
 pre.text { 
     color: var(--vscode-foreground);
 }
+.list-group-item-title {
+    background-color: var(--vscode-titleBar-activeBackground) !important;
+}
 
 @import "../../../node_modules/bootstrap/scss/bootstrap";

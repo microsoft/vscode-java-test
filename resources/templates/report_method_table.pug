@@ -3,11 +3,9 @@ mixin collapseMethodTable(children, type)
     //- See https://github.com/pugjs/pug/issues/2559#issuecomment-289873794 for iterating a map in Pug
     each entry in [...children]
         - classIdx++
-        div.mt-1.p-1
-            div.row
-                div.col 
-                    h5 #{entry[0]}
-        ul.list-group.mb-2
+        ul.list-group.mb-3
+            li.list-group-item.list-group-item-title
+                h5.mb-0 #{entry[0]}
             - var methodIdx = 0
             each method in entry[1]
                 - methodIdx++
