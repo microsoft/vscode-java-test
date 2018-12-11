@@ -10,7 +10,7 @@ mixin collapseMethodTable(children, type)
             - var methodIdx = 0
             each method in entry[1]
                 - methodIdx++
-                div.row.accordion-toggle(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
+                div.row.row-custom.accordion-toggle(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
                     div.cell.col-md-9 
                         li #{method.displayName}
                     div.cell.col-md-1

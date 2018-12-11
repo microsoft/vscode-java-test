@@ -12,4 +12,12 @@ $font-size-base: .85rem !default;
 
 div.cell { padding-bottom:.6rem }
 
+div.row-custom {
+    margin: 0 auto;
+    padding-top: 0.6rem;
+}
+div.row-custom:hover {
+    background: var(--vscode-input-background);
+}
+
 @import "../../../node_modules/bootstrap/scss/bootstrap";
