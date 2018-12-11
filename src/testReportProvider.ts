@@ -84,7 +84,6 @@ class TestReportProvider implements Disposable {
             passedCount,
             failedCount,
             skippedCount,
-            cssFile: this.cssFileUri,
         });
     }
 
@@ -102,11 +101,6 @@ class TestReportProvider implements Disposable {
         } else {
             map.set(classFullName, [{displayName: test.displayName, result}]);
         }
-    }
-
-    private get cssFileUri(): string {
-        const cssFilePath: string = this.context.asAbsolutePath(path.join('resources', 'templates', 'css', 'report.css'));
-        return Uri.file(cssFilePath).with({ scheme: 'vscode-resource' }).toString();
     }
 }
 

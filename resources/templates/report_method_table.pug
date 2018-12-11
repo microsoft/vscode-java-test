@@ -3,38 +3,39 @@ mixin collapseMethodTable(children, type)
     //- See https://github.com/pugjs/pug/issues/2559#issuecomment-289873794 for iterating a map in Pug
     each entry in [...children]
         - classIdx++
-        div.mt-1.table(style="padding:0.6rem")
+        div.mt-1.p-1
             div.row
                 div.col 
                     h5 #{entry[0]}
+        ul.list-group.mb-2
             - var methodIdx = 0
             each method in entry[1]
                 - methodIdx++
-                div.row.accordion-toggle(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
-                    div.cell.col-md-9 
-                        li #{method.displayName}
-                    div.cell.col-md-1
-                        if !method.result
-                            span.badge.badge-warning Not run
-                        else if method.result.status === 'Pass'
-                            span.badge.badge-success Passed
-                        else if method.result.status === 'Fail'
-                            span.badge.badge-danger Failed
-                        else
-                            span.badge.badge-secondary Skipped
-                    div.cell.col-md-2 #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
-                div.pl-4.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
-                    div.row
-                        div.col
-                            h6 Message:
-                    div.row
-                        div.cell.col #{method.result && method.result.message ? method.result.message : "N/A"}
-                    div.row
-                        div.col
-                            h6 Stack trace:
-                    div.row
-                        div.cell.col
-                            if method.result && method.result.details
-                                pre.text-light: code #{method.result.details}
+                li.list-group-item.list-group-item-action
+                    div.row.accordion-toggle(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
+                        div.col-md-9 #{method.displayName}
+                        div.col-md-1
+                            if !method.result
+                                span.badge.badge-warning Not run
+                            else if method.result.status === 'Pass'
+                                span.badge.badge-success Passed
+                            else if method.result.status === 'Fail'
+                                span.badge.badge-danger Failed
                             else
-                                span N/A
+                                span.badge.badge-secondary Skipped
+                        div.col-md-2 #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
+                    div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
+                        div.row
+                            div.col
+                                h6 Message:
+                        div.row
+                            div.col.mb-1 #{method.result && method.result.message ? method.result.message : "N/A"}
+                        div.row
+                            div.col
+                                h6 Stack trace:
+                        div.row
+                            div.col
+                                if method.result && method.result.details
+                                    pre.text: code #{method.result.details}
+                                else
+                                    span N/A

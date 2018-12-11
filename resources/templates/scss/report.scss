@@ -4,12 +4,16 @@ $link-color: var(--vscode-textLink-foreground);
 $link-hover-color: $link-color;
 $link-hover-decoration: none !default;
 
-$table-bg:               var(--vscode-notifications-background);
-$table-border-color:     transparent !default;
-$table-color:            var(--vscode-foreground);
+$list-group-bg: var(--vscode-notifications-background);
+$list-group-action-active-bg: $list-group-bg;
+$list-group-action-color: var(--vscode-foreground);
+$list-group-border-color: transparent;
+$list-group-hover-bg: var(--vscode-list-hoverBackground);
 
 $font-size-base: .85rem !default;
 
-div.cell { padding-bottom:.6rem }
+pre.text { 
+    color: var(--vscode-foreground);
+}
 
 @import "../../../node_modules/bootstrap/scss/bootstrap";
