@@ -4,7 +4,7 @@ mixin collapseMethodTable(children, type)
     each entry in [...children]
         - classIdx++
         ul.list-group.mb-3
-            li.list-group-item.list-group-item-title
+            li.list-group-item.active
                 h5.mb-0 #{entry[0]}
             - var methodIdx = 0
             each method in entry[1]
@@ -34,6 +34,7 @@ mixin collapseMethodTable(children, type)
                         div.row
                             div.col
                                 if method.result && method.result.details
-                                    pre.text: code #{method.result.details}
+                                    pre
+                                        code #{method.result.details}
                                 else
                                     span N/A
