@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Uri } from 'vscode';
+import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
-import { testOutputChannel } from '../../testOutputChannel';
 import { ITestResult, ITestResultDetails, TestStatus } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
@@ -14,7 +14,7 @@ export abstract class BaseRunnerResultAnalyzer {
     }
 
     public analyzeData(data: string): void {
-        testOutputChannel.info(data);
+        logger.info(data);
         let match: RegExpExecArray | null;
         do {
             match = this.regex.exec(data);
@@ -22,14 +22,14 @@ export abstract class BaseRunnerResultAnalyzer {
                 try {
                     this.processData(match[1]);
                 } catch (error) {
-                    testOutputChannel.error(`Failed to parse output data: ${data}`, error);
+                    logger.error(`Failed to parse output data: ${data}`, error);
                 }
             }
         } while (match);
     }
 
     public analyzeError(error: string): void {
-        testOutputChannel.error(error);
+        logger.info(error);
     }
 
     public feedBack(): ITestResult[] {
@@ -57,6 +57,7 @@ export abstract class BaseRunnerResultAnalyzer {
         }
 
         return {
+            displayName: test.displayName,
             fullName: test.fullName,
             uri: Uri.parse(test.uri).toString(),
             result: testResultDetails,

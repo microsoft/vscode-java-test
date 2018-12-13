@@ -3,9 +3,9 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, Uri, WebviewPanel, window } from 'vscode';
+import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import { ITestItemBase } from './protocols';
-import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
+import { ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
 import { getReportPosition } from './utils/testReportUtils';
 
@@ -21,8 +21,9 @@ class TestReportProvider implements Disposable {
     }
 
     public async report(tests: ITestItemBase[]): Promise<void> {
+        const position: ViewColumn = getReportPosition();
         if (!this.panel) {
-            this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', getReportPosition(), {
+            this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', position, {
                 localResourceRoots: [
                     Uri.file(path.join(this.context.extensionPath, 'resources', 'templates', 'css')),
                 ],
@@ -37,6 +38,7 @@ class TestReportProvider implements Disposable {
         }
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
+        this.panel.reveal(position);
     }
 
     public async update(tests: ITestItemBase[]): Promise<void> {
@@ -46,24 +48,42 @@ class TestReportProvider implements Disposable {
     }
 
     public async provideHtmlContent(tests: ITestItemBase[]): Promise<string> {
-        const results: ITestResult[] = [];
+        const allResultsMap: Map<string, IReportMethod[]> = new Map();
+        const passedResultMap: Map<string, IReportMethod[]> = new Map();
+        const failedResultMap: Map<string, IReportMethod[]> = new Map();
+        let allCount: number = 0;
+        let passedCount: number = 0;
+        let failedCount: number = 0;
+        let skippedCount: number = 0;
         for (const test of tests) {
             const result: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(test.uri).fsPath, test.fullName);
+            allCount++;
             if (result) {
-                results.push({uri: test.uri, fullName: test.fullName, result});
+                this.putMethodResultIntoMap(allResultsMap, test, result);
+                switch (result.status) {
+                    case TestStatus.Pass:
+                        this.putMethodResultIntoMap(passedResultMap, test, result);
+                        passedCount++;
+                        break;
+                    case TestStatus.Fail:
+                        this.putMethodResultIntoMap(failedResultMap, test, result);
+                        failedCount++;
+                        break;
+                    case TestStatus.Skip:
+                        skippedCount++;
+                        break;
+                }
             }
         }
 
-        const passedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Pass);
-        const failedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Fail);
-        const skippedTests: ITestItemBase[] = results.filter((result: ITestResult) => result.result && result.result.status === TestStatus.Skip);
-
         return this.compiledReportTemplate({
-            tests: results,
-            passedTests,
-            failedTests,
-            cssFile: this.cssFileUri,
-            skippedCount: skippedTests.length,
+            tests: allResultsMap,
+            passedTests: passedResultMap,
+            failedTests: failedResultMap,
+            allCount,
+            passedCount,
+            failedCount,
+            skippedCount,
         });
     }
 
@@ -73,10 +93,20 @@ class TestReportProvider implements Disposable {
         }
     }
 
-    private get cssFileUri(): string {
-        const cssFilePath: string = this.context.asAbsolutePath(path.join('resources', 'templates', 'css', 'report.css'));
-        return Uri.file(cssFilePath).with({ scheme: 'vscode-resource' }).toString();
+    private putMethodResultIntoMap(map: Map<string, IReportMethod[]>, test: ITestItemBase, result: ITestResultDetails): void {
+        const classFullName: string = test.fullName.substr(0, test.fullName.indexOf('#'));
+        const methods: IReportMethod[] | undefined = map.get(classFullName);
+        if (methods) {
+            methods.push({displayName: test.displayName, result});
+        } else {
+            map.set(classFullName, [{displayName: test.displayName, result}]);
+        }
     }
+}
+
+interface IReportMethod {
+    displayName: string;
+    result: ITestResultDetails;
 }
 
 export const testReportProvider: TestReportProvider = new TestReportProvider();

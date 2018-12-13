@@ -8,7 +8,6 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 
 - JUnit 4 (v4.8.0+)
 - JUnit 5 (v5.1.0+)
-> Note: Currently some of the JUnit 5 features, for example: @ParameterizedTest is not supported yet.
 - TestNG (v6.8.0+)
 
 The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test) works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
@@ -20,12 +19,13 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ## Usage
 
-![Run/debug JUnit test](https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/extension/demo/junit-demo-2-11.gif)
+![Run/debug JUnit test](./demo/demo.gif)
 
 ## Available commands
 
 You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / <kbd>**Ctrl + Shift + P**</kbd>):
 - `Java: Show Test Output`: Open the test output window.
+- `Java: Open Test Runner Log`: Open the log file.
 - `Java: Cancel Test Job`: Cancel the currently being executed test task.
 
 ## Supported VSCode settings
@@ -36,7 +36,7 @@ You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / 
 
 - JDK (version 1.8.0 or later)
 - VS Code (version 1.23.0 or later)
-- [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) (version 0.14.0 or later)
+- [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
 
 ## Feedback and Questions

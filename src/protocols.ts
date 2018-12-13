@@ -4,12 +4,12 @@
 import { Range } from 'vscode';
 
 export interface ITestItemBase {
+    displayName: string;
     fullName: string;
     uri: string;
 }
 
 export interface ITestItem extends ITestItemBase {
-    displayName: string;
     range: Range;
     children: ITestItem[];
     kind: TestKind;

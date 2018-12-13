@@ -1,39 +1,40 @@
-mixin collapseMethodTable(children, tableName)
-    table.table
-        thead
-            tr
-                th(scope="col") Method
-                th(scope="col") Status
-                th(scope="col") Duration
-        tbody
-            - var index = 0
-            each child in children
-                - index++
-                tr.accordion-toggle(data-toggle="collapse", data-target=`#${tableName}${index}`, style="cursor:pointer", title="View details")
-                    td #{child.fullName.replace("#", ".")}
-                    td
-                        if !child.result
-                            span.badge.badge-warning Not run
-                        else if child.result.status === 'Pass'
-                            span.badge.badge-success Passed
-                        else if child.result.status === 'Fail'
-                            span.badge.badge-danger Failed
-                        else
-                            span.badge.badge-secondary Skipped
-                    td #{child.result && child.result.duration ? child.result.duration + "ms" : "N/A"}
-                tr.accordion-body(id=`${tableName}${index}`, class="collapse")
-                    td(colspan="3")
-                        table.table-sm
-                            tbody
-                                tr
-                                    th(scope="col") Message:
-                                tr
-                                    td #{child.result && child.result.message ? child.result.message : "N/A"}
-                                tr
-                                    th(scope="col") Stack trace:
-                                tr
-                                    td
-                                        if child.result && child.result.details
-                                            pre.text-light: code #{child.result.details}
-                                        else
-                                            span N/A
+mixin collapseMethodTable(children, type)
+    - var classIdx = 0
+    //- See https://github.com/pugjs/pug/issues/2559#issuecomment-289873794 for iterating a map in Pug
+    each entry in [...children]
+        - classIdx++
+        ul.list-group.mb-3
+            li.list-group-item.active
+                h5.mb-0 #{entry[0]}
+            - var methodIdx = 0
+            each method in entry[1]
+                - methodIdx++
+                li.list-group-item.list-group-item-action
+                    div.row.accordion-toggle(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
+                        div.col-md-9 #{method.displayName}
+                        div.col-md-1
+                            if !method.result
+                                span.badge.badge-warning Not run
+                            else if method.result.status === 'Pass'
+                                span.badge.badge-success Passed
+                            else if method.result.status === 'Fail'
+                                span.badge.badge-danger Failed
+                            else
+                                span.badge.badge-secondary Skipped
+                        div.col-md-2 #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
+                    div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
+                        div.row
+                            div.col
+                                h6 Message:
+                        div.row
+                            div.col.mb-1 #{method.result && method.result.message ? method.result.message : "N/A"}
+                        div.row
+                            div.col
+                                h6 Stack trace:
+                        div.row
+                            div.col
+                                if method.result && method.result.details
+                                    pre
+                                        code #{method.result.details}
+                                else
+                                    span N/A

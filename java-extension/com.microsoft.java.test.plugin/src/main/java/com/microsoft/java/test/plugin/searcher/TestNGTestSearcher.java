@@ -12,25 +12,17 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
-
-import org.eclipse.jdt.core.IMethod;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
-    protected static final String TEST_METHOD_ANNOTATION = "org.testng.annotations.Test";
+    protected static final String[] TEST_METHOD_ANNOTATIONS = { "org.testng.annotations.Test" };
 
     public TestNGTestSearcher() {
-        super(TEST_METHOD_ANNOTATION);
+        super(TEST_METHOD_ANNOTATIONS);
     }
 
     @Override
     public TestKind getTestKind() {
         return TestKind.TestNG;
-    }
-
-    @Override
-    public boolean isTestMethod(IMethod method) {
-        return super.isTestMethod(method) && TestSearchUtils.hasAnnotation(method, TEST_METHOD_ANNOTATION);
     }
 }

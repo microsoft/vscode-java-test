@@ -15,11 +15,14 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         if (outputData.attributes.type !== JUnit5TestType.Test) {
             return;
         }
+        const res: ITestResultDetails | undefined = this.testResults.get(this.parseFullyQualifiedNameFromId(outputData.attributes.id));
         switch (outputData.name) {
             case TEST_START:
-                this.testResults.set(this.parseFullyQualifiedNameFromId(outputData.attributes.id), {
-                    status: undefined,
-                });
+                if (!res) {
+                    this.testResults.set(this.parseFullyQualifiedNameFromId(outputData.attributes.id), {
+                        status: undefined,
+                    });
+                }
                 break;
             case TEST_IGNORED:
                 this.testResults.set(this.parseFullyQualifiedNameFromId(outputData.attributes.id),
@@ -29,8 +32,8 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 });
                 break;
             case TEST_FINISH:
-                const res: ITestResultDetails | undefined = this.testResults.get(this.parseFullyQualifiedNameFromId(outputData.attributes.id));
-                if (!res) {
+                // Do not update result if already has a failed result for current test - For @ParameterizedTest
+                if (!res || res.status === TestStatus.Fail) {
                     return;
                 }
                 res.status = this.parseTestStatus(outputData.attributes.status);
@@ -44,7 +47,7 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         if (!id) {
             return id;
         }
-        const regex: RegExp = /\[class:(.*?)\]\/\[method:(.*)\]/gm;
+        const regex: RegExp = /\[class:(.*?)\]\/\[(?:method|test-template):(.*)\]/gm;
         const match: RegExpExecArray | null = regex.exec(id);
         if (match && match.length === 3) {
             let methodName: string = match[2];
