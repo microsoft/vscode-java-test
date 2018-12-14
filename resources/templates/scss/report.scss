@@ -16,4 +16,15 @@ $font-size-base: .85rem !default;
 $pre-color: var(--vscode-foreground);
 $code-color: var(--vscode-foreground);
 
+.accordion-toggle:before {
+  font-family: 'FontAwesome';
+  content: "\f0d7";
+  color: var(--vscode-foreground);
+}
+
+.accordion-toggle.collapsed:before {
+  content: "\f0da";
+}
+
+
 @import "../../../node_modules/bootstrap/scss/bootstrap";
