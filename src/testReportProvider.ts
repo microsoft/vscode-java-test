@@ -17,7 +17,7 @@ class TestReportProvider implements Disposable {
 
     public initialize(context: ExtensionContext): void {
         this.context = context;
-        this.compiledReportTemplate = pug.compileFile(this.context.asAbsolutePath(path.join('resources', 'templates', 'report.pug')));
+        this.compiledReportTemplate = require('pug-loader!../resources/templates/report.pug');
     }
 
     public async report(tests: ITestItemBase[]): Promise<void> {

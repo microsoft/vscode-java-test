@@ -1,6 +1,6 @@
 .vscode/**
 .vscode-test/**
-out/test/**
+out/**
 test/**
 src/**
 **/*.map
@@ -12,3 +12,6 @@ package-lock.json
 java-extension/**
 gulpfile.js
 resources/templates/scss/**
+dist/**/*.map
+webpack.*.js
+node_modules

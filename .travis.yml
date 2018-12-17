@@ -21,5 +21,6 @@ install:
 script:
 - npm run lint
 - npm run buildserver
+- npm run compile
 - vsce package
 - npm test --silent
