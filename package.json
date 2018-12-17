@@ -31,6 +31,7 @@
         "onLanguage:java",
         "workspaceContains:pom.xml",
         "workspaceContains:build.gradle",
+        "onView:testExplorer",
         "onCommand:java.test.explorer.refresh",
         "onCommand:java.test.explorer.select",
         "onCommand:java.test.explorer.run",
@@ -53,8 +54,7 @@
             "test": [
                 {
                     "id": "testExplorer",
-                    "name": "%contributes.views.explorer.testExplorer.name%",
-                    "when": "java.test.activated"
+                    "name": "%contributes.views.explorer.testExplorer.name%"
                 }
             ]
         },

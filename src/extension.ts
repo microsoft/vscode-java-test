@@ -82,7 +82,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
     );
-    await commands.executeCommand('setContext', 'java.test.activated', true);
 }
 
 function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
