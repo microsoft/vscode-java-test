@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="JDTLS.EXT" sequenceNumber="38">
+    <locations>
+        <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+            <unit id="org.eclipse.xtend.sdk.feature.group" version="0.0.0"/>
+            <unit id="org.eclipse.xtext.sdk.feature.group" version="0.0.0"/>
+            <repository location="http://download.eclipse.org/releases/2018-12/"/>
+        </location>
+        <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+            <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.0.0"/>
+            <repository location="http://download.eclipse.org/lsp4j/updates/milestones"/>
+        </location>
+        <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+            <unit id="org.eclipse.jdt.ls.core" version="0.0.0"/>
+            <repository location="http://download.eclipse.org/jdtls/snapshots/repository/latest/"/>
+        </location>
+        <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+            <unit id="org.jboss.tools.maven.apt.feature.feature.group" version="1.5.0.201805160042"/>
+            <repository location="http://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.0-2018-05-16_00-46-30-H11"/>
+        </location>
+        <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+            <unit id="com.ibm.icu.base" version="58.2.0.v20170418-1837"/>
+            <repository location="http://download.eclipse.org/tools/orbit/R-builds/R20170516192513/repository"/>
+        </location>
+    </locations>
+</target>
