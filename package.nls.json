@@ -1,0 +1,13 @@
+{
+    "description": "Run and debug JUnit or TestNG test cases",
+    "contributes.views.explorer.testExplorer.name": "Test Explorer",
+    "contributes.commands.java.test.show.output.title": "Show Test Output",
+    "contributes.commands.java.test.open.log.title": "Open Test Runner Log",
+    "contributes.commands.java.test.explorer.run.title": "Run Test",
+    "contributes.commands.java.test.explorer.debug.title": "Debug Test",
+    "contributes.commands.java.test.explorer.run.config.title": "Run With Configuration",
+    "contributes.commands.java.test.explorer.debug.config.title": "Debug With Configuration",
+    "contributes.commands.java.test.cancel.title": "Cancel Test Job",
+    "contributes.commands.java.test.explorer.refresh.title": "Refresh",
+    "configuration.java.test.report.position.description": "Specify where to show the test report"
+}

@@ -1,0 +1,13 @@
+{
+    "description": "运行并调试 JUnit 或 TestNG 测试用例",
+    "contributes.views.explorer.testExplorer.name": "测试管理器",
+    "contributes.commands.java.test.show.output.title": "显示测试输出",
+    "contributes.commands.java.test.open.log.title": "打开测试运行日志",
+    "contributes.commands.java.test.explorer.run.title": "运行测试用例",
+    "contributes.commands.java.test.explorer.debug.title": "调试测试用例",
+    "contributes.commands.java.test.explorer.run.config.title": "根据配置文件运行",
+    "contributes.commands.java.test.explorer.debug.config.title": "根据配置文件调试",
+    "contributes.commands.java.test.cancel.title": "取消测试任务",
+    "contributes.commands.java.test.explorer.refresh.title": "刷新",
+    "configuration.java.test.report.position.description": "设定测试报告的显示位置"
+}

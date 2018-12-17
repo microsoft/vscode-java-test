@@ -1,7 +1,7 @@
 {
     "name": "vscode-java-test",
     "displayName": "Java Test Runner",
-    "description": "Run and debug JUnit/TestNG test cases.",
+    "description": "%description%",
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
@@ -53,7 +53,7 @@
             "test": [
                 {
                     "id": "testExplorer",
-                    "name": "Test Explorer",
+                    "name": "%contributes.views.explorer.testExplorer.name%",
                     "when": "java.test.activated"
                 }
             ]
@@ -129,17 +129,17 @@
         "commands": [
             {
                 "command": "java.test.show.output",
-                "title": "Show Test Output",
+                "title": "%contributes.commands.java.test.show.output.title%",
                 "category": "Java"
             },
             {
                 "command": "java.test.open.log",
-                "title": "Open Test Runner Log",
+                "title": "%contributes.commands.java.test.open.log.title%",
                 "category": "Java"
             },
             {
                 "command": "java.test.explorer.run",
-                "title": "Run Test",
+                "title": "%contributes.commands.java.test.explorer.run.title%",
                 "icon": {
                     "light": "resources/media/light/run.svg",
                     "dark": "resources/media/dark/run.svg"
@@ -148,7 +148,7 @@
             },
             {
                 "command": "java.test.explorer.debug",
-                "title": "Debug Test",
+                "title": "%contributes.commands.java.test.explorer.debug.title%",
                 "icon": {
                     "light": "resources/media/light/debug.svg",
                     "dark": "resources/media/dark/debug.svg"
@@ -157,22 +157,22 @@
             },
             {
                 "command": "java.test.explorer.run.config",
-                "title": "Run With Configuration",
+                "title": "%contributes.commands.java.test.explorer.run.config.title%",
                 "category": "Java"
             },
             {
                 "command": "java.test.explorer.debug.config",
-                "title": "Debug With Configuration",
+                "title": "%contributes.commands.java.test.explorer.debug.config.title%",
                 "category": "Java"
             },
             {
                 "command": "java.test.cancel",
-                "title": "Cancel Test Job",
+                "title": "%contributes.commands.java.test.cancel.title%",
                 "category": "Java"
             },
             {
                 "command": "java.test.explorer.refresh",
-                "title": "Refresh",
+                "title": "%contributes.commands.java.test.explorer.refresh.title%",
                 "icon": {
                     "light": "resources/media/light/refresh.svg",
                     "dark": "resources/media/dark/refresh.svg"
@@ -187,7 +187,7 @@
             }
         ],
         "configuration": {
-            "title": "Java Test configuration",
+            "title": "Java Test Runner",
             "properties": {
                 "java.test.report.position": {
                     "type": "string",
@@ -196,7 +196,7 @@
                         "currentView"
                     ],
                     "default": "sideView",
-                    "description": "Specify where to show the test report",
+                    "description": "%configuration.java.test.report.position.description%",
                     "scope": "window"
                 }
             }
