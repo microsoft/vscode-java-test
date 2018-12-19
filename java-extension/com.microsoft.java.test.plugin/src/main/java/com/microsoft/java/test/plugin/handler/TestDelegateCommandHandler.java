@@ -11,10 +11,9 @@
 
 package com.microsoft.java.test.plugin.handler;
 
-import com.microsoft.java.test.plugin.util.CodeLensUtils;
 import com.microsoft.java.test.plugin.util.ProjectInfoFetcher;
 import com.microsoft.java.test.plugin.util.RuntimeClassPathUtils;
-import com.microsoft.java.test.plugin.util.TestExplorerUtils;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
@@ -39,11 +38,11 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
             case GET_PROJECT_INFO:
                 return ProjectInfoFetcher.getProjectInfo(arguments);
             case SEARCH_TEST_ITEMS:
-                return TestExplorerUtils.searchTestItems(arguments, monitor);
+                return TestSearchUtils.searchTestItems(arguments, monitor);
             case SEARCH_TEST_ALL_ITEMS:
-                return TestExplorerUtils.searchAllTestItems(arguments, monitor);
+                return TestSearchUtils.searchAllTestItems(arguments, monitor);
             case SEARCH_TEST_CODE_LENS:
-                return CodeLensUtils.searchCodeLens(arguments, monitor);
+                return TestSearchUtils.searchCodeLens(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));

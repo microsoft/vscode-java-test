@@ -12,7 +12,7 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
+import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
@@ -48,7 +48,7 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
                 return false;
             }
             for (final String annotation : this.getTestMethodAnnotations()) {
-                if (TestSearchUtils.hasAnnotation(method, annotation)) {
+                if (TestFrameworkUtils.hasAnnotation(method, annotation)) {
                     return true;
                 }
             }
