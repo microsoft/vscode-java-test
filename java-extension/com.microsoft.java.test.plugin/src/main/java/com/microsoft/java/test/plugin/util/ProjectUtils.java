@@ -16,6 +16,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -25,7 +26,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +40,37 @@ public final class ProjectUtils {
     private static final String TEST_SCOPE = "test";
     private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
     private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
+
+    /**
+     * Methods to get the valid paths which contains test code
+     *
+     * @param arguments Array of the workspace folder path
+     * @param monitor
+     * @throws URISyntaxException
+     * @throws JavaModelException
+     */
+    @SuppressWarnings("unchecked")
+    public static String[] getTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
+            throws URISyntaxException, JavaModelException {
+
+        final List<String> resultList = new ArrayList<>();
+        if (arguments == null || arguments.size() == 0) {
+            return new String[0];
+        }
+
+        final String[] uriArray = ((ArrayList<String>) arguments.get(0)).stream().toArray(String[]::new);
+        for (final String uri : uriArray) {
+            final Set<IJavaProject> projectSet = parseProjects(new URI(uri));
+            for (final IJavaProject project : projectSet) {
+                for (final IPath path : getTestPath(project)) {
+                    final IPath projectBasePath = project.getProject().getLocation();
+                    final IPath relativePath = path.makeRelativeTo(project.getPath());
+                    resultList.add(projectBasePath.append(relativePath).toOSString());
+                }
+            }
+        }
+        return resultList.toArray(new String[resultList.size()]);
+    }
 
     public static Set<IJavaProject> parseProjects(URI rootFolderURI) {
         final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();

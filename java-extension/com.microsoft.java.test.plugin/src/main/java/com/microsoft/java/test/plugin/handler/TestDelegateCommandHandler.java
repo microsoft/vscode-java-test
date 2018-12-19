@@ -12,6 +12,7 @@
 package com.microsoft.java.test.plugin.handler;
 
 import com.microsoft.java.test.plugin.util.ProjectInfoFetcher;
+import com.microsoft.java.test.plugin.util.ProjectUtils;
 import com.microsoft.java.test.plugin.util.RuntimeClassPathUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
@@ -23,6 +24,7 @@ import java.util.List;
 @SuppressWarnings("restriction")
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
+    private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.test.path";
     private static final String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
     private static final String GET_PROJECT_INFO = "vscode.java.test.project.info";
     private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
@@ -33,6 +35,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
 
         switch (commandId) {
+            case GET_TEST_SOURCE_PATH:
+                return ProjectUtils.getTestSourcePaths(arguments, monitor);
             case COMPUTE_RUNTIME_CLASSPATH:
                 return RuntimeClassPathUtils.resolveRuntimeClassPath(arguments);
             case GET_PROJECT_INFO:

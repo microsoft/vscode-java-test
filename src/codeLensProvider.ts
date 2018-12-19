@@ -6,6 +6,7 @@ import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
 import { ITestItem, TestLevel } from './protocols';
 import { ITestResultDetails, TestStatus } from './runners/models';
+import { testPathProvider } from './testPathProvider';
 import { testResultManager } from './testResultManager';
 import { searchTestCodeLens } from './utils/commandUtils';
 import { isDarwin } from './utils/platformUtils';
@@ -22,6 +23,10 @@ class TestCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
+        if (!testPathProvider.isInTestPaths(document.uri.fsPath)) {
+            return [];
+        }
+
         try {
             const testClasses: ITestItem[] = await searchTestCodeLens(document.uri.toString());
             const codeLenses: CodeLens[] = [];
