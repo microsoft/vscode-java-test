@@ -58,6 +58,7 @@ public class TestSearchUtils {
 
     /**
      * Method to search the Code Lenses
+     *
      * @param arguments contains the URI of the file to search the Code Lens.
      * @param monitor
      * @throws OperationCanceledException
@@ -98,8 +99,7 @@ public class TestSearchUtils {
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList());
             if (testMethodList.size() > 0) {
-                final TestItem parent = TestItemUtils.constructTestItem(type,
-                        TestItemUtils.getTestLevelForIType(type));
+                final TestItem parent = TestItemUtils.constructTestItem(type, TestItemUtils.getTestLevelForIType(type));
                 parent.setChildren(testMethodList);
                 // Assume the kinds of all methods are the same.
                 parent.setKind(testMethodList.get(0).getKind());
@@ -112,6 +112,7 @@ public class TestSearchUtils {
 
     /**
      * Method to expand the node in Test Explorer
+     *
      * @param arguments {@link com.microsoft.java.test.plugin.model.SearchTestItemParams}
      * @param monitor
      * @throws OperationCanceledException
@@ -151,6 +152,7 @@ public class TestSearchUtils {
 
     /**
      * Method to get all the test items when running tests from Test Explorer
+     *
      * @param arguments {@link com.microsoft.java.test.plugin.model.SearchTestItemParams}
      * @param monitor
      * @throws CoreException
@@ -170,9 +172,10 @@ public class TestSearchUtils {
 
         final IJavaSearchScope scope = createSearchScope(params);
 
-        SearchPattern pattern = TestFrameworkUtils.frameworkSearchers[0].getSearchPattern();
-        for (int i = 1; i < TestFrameworkUtils.frameworkSearchers.length; i++) {
-            pattern = SearchPattern.createOrPattern(pattern, TestFrameworkUtils.frameworkSearchers[i].getSearchPattern());
+        SearchPattern pattern = TestFrameworkUtils.FRAMEWORK_SEARCHERS[0].getSearchPattern();
+        for (int i = 1; i < TestFrameworkUtils.FRAMEWORK_SEARCHERS.length; i++) {
+            pattern = SearchPattern.createOrPattern(pattern,
+                    TestFrameworkUtils.FRAMEWORK_SEARCHERS[i].getSearchPattern());
         }
 
         final Map<String, TestItem> classMap = new HashMap<>();
@@ -258,7 +261,7 @@ public class TestSearchUtils {
             case METHOD:
                 final String fullName = params.getFullName();
                 final String className = fullName.substring(0, fullName.lastIndexOf("#"));
-                final String methodName =  fullName.substring(fullName.lastIndexOf("#") + 1);
+                final String methodName = fullName.substring(fullName.lastIndexOf("#") + 1);
                 final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(params.getUri());
                 final IType[] allTypes = unit.getAllTypes();
                 for (final IType type : allTypes) {
@@ -281,8 +284,7 @@ public class TestSearchUtils {
         final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(params.getUri()));
         for (final IJavaProject project : projectSet) {
             for (final IPackageFragment packageFragment : project.getPackageFragments()) {
-                if (isInTestScope(packageFragment) &&
-                        packageFragment.getCompilationUnits().length > 0) {
+                if (isInTestScope(packageFragment) && packageFragment.getCompilationUnits().length > 0) {
                     resultList.add(TestItemUtils.constructTestItem(packageFragment, TestLevel.PACKAGE));
                 }
             }

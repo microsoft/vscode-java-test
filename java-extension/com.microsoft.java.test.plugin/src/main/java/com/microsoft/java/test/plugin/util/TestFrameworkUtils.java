@@ -28,11 +28,11 @@ import java.util.stream.Collectors;
 
 public class TestFrameworkUtils {
 
-    public static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
+    public static final TestFrameworkSearcher[] FRAMEWORK_SEARCHERS = new TestFrameworkSearcher[] {
         new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
 
     public static TestKind resolveTestKindForMethod(IMethod method) {
-        for (final TestFrameworkSearcher searcher : frameworkSearchers) {
+        for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
             if (searcher.isTestMethod(method)) {
                 return searcher.getTestKind();
             }
