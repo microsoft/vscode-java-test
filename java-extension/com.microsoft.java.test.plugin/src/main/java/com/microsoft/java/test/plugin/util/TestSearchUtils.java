@@ -11,27 +11,15 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import com.google.gson.Gson;
-import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
-import com.microsoft.java.test.plugin.searcher.ClassSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
-import com.microsoft.java.test.plugin.searcher.MethodSearcher;
-import com.microsoft.java.test.plugin.searcher.NestedClassSearcher;
-import com.microsoft.java.test.plugin.searcher.PackageSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
-import com.microsoft.java.test.plugin.searcher.TestItemSearcher;
 import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IClassFile;
@@ -42,25 +30,11 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
-import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Range;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -68,153 +42,8 @@ import java.util.stream.Collectors;
 public class TestSearchUtils {
     protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
 
-    private static final Map<TestLevel, TestItemSearcher[]> searcherMap;
-    private static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
+    public static final TestFrameworkSearcher[] frameworkSearchers = new TestFrameworkSearcher[] {
         new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
-
-    static {
-        searcherMap = new HashMap<TestLevel, TestItemSearcher[]>();
-        searcherMap.put(TestLevel.FOLDER, new TestItemSearcher[] { new PackageSearcher() });
-        searcherMap.put(TestLevel.PACKAGE, new TestItemSearcher[] { new ClassSearcher() });
-        searcherMap.put(TestLevel.CLASS, new TestItemSearcher[] { new NestedClassSearcher(), new MethodSearcher() });
-        searcherMap.put(TestLevel.NESTED_CLASS,
-                new TestItemSearcher[] { new NestedClassSearcher(), new MethodSearcher() });
-    }
-
-    public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor)
-            throws OperationCanceledException, InterruptedException {
-        if (arguments == null || arguments.size() == 0) {
-            return Collections.<TestItem>emptyList();
-        }
-        final Gson gson = new Gson();
-        final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
-
-        // wait for the LS finishing updating
-        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
-
-        final List<TestItem> resultList = new ArrayList<>();
-        final TestItemSearcher[] searchers = searcherMap.get(params.getLevel());
-        if (searchers != null) {
-            for (final TestItemSearcher searcher : searchers) {
-                try {
-                    resultList.addAll(searcher.search(params.getUri(), params.getFullName(), monitor));
-                } catch (final Exception e) {
-                    // swallow the exceptions
-                    e.printStackTrace();
-                }
-            }
-        }
-        return resultList;
-    }
-
-    public static List<TestItem> searchCodeLens(List<Object> arguments, IProgressMonitor monitor)
-            throws OperationCanceledException, InterruptedException, JavaModelException {
-        final List<TestItem> resultList = new ArrayList<>();
-        if (arguments == null || arguments.size() == 0) {
-            return resultList;
-        }
-
-        final String uri = (String) arguments.get(0);
-
-        // wait for the LS finishing updating
-        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
-
-        final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
-        if (!isJavaElementExist(unit) || !isInTestScope(unit) || monitor.isCanceled()) {
-            return resultList;
-        }
-
-        final IType[] childrenTypes = unit.getAllTypes();
-        for (final IType type : childrenTypes) {
-            if (!isTestableClass(type)) {
-                continue;
-            }
-            final List<TestItem> testMethodList = Arrays.stream(type.getMethods()).map(m -> {
-                try {
-                    final TestKind kind = resolveTestKindForMethod(m);
-                    if (kind != null) {
-                        return constructTestItem(m, TestLevel.METHOD, kind);
-                    }
-                    return null;
-                } catch (final JavaModelException e) {
-                    return null;
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toList());
-            if (testMethodList.size() > 0) {
-                final TestItem parent = constructTestItem(type, getTestLevelForIType(type));
-                parent.setChildren(testMethodList);
-                // Assume the kinds of all methods are the same.
-                parent.setKind(testMethodList.get(0).getKind());
-                resultList.add(parent);
-            }
-        }
-
-        return resultList;
-    }
-
-    public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
-            throws CoreException, OperationCanceledException, InterruptedException {
-        if (arguments == null || arguments.size() == 0) {
-            return Collections.<TestItem>emptyList();
-        }
-        final Gson gson = new Gson();
-        final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
-
-        // wait for the LS finishing updating
-        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
-
-        final IJavaSearchScope scope = createSearchScope(params);
-
-        SearchPattern pattern = frameworkSearchers[0].getSearchPattern();
-        for (int i = 1; i < frameworkSearchers.length; i++) {
-            pattern = SearchPattern.createOrPattern(pattern, frameworkSearchers[i].getSearchPattern());
-        }
-
-        final Map<String, TestItem> classMap = new HashMap<>();
-        final SearchRequestor requestor = new SearchRequestor() {
-            @Override
-            public void acceptSearchMatch(SearchMatch match) throws CoreException {
-                final Object element = match.getElement();
-                if (element instanceof IMethod) {
-                    final IMethod method = (IMethod) element;
-                    // Fix bug https://github.com/Microsoft/vscode-java-test/issues/441
-                    //  - The SearchEngine doesn't honer method level search scope.
-                    if (params.getLevel() == TestLevel.METHOD && !scope.encloses(method)) {
-                        return;
-                    }
-                    final TestItem methodItem = constructTestItem(method, TestLevel.METHOD,
-                            resolveTestKindForMethod(method));
-                    final IType type = (IType) method.getParent();
-                    final TestItem classItem = classMap.get(type.getFullyQualifiedName());
-                    if (classItem != null) {
-                        classItem.addChild(methodItem);
-                    } else {
-                        final TestItem newClassItem = constructTestItem(type, getTestLevelForIType(type));
-                        newClassItem.addChild(methodItem);
-                        classMap.put(type.getFullyQualifiedName(), newClassItem);
-                    }
-                }
-            }
-
-        };
-
-        new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
-                scope, requestor, monitor);
-
-        final List<TestItem> searchResult = new ArrayList<>();
-        for (final TestItem testClass : classMap.values()) {
-            if (testClass.getChildren() == null || testClass.getChildren().size() <= 0) {
-                continue;
-            } else if (testClass.getChildren().size() == 1) {
-                searchResult.add(testClass.getChildren().get(0));
-            } else {
-                // Assume the kinds of all methods are the same.
-                testClass.setKind(testClass.getChildren().get(0).getKind());
-                searchResult.add(testClass);
-            }
-        }
-        return searchResult;
-    }
 
     public static Range getRange(ICompilationUnit typeRoot, IJavaElement element) throws JavaModelException {
         final ISourceRange range = ((ISourceReference) element).getNameRange();
@@ -301,11 +130,11 @@ public class TestSearchUtils {
         return getAnnotation(method, methodAnnotation).isPresent();
     }
 
-    private static boolean isJavaElementExist(IJavaElement element) {
+    public static boolean isJavaElementExist(IJavaElement element) {
         return element != null && element.getResource() != null && element.getResource().exists();
     }
 
-    private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
+    public static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
         for (final IPath testRootPath : ProjectUtils.getTestPath(project)) {
             if (testRootPath.isPrefixOf(element.getPath())) {
@@ -315,7 +144,7 @@ public class TestSearchUtils {
         return false;
     }
 
-    private static TestLevel getTestLevelForIType(IType type) {
+    public static TestLevel getTestLevelForIType(IType type) {
         if (type.getParent() instanceof ICompilationUnit) {
             return TestLevel.CLASS;
         } else {
@@ -323,52 +152,7 @@ public class TestSearchUtils {
         }
     }
 
-    private static IJavaSearchScope createSearchScope(SearchTestItemParams params) throws JavaModelException {
-        switch (params.getLevel()) {
-            case ROOT:
-                final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
-                        .getJavaProjects();
-                return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
-            case FOLDER:
-                final IJavaElement project = JavaCore.create(JDTUtils.findFolder(params.getUri()));
-                return SearchEngine.createJavaSearchScope(new IJavaElement[] { project }, IJavaSearchScope.SOURCES);
-            case PACKAGE:
-                final IJavaElement packageElement = JDTUtils.resolvePackage(params.getUri());
-                return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
-                        IJavaSearchScope.SOURCES);
-            case CLASS:
-            case NESTED_CLASS:
-                final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
-                final IType[] types = compilationUnit.getAllTypes();
-                for (final IType type : types) {
-                    if (type.getFullyQualifiedName().equals(params.getFullName())) {
-                        return SearchEngine.createJavaSearchScope(new IJavaElement[] { type },
-                                IJavaSearchScope.SOURCES);
-                    }
-                }
-                break;
-            case METHOD:
-                final String fullName = params.getFullName();
-                final String className = fullName.substring(0, fullName.lastIndexOf("#"));
-                final String methodName =  fullName.substring(fullName.lastIndexOf("#") + 1);
-                final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(params.getUri());
-                final IType[] allTypes = unit.getAllTypes();
-                for (final IType type : allTypes) {
-                    if (type.getFullyQualifiedName().equals(className)) {
-                        for (final IMethod method : type.getMethods()) {
-                            if (method.getElementName().equals(methodName)) {
-                                return SearchEngine.createJavaSearchScope(new IJavaElement[] { method },
-                                        IJavaSearchScope.SOURCES);
-                            }
-                        }
-                    }
-                }
-        }
-
-        throw new RuntimeException("Cannot resolve the search scope for " + params.getFullName());
-    }
-
-    private static String parseTestItemFullName(IJavaElement element, TestLevel level) {
+    public static String parseTestItemFullName(IJavaElement element, TestLevel level) {
         switch (level) {
             case CLASS:
             case NESTED_CLASS:
@@ -382,7 +166,7 @@ public class TestSearchUtils {
         }
     }
 
-    private static Range parseTestItemRange(IJavaElement element, TestLevel level) throws JavaModelException {
+    public static Range parseTestItemRange(IJavaElement element, TestLevel level) throws JavaModelException {
         switch (level) {
             case CLASS:
             case NESTED_CLASS:
