@@ -78,7 +78,7 @@ public class TestSearchUtils {
         Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
 
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
-        if (!isJavaElementExist(unit) || monitor.isCanceled()) {
+        if (!isJavaElementExist(unit) || !isInTestScope(unit) || monitor.isCanceled()) {
             return resultList;
         }
 
