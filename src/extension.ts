@@ -38,8 +38,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         throw new Error('Could not find Java home.');
     }
 
-    await testFileWatcher.initialize(context);
-
+    testFileWatcher.initialize(context);
     testExplorer.initialize(context);
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
