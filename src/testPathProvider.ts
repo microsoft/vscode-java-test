@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Disposable, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { logger } from './logger/logger';
 import { getTestSourcePaths } from './utils/commandUtils';
 
 class TestPathProvider implements Disposable {
@@ -16,6 +17,7 @@ class TestPathProvider implements Disposable {
                     this.testPaths.add(Uri.file(path).fsPath);
                 }
             } catch (error) {
+                logger.error('Failed to get the test paths', error);
                 for (const workspaceFolder of workspace.workspaceFolders) {
                     this.testPaths.add(workspaceFolder.uri.fsPath);
                 }

@@ -58,7 +58,7 @@ public final class ProjectUtils {
             return new String[0];
         }
 
-        final String[] uriArray = ((ArrayList<String>) arguments.get(0)).stream().toArray(String[]::new);
+        final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
         for (final String uri : uriArray) {
             final Set<IJavaProject> projectSet = parseProjects(new URI(uri));
             for (final IJavaProject project : projectSet) {
