@@ -37,11 +37,8 @@ class TestFileWatcher {
         }, null, disposables);
 
         watcher.onDidDelete((uri: Uri) => {
-            const node: TestTreeNode | undefined = explorerNodeManager.getNode(uri.fsPath);
-            if (node) {
-                explorerNodeManager.removeNode(uri.fsPath);
-                testExplorer.refresh();
-            }
+            explorerNodeManager.removeNode(uri.fsPath);
+            testExplorer.refresh();
         }, null, disposables);
     }
 }
