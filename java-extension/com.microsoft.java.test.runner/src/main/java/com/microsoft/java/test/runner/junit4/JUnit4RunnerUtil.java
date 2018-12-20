@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 /** Utility class for building test executing request. */
 public class JUnit4RunnerUtil {
@@ -36,61 +35,46 @@ public class JUnit4RunnerUtil {
     public static List<JUnit4TestReference> createTestReferences(String[] suites) {
         if (suites.length == 0) {
             return emptyList();
-        } else if (suites.length == 1) {
-            final String suite = suites[0];
-            final int separatorIndex = suite.indexOf('#');
-            return separatorIndex == -1 ? getRequestForClass(suite) : getRequestForOneMethod(suite, separatorIndex);
         }
 
-        return getRequestForClasses(suites);
+        final List<JUnit4TestReference> referencesList = new LinkedList<>();
+        for (final String suite : suites) {
+            final int separatorIndex = suite.indexOf('#');
+            final JUnit4TestReference reference = separatorIndex == -1 ? getRequestForClass(suite)
+                    : getRequestForOneMethod(suite, separatorIndex);
+            if (reference != null) {
+                referencesList.add(reference);
+            }
+        }
+
+        return referencesList;
     }
 
-    private static List<JUnit4TestReference> getRequestForOneMethod(String suite, int separatorIndex) {
+    private static JUnit4TestReference getRequestForOneMethod(String suite, int separatorIndex) {
         try {
             final Class<?> suiteClass = Class.forName(suite.substring(0, separatorIndex));
             final String method = suite.substring(separatorIndex + 1);
             final Request request = Request.method(suiteClass, method);
             final Runner runner = request.getRunner();
-            return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
+            return new JUnit4TestReference(runner, runner.getDescription());
         } catch (final ClassNotFoundException e) {
             final String message = String.format("No test found to run for suite %s. Details: %s.", suite,
                     e.getMessage());
             stream.println(new TestMessageItem(message, e));
-            return emptyList();
+            return null;
         }
     }
 
-    private static List<JUnit4TestReference> getRequestForClass(String suite) {
+    private static JUnit4TestReference getRequestForClass(String suite) {
         try {
             final Request request = Request.aClass(Class.forName(suite));
             final Runner runner = request.getRunner();
-            return singletonList(new JUnit4TestReference(runner, runner.getDescription()));
+            return new JUnit4TestReference(runner, runner.getDescription());
         } catch (final ClassNotFoundException e) {
             final String message = String.format("No test found to run for suite %s. Details: %s.", suite,
                     e.getMessage());
             stream.println(new TestMessageItem(message, e));
-            return emptyList();
+            return null;
         }
-    }
-
-    private static List<JUnit4TestReference> getRequestForClasses(String[] args) {
-        final List<JUnit4TestReference> suites = new LinkedList<>();
-        for (final String classFqn : args) {
-            try {
-                final Class<?> aClass = Class.forName(classFqn);
-                final Request request = Request.aClass(aClass);
-                final Runner runner = request.getRunner();
-                suites.add(new JUnit4TestReference(runner, runner.getDescription()));
-            } catch (final ClassNotFoundException ignored) {
-                final String message = String.format("Failed to parse tests for suite %s. Details: %s.", classFqn,
-                        ignored.getMessage());
-                stream.println(new TestMessageItem(message, ignored));
-            }
-        }
-        if (suites.isEmpty()) {
-            stream.println(new TestMessageItem("No test found to run.", null));
-            return emptyList();
-        }
-        return suites;
     }
 }
