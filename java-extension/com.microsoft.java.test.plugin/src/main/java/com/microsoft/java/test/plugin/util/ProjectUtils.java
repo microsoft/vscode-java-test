@@ -42,7 +42,7 @@ public final class ProjectUtils {
     private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
 
     /**
-     * Methods to get the valid paths which contains test code
+     * Method to get the valid paths which contains test code
      *
      * @param arguments Array of the workspace folder path
      * @param monitor

@@ -6,7 +6,7 @@ export namespace JavaLanguageServerCommands {
 }
 
 export namespace JavaTestRunnerDelegateCommands {
-    export const GET_TEST_SOURCE_PATH: string = 'vscode.java.test.test.path';
+    export const GET_TEST_SOURCE_PATH: string = 'vscode.java.test.get.testpath';
     export const SEARCH_TEST_ITEMS: string = 'vscode.java.test.search.items';
     export const SEARCH_TEST_ITEMS_ALL: string = 'vscode.java.test.search.items.all';
     export const SEARCH_TEST_CODE_LENS: string = 'vscode.java.test.search.codelens';

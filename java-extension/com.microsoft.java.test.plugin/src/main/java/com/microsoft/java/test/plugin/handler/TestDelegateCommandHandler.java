@@ -24,7 +24,7 @@ import java.util.List;
 @SuppressWarnings("restriction")
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
-    private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.test.path";
+    private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.get.testpath";
     private static final String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
     private static final String GET_PROJECT_INFO = "vscode.java.test.project.info";
     private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
