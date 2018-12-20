@@ -20,6 +20,8 @@ import org.eclipse.jdt.launching.JavaRuntime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -37,22 +39,22 @@ public class RuntimeClassPathUtils {
                 .map(fsPath -> new Path(fsPath))
                 .toArray(IPath[]::new);
 
-        final List<IJavaProject> javaProjectList = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
+        final Set<IJavaProject> javaProjectSet = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
                 .map(project -> ProjectUtils.getJavaProject(project))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        final Set<IJavaProject> projectsToTest = Arrays.stream(testPaths)
-                .map(testPath -> {
-                    for (final IJavaProject project : javaProjectList) {
-                        if (project.getProject().getLocation().isPrefixOf(testPath)) {
-                            return project;
-                        }
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+
+        final Set<IJavaProject> projectsToTest = new HashSet<>();
+        for (final IPath testPath : testPaths) {
+            final Iterator<IJavaProject> iterator = javaProjectSet.iterator();
+            while (iterator.hasNext()) {
+                final IJavaProject project = iterator.next();
+                if (project.getProject().getLocation().isPrefixOf(testPath)) {
+                    projectsToTest.add(project);
+                    iterator.remove();
+                }
+            }
+        }
 
         final List<String> classPathList = new ArrayList<>();
         for (final IJavaProject project : projectsToTest) {
