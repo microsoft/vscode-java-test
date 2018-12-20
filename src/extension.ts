@@ -4,7 +4,7 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { commands, Disposable, Extension, ExtensionContext, extensions, FileSystemWatcher, languages, Uri, window, workspace } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, languages, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTests, runTests } from './commands/executeTests';
@@ -17,6 +17,7 @@ import { TestTreeNode } from './explorer/TestTreeNode';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
 import { runnerExecutor } from './runners/runnerExecutor';
+import { testFileWatcher } from './testFileWatcher';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
@@ -37,21 +38,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         throw new Error('Could not find Java home.');
     }
 
-    const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
-    watcher.onDidChange((uri: Uri) => {
-        const node: TestTreeNode | undefined = explorerNodeManager.getNode(uri.fsPath);
-        if (node) {
-            testExplorer.refresh(node);
-        }
-    });
-    watcher.onDidDelete((uri: Uri) => {
-        explorerNodeManager.removeNode(uri.fsPath);
-        testExplorer.refresh();
-    });
-    watcher.onDidCreate(() => {
-        testExplorer.refresh();
-    });
-
+    testFileWatcher.initialize(context);
     testExplorer.initialize(context);
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
@@ -67,7 +54,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testResultManager,
         testReportProvider,
         logger,
-        watcher,
         languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),

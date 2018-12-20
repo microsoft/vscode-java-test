@@ -5,6 +5,11 @@ import { commands, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { IProjectInfo, ISearchTestItemParams, ITestItem } from '../protocols';
 
+export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
+    return await executeJavaLanguageServerCommand<string[]>(
+        JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
+}
+
 export async function searchTestItems(params: ISearchTestItemParams): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
         JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(params)) || [];
