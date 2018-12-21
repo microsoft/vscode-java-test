@@ -15,6 +15,7 @@ export interface ITestItem extends ITestItemBase {
     kind: TestKind;
     project: string;
     level: TestLevel;
+    paramTypes: string[];
 }
 
 export interface ISearchTestItemParams {
