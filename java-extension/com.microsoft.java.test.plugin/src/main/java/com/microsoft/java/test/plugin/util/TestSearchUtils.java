@@ -14,7 +14,6 @@ package com.microsoft.java.test.plugin.util;
 import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
-import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -87,13 +86,9 @@ public class TestSearchUtils {
             if (!isTestableClass(type)) {
                 continue;
             }
-            final List<TestItem> testMethodList = Arrays.stream(type.getMethods()).map(m -> {
+            final List<TestItem> testMethodList = Arrays.stream(type.getMethods()).map(method -> {
                 try {
-                    final TestKind kind = TestFrameworkUtils.resolveTestKindForMethod(m);
-                    if (kind != null) {
-                        return TestItemUtils.constructTestItem(m, TestLevel.METHOD, kind);
-                    }
-                    return null;
+                    return TestFrameworkUtils.resoveTestItemForMethod(method);
                 } catch (final JavaModelException e) {
                     return null;
                 }
@@ -190,8 +185,7 @@ public class TestSearchUtils {
                     if (params.getLevel() == TestLevel.METHOD && !scope.encloses(method)) {
                         return;
                     }
-                    final TestItem methodItem = TestItemUtils.constructTestItem(method, TestLevel.METHOD,
-                            TestFrameworkUtils.resolveTestKindForMethod(method));
+                    final TestItem methodItem = TestFrameworkUtils.resoveTestItemForMethod(method);
                     final IType type = (IType) method.getParent();
                     final TestItem classItem = classMap.get(type.getFullyQualifiedName());
                     if (classItem != null) {
@@ -312,9 +306,9 @@ public class TestSearchUtils {
                     resultList.add(TestItemUtils.constructTestItem(innerType, TestLevel.NESTED_CLASS));
                 }
                 for (final IMethod method : type.getMethods()) {
-                    final TestKind kind = TestFrameworkUtils.resolveTestKindForMethod(method);
-                    if (kind != null) {
-                        resultList.add(TestItemUtils.constructTestItem(method, TestLevel.METHOD, kind));
+                    final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
+                    if (item != null) {
+                        resultList.add(item);
                     }
                 }
             }
@@ -327,9 +321,9 @@ public class TestSearchUtils {
         for (final IType type : compilationUnit.getAllTypes()) {
             if (type.getFullyQualifiedName().equals(params.getFullName())) {
                 for (final IMethod method : type.getMethods()) {
-                    final TestKind kind = TestFrameworkUtils.resolveTestKindForMethod(method);
-                    if (kind != null) {
-                        resultList.add(TestItemUtils.constructTestItem(method, TestLevel.METHOD, kind));
+                    final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
+                    if (item != null) {
+                        resultList.add(item);
                     }
                 }
             }

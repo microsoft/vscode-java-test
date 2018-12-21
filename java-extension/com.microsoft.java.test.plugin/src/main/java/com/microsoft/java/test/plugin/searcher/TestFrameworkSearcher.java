@@ -11,9 +11,11 @@
 
 package com.microsoft.java.test.plugin.searcher;
 
+import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 
 public interface TestFrameworkSearcher {
@@ -25,4 +27,6 @@ public interface TestFrameworkSearcher {
     String[] getTestMethodAnnotations();
 
     SearchPattern getSearchPattern();
+
+    TestItem parseTestItem(IMethod method) throws JavaModelException;
 }
