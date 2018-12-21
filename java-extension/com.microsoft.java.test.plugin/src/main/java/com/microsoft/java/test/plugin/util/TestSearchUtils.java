@@ -241,8 +241,10 @@ public class TestSearchUtils {
                         .getJavaProjects();
                 return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
-                final IJavaElement project = JavaCore.create(JDTUtils.findFolder(params.getUri()));
-                return SearchEngine.createJavaSearchScope(new IJavaElement[] { project }, IJavaSearchScope.SOURCES);
+
+                final IJavaProject[] javaProjects = JavaCore.create(JDTUtils.findFolder(params.getUri())).getJavaModel()
+                        .getJavaProjects();
+                return SearchEngine.createJavaSearchScope(javaProjects, IJavaSearchScope.SOURCES);
             case PACKAGE:
                 final IJavaElement packageElement = JDTUtils.resolvePackage(params.getUri());
                 return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
