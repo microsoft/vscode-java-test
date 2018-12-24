@@ -25,7 +25,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Range;
 
-import static java.util.Collections.emptyList;
+import java.util.Collections;
 
 @SuppressWarnings("restriction")
 public class TestItemUtils {
@@ -42,7 +42,7 @@ public class TestItemUtils {
         final Range range = parseTestItemRange(element);
         final String projectName = element.getJavaProject().getProject().getName();
 
-        return new TestItem(displayName, fullName, uri, range, level, kind, projectName, emptyList());
+        return new TestItem(displayName, fullName, uri, range, level, kind, projectName, Collections.emptyList());
     }
 
     public static TestLevel getTestLevelForIType(IType type) {
