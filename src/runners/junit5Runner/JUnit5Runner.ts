@@ -21,7 +21,7 @@ export class JUnit5Runner extends BaseRunner {
             if (test.level === TestLevel.Class || test.level === TestLevel.NestedClass) {
                 params.push('-c', test.fullName);
             } else if (test.level === TestLevel.Method) {
-                params.push('-m', test.fullName);
+                params.push('-m', `${test.fullName}(${test.paramTypes.join(',')})`);
             }
         }
         return params;

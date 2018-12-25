@@ -11,7 +11,7 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
@@ -31,10 +31,10 @@ public class TestFrameworkUtils {
     public static final TestFrameworkSearcher[] FRAMEWORK_SEARCHERS = new TestFrameworkSearcher[] {
         new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
 
-    public static TestKind resolveTestKindForMethod(IMethod method) {
+    public static TestItem resoveTestItemForMethod(IMethod method) throws JavaModelException {
         for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
             if (searcher.isTestMethod(method)) {
-                return searcher.getTestKind();
+                return searcher.parseTestItem(method);
             }
         }
         return null;

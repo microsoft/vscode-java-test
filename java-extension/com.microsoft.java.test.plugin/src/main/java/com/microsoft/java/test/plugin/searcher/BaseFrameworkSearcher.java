@@ -11,8 +11,11 @@
 
 package com.microsoft.java.test.plugin.searcher;
 
+import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
+import com.microsoft.java.test.plugin.util.TestItemUtils;
 
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
@@ -75,5 +78,10 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
                             SearchPattern.R_EXACT_MATCH));
         }
         return searchPattern;
+    }
+
+    @Override
+    public TestItem parseTestItem(IMethod method) throws JavaModelException {
+        return TestItemUtils.constructTestItem(method, TestLevel.METHOD, this.getTestKind());
     }
 }

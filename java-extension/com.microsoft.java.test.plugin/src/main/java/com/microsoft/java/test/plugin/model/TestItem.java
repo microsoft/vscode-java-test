@@ -33,8 +33,10 @@ public class TestItem {
 
     private String project;
 
-    public TestItem(String displayName, String fullName, String uri, Range range, TestLevel level, TestKind kind,
-            String project) {
+    private List<String> paramTypes;
+
+    public TestItem(String displayName, String fullName, String uri, String project, List<String> paramTypes,
+            Range range, TestLevel level, TestKind kind) {
         this.displayName = displayName;
         this.fullName = fullName;
         this.uri = uri;
@@ -42,6 +44,7 @@ public class TestItem {
         this.level = level;
         this.kind = kind;
         this.project = project;
+        this.paramTypes = paramTypes;
     }
 
     public String getDisplayName() {
@@ -113,5 +116,13 @@ public class TestItem {
             this.children = new ArrayList<>();
         }
         this.children.add(child);
+    }
+
+    public List<String> getParamTypes() {
+        return paramTypes;
+    }
+
+    public void setParamTypes(List<String> paramTypes) {
+        this.paramTypes = paramTypes;
     }
 }
