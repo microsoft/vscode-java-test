@@ -35,8 +35,8 @@ public class TestItem {
 
     private List<String> paramTypes;
 
-    public TestItem(String displayName, String fullName, String uri, Range range, TestLevel level, TestKind kind,
-            String project, List<String> paramTypes) {
+    public TestItem(String displayName, String fullName, String uri, String project, List<String> paramTypes,
+            Range range, TestLevel level, TestKind kind) {
         this.displayName = displayName;
         this.fullName = fullName;
         this.uri = uri;

@@ -42,7 +42,7 @@ public class TestItemUtils {
         final Range range = parseTestItemRange(element);
         final String projectName = element.getJavaProject().getProject().getName();
 
-        return new TestItem(displayName, fullName, uri, range, level, kind, projectName, Collections.emptyList());
+        return new TestItem(displayName, fullName, uri, projectName, Collections.emptyList(), range, level, kind);
     }
 
     public static TestLevel getTestLevelForIType(IType type) {

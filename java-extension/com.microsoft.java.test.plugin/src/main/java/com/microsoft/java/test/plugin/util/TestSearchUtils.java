@@ -43,9 +43,9 @@ import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,7 +66,7 @@ public class TestSearchUtils {
      */
     public static List<TestItem> searchCodeLens(List<Object> arguments, IProgressMonitor monitor)
             throws OperationCanceledException, InterruptedException, JavaModelException {
-        final List<TestItem> resultList = new ArrayList<>();
+        final List<TestItem> resultList = new LinkedList<>();
         if (arguments == null || arguments.size() == 0) {
             return resultList;
         }
@@ -117,7 +117,7 @@ public class TestSearchUtils {
      */
     public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor)
             throws OperationCanceledException, InterruptedException, URISyntaxException, JavaModelException {
-        final List<TestItem> resultList = new ArrayList<>();
+        final List<TestItem> resultList = new LinkedList<>();
 
         if (arguments == null || arguments.size() == 0) {
             return resultList;
@@ -156,7 +156,7 @@ public class TestSearchUtils {
      */
     public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
             throws CoreException, OperationCanceledException, InterruptedException {
-        final List<TestItem> searchResult = new ArrayList<>();
+        final List<TestItem> searchResult = new LinkedList<>();
 
         if (arguments == null || arguments.size() == 0) {
             return searchResult;
@@ -320,14 +320,20 @@ public class TestSearchUtils {
         final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
         for (final IType type : compilationUnit.getAllTypes()) {
             if (type.getFullyQualifiedName().equals(params.getFullName())) {
-                for (final IMethod method : type.getMethods()) {
-                    final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
-                    if (item != null) {
-                        resultList.add(item);
-                    }
-                }
+                resultList.addAll(searchTestMethodsOfType(type));
             }
         }
+    }
+
+    private static List<TestItem> searchTestMethodsOfType(IType type) throws JavaModelException {
+        final List<TestItem> results = new LinkedList<>();
+        for (final IMethod method : type.getMethods()) {
+            final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
+            if (item != null) {
+                results.add(item);
+            }
+        }
+        return results;
     }
 
     private static boolean isTestableClass(IType type) throws JavaModelException {
