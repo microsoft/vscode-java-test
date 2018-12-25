@@ -1,6 +1,8 @@
 # Java Test Runner
 
 [![Travis CI](https://travis-ci.org/Microsoft/vscode-java-test.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-java-test)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/Microsoft/vscode-java-test.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Microsoft/vscode-java-test/alerts/)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/Microsoft/vscode-java-test.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Microsoft/vscode-java-test/context:javascript)
 
 ## Overview
 
