@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Change the style of the test report. [#517](https://github.com/Microsoft/vscode-java-test/issues/517)
 
 ## Fixed
-- Fix the bug that test explorer will kepp refreshing when opening a large project. [#461](https://github.com/Microsoft/vscode-java-test/issues/461)
-- Fix several bugs that cause the extension could not run test cases successfully. ([#134](https://github.com/Microsoft/vscode-java-test/issues/134), [#488](https://github.com/Microsoft/vscode-java-test/issues/488), [#504](https://github.com/Microsoft/vscode-java-test/issues/504), [#515](https://github.com/Microsoft/vscode-java-test/issues/515))
+- Fix the bug that test explorer will keep refreshing when opening a large project. [#461](https://github.com/Microsoft/vscode-java-test/issues/461)
+- Fix several bugs that cause the extension fails to run test cases. ([#134](https://github.com/Microsoft/vscode-java-test/issues/134), [#488](https://github.com/Microsoft/vscode-java-test/issues/488), [#504](https://github.com/Microsoft/vscode-java-test/issues/504), [#515](https://github.com/Microsoft/vscode-java-test/issues/515))
 
 ## 0.12.0 - Dec 2018
 
