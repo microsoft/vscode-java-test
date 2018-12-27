@@ -153,9 +153,10 @@ public class TestSearchUtils {
      * @throws CoreException
      * @throws OperationCanceledException
      * @throws InterruptedException
+     * @throws URISyntaxException
      */
     public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
-            throws CoreException, OperationCanceledException, InterruptedException {
+            throws CoreException, OperationCanceledException, InterruptedException, URISyntaxException {
         final List<TestItem> searchResult = new LinkedList<>();
 
         if (arguments == null || arguments.size() == 0) {
@@ -228,17 +229,17 @@ public class TestSearchUtils {
         return false;
     }
 
-    private static IJavaSearchScope createSearchScope(SearchTestItemParams params) throws JavaModelException {
+    private static IJavaSearchScope createSearchScope(SearchTestItemParams params)
+            throws JavaModelException, URISyntaxException {
         switch (params.getLevel()) {
             case ROOT:
                 final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
                         .getJavaProjects();
                 return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
-
-                final IJavaProject[] javaProjects = JavaCore.create(JDTUtils.findFolder(params.getUri())).getJavaModel()
-                        .getJavaProjects();
-                return SearchEngine.createJavaSearchScope(javaProjects, IJavaSearchScope.SOURCES);
+                final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(params.getUri()));
+                return SearchEngine.createJavaSearchScope(projectSet.toArray(new IJavaElement[projectSet.size()]),
+                        IJavaSearchScope.SOURCES);
             case PACKAGE:
                 final IJavaElement packageElement = JDTUtils.resolvePackage(params.getUri());
                 return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
