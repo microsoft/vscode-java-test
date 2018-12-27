@@ -4,6 +4,20 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.13.0 - Dec 2018
+
+## Added
+- Add Chinese language support. [#437](https://github.com/Microsoft/vscode-java-test/issues/437)
+
+## Changed
+- Use webpack to improve the extension startup time. [#495](https://github.com/Microsoft/vscode-java-test/issues/495)
+- Change the activation events of the extension. [#516](https://github.com/Microsoft/vscode-java-test/issues/516)
+- Change the style of the test report. [#517](https://github.com/Microsoft/vscode-java-test/issues/517)
+
+## Fixed
+- Fix the bug that test explorer will kepp refreshing when opening a large project. [#461](https://github.com/Microsoft/vscode-java-test/issues/461)
+- Fix several bugs that cause the extension could not run test cases successfully. ([#134](https://github.com/Microsoft/vscode-java-test/issues/134), [#488](https://github.com/Microsoft/vscode-java-test/issues/488), [#504](https://github.com/Microsoft/vscode-java-test/issues/504), [#515](https://github.com/Microsoft/vscode-java-test/issues/515))
+
 ## 0.12.0 - Dec 2018
 
 ## Added
@@ -16,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Change the foreground color of the status bar items. [#467](https://github.com/Microsoft/vscode-java-test/issues/467)
 
 ## Fixed
-- Fix the bug that test runners will run forever. ([#482](https://github.com/Microsoft/vscode-java-test/issues/482))
+- Fix the bug that test runners will run forever. [#482](https://github.com/Microsoft/vscode-java-test/issues/482)
 
 ## 0.11.1 - Nov 2018
 
