@@ -181,9 +181,9 @@ public class TestSearchUtils {
                 final Object element = match.getElement();
                 if (element instanceof IMethod) {
                     final IMethod method = (IMethod) element;
-                    // Fix bug https://github.com/Microsoft/vscode-java-test/issues/441
-                    // - The SearchEngine doesn't honer method level search scope.
-                    if (params.getLevel() == TestLevel.METHOD && !scope.encloses(method)) {
+                    // The search result might not in the search scope.
+                    // See: https://github.com/Microsoft/vscode-java-test/issues/441
+                    if (!scope.encloses(method)) {
                         return;
                     }
                     final TestItem methodItem = TestFrameworkUtils.resoveTestItemForMethod(method);
