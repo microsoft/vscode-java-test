@@ -1,6 +1,8 @@
 # Java Test Runner
 
 [![Travis CI](https://travis-ci.org/Microsoft/vscode-java-test.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-java-test)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/Microsoft/vscode-java-test.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Microsoft/vscode-java-test/alerts/)
+[![Gitter](https://badges.gitter.im/Microsoft/vscode-java-test.svg)](https://gitter.im/Microsoft/vscode-java-test)
 
 ## Overview
 

@@ -35,7 +35,7 @@ gulp.task('build-server', gulp.series('build-plugin', 'download-server'));
 gulp.task('checkstyle', (done) => {
     cp.execSync(`${mvnw()} verify`, { cwd: serverDir, stdio: [0, 1, 2] });
     done();
-})
+});
 
 gulp.task('tslint', (done) => {
     gulp.src(['**/*.ts', '!**/*.d.ts', '!node_modules/**', '!./src/views/node_modules/**'])
