@@ -15,4 +15,5 @@ resources/templates/scss/**
 dist/**/*.map
 webpack.*.js
 node_modules
+*.log
 demo
