@@ -58,8 +58,6 @@ gulp.task('sass', (done) => {
 });
 
 gulp.task('download-resources', (done) => {
-    download('https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css')
-        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'css')));
     download('https://fontawesome.com/v4.7.0/assets/font-awesome-4.7.0.zip')
         .pipe(decompress({strip: 1, filter: file => path.basename(file.path) === 'font-awesome.min.css' || path.dirname(file.path) === 'fonts'}))
         .pipe(gulp.dest(path.join(resourceDir, 'templates')));
