@@ -14,10 +14,12 @@ class TestReportProvider implements Disposable {
     private compiledReportTemplate: pug.compileTemplate;
     private context: ExtensionContext;
     private panel: WebviewPanel | undefined;
+    private resourceBasePath: string;
 
     public initialize(context: ExtensionContext): void {
         this.context = context;
         this.compiledReportTemplate = require('pug-loader!../resources/templates/report.pug');
+        this.resourceBasePath = path.join(this.context.extensionPath, 'resources', 'templates');
     }
 
     public async report(tests: ITestItemBase[]): Promise<void> {
@@ -25,7 +27,7 @@ class TestReportProvider implements Disposable {
         if (!this.panel) {
             this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', position, {
                 localResourceRoots: [
-                    Uri.file(path.join(this.context.extensionPath, 'resources', 'templates', 'css')),
+                    Uri.file(this.resourceBasePath),
                 ],
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -84,6 +86,10 @@ class TestReportProvider implements Disposable {
             passedCount,
             failedCount,
             skippedCount,
+            jqueryUri: Uri.file(path.join(this.resourceBasePath, 'js', 'jquery-3.3.1.slim.min.js')).with({ scheme: 'vscode-resource' }),
+            popperUri: Uri.file(path.join(this.resourceBasePath, 'js', 'popper.min.js')).with({ scheme: 'vscode-resource' }),
+            bootstrapUri: Uri.file(path.join(this.resourceBasePath, 'js', 'bootstrap.min.js')).with({ scheme: 'vscode-resource' }),
+            fontawesomeUri: Uri.file(path.join(this.resourceBasePath, 'css', 'font-awesome.min.css')).with({ scheme: 'vscode-resource' }),
         });
     }
 

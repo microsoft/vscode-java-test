@@ -12,8 +12,10 @@ const fse = require('fs-extra');
 const os = require('os');
 
 const serverDir = path.join(__dirname, 'java-extension');
+const resourceDir = path.join(__dirname, 'resources');
 const vscodeExtensionsPath = path.join(os.homedir(), '.vscode', 'extensions');
 
+// Build required jar files.
 gulp.task('build-plugin', (done) => {
     cp.execSync(`${mvnw()} clean package`, { cwd: serverDir, stdio: [0, 1, 2] });
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.plugin/target/*.jar'))
@@ -32,6 +34,7 @@ gulp.task('download-server', (done) => {
 
 gulp.task('build-server', gulp.series('build-plugin', 'download-server'));
 
+// Lint
 gulp.task('checkstyle', (done) => {
     cp.execSync(`${mvnw()} verify`, { cwd: serverDir, stdio: [0, 1, 2] });
     done();
@@ -46,6 +49,7 @@ gulp.task('tslint', (done) => {
 
 gulp.task('lint', gulp.series('checkstyle', 'tslint'));
 
+// Test report resources
 gulp.task('sass', (done) => {
     gulp.src(['resources/templates/scss/*.scss'])
         .pipe(sass())
@@ -53,6 +57,22 @@ gulp.task('sass', (done) => {
     done();
 });
 
+gulp.task('download-resources', (done) => {
+    download('https://fontawesome.com/v4.7.0/assets/font-awesome-4.7.0.zip')
+        .pipe(decompress({strip: 1, filter: file => path.basename(file.path) === 'font-awesome.min.css' || path.dirname(file.path) === 'fonts'}))
+        .pipe(gulp.dest(path.join(resourceDir, 'templates')));
+    download('https://code.jquery.com/jquery-3.3.1.slim.min.js')
+        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
+    download('https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js')
+        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
+    download('https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js')
+        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
+    done();
+});
+
+gulp.task('resources', gulp.series('sass', 'download-resources'));
+
+// For test
 gulp.task('install-java-language-server', async (done) => {
     await installExtension('redhat', 'java', '0.31.0');
     done();

@@ -49,4 +49,6 @@ node_modules
 *.vsix
 .vscode-test
 resources/templates/css/**
+resources/templates/js/**
+resources/templates/fonts/**
 dist

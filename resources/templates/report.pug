@@ -1,16 +1,16 @@
-include ./report_method_table.pug
+include /report_method_table.pug
 doctype html
 html(lang="en")
     head
-        meta(http-equiv="Content-Security-Policy" content="default-src https:; img-src vscode-resource:; style-src https: vscode-resource: 'unsafe-inline'; script-src vscode-resource: https:;")
+        meta(http-equiv="Content-Security-Policy" content="default-src vscode-resource:; img-src vscode-resource:; style-src vscode-resource: 'unsafe-inline'; script-src vscode-resource:;")
         meta(charset="utf-8")
         meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
-        link(href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css", rel="stylesheet", integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN", crossorigin="anonymous")
+        link(href=`${fontawesomeUri}`, rel="stylesheet", integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN", crossorigin="anonymous")
         style
-            include ./css/report.css
-        script(nonce="check", src="https://code.jquery.com/jquery-3.3.1.slim.min.js", integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo", crossorigin="anonymous")
-        script(nonce="check", src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js", integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49", crossorigin="anonymous")
-        script(nonce="check", src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js", integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy", crossorigin="anonymous")
+            include /css/report.css
+        script(nonce="check", src=`${jqueryUri}`, integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo", crossorigin="anonymous")
+        script(nonce="check", src=`${popperUri}`, integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49", crossorigin="anonymous")
+        script(nonce="check", src=`${bootstrapUri}`, integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy", crossorigin="anonymous")
     body.container-fluid
         ul.nav.nav-pills.mt-3(role='tablist')
             li.nav-item
