@@ -59,8 +59,10 @@ public class TestOutputStream implements TestStream {
         final String content = toJson(item);
         if (item.type == TestMessageType.Error) {
             this.err.println(content);
+            this.err.println();
         } else {
             this.out.println(content);
+            this.out.println();
         }
     }
 
