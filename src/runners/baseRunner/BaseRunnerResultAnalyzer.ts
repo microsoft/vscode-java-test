@@ -14,18 +14,20 @@ export abstract class BaseRunnerResultAnalyzer {
     }
 
     public analyzeData(data: string): void {
-        logger.info(data);
-        let match: RegExpExecArray | null;
-        do {
-            match = this.regex.exec(data);
+        const lines: string[] = data.split(/\r?\n/);
+        for (const line of lines) {
+            const match: RegExpExecArray | null = this.regex.exec(line);
             if (match) {
                 try {
                     this.processData(match[1]);
+                    logger.info(this.unescape(line));
                 } catch (error) {
                     logger.error(`Failed to parse output data: ${data}`, error);
                 }
+            } else {
+                logger.info(line);
             }
-        } while (match);
+        }
     }
 
     public analyzeError(error: string): void {
@@ -62,6 +64,14 @@ export abstract class BaseRunnerResultAnalyzer {
             uri: Uri.parse(test.uri).toString(),
             result: testResultDetails,
         };
+    }
+
+    protected unescape(content: string): string {
+        return content.replace(/\\r/gm, '\r')
+            .replace(/\\f/gm, '\f')
+            .replace(/\\n/gm, '\n')
+            .replace(/\\t/gm, '\t')
+            .replace(/\\b/gm, '\b');
     }
 
     protected get outputRegex(): RegExp {
