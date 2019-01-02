@@ -76,7 +76,7 @@ export abstract class BaseRunner implements ITestRunner {
                 const index: number = buffer.lastIndexOf(os.EOL);
                 if (index >= 0) {
                     testResultAnalyzer.analyzeData(buffer.substring(0, index));
-                    buffer = buffer.substring(index + os.EOL.length);
+                    buffer = buffer.substring(index);
                 }
             });
             this.process.on('close', (signal: number) => {
