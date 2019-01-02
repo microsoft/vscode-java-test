@@ -25,6 +25,22 @@ public class TestOutputStream implements TestStream {
     private final PrintStream out;
     private final PrintStream err;
 
+    private static final JsonSerializer<TestMessageItem> serializer = new JsonSerializer<TestMessageItem>() {
+        @Override
+        public JsonElement serialize(TestMessageItem item, Type typeOfSrc, JsonSerializationContext context) {
+            final JsonObject jsonMsgItem = new JsonObject();
+            jsonMsgItem.addProperty("name", item.name);
+            if (item.attributes != null) {
+                final JsonObject jsonAttributes = new JsonObject();
+                for (final Pair pair : item.attributes) {
+                    jsonAttributes.addProperty(pair.first, pair.second);
+                }
+                jsonMsgItem.add("attributes", jsonAttributes);
+            }
+            return jsonMsgItem;
+        }
+    };
+
     private TestOutputStream() {
         this.out = System.out;
         this.err = System.err;
@@ -55,22 +71,6 @@ public class TestOutputStream implements TestStream {
     }
 
     private static String toJson(TestMessageItem item) {
-        final JsonSerializer<TestMessageItem> serializer = new JsonSerializer<TestMessageItem>() {
-            @Override
-            public JsonElement serialize(TestMessageItem item, Type typeOfSrc, JsonSerializationContext context) {
-                final JsonObject jsonMsgItem = new JsonObject();
-                jsonMsgItem.addProperty("name", item.name);
-                if (item.attributes != null) {
-                    final JsonObject jsonAttributes = new JsonObject();
-                    for (final Pair pair : item.attributes) {
-                        jsonAttributes.addProperty(pair.first, pair.second);
-                    }
-                    jsonMsgItem.add("attributes", jsonAttributes);
-                }
-                return jsonMsgItem;
-            }
-        };
-
         final GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(TestMessageItem.class, serializer);
         final Gson customGson = gsonBuilder.create();
