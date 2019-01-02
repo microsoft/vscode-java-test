@@ -13,7 +13,7 @@ class OutputChannelTransport extends Transport {
     }
 
     public log(msg: TransformableInfo, next?: () => void): any {
-        this.channel.append(msg.message);
+        this.channel.appendLine(msg.message);
 
         if (next) {
             next();
