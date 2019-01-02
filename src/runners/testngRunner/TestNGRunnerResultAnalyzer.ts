@@ -24,8 +24,8 @@ export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                     return;
                 }
                 failedResult.status = TestStatus.Fail;
-                failedResult.message = this.decodeContent(outputData.attributes.message);
-                failedResult.details = this.decodeContent(outputData.attributes.details);
+                failedResult.message = outputData.attributes.message;
+                failedResult.details = outputData.attributes.details;
                 break;
             case TEST_FINISH:
                 const finishedResult: ITestResultDetails | undefined = this.testResults.get(outputData.attributes.name);

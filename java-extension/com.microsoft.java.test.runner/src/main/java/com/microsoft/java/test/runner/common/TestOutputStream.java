@@ -11,8 +11,15 @@
 
 package com.microsoft.java.test.runner.common;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+
 import java.io.PrintStream;
-import java.util.StringJoiner;
+import java.lang.reflect.Type;
 
 public class TestOutputStream implements TestStream {
     private final PrintStream out;
@@ -48,64 +55,29 @@ public class TestOutputStream implements TestStream {
     }
 
     private static String toJson(TestMessageItem item) {
-        final StringBuilder builder = new StringBuilder("@@<TestRunner-{\"name\":");
-        builder.append('"').append(item.name).append('"');
-        if (item.attributes != null) {
-            builder.append(", \"attributes\":{");
-            final StringJoiner joiner = new StringJoiner(", ");
-            for (final Pair attribute : item.attributes) {
-                joiner.add("\"" + attribute.first + "\":\"" + escape(attribute.second) + "\"");
-            }
-            builder.append(joiner.toString());
-            builder.append("}");
-        }
-
-        builder.append("}-TestRunner>");
-        return builder.toString();
-    }
-
-    private static String escape(String str) {
-        if (str == null) {
-            return str;
-        }
-        final int len = str.length();
-        final StringBuilder sb = new StringBuilder(len);
-        String t;
-        for (int i = 0; i < len; i += 1) {
-            final char c = str.charAt(i);
-            switch (c) {
-                case '\\':
-                case '\"':
-                    sb.append('\\');
-                    sb.append(c);
-                    break;
-                case '\b':
-                    sb.append("\\b");
-                    break;
-                case '\t':
-                    sb.append("\\t");
-                    break;
-                case '\n':
-                    sb.append("\\n");
-                    break;
-                case '\f':
-                    sb.append("\\f");
-                    break;
-                case '\r':
-                    sb.append("\\r");
-                    break;
-                case '@':
-                    sb.append("&#x40;");
-                    break;
-                default:
-                    if (c < ' ') {
-                        t = "000" + Integer.toHexString(c);
-                        sb.append("\\u" + t.substring(t.length() - 4));
-                    } else {
-                        sb.append(c);
+        final JsonSerializer<TestMessageItem> serializer = new JsonSerializer<TestMessageItem>() {
+            @Override
+            public JsonElement serialize(TestMessageItem item, Type typeOfSrc, JsonSerializationContext context) {
+                final JsonObject jsonMsgItem = new JsonObject();
+                jsonMsgItem.addProperty("name", item.name);
+                if (item.attributes != null) {
+                    final JsonObject jsonAttributes = new JsonObject();
+                    for (final Pair pair : item.attributes) {
+                        jsonAttributes.addProperty(pair.first, pair.second);
                     }
+                    jsonMsgItem.add("attributes", jsonAttributes);
+                }
+                return jsonMsgItem;
             }
-        }
-        return sb.toString();
+        };
+
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(TestMessageItem.class, serializer);
+        final Gson customGson = gsonBuilder.create();
+
+        final StringBuilder builder = new StringBuilder("@@<TestRunner-");
+        builder.append(customGson.toJson(item));
+        builder.append("-TestRunner>");
+        return builder.toString();
     }
 }
