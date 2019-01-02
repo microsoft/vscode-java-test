@@ -64,13 +64,6 @@ export abstract class BaseRunnerResultAnalyzer {
         };
     }
 
-    protected decodeContent(content: string): string {
-        if (!content) {
-            return content;
-        }
-        return content.replace(new RegExp('&#x40;', 'gm'), '@');
-    }
-
     protected get outputRegex(): RegExp {
         return this.regex;
     }
