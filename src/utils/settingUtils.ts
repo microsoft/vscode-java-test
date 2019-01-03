@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ViewColumn, workspace, WorkspaceConfiguration } from 'vscode';
-import { DEFAULT_REPORT_POSITION, REPORT_POSITION_SETTING_KEY } from '../constants/configs';
+import { DEFAULT_LOG_LEVEL, DEFAULT_REPORT_POSITION, LOG_LEVEL_SETTING_KEY, REPORT_POSITION_SETTING_KEY } from '../constants/configs';
 
 export function getReportPosition(): ViewColumn {
     const config: WorkspaceConfiguration = workspace.getConfiguration();
@@ -10,8 +10,6 @@ export function getReportPosition(): ViewColumn {
     return position === DEFAULT_REPORT_POSITION ? ViewColumn.Two : ViewColumn.Active;
 }
 
-export enum TestReportType {
-    All,
-    Passed,
-    Failed,
+export function getLogLevel(): string {
+    return workspace.getConfiguration().get<string>(LOG_LEVEL_SETTING_KEY, DEFAULT_LOG_LEVEL);
 }

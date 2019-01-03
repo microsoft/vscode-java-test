@@ -4,6 +4,7 @@
 import { TransformableInfo } from 'logform';
 import { OutputChannel, window } from 'vscode';
 import * as Transport from 'winston-transport';
+import { getLogLevel } from '../utils/settingUtils';
 
 class OutputChannelTransport extends Transport {
     private channel: OutputChannel;
@@ -29,4 +30,4 @@ class OutputChannelTransport extends Transport {
     }
 }
 
-export const outputChannelTransport: OutputChannelTransport = new OutputChannelTransport({level: 'info'});
+export const outputChannelTransport: OutputChannelTransport = new OutputChannelTransport({level: getLogLevel()});

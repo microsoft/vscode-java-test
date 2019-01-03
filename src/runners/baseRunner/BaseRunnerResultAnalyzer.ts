@@ -16,7 +16,7 @@ export abstract class BaseRunnerResultAnalyzer {
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
         for (const line of lines) {
-            if (line.length === 0) {
+            if (!line) {
                 continue;
             }
             const match: RegExpExecArray | null = this.regex.exec(line);
