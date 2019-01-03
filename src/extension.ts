@@ -45,7 +45,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
     const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
     await fse.ensureDir(storagePath);
-    logger.initialize(storagePath);
+    await logger.initialize(storagePath, context.subscriptions);
 
     context.subscriptions.push(
         window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),

@@ -8,7 +8,7 @@ import { ITestResult, ITestResultDetails, TestStatus } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
     protected testResults: Map<string, ITestResultDetails> = new Map<string, ITestResultDetails>();
-    private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/gm;
+    private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/;
 
     constructor(protected tests: ITestItem[]) {
     }
@@ -16,15 +16,20 @@ export abstract class BaseRunnerResultAnalyzer {
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
         for (const line of lines) {
+            if (line.length === 0) {
+                continue;
+            }
             const match: RegExpExecArray | null = this.regex.exec(line);
             if (match) {
+                // Message from Test Runner executable
                 try {
                     this.processData(match[1]);
-                    logger.info(this.unescape(line));
+                    logger.verbose(this.unescape(line));
                 } catch (error) {
                     logger.error(`Failed to parse output data: ${data}`, error);
                 }
             } else {
+                // Message from the test case itself
                 logger.info(line);
             }
         }

@@ -198,6 +198,17 @@
                     "default": "sideView",
                     "description": "%configuration.java.test.report.position.description%",
                     "scope": "window"
+                },
+                "java.test.log.level": {
+                    "type": "string",
+                    "enum": [
+                        "error",
+                        "info",
+                        "verbose"
+                    ],
+                    "default": "info",
+                    "description": "%configuration.java.test.log.level.description%",
+                    "scope": "application"
                 }
             }
         }
