@@ -10,7 +10,7 @@ import { outputChannelTransport } from './outputChannelTransport';
 class Logger implements Disposable {
     private logger: winston.Logger;
 
-    public async initialize(storagePath: string, disposables: Disposable[]): Promise<void> {
+    public initialize(storagePath: string, disposables: Disposable[]): void {
         this.logger = winston.createLogger({
             transports: [
                 new (winston.transports.File)({
