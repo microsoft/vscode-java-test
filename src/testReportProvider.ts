@@ -7,7 +7,7 @@ import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } f
 import { ITestItemBase } from './protocols';
 import { ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
-import { getReportPosition } from './utils/testReportUtils';
+import { getReportPosition } from './utils/settingUtils';
 
 class TestReportProvider implements Disposable {
 

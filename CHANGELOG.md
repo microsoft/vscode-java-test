@@ -4,6 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.14.0
+
+## Added
+- Add the log level setting. [#555](https://github.com/Microsoft/vscode-java-test/issues/555)
+
+## Fixed
+- Fix the bug that test scope is wrong when triggering tests from inner class level. [#411](https://github.com/Microsoft/vscode-java-test/issues/411)
+- Fix the bug that tests which contain inner class will be skipped if triggered from the test explorer. [#460](https://github.com/Microsoft/vscode-java-test/issues/460)
+- Improve the test output format. [#505](https://github.com/Microsoft/vscode-java-test/issues/505)
+- Pack the test report resources into the extension vsix. [550](https://github.com/Microsoft/vscode-java-test/issues/550)
+
 ## 0.13.0 - Dec 2018
 
 ## Added

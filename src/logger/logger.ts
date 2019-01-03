@@ -2,22 +2,21 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Disposable } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, workspace } from 'vscode';
 import * as winston from 'winston';
-import { LOG_FILE_LEVEL, LOG_FILE_MAX_NUMBER, LOG_FILE_MAX_SIZE, LOG_FILE_NAME } from '../constants/configs';
+import { LOG_FILE_MAX_NUMBER, LOG_FILE_MAX_SIZE, LOG_FILE_NAME, LOG_LEVEL_SETTING_KEY } from '../constants/configs';
+import { getLogLevel } from '../utils/settingUtils';
 import { outputChannelTransport } from './outputChannelTransport';
 
 class Logger implements Disposable {
-    private storagePath: string;
     private logger: winston.Logger;
 
-    public initialize(storagePath: string): void {
-        this.storagePath = storagePath;
+    public initialize(storagePath: string, disposables: Disposable[]): void {
         this.logger = winston.createLogger({
             transports: [
                 new (winston.transports.File)({
-                    level: LOG_FILE_LEVEL,
-                    filename: path.join(this.storagePath, LOG_FILE_NAME),
+                    level: getLogLevel(),
+                    filename: path.join(storagePath, LOG_FILE_NAME),
                     maxsize: LOG_FILE_MAX_SIZE,
                     maxFiles: LOG_FILE_MAX_NUMBER,
                     tailable: true,
@@ -25,6 +24,14 @@ class Logger implements Disposable {
                 outputChannelTransport,
             ],
         });
+        workspace.onDidChangeConfiguration((e: ConfigurationChangeEvent) => {
+            if (e.affectsConfiguration(LOG_LEVEL_SETTING_KEY)) {
+                const logLevel: string = getLogLevel();
+                for (const transport of this.logger.transports) {
+                    transport.level = logLevel;
+                }
+            }
+        }, null, disposables);
     }
 
     public dispose(): void {
@@ -33,6 +40,10 @@ class Logger implements Disposable {
                 transport.close();
             }
         }
+    }
+
+    public verbose(message: string): void {
+        this.logger.verbose(message);
     }
 
     public info(message: string): void {
