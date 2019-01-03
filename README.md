@@ -32,7 +32,10 @@ You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / 
 
 ## Supported VSCode settings
 
-- `java.test.report.position`: Specify where to show the test report. Supported values are `sideView`, `currentView`. The default value is `sideView`.
+| Setting Name | Description | Default Value |
+|---|---|---|
+| `java.test.report.position` | Specify where to show the test report. Supported values are: `sideView`, `currentView`. | `sideView` |
+| `java.test.log.level` | Specify the level of the test logs. Supported values are: `error`, `info`, `verbose`. | `info` |
 
 ## Requirements
 
