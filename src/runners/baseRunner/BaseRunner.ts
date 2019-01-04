@@ -9,7 +9,6 @@ import * as path from 'path';
 import { debug, Uri, workspace } from 'vscode';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
-import { IExecutionConfig } from '../../runConfigs';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
 import { killProcess } from '../../utils/cpUtils';
@@ -24,7 +23,6 @@ export abstract class BaseRunner implements ITestRunner {
     protected tests: ITestItem[];
     protected isDebug: boolean;
     protected classpath: string;
-    protected config: IExecutionConfig | undefined;
     protected isCanceled: boolean;
 
     constructor(
@@ -42,7 +40,7 @@ export abstract class BaseRunner implements ITestRunner {
         return 'com.microsoft.java.test.runner.Launcher';
     }
 
-    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
+    public async setup(tests: ITestItem[], isDebug: boolean = false): Promise<void> {
         const runnerJarFilePath: string = await this.getRunnerJarFilePath();
         this.port = isDebug ? await getPort() : undefined;
         this.tests = tests;
@@ -51,15 +49,11 @@ export abstract class BaseRunner implements ITestRunner {
         const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), runnerJarFilePath];
         this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
         this.classpath = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
-        this.config = config;
     }
 
     public async run(): Promise<ITestResult[]> {
         const commandParams: string[] = await this.constructCommandParams();
-        const options: cp.SpawnOptions = { cwd: this.config ? this.config.workingDirectory : undefined, env: process.env };
-        if (this.config && this.config.env) {
-            options.env = {...this.config.env, ...options.env};
-        }
+        const options: cp.SpawnOptions = { env: process.env };
         return new Promise<ITestResult[]>((resolve: (result: ITestResult[]) => void, reject: (error: Error) => void): void => {
             const testResultAnalyzer: BaseRunnerResultAnalyzer = this.getTestResultAnalyzer();
             let buffer: string = '';
@@ -102,7 +96,6 @@ export abstract class BaseRunner implements ITestRunner {
                         request: 'attach',
                         hostName: 'localhost',
                         port: this.port,
-                        projectName: this.config ? this.config.projectName : undefined,
                     });
                 }, 500);
             }
@@ -131,15 +124,6 @@ export abstract class BaseRunner implements ITestRunner {
 
         if (this.isDebug) {
             commandParams.push('-Xdebug', `-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=${this.port}`);
-        }
-
-        if (this.config) {
-            if (this.config.vmargs.length > 0) {
-                commandParams.push(...this.config.vmargs);
-            }
-            if (this.config.args.length > 0) {
-                commandParams.push(...this.config.args);
-            }
         }
 
         commandParams.push(this.runnerMainClassName);

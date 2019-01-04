@@ -4,10 +4,8 @@
 import * as cp from 'child_process';
 import { ExtensionContext, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
-import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
-import { IExecutionConfig } from '../runConfigs';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
@@ -30,7 +28,7 @@ class RunnerExecutor {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean = false): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -47,17 +45,7 @@ class RunnerExecutor {
             this._runnerMap = this.classifyTestsByKind(testItems);
             const finalResults: ITestResult[] = [];
             for (const [runner, tests] of this._runnerMap.entries()) {
-                if (config && config.preLaunchTask.length > 0) {
-                    this._preLaunchTask = cp.exec(
-                        config.preLaunchTask,
-                        {
-                            maxBuffer: CHILD_PROCESS_MAX_BUFFER_SIZE,
-                            cwd: config.workingDirectory,
-                        },
-                    );
-                    await this.execPreLaunchTask();
-                }
-                await runner.setup(tests, isDebug, config);
+                await runner.setup(tests, isDebug);
                 const results: ITestResult[] = await runner.run();
                 testResultManager.storeResult(...results);
                 finalResults.push(...results);
@@ -146,30 +134,6 @@ class RunnerExecutor {
             default:
                 return undefined;
         }
-    }
-
-    private async execPreLaunchTask(): Promise<number> {
-        return new Promise<number>((resolve: (ret: number) => void, reject: (err: Error) => void): void => {
-            if (this._preLaunchTask) {
-                this._preLaunchTask.on('error', (err: Error) => {
-                    logger.error('Failed to run pre-launch task', err);
-                    reject(err);
-                });
-                this._preLaunchTask.stderr.on('data', (data: Buffer) => {
-                    logger.info(data.toString());
-                });
-                this._preLaunchTask.stdout.on('data', (data: Buffer) => {
-                    logger.info(data.toString());
-                });
-                this._preLaunchTask.on('close', (signal: number) => {
-                    if (signal && signal !== 0) {
-                        reject(new Error(`Prelaunch task exited with code ${signal}.`));
-                    } else {
-                        resolve(signal);
-                    }
-                });
-            }
-        });
     }
 }
 
