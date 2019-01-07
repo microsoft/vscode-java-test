@@ -4,9 +4,8 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
-import { IProjectInfo, ITestItem } from './protocols';
+import { ITestItem } from './protocols';
 import { IExecutionConfigGroup, ITestConfig } from './runConfigs';
-import { getProjectInfo } from './utils/commandUtils';
 
 class TestConfigManager {
     private readonly configRelativePath: string;
@@ -21,7 +20,10 @@ class TestConfigManager {
         const folderSet: Set<WorkspaceFolder> = this.getFoldersOfTests(tests);
         const configs: ITestConfig[] = [];
         for (const folder of folderSet.values()) {
-            const configFullPath: string = await this.createTestConfigIfNotExisted(folder);
+            const configFullPath: string = path.join(folder.uri.fsPath, this.configRelativePath);
+            if (!await fse.pathExists(configFullPath)) {
+                continue;
+            }
             const content: string = await fse.readFile(configFullPath, 'utf-8');
             configs.push(JSON.parse(content) as ITestConfig);
         }
@@ -29,50 +31,6 @@ class TestConfigManager {
             return configs.map((c: ITestConfig) => c.debug);
         }
         return configs.map((c: ITestConfig) => c.run);
-    }
-
-    private async createTestConfigIfNotExisted(folder: WorkspaceFolder): Promise<string> {
-        const configFullPath: string = path.join(folder.uri.fsPath, this.configRelativePath);
-        if (!await fse.pathExists(configFullPath)) {
-            await fse.ensureDir(path.dirname(configFullPath));
-            const config: ITestConfig = await this.createDefaultTestConfig(folder.uri);
-            await fse.writeFile(configFullPath, JSON.stringify(config, null, 4 /* space size */));
-        }
-        return configFullPath;
-    }
-
-    private async createDefaultTestConfig(folderUri: Uri): Promise<ITestConfig> {
-        const projects: IProjectInfo[] = await getProjectInfo(folderUri);
-        return {
-            run: {
-                default: '',
-                items: projects.map((project: IProjectInfo) => {
-                    return {
-                        name: project.name,
-                        projectName: project.name,
-                        workingDirectory: Uri.parse(project.path).fsPath,
-                        args: [],
-                        vmargs: [],
-                        env: {},
-                        preLaunchTask: '',
-                    };
-                }),
-            },
-            debug: {
-                default: '',
-                items: projects.map((project: IProjectInfo) => {
-                    return {
-                        name: project.name,
-                        projectName: project.name,
-                        workingDirectory: Uri.parse(project.path).fsPath,
-                        args: [],
-                        vmargs: [],
-                        env: {},
-                        preLaunchTask: '',
-                    };
-                }),
-            },
-        };
     }
 
     private getFoldersOfTests(tests: ITestItem[]): Set<WorkspaceFolder> {
