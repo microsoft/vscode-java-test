@@ -37,6 +37,9 @@ export async function executeTests(tests: ITestItem[], isDebug: boolean, isDefau
 
 async function getTestConfig(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
     const configGroups: IExecutionConfigGroup[] = await testConfigManager.loadRunConfig(tests, isDebug);
+    if (!configGroups) {
+        return undefined;
+    }
     if (isDefaultConfig) {
         if (configGroups.length !== 1 || !configGroups[0].default) {
             return undefined;
