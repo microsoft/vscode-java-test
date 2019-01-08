@@ -209,6 +209,47 @@
                     "default": "info",
                     "description": "%configuration.java.test.log.level.description%",
                     "scope": "application"
+                },
+                "java.test.config": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "title": "%configuration.java.test.config.items.title%",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.name.description%",
+                                "default": ""
+                            },
+                            "workingDirectory": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.workingDirectory.description%",
+                                "default": "${workspaceFolder}"
+                            },
+                            "vmargs": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "%configuration.java.test.config.vmargs.description%",
+                                "default": []
+                            },
+                            "args": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "%configuration.java.test.config.args.description%",
+                                "default": []
+                            },
+                            "env": {
+                                "type": "object",
+                                "description": "%configuration.java.test.config.env.description%",
+                                "default": {}
+                            }
+                        }
+                    },
+                    "scope": "resource"
                 }
             }
         }

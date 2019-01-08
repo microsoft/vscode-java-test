@@ -10,5 +10,11 @@
     "contributes.commands.java.test.cancel.title": "Cancel Test Job",
     "contributes.commands.java.test.explorer.refresh.title": "Refresh",
     "configuration.java.test.report.position.description": "Specify where to show the test report",
-    "configuration.java.test.log.level.description": "Specify the level of the test logs"
+    "configuration.java.test.log.level.description": "Specify the level of the test logs",
+    "configuration.java.test.config.items.title": "Specify the configurations for running or debugging the tests",
+    "configuration.java.test.config.name.description": "Specify the name of the configuration item",
+    "configuration.java.test.config.workingDirectory.description": "Specify the working directory when running the tests",
+    "configuration.java.test.config.vmargs.description": "Specify the extra options and system properties for the JVM",
+    "configuration.java.test.config.args.description": "Specify the command line arguments which will be passed to the test runner",
+    "configuration.java.test.config.env.description": "Specify the extra environment variables when running the tests"
 }

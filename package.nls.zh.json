@@ -10,5 +10,11 @@
     "contributes.commands.java.test.cancel.title": "取消测试任务",
     "contributes.commands.java.test.explorer.refresh.title": "刷新",
     "configuration.java.test.report.position.description": "设定测试报告的显示位置",
-    "configuration.java.test.log.level.description": "设定日志级别"
+    "configuration.java.test.log.level.description": "设定日志级别",
+    "configuration.java.test.config.items.title": "设定运行测试时所用的配置项",
+    "configuration.java.test.config.name.description": "命名配置项",
+    "configuration.java.test.config.workingDirectory.description": "设定执行测试时的工作目录",
+    "configuration.java.test.config.vmargs.description": "设定启动 JVM 的额外选项和系统属性",
+    "configuration.java.test.config.args.description": "设定启动 Test Runner 时的命令行参数",
+    "configuration.java.test.config.env.description": "启动应用程序时自定义的环境变量"
 }
