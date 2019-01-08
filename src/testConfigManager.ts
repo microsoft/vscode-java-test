@@ -17,6 +17,7 @@ class TestConfigManager {
     }
 
     public async loadRunConfig(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
+        // TODO: Handle multi-root
         const configs: IExecutionConfig[] | undefined = workspace.getConfiguration('java.test').get<IExecutionConfig[]>('config');
         if (configs && configs.length > 0) {
             // Use the new config schema
@@ -93,6 +94,7 @@ class TestConfigManager {
             const label: string = configs[i].name ? configs[i].name! : `Configuration #${i + 1}`;
             choices.push({
                 label,
+                // TODO: provide more details
                 description: configs[i].projectName ? `Project name: ${configs[i].projectName}` : '',
                 item: configs[i],
             });
