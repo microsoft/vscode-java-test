@@ -27,6 +27,7 @@ class TestConfigManager {
             return await this.selectQuickPick(configs);
         } else {
             // Using deprecated config shcema
+            // TODO: show hint for using deprecated configuration
             const deprecatedConfigs: IExecutionConfigGroup[] = [];
             const folderSet: Set<WorkspaceFolder> = this.getFoldersOfTests(tests);
             for (const folder of folderSet.values()) {
@@ -94,8 +95,7 @@ class TestConfigManager {
             const label: string = configs[i].name ? configs[i].name! : `Configuration #${i + 1}`;
             choices.push({
                 label,
-                // TODO: provide more details
-                description: configs[i].projectName ? `Project name: ${configs[i].projectName}` : '',
+                detail: JSON.stringify(configs[i]),
                 item: configs[i],
             });
         }
