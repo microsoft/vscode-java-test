@@ -212,9 +212,10 @@
                 },
                 "java.test.config": {
                     "type": "array",
+                    "description": "%configuration.java.test.config.description%",
                     "items": {
                         "type": "object",
-                        "title": "%configuration.java.test.config.items.title%",
+                        "description": "%configuration.java.test.config.item.description%",
                         "properties": {
                             "name": {
                                 "type": "string",
