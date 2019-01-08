@@ -16,12 +16,12 @@ class TestConfigManager {
         return this.configRelativePath;
     }
 
-    public async loadRunConfig(tests: ITestItem[], isDebug: boolean, isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
+    public async loadRunConfig(tests: ITestItem[], isDebug: boolean, usingDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
         // TODO: Handle multi-root
         const configs: IExecutionConfig[] | undefined = workspace.getConfiguration('java.test').get<IExecutionConfig[]>('config');
         if (configs && configs.length > 0) {
             // Use the new config schema
-            if (isDefaultConfig) {
+            if (usingDefaultConfig) {
                 return configs[0];
             }
             return await this.selectQuickPick(configs);
@@ -38,7 +38,7 @@ class TestConfigManager {
                 const deprecatedConfig: ITestConfig = JSON.parse(content);
                 deprecatedConfigs.push(isDebug ? deprecatedConfig.debug : deprecatedConfig.run);
             }
-            return await this.selectDeprecatedConfig(deprecatedConfigs, isDefaultConfig);
+            return await this.selectDeprecatedConfig(deprecatedConfigs, usingDefaultConfig);
         }
     }
 
@@ -53,11 +53,11 @@ class TestConfigManager {
         return workspaceFolderSet;
     }
 
-    private async selectDeprecatedConfig(configs: IExecutionConfigGroup[], isDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
+    private async selectDeprecatedConfig(configs: IExecutionConfigGroup[], usingDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
         if (configs.length === 0) {
             return undefined;
         }
-        if (isDefaultConfig) {
+        if (usingDefaultConfig) {
             if (configs.length !== 1 || !configs[0].default) {
                 return undefined;
             }
