@@ -16,9 +16,14 @@ class TestConfigManager {
         return this.configRelativePath;
     }
 
+    // The test items that belong to a test runner, here the test items should be in the same workspace folder.
     public async loadRunConfig(tests: ITestItem[], isDebug: boolean, usingDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
-        // TODO: Handle multi-root
-        const configs: IExecutionConfig[] | undefined = workspace.getConfiguration('java.test').get<IExecutionConfig[]>('config');
+        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].uri));
+        if (!workspaceFolder) {
+            return undefined;
+        }
+
+        const configs: IExecutionConfig[] | undefined = workspace.getConfiguration('java.test', workspaceFolder.uri).get<IExecutionConfig[]>('config');
         if (configs && configs.length > 0) {
             // Use the new config schema
             if (usingDefaultConfig) {
@@ -29,29 +34,15 @@ class TestConfigManager {
             // Using deprecated config shcema
             // TODO: show hint for using deprecated configuration
             const deprecatedConfigs: IExecutionConfigGroup[] = [];
-            const folderSet: Set<WorkspaceFolder> = this.getFoldersOfTests(tests);
-            for (const folder of folderSet.values()) {
-                const configFullPath: string = path.join(folder.uri.fsPath, this.configRelativePath);
-                if (!await fse.pathExists(configFullPath)) {
-                    continue;
-                }
-                const content: string = await fse.readFile(configFullPath, 'utf-8');
-                const deprecatedConfig: ITestConfig = JSON.parse(content);
-                deprecatedConfigs.push(isDebug ? deprecatedConfig.debug : deprecatedConfig.run);
+            const configFullPath: string = path.join(workspaceFolder.uri.fsPath, this.configRelativePath);
+            if (!await fse.pathExists(configFullPath)) {
+                return undefined;
             }
+            const content: string = await fse.readFile(configFullPath, 'utf-8');
+            const deprecatedConfig: ITestConfig = JSON.parse(content);
+            deprecatedConfigs.push(isDebug ? deprecatedConfig.debug : deprecatedConfig.run);
             return await this.selectDeprecatedConfig(deprecatedConfigs, usingDefaultConfig);
         }
-    }
-
-    private getFoldersOfTests(tests: ITestItem[]): Set<WorkspaceFolder> {
-        const workspaceFolderSet: Set<WorkspaceFolder> = new Set<WorkspaceFolder>();
-        for (const test of tests) {
-            const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
-            if (workspaceFolder) {
-                workspaceFolderSet.add(workspaceFolder);
-            }
-        }
-        return workspaceFolderSet;
     }
 
     private async selectDeprecatedConfig(configs: IExecutionConfigGroup[], usingDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {

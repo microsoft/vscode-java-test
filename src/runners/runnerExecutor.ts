@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as cp from 'child_process';
-import { ExtensionContext, window } from 'vscode';
+import { ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
-import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
+import { testConfigManager } from '../testConfigManager';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
-import { killProcess } from '../utils/cpUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
@@ -22,7 +20,6 @@ class RunnerExecutor {
     private _javaHome: string;
     private _context: ExtensionContext;
     private _isRunning: boolean;
-    private _preLaunchTask: cp.ChildProcess | undefined;
     private _runnerMap: Map<ITestRunner, ITestItem[]> | undefined;
 
     public initialize(javaHome: string, context: ExtensionContext): void {
@@ -30,7 +27,7 @@ class RunnerExecutor {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean = false, usingDefaultConfig: boolean): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -47,17 +44,9 @@ class RunnerExecutor {
             this._runnerMap = this.classifyTestsByKind(testItems);
             const finalResults: ITestResult[] = [];
             for (const [runner, tests] of this._runnerMap.entries()) {
-                if (config && config.preLaunchTask && config.preLaunchTask.length > 0) {
-                    this._preLaunchTask = cp.exec(
-                        config.preLaunchTask,
-                        {
-                            maxBuffer: CHILD_PROCESS_MAX_BUFFER_SIZE,
-                            cwd: config.workingDirectory,
-                        },
-                    );
-                    await this.execPreLaunchTask();
-                }
+                const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(tests, isDebug, usingDefaultConfig);
                 await runner.setup(tests, isDebug, config);
+                await runner.execPreLaunchTaskIfExist();
                 const results: ITestResult[] = await runner.run();
                 testResultManager.storeResult(...results);
                 finalResults.push(...results);
@@ -75,11 +64,6 @@ class RunnerExecutor {
 
     public async cleanUp(isCancel: boolean): Promise<void> {
         try {
-            if (this._preLaunchTask) {
-                await killProcess(this._preLaunchTask);
-                this._preLaunchTask = undefined;
-            }
-
             const promises: Array<Promise<void>> = [];
             if (this._runnerMap) {
                 for (const runner of this._runnerMap.keys()) {
@@ -100,29 +84,33 @@ class RunnerExecutor {
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {
-        const testMap: Map<string, ITestItem[]> = this.mapTestsByProjectAndKind(tests);
+        const testMap: Map<Uri, ITestItem[]> = this.mapTestsByProjectAndKind(tests);
         return this.mapTestsByRunner(testMap);
     }
 
-    private mapTestsByProjectAndKind(tests: ITestItem[]): Map<string, ITestItem[]> {
-        const map: Map<string, ITestItem[]> = new Map<string, ITestItem[]>();
+    private mapTestsByProjectAndKind(tests: ITestItem[]): Map<Uri, ITestItem[]> {
+        const map: Map<Uri, ITestItem[]> = new Map<Uri, ITestItem[]>();
         for (const test of tests) {
             if (!(test.kind in TestKind)) {
                 logger.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
             }
-            const key: string = test.project.concat(test.kind.toString());
-            const testArray: ITestItem[] | undefined = map.get(key);
+            const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
+            if (!workspaceFolder) {
+                logger.error(`The test: ${test.fullName} does not belong to any workspace folder`);
+                continue;
+            }
+            const testArray: ITestItem[] | undefined = map.get(workspaceFolder.uri);
             if (testArray) {
                 testArray.push(test);
             } else {
-                map.set(key, [test]);
+                map.set(workspaceFolder.uri, [test]);
             }
         }
         return map;
     }
 
-    private mapTestsByRunner(testsPerProjectAndKind: Map<string, ITestItem[]>): Map<ITestRunner, ITestItem[]> {
+    private mapTestsByRunner(testsPerProjectAndKind: Map<Uri, ITestItem[]>): Map<ITestRunner, ITestItem[]> {
         const map: Map<ITestRunner, ITestItem[]> = new Map<ITestRunner, ITestItem[]>();
         for (const tests of testsPerProjectAndKind.values()) {
             const runner: ITestRunner | undefined = this.getRunnerByKind(tests[0].kind);
@@ -146,30 +134,6 @@ class RunnerExecutor {
             default:
                 return undefined;
         }
-    }
-
-    private async execPreLaunchTask(): Promise<number> {
-        return new Promise<number>((resolve: (ret: number) => void, reject: (err: Error) => void): void => {
-            if (this._preLaunchTask) {
-                this._preLaunchTask.on('error', (err: Error) => {
-                    logger.error('Failed to run pre-launch task', err);
-                    reject(err);
-                });
-                this._preLaunchTask.stderr.on('data', (data: Buffer) => {
-                    logger.info(data.toString());
-                });
-                this._preLaunchTask.stdout.on('data', (data: Buffer) => {
-                    logger.info(data.toString());
-                });
-                this._preLaunchTask.on('close', (signal: number) => {
-                    if (signal && signal !== 0) {
-                        reject(new Error(`Prelaunch task exited with code ${signal}.`));
-                    } else {
-                        resolve(signal);
-                    }
-                });
-            }
-        });
     }
 }
 
