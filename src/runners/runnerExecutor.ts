@@ -47,7 +47,7 @@ class RunnerExecutor {
             this._runnerMap = this.classifyTestsByKind(testItems);
             const finalResults: ITestResult[] = [];
             for (const [runner, tests] of this._runnerMap.entries()) {
-                if (config && config.preLaunchTask.length > 0) {
+                if (config && config.preLaunchTask && config.preLaunchTask.length > 0) {
                     this._preLaunchTask = cp.exec(
                         config.preLaunchTask,
                         {

@@ -12,6 +12,7 @@ import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
+import { resolveWorkingDirectory } from '../../utils/configUtils';
 import { killProcess } from '../../utils/cpUtils';
 import { ITestRunner } from '../ITestRunner';
 import { ITestResult } from '../models';
@@ -56,7 +57,7 @@ export abstract class BaseRunner implements ITestRunner {
 
     public async run(): Promise<ITestResult[]> {
         const commandParams: string[] = await this.constructCommandParams();
-        const options: cp.SpawnOptions = { cwd: this.config ? this.config.workingDirectory : undefined, env: process.env };
+        const options: cp.SpawnOptions = { cwd: this.config ? resolveWorkingDirectory(this.tests[0].uri, this.config.workingDirectory) : undefined, env: process.env };
         if (this.config && this.config.env) {
             options.env = {...this.config.env, ...options.env};
         }
@@ -135,10 +136,10 @@ export abstract class BaseRunner implements ITestRunner {
 
         if (this.config) {
             if (this.config.vmargs.length > 0) {
-                commandParams.push(...this.config.vmargs);
+                commandParams.push(...this.config.vmargs.filter(Boolean));
             }
             if (this.config.args.length > 0) {
-                commandParams.push(...this.config.args);
+                commandParams.push(...this.config.args.filter(Boolean));
             }
         }
 
