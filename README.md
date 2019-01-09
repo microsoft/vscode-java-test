@@ -43,6 +43,7 @@ You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / 
 - VS Code (version 1.23.0 or later)
 - [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
+- [Maven for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)
 
 ## Feedback and Questions
 
