@@ -1,6 +1,6 @@
-To run the tests with a customized configuration, you can add a new setting with key named: `java.test.config`.
+You can run tests with custom configuration. The configuration can be specified in `settings.json` using the key `java.test.config`.
 
-> [How to create new settings in VS Code?](https://code.visualstudio.com/docs/getstarted/settings#_creating-user-and-workspace-settings)
+> It is recommended to save the test configuration as workspace settings. To open workspace settings, run command `Preference: Open Workspace Settings`. And click on the icon `{}` on the top right to show the source code of your settings.
 
 ## TL;DR
 Here is an example of the configuration schema:
@@ -35,10 +35,10 @@ The value of `java.test.config` is an object array, each object is a configurati
 
 ## Q & A
 **Q: How can I migrate to the new `java.test.config` setting?**
-A: You can create your own customized configuration according to the above document. Then remove or rename the `launch.test.json` in your workspace.
+A: You can create your own customized configuration and test it according to the above document. If everything is fine, then the `launch.test.json` can be removed.
 
 **Q: Can I keep using the original `launch.test.json` to run with customized configuration?**
-A: For now, yes. But the `launch.test.json` is deprecated and we will stop honor `launch.test.json` in the near future.
+A: For now, yes. But it's highly recommended that you work with the new schema. `launch.test.json` is deprecated and will be completely removed in the future.
 
 **Q: What will happen if I both have `java.test.config` setting and `launch.test.json` in my workspace?**
-A: The extension will only take the configurations from `java.test.config` setting if it exists.
+A: `java.test.config` wins.
