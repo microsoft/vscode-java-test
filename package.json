@@ -210,6 +210,12 @@
                     "description": "%configuration.java.test.log.level.description%",
                     "scope": "application"
                 },
+                "java.test.message.hintForDeprecatedConfig": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%configuration.java.test.message.hintForDeprecatedConfig.description%",
+                    "scope": "application"
+                },
                 "java.test.config": {
                     "type": "array",
                     "description": "%configuration.java.test.config.description%",

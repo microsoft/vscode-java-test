@@ -2,8 +2,11 @@
 // Licensed under the MIT license.
 
 import * as fse from 'fs-extra';
+import * as opn from 'opn';
 import * as path from 'path';
-import { QuickPickItem, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { MessageItem, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { sendInfo } from 'vscode-extension-telemetry-wrapper';
+import { CONFIG_DOCUMENT_URL, HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY } from './constants/configs';
 import { ITestItem } from './protocols';
 import { IExecutionConfig, IExecutionConfigGroup, ITestConfig } from './runConfigs';
 
@@ -32,12 +35,12 @@ class TestConfigManager {
             return await this.selectQuickPick(configs);
         } else {
             // Using deprecated config shcema
-            // TODO: show hint for using deprecated configuration
             const deprecatedConfigs: IExecutionConfigGroup[] = [];
             const configFullPath: string = path.join(workspaceFolder.uri.fsPath, this.configRelativePath);
             if (!await fse.pathExists(configFullPath)) {
                 return undefined;
             }
+            this.hintForDeprecatedUsage();
             const content: string = await fse.readFile(configFullPath, 'utf-8');
             const deprecatedConfig: ITestConfig = JSON.parse(content);
             deprecatedConfigs.push(isDebug ? deprecatedConfig.debug : deprecatedConfig.run);
@@ -96,6 +99,30 @@ class TestConfigManager {
         }
         return selection.item;
     }
+
+    private async hintForDeprecatedUsage(): Promise<void> {
+        sendInfo('', { deprecatedConfigUsed: 1 });
+        const workspaceConfiguration: WorkspaceConfiguration = workspace.getConfiguration();
+        const showHint: boolean | undefined = workspaceConfiguration.get<boolean>(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY);
+        if (!showHint) {
+            return;
+        }
+        const choice: MessageItem | undefined = await window.showInformationMessage(
+            'Using launch.test.json to run tests is deprecated, please use the "java.test.config" setting instead',
+            DialogOptions.neverShow,
+            DialogOptions.learnMore,
+        );
+        if (choice === DialogOptions.neverShow) {
+            workspaceConfiguration.update(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY, false, true /* global setting */);
+        } else if (choice === DialogOptions.learnMore) {
+            opn(CONFIG_DOCUMENT_URL);
+        }
+    }
+}
+
+namespace DialogOptions {
+    export const learnMore: MessageItem = { title: 'Learn More' };
+    export const neverShow: MessageItem = { title: 'Never Show again' };
 }
 
 export const testConfigManager: TestConfigManager = new TestConfigManager();
