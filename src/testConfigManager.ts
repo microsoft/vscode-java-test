@@ -3,7 +3,7 @@
 
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import { commands, MessageItem, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { commands, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { CONFIG_DOCUMENT_URL, HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY } from './constants/configs';
 import { ITestItem } from './protocols';
