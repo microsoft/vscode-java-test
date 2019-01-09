@@ -12,3 +12,6 @@ export const DEFAULT_LOG_LEVEL: string = 'info';
 
 export const REPORT_POSITION_SETTING_KEY: string = 'java.test.report.position';
 export const DEFAULT_REPORT_POSITION: string = 'sideView';
+
+export const HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY: string = 'java.test.message.hintForDeprecatedConfig';
+export const CONFIG_DOCUMENT_URL: string = 'https://aka.ms/java-test-config';

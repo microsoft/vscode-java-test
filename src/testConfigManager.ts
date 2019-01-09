@@ -3,7 +3,9 @@
 
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import { QuickPickItem, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { commands, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { sendInfo } from 'vscode-extension-telemetry-wrapper';
+import { CONFIG_DOCUMENT_URL, HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY } from './constants/configs';
 import { ITestItem } from './protocols';
 import { IExecutionConfig, IExecutionConfigGroup, ITestConfig } from './runConfigs';
 
@@ -16,9 +18,14 @@ class TestConfigManager {
         return this.configRelativePath;
     }
 
+    // The test items that belong to a test runner, here the test items should be in the same workspace folder.
     public async loadRunConfig(tests: ITestItem[], isDebug: boolean, usingDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
-        // TODO: Handle multi-root
-        const configs: IExecutionConfig[] | undefined = workspace.getConfiguration('java.test').get<IExecutionConfig[]>('config');
+        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].uri));
+        if (!workspaceFolder) {
+            return undefined;
+        }
+
+        const configs: IExecutionConfig[] | undefined = workspace.getConfiguration('java.test', workspaceFolder.uri).get<IExecutionConfig[]>('config');
         if (configs && configs.length > 0) {
             // Use the new config schema
             if (usingDefaultConfig) {
@@ -27,31 +34,17 @@ class TestConfigManager {
             return await this.selectQuickPick(configs);
         } else {
             // Using deprecated config shcema
-            // TODO: show hint for using deprecated configuration
             const deprecatedConfigs: IExecutionConfigGroup[] = [];
-            const folderSet: Set<WorkspaceFolder> = this.getFoldersOfTests(tests);
-            for (const folder of folderSet.values()) {
-                const configFullPath: string = path.join(folder.uri.fsPath, this.configRelativePath);
-                if (!await fse.pathExists(configFullPath)) {
-                    continue;
-                }
-                const content: string = await fse.readFile(configFullPath, 'utf-8');
-                const deprecatedConfig: ITestConfig = JSON.parse(content);
-                deprecatedConfigs.push(isDebug ? deprecatedConfig.debug : deprecatedConfig.run);
+            const configFullPath: string = path.join(workspaceFolder.uri.fsPath, this.configRelativePath);
+            if (!await fse.pathExists(configFullPath)) {
+                return undefined;
             }
+            this.hintForDeprecatedUsage();
+            const content: string = await fse.readFile(configFullPath, 'utf-8');
+            const deprecatedConfig: ITestConfig = JSON.parse(content);
+            deprecatedConfigs.push(isDebug ? deprecatedConfig.debug : deprecatedConfig.run);
             return await this.selectDeprecatedConfig(deprecatedConfigs, usingDefaultConfig);
         }
-    }
-
-    private getFoldersOfTests(tests: ITestItem[]): Set<WorkspaceFolder> {
-        const workspaceFolderSet: Set<WorkspaceFolder> = new Set<WorkspaceFolder>();
-        for (const test of tests) {
-            const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
-            if (workspaceFolder) {
-                workspaceFolderSet.add(workspaceFolder);
-            }
-        }
-        return workspaceFolderSet;
     }
 
     private async selectDeprecatedConfig(configs: IExecutionConfigGroup[], usingDefaultConfig: boolean): Promise<IExecutionConfig | undefined> {
@@ -104,6 +97,27 @@ class TestConfigManager {
             throw new Error('Please specify the test config to use.');
         }
         return selection.item;
+    }
+
+    private async hintForDeprecatedUsage(): Promise<void> {
+        sendInfo('', { deprecatedConfigUsed: '1' });
+        const workspaceConfiguration: WorkspaceConfiguration = workspace.getConfiguration();
+        const showHint: boolean | undefined = workspaceConfiguration.get<boolean>(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY);
+        if (!showHint) {
+            return;
+        }
+        const LEARN_MORE: string = 'Learn More';
+        const NEVER_SHOW: string = 'Never Show again';
+        const choice: string | undefined = await window.showInformationMessage(
+            'Using launch.test.json to run tests is deprecated, please use the "java.test.config" setting instead',
+            NEVER_SHOW,
+            LEARN_MORE,
+        );
+        if (choice === NEVER_SHOW) {
+            workspaceConfiguration.update(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY, false, true /* global setting */);
+        } else if (choice === LEARN_MORE) {
+            commands.executeCommand('vscode.open', Uri.parse(CONFIG_DOCUMENT_URL));
+        }
     }
 }
 
