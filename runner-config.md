@@ -1,5 +1,7 @@
 To run the tests with a customized configuration, you can add a new setting with key named: `java.test.config`.
 
+> [How to create new settings in VS Code?](https://code.visualstudio.com/docs/getstarted/settings#_creating-user-and-workspace-settings)
+
 ## TL;DR
 Here is an example of the configuration schema:
 ```js
@@ -22,7 +24,7 @@ Here is an example of the configuration schema:
 
 ## Property Details
 
-The value of `java.test.config.json` is an object array, each object is a configuration item, which may have following properties:
+The value of `java.test.config` is an object array, each object is a configuration item, which may have following properties:
 | Property Name | Description | Default Value |
 |---|---|---|
 | `name` | Specify the name of the configuration item | "" |
