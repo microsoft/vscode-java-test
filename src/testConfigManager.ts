@@ -106,22 +106,19 @@ class TestConfigManager {
         if (!showHint) {
             return;
         }
-        const choice: MessageItem | undefined = await window.showInformationMessage(
+        const LEARN_MORE: string = 'Learn More';
+        const NEVER_SHOW: string = 'Never Show again';
+        const choice: string | undefined = await window.showInformationMessage(
             'Using launch.test.json to run tests is deprecated, please use the "java.test.config" setting instead',
-            DialogOptions.neverShow,
-            DialogOptions.learnMore,
+            NEVER_SHOW,
+            LEARN_MORE,
         );
-        if (choice === DialogOptions.neverShow) {
+        if (choice === NEVER_SHOW) {
             workspaceConfiguration.update(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY, false, true /* global setting */);
-        } else if (choice === DialogOptions.learnMore) {
+        } else if (choice === LEARN_MORE) {
             commands.executeCommand('vscode.open', Uri.parse(CONFIG_DOCUMENT_URL));
         }
     }
-}
-
-namespace DialogOptions {
-    export const learnMore: MessageItem = { title: 'Learn More' };
-    export const neverShow: MessageItem = { title: 'Never Show again' };
 }
 
 export const testConfigManager: TestConfigManager = new TestConfigManager();
