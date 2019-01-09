@@ -18,6 +18,8 @@ Here is an example of the configuration schema:
 ]
 ```
 
+> Note: The first configuration item in the array will be used as the default configuration when you trigger `Run Test` or `Debug Test`
+
 ## Property Details
 
 The value of `java.test.config.json` is an object array, each object is a configuration item, which may have following properties:
