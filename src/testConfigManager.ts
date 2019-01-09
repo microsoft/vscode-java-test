@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import * as fse from 'fs-extra';
-import * as opn from 'opn';
 import * as path from 'path';
-import { MessageItem, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { commands, MessageItem, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { CONFIG_DOCUMENT_URL, HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY } from './constants/configs';
 import { ITestItem } from './protocols';
@@ -101,7 +100,7 @@ class TestConfigManager {
     }
 
     private async hintForDeprecatedUsage(): Promise<void> {
-        sendInfo('', { deprecatedConfigUsed: 1 });
+        sendInfo('', { deprecatedConfigUsed: '1' });
         const workspaceConfiguration: WorkspaceConfiguration = workspace.getConfiguration();
         const showHint: boolean | undefined = workspaceConfiguration.get<boolean>(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY);
         if (!showHint) {
@@ -115,7 +114,7 @@ class TestConfigManager {
         if (choice === DialogOptions.neverShow) {
             workspaceConfiguration.update(HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY, false, true /* global setting */);
         } else if (choice === DialogOptions.learnMore) {
-            opn(CONFIG_DOCUMENT_URL);
+            commands.executeCommand('vscode.open', Uri.parse(CONFIG_DOCUMENT_URL));
         }
     }
 }
