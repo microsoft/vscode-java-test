@@ -27,7 +27,7 @@ class RunnerExecutor {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean = false, usingDefaultConfig: boolean): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean, usingDefaultConfig: boolean): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
