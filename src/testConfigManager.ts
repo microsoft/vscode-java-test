@@ -40,10 +40,10 @@ class TestConfigManager {
                     return config.name === defaultConfigName;
                 });
                 if (defaultConfigs.length === 0) {
-                    window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, tests will be launched without configurations.`);
+                    window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, tests will be launched with built-in configurations.`);
                     return __BUILTIN_CONFIG__;
                 } else if (defaultConfigs.length > 1) {
-                    window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, tests will be launched without configurations.`);
+                    window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, tests will be launched with built-in configurations.`);
                     return __BUILTIN_CONFIG__;
                 } else {
                     return defaultConfigs[0];
@@ -117,10 +117,10 @@ class TestConfigManager {
         if (choices.length === 1) {
             return choices[0].item;
         }
-        const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, { placeHolder: 'Select test config' });
+        const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, { placeHolder: 'Select test configuration' });
         if (!selection) {
-            window.showWarningMessage('No configuration item is picked, tests will be launched without configurations.');
-            return undefined;
+            window.showWarningMessage('No configuration item is picked, tests will be launched with built-in configurations.');
+            return __BUILTIN_CONFIG__;
         }
         if (workspaceFolderUri) {
             this.askPreferenceForConfig(configs, selection.item, workspaceFolderUri);
@@ -150,6 +150,10 @@ class TestConfigManager {
 
     private async askPreferenceForConfig(configs: IExecutionConfig[], selectedConfig: IExecutionConfig, workspaceFolderUri: Uri): Promise<void> {
         const workspaceConfiguration: WorkspaceConfiguration = workspace.getConfiguration(undefined, workspaceFolderUri);
+        const showHint: boolean | undefined = workspaceConfiguration.get<boolean>(HINT_FOR_DEFAULT_CONFIG_SETTING_KEY);
+        if (!showHint) {
+            return;
+        }
         const choice: string | undefined = await window.showInformationMessage('Would you like to set this configuration as default?', YES, NO, NEVER_SHOW);
         if (!choice || choice === NO) {
             return;
