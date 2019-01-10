@@ -21,7 +21,7 @@ export interface ITestConfig {
     debug: IExecutionConfigGroup;
 }
 
-export const __EMPTY_CONFIG__: IExecutionConfig = {
-    name: '__EMPTY_CONFIG__',
+export const __BUILTIN_CONFIG__: IExecutionConfig = {
+    name: '__BUILTIN_CONFIG__',
     workingDirectory: '${workspaceFolder}',
 };

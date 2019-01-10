@@ -100,7 +100,7 @@ class RunnerExecutor {
                 logger.error(`The test: ${test.fullName} does not belong to any workspace folder`);
                 continue;
             }
-            const key: string = workspaceFolder.uri.toString() + test.kind.toString();
+            const key: string = `${workspaceFolder.uri}/${test.kind}`;
             const testArray: ITestItem[] | undefined = map.get(key);
             if (testArray) {
                 testArray.push(test);

@@ -207,7 +207,7 @@
                             "name": {
                                 "type": "string",
                                 "description": "%configuration.java.test.config.name.description%",
-                                "pattern": "^((?!__EMPTY_CONFIG__).)*$",
+                                "pattern": "^((?!__BUILTIN_CONFIG__).)*$",
                                 "default": ""
                             },
                             "workingDirectory": {

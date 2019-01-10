@@ -6,11 +6,11 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import { commands, ConfigurationTarget, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
-import { CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, EMPTY_CONFIG_NAME, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY,
+import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY,
     HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY } from './constants/configs';
 import { LEARN_MORE, NEVER_SHOW, NO, YES } from './constants/dialogOptions';
 import { ITestItem } from './protocols';
-import { __EMPTY_CONFIG__, IExecutionConfig, IExecutionConfigGroup, ITestConfig } from './runConfigs';
+import { __BUILTIN_CONFIG__, IExecutionConfig, IExecutionConfigGroup, ITestConfig } from './runConfigs';
 
 class TestConfigManager {
     private readonly configRelativePath: string;
@@ -33,18 +33,18 @@ class TestConfigManager {
             // Use the new config schema
             const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
             if (defaultConfigName) {
-                if (defaultConfigName === EMPTY_CONFIG_NAME) {
-                    return __EMPTY_CONFIG__;
+                if (defaultConfigName === BUILTIN_CONFIG_NAME) {
+                    return __BUILTIN_CONFIG__;
                 }
                 const defaultConfigs: IExecutionConfig[] = configs.filter((config: IExecutionConfig) => {
                     return config.name === defaultConfigName;
                 });
                 if (defaultConfigs.length === 0) {
                     window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, tests will be launched without configurations.`);
-                    return undefined;
+                    return __BUILTIN_CONFIG__;
                 } else if (defaultConfigs.length > 1) {
                     window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, tests will be launched without configurations.`);
-                    return undefined;
+                    return __BUILTIN_CONFIG__;
                 } else {
                     return defaultConfigs[0];
                 }
@@ -102,10 +102,9 @@ class TestConfigManager {
 
         const choices: IRunConfigQuickPick[] = [];
         choices.push({
-            label: 'Empty Configuration',
-            description: 'Built-in configuration',
-            detail: JSON.stringify(__EMPTY_CONFIG__),
-            item: __EMPTY_CONFIG__,
+            label: 'Built-in Configuration',
+            detail: JSON.stringify(__BUILTIN_CONFIG__),
+            item: __BUILTIN_CONFIG__,
         });
         for (let i: number = 0; i < configs.length; i++) {
             const label: string = configs[i].name ? configs[i].name! : `Configuration #${i + 1}`;
@@ -114,6 +113,9 @@ class TestConfigManager {
                 detail: JSON.stringify(configs[i]),
                 item: configs[i],
             });
+        }
+        if (choices.length === 1) {
+            return choices[0].item;
         }
         const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, { placeHolder: 'Select test config' });
         if (!selection) {
