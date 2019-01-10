@@ -10,8 +10,13 @@ export const LOG_FILE_MAX_NUMBER: number = 2;
 export const LOG_LEVEL_SETTING_KEY: string = 'java.test.log.level';
 export const DEFAULT_LOG_LEVEL: string = 'info';
 
+export const DEFAULT_CONFIG_NAME_SETTING_KEY: string = 'java.test.defaultConfig';
+export const CONFIG_SETTING_KEY: string = 'java.test.config';
+export const EMPTY_CONFIG_NAME: string = '__EMPTY_CONFIG__';
+
 export const REPORT_POSITION_SETTING_KEY: string = 'java.test.report.position';
 export const DEFAULT_REPORT_POSITION: string = 'sideView';
 
 export const HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY: string = 'java.test.message.hintForDeprecatedConfig';
 export const CONFIG_DOCUMENT_URL: string = 'https://aka.ms/java-test-config';
+export const HINT_FOR_DEFAULT_CONFIG_SETTING_KEY: string = 'java.test.message.hintForSetingDefaultConfig';

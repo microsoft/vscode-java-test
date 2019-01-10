@@ -4,7 +4,7 @@
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { logger } from '../logger/logger';
 
-export function resolveWorkingDirectory(testUriString: string, cwdConfig: string): string | undefined {
+export function resolveWorkingDirectory(testUriString: string, cwdConfig: string | undefined): string | undefined {
     if (cwdConfig && /\$\{workspacefolder\}/i.test(cwdConfig.trim())) {
         const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(testUriString));
         if (workspaceFolder) {

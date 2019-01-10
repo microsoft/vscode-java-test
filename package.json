@@ -36,8 +36,6 @@
         "onCommand:java.test.explorer.select",
         "onCommand:java.test.explorer.run",
         "onCommand:java.test.explorer.debug",
-        "onCommand:java.test.explorer.run.config",
-        "onCommand:java.test.explorer.debug.config",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
         "onCommand:java.test.cancel",
@@ -88,16 +86,6 @@
                     "group": "testExplorer@1"
                 },
                 {
-                    "command": "java.test.explorer.run.config",
-                    "when": "view == testExplorer",
-                    "group": "testExplorer@2"
-                },
-                {
-                    "command": "java.test.explorer.debug.config",
-                    "when": "view == testExplorer",
-                    "group": "testExplorer@3"
-                },
-                {
                     "command": "java.test.explorer.refresh",
                     "when": "view == testExplorer",
                     "group": "testExplorer@4"
@@ -110,14 +98,6 @@
                 },
                 {
                     "command": "java.test.explorer.debug",
-                    "when": "never"
-                },
-                {
-                    "command": "java.test.explorer.run.config",
-                    "when": "never"
-                },
-                {
-                    "command": "java.test.explorer.debug.config",
                     "when": "never"
                 },
                 {
@@ -153,16 +133,6 @@
                     "light": "resources/media/light/debug.svg",
                     "dark": "resources/media/dark/debug.svg"
                 },
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.run.config",
-                "title": "%contributes.commands.java.test.explorer.run.config.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.debug.config",
-                "title": "%contributes.commands.java.test.explorer.debug.config.title%",
                 "category": "Java"
             },
             {
@@ -216,6 +186,17 @@
                     "description": "%configuration.java.test.message.hintForDeprecatedConfig.description%",
                     "scope": "application"
                 },
+                "java.test.message.hintForSetingDefaultConfig": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%configuration.java.test.message.hintForSetingDefaultConfig.description%",
+                    "scope": "application"
+                },
+                "java.test.defaultConfig": {
+                    "type": "string",
+                    "description": "%configuration.java.test.defaultConfig.description%",
+                    "scope": "resource"
+                },
                 "java.test.config": {
                     "type": "array",
                     "description": "%configuration.java.test.config.description%",
@@ -226,6 +207,7 @@
                             "name": {
                                 "type": "string",
                                 "description": "%configuration.java.test.config.name.description%",
+                                "pattern": "^((?!__EMPTY_CONFIG__).)*$",
                                 "default": ""
                             },
                             "workingDirectory": {
