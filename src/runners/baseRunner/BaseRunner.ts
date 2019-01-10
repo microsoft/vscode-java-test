@@ -136,10 +136,10 @@ export abstract class BaseRunner implements ITestRunner {
         }
 
         if (this.config) {
-            if (this.config.vmargs.length > 0) {
+            if (this.config.vmargs) {
                 commandParams.push(...this.config.vmargs.filter(Boolean));
             }
-            if (this.config.args.length > 0) {
+            if (this.config.args) {
                 commandParams.push(...this.config.args.filter(Boolean));
             }
         }
