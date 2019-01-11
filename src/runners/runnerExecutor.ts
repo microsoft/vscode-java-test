@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { ExtensionContext, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
