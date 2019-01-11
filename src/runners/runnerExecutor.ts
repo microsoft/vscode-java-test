@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { ExtensionContext, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -95,12 +95,7 @@ class RunnerExecutor {
                 logger.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
             }
-            const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
-            if (!workspaceFolder) {
-                logger.error(`The test: ${test.fullName} does not belong to any workspace folder`);
-                continue;
-            }
-            const key: string = `${workspaceFolder.uri}/${test.kind}`;
+            const key: string = `${test.project}/${test.kind}`;
             const testArray: ITestItem[] | undefined = map.get(key);
             if (testArray) {
                 testArray.push(test);
