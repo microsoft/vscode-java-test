@@ -12,6 +12,8 @@
     "configuration.java.test.report.position.description": "Specify where to show the test report",
     "configuration.java.test.log.level.description": "Specify the level of the test logs",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "Specify whether the extension will show hint dialog when deprecated configuration file is used",
+    "configuration.java.test.message.hintForSetingDefaultConfig.description": "Specify whether the extension will show hint to set default test configuration",
+    "configuration.java.test.defaultConfig.description": "Specify the name of the default test configuration",
     "configuration.java.test.config.description": "Specify the configurations for running the tests",
     "configuration.java.test.config.item.description": "Specify the configuration item for running the tests",
     "configuration.java.test.config.name.description": "Specify the name of the configuration item",

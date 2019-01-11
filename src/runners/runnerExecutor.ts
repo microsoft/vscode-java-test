@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { ExtensionContext, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -27,7 +27,7 @@ class RunnerExecutor {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean, usingDefaultConfig: boolean): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -44,7 +44,7 @@ class RunnerExecutor {
             this._runnerMap = this.classifyTestsByKind(testItems);
             const finalResults: ITestResult[] = [];
             for (const [runner, tests] of this._runnerMap.entries()) {
-                const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(tests, isDebug, usingDefaultConfig);
+                const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(tests, isDebug);
                 await runner.setup(tests, isDebug, config);
                 await runner.execPreLaunchTaskIfExist();
                 const results: ITestResult[] = await runner.run();
@@ -84,33 +84,29 @@ class RunnerExecutor {
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {
-        const testMap: Map<Uri, ITestItem[]> = this.mapTestsByProjectAndKind(tests);
+        const testMap: Map<string, ITestItem[]> = this.mapTestsByProjectAndKind(tests);
         return this.mapTestsByRunner(testMap);
     }
 
-    private mapTestsByProjectAndKind(tests: ITestItem[]): Map<Uri, ITestItem[]> {
-        const map: Map<Uri, ITestItem[]> = new Map<Uri, ITestItem[]>();
+    private mapTestsByProjectAndKind(tests: ITestItem[]): Map<string, ITestItem[]> {
+        const map: Map<string, ITestItem[]> = new Map<string, ITestItem[]>();
         for (const test of tests) {
             if (!(test.kind in TestKind)) {
                 logger.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
             }
-            const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
-            if (!workspaceFolder) {
-                logger.error(`The test: ${test.fullName} does not belong to any workspace folder`);
-                continue;
-            }
-            const testArray: ITestItem[] | undefined = map.get(workspaceFolder.uri);
+            const key: string = `${test.project}/${test.kind}`;
+            const testArray: ITestItem[] | undefined = map.get(key);
             if (testArray) {
                 testArray.push(test);
             } else {
-                map.set(workspaceFolder.uri, [test]);
+                map.set(key, [test]);
             }
         }
         return map;
     }
 
-    private mapTestsByRunner(testsPerProjectAndKind: Map<Uri, ITestItem[]>): Map<ITestRunner, ITestItem[]> {
+    private mapTestsByRunner(testsPerProjectAndKind: Map<string, ITestItem[]>): Map<ITestRunner, ITestItem[]> {
         const map: Map<ITestRunner, ITestItem[]> = new Map<ITestRunner, ITestItem[]>();
         for (const tests of testsPerProjectAndKind.values()) {
             const runner: ITestRunner | undefined = this.getRunnerByKind(tests[0].kind);

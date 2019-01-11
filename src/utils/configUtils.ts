@@ -4,8 +4,8 @@
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { logger } from '../logger/logger';
 
-export function resolveWorkingDirectory(testUriString: string, cwdConfig: string): string | undefined {
-    if (cwdConfig && /\$\{workspacefolder\}/i.test(cwdConfig.trim())) {
+export function resolveWorkingDirectory(testUriString: string, cwd: string | undefined): string | undefined {
+    if (cwd && /\$\{workspacefolder\}/i.test(cwd.trim())) {
         const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(testUriString));
         if (workspaceFolder) {
             return workspaceFolder.uri.fsPath;
@@ -13,5 +13,5 @@ export function resolveWorkingDirectory(testUriString: string, cwdConfig: string
         logger.error(`Failed to parse the working directory for test: ${testUriString}`);
         return undefined;
     }
-    return cwdConfig;
+    return cwd;
 }

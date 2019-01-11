@@ -14,22 +14,14 @@ export async function openTextDocumentForNode(node: TestTreeNode): Promise<void>
 }
 
 export async function runTestsFromExplorer(node?: TestTreeNode): Promise<void> {
-    return executeTestsFromExplorer(false /* isDebug */, true /* usingDefaultConfig */, node);
+    return executeTestsFromExplorer(false /* isDebug */, node);
 }
 
 export async function debugTestsFromExplorer(node?: TestTreeNode): Promise<void> {
-    return executeTestsFromExplorer(true /* isDebug */, true /* usingDefaultConfig */, node);
+    return executeTestsFromExplorer(true /* isDebug */, node);
 }
 
-export async function runTestsWithConfigFromExplorer(node?: TestTreeNode): Promise<void> {
-    return executeTestsFromExplorer(false /* isDebug */, false /* usingDefaultConfig */, node);
-}
-
-export async function debugTestsWithFromExplorer(node?: TestTreeNode): Promise<void> {
-    return executeTestsFromExplorer(true /* isDebug */, false /* usingDefaultConfig */, node);
-}
-
-async function executeTestsFromExplorer(isDebug: boolean, usingDefaultConfig: boolean, node?: TestTreeNode): Promise<void> {
+async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode): Promise<void> {
     return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
@@ -39,7 +31,7 @@ async function executeTestsFromExplorer(isDebug: boolean, usingDefaultConfig: bo
             if (token.isCancellationRequested) {
                 return;
             }
-            return executeTests(tests, isDebug, usingDefaultConfig, progress, token);
+            return executeTests(tests, isDebug, progress, token);
         },
     );
 }
