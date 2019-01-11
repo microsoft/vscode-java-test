@@ -95,12 +95,7 @@ class RunnerExecutor {
                 logger.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
             }
-            const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(test.uri));
-            if (!workspaceFolder) {
-                logger.error(`The test: ${test.fullName} does not belong to any workspace folder`);
-                continue;
-            }
-            const key: string = `${workspaceFolder.uri}/${test.kind}`;
+            const key: string = `${test.project}/${test.kind}`;
             const testArray: ITestItem[] | undefined = map.get(key);
             if (testArray) {
                 testArray.push(test);

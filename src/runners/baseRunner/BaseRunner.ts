@@ -104,7 +104,8 @@ export abstract class BaseRunner implements ITestRunner {
                         request: 'attach',
                         hostName: 'localhost',
                         port: this.port,
-                        projectName: this.config ? this.config.projectName : undefined,
+                        // Tests in each runner has been classified according to the project they belong to
+                        projectName: this.tests[0].project,
                     });
                 }, 500);
             }
