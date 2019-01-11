@@ -20,11 +20,11 @@ Here is an example of the configuration schema:
 ]
 ```
 
-> Note: The first configuration item in the array will be used as the default configuration when you trigger `Run Test` or `Debug Test`
+> Note: The commands `Run With Configuration` and `Debug With Configuration` are **removed** from version `0.14.0`. The extension will let you select the configuration if it detects there are customized configuration available.
 
 ## Property Details
 
-The value of `java.test.config` is an object array, each object is a configuration item, which may have following properties:
+The value of `java.test.config` is an **object** or an **object array**, each object is a configuration item, which may have following properties:
 
 | Property Name | Description | Default Value |
 |---|---|---|
@@ -33,6 +33,16 @@ The value of `java.test.config` is an object array, each object is a configurati
 | `vmargs` | Specify the extra options and system properties for the JVM | [] |
 | `args` | Specify the command line arguments which will be passed to the test runner | [] |
 | `env` | Specify the extra environment variables when running the tests | {} |
+
+## Set the default configuration
+
+Each time when you run the test cases, the extension will ask you to select a configuration if it detects there are customized configuration available. If you do not want to pick the configuration each time. There are two ways to achieve this:
+
+### Set the default configuration by yourself
+you can set the setting: `java.test.defaultConfig` to the name of the configuration. For example, if your configuration is the same as the [above schema](#TL;DR) shows, simply set `java.test.defaultConfig` to `myConfiguration`.
+
+### Let the extension to set the default configuration
+Each time you select one configuration, the extension will ask you whether to set the selected configuration as default. Simply click `Yes` will let the extension to set the default configuration for you.
 
 ## Q & A
 **Q: How can I migrate to the new `java.test.config` setting?**
