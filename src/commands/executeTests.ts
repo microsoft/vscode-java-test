@@ -10,7 +10,7 @@ export async function runTests(tests: ITestItem[]): Promise<void> {
     return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-            return executeTests(tests, false /* isDebug */, true /* usingDefaultConfig */, progress, token);
+            return executeTests(tests, false /* isDebug */, progress, token);
         },
     );
 }
@@ -19,15 +19,15 @@ export async function debugTests(tests: ITestItem[]): Promise<void> {
     return window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-            return executeTests(tests, true /* isDebug */, true /* usingDefaultConfig */, progress, token);
+            return executeTests(tests, true /* isDebug */, progress, token);
         },
     );
 }
 
-export async function executeTests(tests: ITestItem[], isDebug: boolean, usingDefaultConfig: boolean, progress: Progress<any>, token: CancellationToken): Promise<void> {
+export async function executeTests(tests: ITestItem[], isDebug: boolean, progress: Progress<any>, token: CancellationToken): Promise<void> {
     token.onCancellationRequested(() => {
         commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
     });
     progress.report({ message: 'Running tests...'});
-    return runnerExecutor.run(tests, isDebug, usingDefaultConfig);
+    return runnerExecutor.run(tests, isDebug);
 }

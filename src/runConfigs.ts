@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 export interface IExecutionConfig {
-    name: string;
-    projectName: string;
-    workingDirectory: string;
-    args: any[];
-    vmargs: any[];
-    env: { [key: string]: string; };
-    preLaunchTask: string;
+    name?: string;
+    projectName?: string;
+    workingDirectory?: string;
+    args?: any[];
+    vmargs?: any[];
+    env?: { [key: string]: string; };
+    preLaunchTask?: string;
 }
 
 export interface IExecutionConfigGroup {
@@ -20,3 +20,8 @@ export interface ITestConfig {
     run: IExecutionConfigGroup;
     debug: IExecutionConfigGroup;
 }
+
+export const __BUILTIN_CONFIG__: IExecutionConfig = {
+    name: '__BUILTIN_CONFIG__',
+    workingDirectory: '${workspaceFolder}',
+};
