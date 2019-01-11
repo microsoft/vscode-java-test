@@ -24,7 +24,7 @@ Here is an example of the configuration schema:
 
 ## Property Details
 
-The value of `java.test.config` is an **object** or an **object array**, each object is a configuration item, which may have following properties:
+The value of `java.test.config` is an **object** or an **object array**, each object is a configuration item, which may have the following properties:
 
 | Property Name | Description | Default Value |
 |---|---|---|
@@ -39,10 +39,10 @@ The value of `java.test.config` is an **object** or an **object array**, each ob
 Each time when you run the test cases, the extension will ask you to select a configuration if it detects there are customized configuration available. If you do not want to pick the configuration each time. There are two ways to achieve this:
 
 ### Set the default configuration by yourself
-you can set the setting: `java.test.defaultConfig` to the name of the configuration. For example, if your configuration is the same as the [above schema](#TL;DR) shows, simply set `java.test.defaultConfig` to `myConfiguration`.
+you can set the setting: `java.test.defaultConfig` to the name of the configuration. For example, if your configuration is the same as the [above schema](##tldr) shows, simply set `java.test.defaultConfig` to `myConfiguration`.
 
 ### Let the extension to set the default configuration
-Each time you select one configuration, the extension will ask you whether to set the selected configuration as default. Simply click `Yes` will let the extension to set the default configuration for you.
+Each time you select one configuration, the extension will ask you whether to set the selected configuration as default. Simply click `Yes` will let the extension set the default configuration for you.
 
 ## Q & A
 **Q: How can I migrate to the new `java.test.config` setting?**
