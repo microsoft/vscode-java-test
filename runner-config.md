@@ -36,13 +36,18 @@ The value of `java.test.config` is an **object** or an **object array**, each ob
 
 ## Set the default configuration
 
-Each time when you run the test cases, the extension will ask you to select a configuration if it detects there are customized configuration available. If you do not want to pick the configuration each time. There are two ways to achieve this:
+If you do not want to select the configuration each time running the test cases. you can set the setting: `java.test.defaultConfig` to the name of the configuration you want to use.
 
-### Set the default configuration by yourself
-you can set the setting: `java.test.defaultConfig` to the name of the configuration. For example, if your configuration is the same as the [above schema](##tldr) shows, simply set `java.test.defaultConfig` to `myConfiguration`.
+## The built-in configuration
 
-### Let the extension to set the default configuration
-Each time you select one configuration, the extension will ask you whether to set the selected configuration as default. Simply click `Yes` will let the extension set the default configuration for you.
+Besides your customized configuration, there is another built-in configuration available, which has the following defination:
+```json
+{
+    "name": "__BUILTIN_CONFIG__",
+    "workingDirectory": "${workspaceFolder}",
+}
+```
+If there is no customized configuration, the built-in configuration will be used.
 
 ## Q & A
 **Q: How can I migrate to the new `java.test.config` setting?**
