@@ -34,11 +34,11 @@ The value of `java.test.config` is an **object** or an **object array**, each ob
 | `args` | Specify the command line arguments which will be passed to the test runner | [] |
 | `env` | Specify the extra environment variables when running the tests | {} |
 
-## Set the default configuration
+## Custom Configurations
 
 When you have custom configurations, you'll be asked to pick one everytime when running/debugging your test cases. To avoid that, you can use `java.test.defaultConfig` and set its value to the name of a configuration.
 
-If you want to bypass customizing the configurations, you can use the built-in configuration named "default" which has the following definition:
+If you want to bypass any existing configurations, you can use the built-in configuration named "default" which has the following definition:
 ```json
 {
     "name": "default",
