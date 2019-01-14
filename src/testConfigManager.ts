@@ -125,7 +125,7 @@ class TestConfigManager {
         if (choices.length === 1) {
             return choices[0].item;
         }
-        const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, { placeHolder: 'Select test configuration' });
+        const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, { ignoreFocusOut: true, placeHolder: 'Select test configuration' });
         if (!selection) {
             window.showWarningMessage('No configuration item is picked, tests will be launched with built-in configurations.');
             return __BUILTIN_CONFIG__;
