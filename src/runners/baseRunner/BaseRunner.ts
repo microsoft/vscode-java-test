@@ -45,12 +45,11 @@ export abstract class BaseRunner implements ITestRunner {
     }
 
     public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
-        const runnerJarFilePath: string = await this.getRunnerJarFilePath();
         this.port = isDebug ? await getPort() : undefined;
         this.tests = tests;
         this.isDebug = isDebug;
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.uri).fsPath);
-        const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), runnerJarFilePath];
+        const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
         this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
         this.classpath = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
         this.config = config;
@@ -188,10 +187,18 @@ export abstract class BaseRunner implements ITestRunner {
     protected abstract getRunnerCommandParams(): string[];
 
     private async getRunnerJarFilePath(): Promise<string> {
-        const runnerPath: string = path.join(this.runnerDir, 'com.microsoft.java.test.runner-jar-with-dependencies.jar');
-        if (await fse.pathExists(runnerPath)) {
-            return runnerPath;
+        return this.getPath('com.microsoft.java.test.runner.jar');
+    }
+
+    private async getRunnerLibPath(): Promise<string> {
+        return this.getPath('lib');
+    }
+
+    private async getPath(subPath: string): Promise<string> {
+        const fullPath: string = path.join(this.runnerDir, subPath);
+        if (await fse.pathExists(fullPath)) {
+            return fullPath;
         }
-        throw new Error('Failed to find runner jar file.');
+        throw new Error(`Failed to find path: ${fullPath}`);
     }
 }
