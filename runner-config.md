@@ -36,18 +36,15 @@ The value of `java.test.config` is an **object** or an **object array**, each ob
 
 ## Set the default configuration
 
-If you do not want to select the configuration each time running the test cases. you can set the setting: `java.test.defaultConfig` to the name of the configuration you want to use.
+When you have custom configurations, you'll be asked to pick one everytime when running/debugging your test cases. To avoid that, you can use `java.test.defaultConfig` and set its value to the name of a configuration.
 
-## The built-in configuration
-
-Besides your customized configuration, there is another built-in configuration available, which has the following defination:
+If you want to bypass customizing the configurations, you can use the built-in configuration named "default" which has the following definition:
 ```json
 {
-    "name": "__BUILTIN_CONFIG__",
-    "workingDirectory": "${workspaceFolder}",
+    "name": "default",
+    "workingDirectory": "$(workspaceFolder)"
 }
 ```
-If there is no customized configuration, the built-in configuration will be used.
 
 ## Q & A
 **Q: How can I migrate to the new `java.test.config` setting?**
