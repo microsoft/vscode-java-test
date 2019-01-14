@@ -3,6 +3,7 @@
 
 import * as crypto from 'crypto';
 import * as fse from 'fs-extra';
+import * as _ from 'lodash';
 import * as path from 'path';
 import { commands, ConfigurationTarget, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
@@ -28,15 +29,22 @@ class TestConfigManager {
             return undefined;
         }
 
-        const configs: IExecutionConfig[] | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[]>(CONFIG_SETTING_KEY);
-        if (configs && configs.length > 0) {
+        const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(CONFIG_SETTING_KEY, {});
+        if (!_.isEmpty(configSetting)) {
             // Use the new config schema
+            const configItems: IExecutionConfig[] = [];
+            if (_.isPlainObject(configSetting)) {
+                configItems.push(configSetting as IExecutionConfig);
+            } else if (_.isArray(configSetting)) {
+                configItems.push(...configSetting);
+            }
+
             const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
             if (defaultConfigName) {
                 if (defaultConfigName === BUILTIN_CONFIG_NAME) {
                     return __BUILTIN_CONFIG__;
                 }
-                const defaultConfigs: IExecutionConfig[] = configs.filter((config: IExecutionConfig) => {
+                const defaultConfigs: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
                     return config.name === defaultConfigName;
                 });
                 if (defaultConfigs.length === 0) {
@@ -49,13 +57,13 @@ class TestConfigManager {
                     return defaultConfigs[0];
                 }
             }
-            return await this.selectQuickPick(configs, workspaceFolder.uri);
+            return await this.selectQuickPick(configItems, workspaceFolder.uri);
         } else {
             // Using deprecated config shcema
             const deprecatedConfigs: IExecutionConfigGroup[] = [];
             const configFullPath: string = path.join(workspaceFolder.uri.fsPath, this.configRelativePath);
             if (!await fse.pathExists(configFullPath)) {
-                return undefined;
+                return __BUILTIN_CONFIG__;
             }
             this.hintForDeprecatedUsage();
             const content: string = await fse.readFile(configFullPath, 'utf-8');

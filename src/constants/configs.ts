@@ -12,7 +12,7 @@ export const DEFAULT_LOG_LEVEL: string = 'info';
 
 export const DEFAULT_CONFIG_NAME_SETTING_KEY: string = 'java.test.defaultConfig';
 export const CONFIG_SETTING_KEY: string = 'java.test.config';
-export const BUILTIN_CONFIG_NAME: string = '__BUILTIN_CONFIG__';
+export const BUILTIN_CONFIG_NAME: string = 'default';
 
 export const REPORT_POSITION_SETTING_KEY: string = 'java.test.report.position';
 export const DEFAULT_REPORT_POSITION: string = 'sideView';

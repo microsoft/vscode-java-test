@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { BUILTIN_CONFIG_NAME } from './constants/configs';
+
 export interface IExecutionConfig {
     name?: string;
     projectName?: string;
@@ -22,6 +24,6 @@ export interface ITestConfig {
 }
 
 export const __BUILTIN_CONFIG__: IExecutionConfig = {
-    name: '__BUILTIN_CONFIG__',
+    name: BUILTIN_CONFIG_NAME,
     workingDirectory: '${workspaceFolder}',
 };
