@@ -28,6 +28,6 @@ export async function executeTests(tests: ITestItem[], isDebug: boolean, progres
     token.onCancellationRequested(() => {
         commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
     });
-    progress.report({ message: 'Running tests...'});
-    return runnerExecutor.run(tests, isDebug);
+    progress.report({ message: 'Preparing the task...'});
+    return runnerExecutor.run(tests, isDebug, progress, token);
 }
