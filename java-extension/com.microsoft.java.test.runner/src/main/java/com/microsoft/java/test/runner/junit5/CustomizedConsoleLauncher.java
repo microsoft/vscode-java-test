@@ -17,7 +17,7 @@ import com.microsoft.java.test.runner.common.TestOutputStream;
 
 import org.junit.platform.console.options.CommandLineOptions;
 import org.junit.platform.console.options.CommandLineOptionsParser;
-import org.junit.platform.console.options.PicocliCommandLineOptionsParser;;
+import org.junit.platform.console.options.PicocliCommandLineOptionsParser;
 
 public class CustomizedConsoleLauncher implements ITestLauncher {
 
