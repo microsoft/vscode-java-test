@@ -10,9 +10,9 @@ mixin collapseMethodTable(children, type)
             each method in entry[1]
                 - methodIdx++
                 li.list-group-item.list-group-item-action
-                    div.row.accordion-toggle.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
-                        div.col-md-8 #{method.displayName}
-                        div.col-md-1
+                    div.row.accordion-toggle.collapsed
+                        div.col-sm-8(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details") #{method.displayName}
+                        div.col-sm-1.text-right
                             if !method.result
                                 span.badge.badge-warning Not run
                             else if method.result.status === 'Pass'
@@ -21,7 +21,10 @@ mixin collapseMethodTable(children, type)
                                 span.badge.badge-danger Failed
                             else
                                 span.badge.badge-secondary Skipped
-                        div.col-md-2.text-right #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
+                        div.col-sm-2.text-right #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
+                        div.col-sm-1.text-right
+                            a(href="#", title="Navigate to the method", uri=`${method.uri}`, range=`${method.range}`)
+                                i.fa.fa-external-link
                     div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
                         div.row
                             div.col

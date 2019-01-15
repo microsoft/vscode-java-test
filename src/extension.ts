@@ -4,11 +4,11 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { commands, Disposable, Extension, ExtensionContext, extensions, languages, window } from 'vscode';
+import { commands, Disposable, Extension, ExtensionContext, extensions, languages, Uri, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTests, runTests } from './commands/executeTests';
-import { debugTestsFromExplorer, openTextDocumentForNode, runTestsFromExplorer } from './commands/explorerCommands';
+import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
@@ -55,7 +55,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testReportProvider,
         logger,
         languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE, async (node: TestTreeNode) => await openTextDocumentForNode(node)),
+        instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (node: TestTreeNode) => await openTextDocument(Uri.file(node.fsPath), node.range)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runTests(tests)),
         instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await debugTests(tests)),

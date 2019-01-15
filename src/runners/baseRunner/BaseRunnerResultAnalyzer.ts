@@ -67,6 +67,7 @@ export abstract class BaseRunnerResultAnalyzer {
             displayName: test.displayName,
             fullName: test.fullName,
             uri: Uri.parse(test.uri).toString(),
+            range: test.range,
             result: testResultDetails,
         };
     }

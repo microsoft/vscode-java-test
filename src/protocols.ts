@@ -7,10 +7,10 @@ export interface ITestItemBase {
     displayName: string;
     fullName: string;
     uri: string;
+    range: Range;
 }
 
 export interface ITestItem extends ITestItemBase {
-    range: Range;
     children: ITestItem[];
     kind: TestKind;
     project: string;

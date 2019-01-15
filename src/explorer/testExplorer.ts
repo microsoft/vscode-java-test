@@ -102,9 +102,9 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
     private resolveCommand(element: TestTreeNode): Command | undefined {
         if (element.level >= TestLevel.Class) {
             return {
-                command: JavaTestRunnerCommands.OPEN_DOCUMENT_FOR_NODE,
+                command: JavaTestRunnerCommands.OPEN_DOCUMENT,
                 title: '',
-                arguments: [element],
+                arguments: [Uri.file(element.fsPath), element.range],
             };
         }
         return undefined;
