@@ -17,14 +17,14 @@ import com.microsoft.java.test.runner.common.TestOutputStream;
 
 import org.junit.platform.console.options.CommandLineOptions;
 import org.junit.platform.console.options.CommandLineOptionsParser;
-import org.junit.platform.console.options.JOptSimpleCommandLineOptionsParser;
+import org.junit.platform.console.options.PicocliCommandLineOptionsParser;;
 
 public class CustomizedConsoleLauncher implements ITestLauncher {
 
     @Override
     public void execute(String[] args) {
         try {
-            final CommandLineOptionsParser parser = new JOptSimpleCommandLineOptionsParser();
+            final CommandLineOptionsParser parser = new PicocliCommandLineOptionsParser();
             final CommandLineOptions options = parser.parse(args);
             new CustomizedConsoleTestExecutor(options).executeTests();
         } catch (final Exception ex) {
