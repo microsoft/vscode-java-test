@@ -33,7 +33,6 @@
         "workspaceContains:build.gradle",
         "onView:testExplorer",
         "onCommand:java.test.explorer.refresh",
-        "onCommand:java.test.explorer.select",
         "onCommand:java.test.explorer.run",
         "onCommand:java.test.explorer.debug",
         "onCommand:java.test.run",

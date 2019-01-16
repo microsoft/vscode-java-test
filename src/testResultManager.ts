@@ -5,25 +5,22 @@ import { Disposable, Uri } from 'vscode';
 import { ITestResult, ITestResultDetails } from './runners/models';
 
 class TestResultManager implements Disposable {
-    private testResultMap: Map<string, IResultsInFsPath> = new Map<string, IResultsInFsPath>();
+    private testResultMap: Map<string, Map<string, ITestResultDetails>> = new Map<string, Map<string, ITestResultDetails>>();
 
     public storeResult(...results: ITestResult[]): void {
         for (const result of results) {
             const fsPath: string = Uri.parse(result.uri).fsPath;
             if (!this.testResultMap.has(fsPath)) {
-                this.testResultMap.set(fsPath, {
-                    methodsMap: new Map<string, ITestResultDetails>(),
-                    isDirty: false,
-                });
+                this.testResultMap.set(fsPath, new Map<string, ITestResultDetails>());
             }
-            this.testResultMap.get(fsPath)!.methodsMap.set(result.fullName, result.result);
+            this.testResultMap.get(fsPath)!.set(result.fullName, result.result);
         }
     }
 
     public getResult(fsPath: string, testFullName: string): ITestResultDetails | undefined {
-        const resultsInFsPath: IResultsInFsPath | undefined = this.testResultMap.get(fsPath);
+        const resultsInFsPath: Map<string, ITestResultDetails> | undefined = this.testResultMap.get(fsPath);
         if (resultsInFsPath) {
-            return resultsInFsPath.methodsMap.get(testFullName);
+            return resultsInFsPath.get(testFullName);
         }
         return undefined;
     }
@@ -39,11 +36,6 @@ class TestResultManager implements Disposable {
     public dispose(): void {
         this.testResultMap.clear();
     }
-}
-
-interface IResultsInFsPath {
-    methodsMap: Map<string, ITestResultDetails>;
-    isDirty: boolean;
 }
 
 export const testResultManager: TestResultManager = new TestResultManager();
