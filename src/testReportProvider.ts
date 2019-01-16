@@ -3,7 +3,10 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
+import { Disposable, ExtensionContext, Range, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
+import { openTextDocument } from './commands/explorerCommands';
+import { JavaTestRunnerCommands } from './constants/commands';
+import { logger } from './logger/logger';
 import { ITestItemBase } from './protocols';
 import { ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
@@ -40,6 +43,23 @@ class TestReportProvider implements Disposable {
         }
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
+
+        this.panel.webview.onDidReceiveMessage((message: any) => {
+            if (!message) {
+                return;
+            }
+            switch (message.command) {
+                case JavaTestRunnerCommands.OPEN_DOCUMENT:
+                    if (!message.uri) {
+                        logger.error('Could not open the document, the Uri in the message is null.');
+                        return;
+                    }
+                    return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
+                default:
+                    return;
+            }
+        });
+
         this.panel.reveal(position);
     }
 
@@ -103,15 +123,27 @@ class TestReportProvider implements Disposable {
         const classFullName: string = test.fullName.substr(0, test.fullName.indexOf('#'));
         const methods: IReportMethod[] | undefined = map.get(classFullName);
         if (methods) {
-            methods.push({displayName: test.displayName, result});
+            methods.push({
+                displayName: test.displayName,
+                uri: test.uri,
+                range: JSON.stringify(test.range),
+                result,
+            });
         } else {
-            map.set(classFullName, [{displayName: test.displayName, result}]);
+            map.set(classFullName, [{
+                displayName: test.displayName,
+                uri: test.uri,
+                range: JSON.stringify(test.range),
+                result,
+            }]);
         }
     }
 }
 
 interface IReportMethod {
     displayName: string;
+    uri: string;
+    range: string;
     result: ITestResultDetails;
 }
 
