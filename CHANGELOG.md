@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Navigate to the source code from the test explorer. [#558](https://github.com/Microsoft/vscode-java-test/issues/558)
 
 ## Changed
-- Redesign the user experience to run with configurations. [#524](https://github.com/Microsoft/vscode-java-test/issues/524)
+- Redesign the user experience of running tests with configurations. [#524](https://github.com/Microsoft/vscode-java-test/issues/524)
   > More details can be found [here](https://aka.ms/java-test-config)
 
 ## Fixed
