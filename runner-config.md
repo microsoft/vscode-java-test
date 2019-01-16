@@ -7,8 +7,8 @@ Here is an example of the configuration schema:
 ```js
 "java.test.config": [
     {
-        "name": "myConfiguration"
-        "workingDirectory": "${workspaceFolder}"
+        "name": "myConfiguration",
+        "workingDirectory": "${workspaceFolder}",
         "args": [ "-c", "com.test" ],
         "vmargs": [ "-Xmx512M" ],
         "env": { "key": "value" },
