@@ -12,13 +12,14 @@ html(lang="en")
         script(nonce="check", src=`${popperUri}`, integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49", crossorigin="anonymous")
         script(nonce="check", src=`${bootstrapUri}`, integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy", crossorigin="anonymous")
         script.
-            $(document).ready(function() {
+            $(() => {
                 const vscode = acquireVsCodeApi();
-                $('.list-group-item a').click(function() {
+                $('.list-group-item a').click((e) => {
+                    const $this = $(e.currentTarget);
                     vscode.postMessage({
                         command: 'java.test.open.document',
-                        uri: $(this).attr('uri'),
-                        range: $(this).attr('range')
+                        uri: $this.attr('uri'),
+                        range: $this.attr('range')
                     });
                 });
             });
