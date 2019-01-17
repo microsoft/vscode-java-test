@@ -77,9 +77,21 @@ class TestCodeLensProvider implements CodeLensProvider {
 
     private hasTestResult(test: ITestItem): boolean {
         if (test.level === TestLevel.Method) {
-            return testResultManager.hasResultWithFsPathAndFullName(Uri.parse(test.uri).fsPath, test.fullName);
+            return testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName) !== undefined;
         } else if (test.level === TestLevel.Class || test.level === TestLevel.NestedClass) {
-            return testResultManager.hasResultWithFsPath(Uri.parse(test.uri).fsPath);
+            const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.uri).fsPath);
+            if (!resultsInFsPath) {
+                return false;
+            }
+            const keyCollection: string[] = Array.from(resultsInFsPath.keys());
+            for (const child of test.children) {
+                if (child.level !== TestLevel.Method) {
+                    continue;
+                }
+                if (keyCollection.indexOf(child.fullName) >= 0) {
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -105,7 +117,7 @@ class TestCodeLensProvider implements CodeLensProvider {
 
     private getTestStatusIcon(testMethods: ITestItem[]): string {
         for (const method of testMethods) {
-            const testResult: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(method.uri).fsPath, method.fullName);
+            const testResult: ITestResultDetails | undefined = testResultManager.getResultDetails(Uri.parse(method.uri).fsPath, method.fullName);
             if (!testResult || testResult.status === TestStatus.Skip) {
                 return '?';
             } else if (testResult.status === TestStatus.Fail) {

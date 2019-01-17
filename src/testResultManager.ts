@@ -17,20 +17,16 @@ class TestResultManager implements Disposable {
         }
     }
 
-    public getResult(fsPath: string, testFullName: string): ITestResultDetails | undefined {
-        const resultsInFsPath: Map<string, ITestResultDetails> | undefined = this.testResultMap.get(fsPath);
+    public getResultDetails(fsPath: string, testFullName: string): ITestResultDetails | undefined {
+        const resultsInFsPath: Map<string, ITestResultDetails> | undefined = this.getResults(fsPath);
         if (resultsInFsPath) {
             return resultsInFsPath.get(testFullName);
         }
         return undefined;
     }
 
-    public hasResultWithFsPath(fsPath: string): boolean {
-        return this.testResultMap.has(fsPath);
-    }
-
-    public hasResultWithFsPathAndFullName(fsPath: string, testFullName: string): boolean {
-        return !!this.getResult(fsPath, testFullName);
+    public getResults(fsPath: string): Map<string, ITestResultDetails> | undefined {
+        return this.testResultMap.get(fsPath);
     }
 
     public dispose(): void {
