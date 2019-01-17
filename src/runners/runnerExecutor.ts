@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, ExtensionContext, Progress, window } from 'vscode';
+import { CancellationToken, ExtensionContext, Progress, ProgressLocation, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -27,41 +27,48 @@ class RunnerExecutor {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean, progress: Progress<any>, token: CancellationToken): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
         }
 
-        if (testItems.length === 0) {
-            logger.info('No test items found.');
-            return;
-        }
-
         this._isRunning = true;
+        const finalResults: ITestResult[] = [];
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
-            const finalResults: ITestResult[] = [];
             for (const [runner, tests] of this._runnerMap.entries()) {
                 const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(tests, isDebug);
-                if (token.isCancellationRequested) {
-                    return;
+                if (!config) {
+                    logger.info('Test job is canceled.');
+                    continue;
                 }
-                await runner.setup(tests, isDebug, config);
-                testStatusBarProvider.showRunningTest();
-                progress.report({ message: 'Running tests...'});
-                await runner.execPreLaunchTaskIfExist();
-                const results: ITestResult[] = await runner.run();
-                testResultManager.storeResult(...results);
-                finalResults.push(...results);
+                await window.withProgress(
+                    { location: ProgressLocation.Notification, cancellable: true },
+                    async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
+                        token.onCancellationRequested(() => {
+                            this.cleanUp(true /* isCancel */);
+                        });
+                        await runner.setup(tests, isDebug, config);
+                        testStatusBarProvider.showRunningTest();
+                        progress.report({ message: 'Running tests...'});
+                        await runner.execPreLaunchTaskIfExist();
+                        if (token.isCancellationRequested) {
+                            return;
+                        }
+                        const results: ITestResult[] = await runner.run();
+                        testResultManager.storeResult(...results);
+                        finalResults.push(...results);
+                    },
+                );
             }
-            testStatusBarProvider.showTestResult(finalResults);
-            testCodeLensProvider.refresh();
-            testReportProvider.update(finalResults);
         } catch (error) {
             window.showErrorMessage(`${error}`);
             testStatusBarProvider.showFailure();
         } finally {
+            testStatusBarProvider.showTestResult(finalResults);
+            testCodeLensProvider.refresh();
+            testReportProvider.update(finalResults);
             await this.cleanUp(false);
         }
     }
@@ -79,7 +86,6 @@ class RunnerExecutor {
             await Promise.all(promises);
 
             if (isCancel) {
-                testStatusBarProvider.showTestResult([]);
                 logger.info('Test job is canceled.');
             }
         } catch (error) {
