@@ -76,24 +76,28 @@ class TestCodeLensProvider implements CodeLensProvider {
     }
 
     private hasTestResult(test: ITestItem): boolean {
-        if (test.level === TestLevel.Method) {
-            return testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName) !== undefined;
-        } else if (test.level === TestLevel.Class || test.level === TestLevel.NestedClass) {
-            const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.uri).fsPath);
-            if (!resultsInFsPath) {
+        switch (test.level) {
+            case TestLevel.Method:
+                return testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName) !== undefined;
+            case TestLevel.Class:
+            case TestLevel.NestedClass:
+                const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.uri).fsPath);
+                if (!resultsInFsPath) {
+                    return false;
+                }
+                const keyCollection: string[] = Array.from(resultsInFsPath.keys());
+                for (const child of test.children) {
+                    if (child.level !== TestLevel.Method) {
+                        continue;
+                    }
+                    if (keyCollection.indexOf(child.fullName) >= 0) {
+                        return true;
+                    }
+                }
                 return false;
-            }
-            const keyCollection: string[] = Array.from(resultsInFsPath.keys());
-            for (const child of test.children) {
-                if (child.level !== TestLevel.Method) {
-                    continue;
-                }
-                if (keyCollection.indexOf(child.fullName) >= 0) {
-                    return true;
-                }
-            }
+            default:
+                return false;
         }
-        return false;
     }
 
     private parseCodeLensForTestResult(test: ITestItem): CodeLens {
