@@ -36,7 +36,7 @@ You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / 
 |---|---|---|
 | `java.test.report.position` | Specify where to show the test report. Supported values are: `sideView`, `currentView`. | `sideView` |
 | `java.test.log.level` | Specify the level of the test logs. Supported values are: `error`, `info`, `verbose`. | `info` |
-| `java.test.config` | Specify the configuration for the test cases to run with.<br> More details can be found [here](https://aka.ms/java-test-config). | `{}` |
+| `java.test.config` | Specify the configuration for the test cases to run with. [More details](https://aka.ms/java-test-config). | `{}` |
 | `java.test.defaultConfig` | Specify the name of the default test configuration. | `""` |
 
 ## Requirements

@@ -11,8 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Navigate to the source code from the test explorer. [#558](https://github.com/Microsoft/vscode-java-test/issues/558)
 
 ## Changed
-- Redesign the user experience of running tests with configurations. [#524](https://github.com/Microsoft/vscode-java-test/issues/524)
-  > More details can be found [here](https://aka.ms/java-test-config)
+- Redesign the user experience of running tests with configurations. [More details](https://aka.ms/java-test-config) [#524](https://github.com/Microsoft/vscode-java-test/issues/524)
 
 ## Fixed
 - Fix the bug that test scope is wrong when triggering tests from inner class level. [#411](https://github.com/Microsoft/vscode-java-test/issues/411)
