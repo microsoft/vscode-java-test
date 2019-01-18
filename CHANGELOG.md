@@ -4,7 +4,7 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## 0.14.0 - [Unreleased]
+## 0.14.0 - 2019-01-21
 
 ## Added
 - Add the log level setting. [#555](https://github.com/Microsoft/vscode-java-test/issues/555)
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improve the test output format. [#505](https://github.com/Microsoft/vscode-java-test/issues/505)
 - Pack the test report resources into the extension vsix. [550](https://github.com/Microsoft/vscode-java-test/issues/550)
 
-## 0.13.0 - Dec 2018
+## 0.13.0 - 2018-12-27
 
 ## Added
 - Add Chinese language support. [#437](https://github.com/Microsoft/vscode-java-test/issues/437)
@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix the bug that test explorer will keep refreshing when opening a large project. [#461](https://github.com/Microsoft/vscode-java-test/issues/461)
 - Fix several bugs that cause the extension fails to run test cases. ([#134](https://github.com/Microsoft/vscode-java-test/issues/134), [#488](https://github.com/Microsoft/vscode-java-test/issues/488), [#504](https://github.com/Microsoft/vscode-java-test/issues/504), [#515](https://github.com/Microsoft/vscode-java-test/issues/515))
 
-## 0.12.0 - Dec 2018
+## 0.12.0 - 2018-12-10
 
 ## Added
 - Add a way to persist test logs into log files. [#452](https://github.com/Microsoft/vscode-java-test/issues/452)
@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Fixed
 - Fix the bug that test runners will run forever. [#482](https://github.com/Microsoft/vscode-java-test/issues/482)
 
-## 0.11.1 - Nov 2018
+## 0.11.1 - 2018-11-26
 
 ## Added
 - Add JUnit 5's @DisplayName support in test explorer. (Thanks for [@BaerMitUmlaut](https://github.com/BaerMitUmlaut))
@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Will run all tests in class if triggering test from method level in test explorer. [#441](https://github.com/Microsoft/vscode-java-test/issues/441)
 - Cannot run tests when the project is a multi-module Maven project. [#443](https://github.com/Microsoft/vscode-java-test/issues/443)
 
-## 0.11.0 - Nov 2018
+## 0.11.0 - 2018-11-09
 
 ## Added
 - Add TestNG support.
