@@ -87,10 +87,7 @@ class TestCodeLensProvider implements CodeLensProvider {
                 }
                 const keyCollection: string[] = Array.from(resultsInFsPath.keys());
                 for (const child of test.children) {
-                    if (child.level !== TestLevel.Method) {
-                        continue;
-                    }
-                    if (keyCollection.indexOf(child.fullName) >= 0) {
+                    if (child.level === TestLevel.Method && keyCollection.indexOf(child.fullName) >= 0) {
                         return true;
                     }
                 }
