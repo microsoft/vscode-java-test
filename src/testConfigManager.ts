@@ -26,6 +26,7 @@ class TestConfigManager {
     public async loadRunConfig(tests: ITestItem[], isDebug: boolean): Promise<IExecutionConfig | undefined> {
         const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].uri));
         if (!workspaceFolder) {
+            window.showErrorMessage(`Failed to get workspace folder for the test item: ${tests[0].uri}.`);
             return undefined;
         }
 
@@ -48,16 +49,16 @@ class TestConfigManager {
                     return config.name === defaultConfigName;
                 });
                 if (defaultConfigs.length === 0) {
-                    window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, tests will be launched with built-in configurations.`);
+                    window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, use the built-in configuration instead.`);
                     return __BUILTIN_CONFIG__;
                 } else if (defaultConfigs.length > 1) {
-                    window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, tests will be launched with built-in configurations.`);
+                    window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, use the built-in configuration instead.`);
                     return __BUILTIN_CONFIG__;
                 } else {
                     return defaultConfigs[0];
                 }
             }
-            return await this.selectQuickPick(configItems, workspaceFolder.uri);
+            return await this.selectQuickPick(configItems, workspaceFolder);
         } else {
             // Using deprecated config shcema
             const deprecatedConfigs: IExecutionConfigGroup[] = [];
@@ -75,24 +76,24 @@ class TestConfigManager {
 
     private async selectDeprecatedConfig(configs: IExecutionConfigGroup[]): Promise<IExecutionConfig | undefined> {
         if (configs.length === 0) {
-            return undefined;
+            return __BUILTIN_CONFIG__;
         }
         if (configs[0].default) {
             const runConfig: IExecutionConfigGroup = configs[0];
             const candidates: IExecutionConfig[] = runConfig.items.filter((item: IExecutionConfig) => item.name === runConfig.default);
             if (candidates.length === 0) {
-                window.showWarningMessage(`There is no config with name: ${runConfig.default}.`);
-                return undefined;
+                window.showWarningMessage(`Failed to find the default configuration item: ${runConfig.default}, use the built-in configuration instead.`);
+                return __BUILTIN_CONFIG__;
             }
             if (candidates.length > 1) {
-                window.showWarningMessage(`Duplicate configs with default name: ${runConfig.default}.`);
-                return undefined;
+                window.showWarningMessage(`More than one configuration item found with name: ${runConfig.default}, use the built-in configuration instead.`);
+                return __BUILTIN_CONFIG__;
             }
             return candidates[0];
         }
 
         if (configs.length > 1) {
-            window.showWarningMessage('It is not supported to run tests with config from multi root.');
+            window.showErrorMessage('It is not supported to run tests from multi-root workspace with the deprecated "launch.test.json".');
             return undefined;
         }
 
@@ -103,7 +104,7 @@ class TestConfigManager {
         return this.selectQuickPick(configItems);
     }
 
-    private async selectQuickPick(configs: IExecutionConfig[], workspaceFolderUri?: Uri): Promise<IExecutionConfig | undefined> {
+    private async selectQuickPick(configs: IExecutionConfig[], workspaceFolder?: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
         interface IRunConfigQuickPick extends QuickPickItem {
             item: IExecutionConfig;
         }
@@ -125,13 +126,15 @@ class TestConfigManager {
         if (choices.length === 1) {
             return choices[0].item;
         }
-        const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, { ignoreFocusOut: true, placeHolder: 'Select test configuration' });
+        const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, {
+            ignoreFocusOut: true,
+            placeHolder: 'Select test configuration' + `${workspaceFolder ? ` for workspace folder: "${workspaceFolder.name}"` : ''}`,
+        });
         if (!selection) {
-            window.showWarningMessage('No configuration item is picked, tests will be launched with built-in configurations.');
-            return __BUILTIN_CONFIG__;
+            return undefined;
         }
-        if (workspaceFolderUri) {
-            this.askPreferenceForConfig(configs, selection.item, workspaceFolderUri);
+        if (workspaceFolder) {
+            this.askPreferenceForConfig(configs, selection.item, workspaceFolder.uri);
         }
 
         return selection.item;
@@ -144,7 +147,7 @@ class TestConfigManager {
         if (!showHint) {
             return;
         }
-        const choice: string | undefined = await window.showInformationMessage(
+        const choice: string | undefined = await window.showWarningMessage(
             'Using launch.test.json to run tests is deprecated, please use the "java.test.config" setting instead',
             NEVER_SHOW,
             LEARN_MORE,
