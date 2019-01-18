@@ -78,7 +78,7 @@ class TestReportProvider implements Disposable {
         let failedCount: number = 0;
         let skippedCount: number = 0;
         for (const test of tests) {
-            const result: ITestResultDetails | undefined = testResultManager.getResult(Uri.parse(test.uri).fsPath, test.fullName);
+            const result: ITestResultDetails | undefined = testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName);
             allCount++;
             if (result) {
                 this.putMethodResultIntoMap(allResultsMap, test, result);
