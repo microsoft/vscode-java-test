@@ -136,16 +136,18 @@ export abstract class BaseRunner implements ITestRunner {
             commandParams.push('-Xdebug', `-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=${this.port}`);
         }
 
-        if (this.config) {
-            if (this.config.vmargs) {
-                commandParams.push(...this.config.vmargs.filter(Boolean));
-            }
-            if (this.config.args) {
-                commandParams.push(...this.config.args.filter(Boolean));
-            }
+        if (this.config && this.config.vmargs) {
+            commandParams.push(...this.config.vmargs.filter(Boolean));
         }
 
         commandParams.push(this.runnerMainClassName);
+
+        commandParams.push(...this.getRunnerCommandParams());
+
+        if (this.config && this.config.args) {
+            commandParams.push(...this.config.args.filter(Boolean));
+        }
+
         return commandParams;
     }
 
@@ -182,6 +184,8 @@ export abstract class BaseRunner implements ITestRunner {
             });
         });
     }
+
+    protected abstract getRunnerCommandParams(): string[];
 
     private async getRunnerJarFilePath(): Promise<string> {
         const runnerPath: string = path.join(this.runnerDir, 'com.microsoft.java.test.runner-jar-with-dependencies.jar');
