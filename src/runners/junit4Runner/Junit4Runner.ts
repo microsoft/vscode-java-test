@@ -7,8 +7,8 @@ import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer
 import { JUnit4RunnerResultAnalyzer } from './JUnit4RunnerResultAnalyzer';
 
 export class JUnit4Runner extends BaseRunner {
-    public constructCommandParams(): string[] {
-        return [...super.constructCommandParams(), 'junit', ...this.tests.map((t: ITestItem) => t.fullName)];
+    public getRunnerCommandParams(): string[] {
+        return ['junit', ...this.tests.map((t: ITestItem) => t.fullName)];
     }
 
     public getTestResultAnalyzer(): BaseRunnerResultAnalyzer {

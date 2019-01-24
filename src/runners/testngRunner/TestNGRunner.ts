@@ -8,8 +8,8 @@ import { TestNGRunnerResultAnalyzer } from './TestNGRunnerResultAnalyzer';
 
 export class TestNGRunner extends BaseRunner {
 
-    public constructCommandParams(): string[] {
-        return [...super.constructCommandParams(), 'testng', ...this.tests.map((t: ITestItem) => t.fullName)];
+    public getRunnerCommandParams(): string[] {
+        return ['testng', ...this.tests.map((t: ITestItem) => t.fullName)];
     }
 
     public getTestResultAnalyzer(): BaseRunnerResultAnalyzer {
