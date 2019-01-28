@@ -37,7 +37,7 @@ class TestConfigManager {
             if (_.isPlainObject(configSetting)) {
                 configItems.push(configSetting as IExecutionConfig);
             } else if (_.isArray(configSetting)) {
-                configItems.push(...configSetting);
+                configItems.push(...configSetting as IExecutionConfig[]);
             }
 
             const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);

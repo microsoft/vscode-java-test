@@ -75,6 +75,7 @@ class RunnerExecutor {
 
     public async cleanUp(isCancel: boolean): Promise<void> {
         try {
+            this._isRunning = false;
             const promises: Array<Promise<void>> = [];
             if (this._runnerMap) {
                 for (const runner of this._runnerMap.keys()) {
@@ -91,7 +92,6 @@ class RunnerExecutor {
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
-        this._isRunning = false;
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {
