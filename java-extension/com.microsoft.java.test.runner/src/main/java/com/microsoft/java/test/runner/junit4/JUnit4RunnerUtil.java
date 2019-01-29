@@ -57,8 +57,8 @@ public class JUnit4RunnerUtil {
             final Request request = Request.method(suiteClass, method);
             final Runner runner = request.getRunner();
             return new JUnit4TestReference(runner, runner.getDescription());
-        } catch (final ClassNotFoundException e) {
-            final String message = String.format("No test found to run for suite %s. Details: %s.", suite,
+        } catch (final Throwable e) {
+            final String message = String.format("Exception happened when construct the suite %s. Details: %s.", suite,
                     e.getMessage());
             stream.println(new TestMessageItem(message, e));
             return null;
@@ -70,8 +70,8 @@ public class JUnit4RunnerUtil {
             final Request request = Request.aClass(Class.forName(suite));
             final Runner runner = request.getRunner();
             return new JUnit4TestReference(runner, runner.getDescription());
-        } catch (final ClassNotFoundException e) {
-            final String message = String.format("No test found to run for suite %s. Details: %s.", suite,
+        } catch (final Throwable e) {
+            final String message = String.format("Exception happened when construct the suite %s. Details: %s.", suite,
                     e.getMessage());
             stream.println(new TestMessageItem(message, e));
             return null;

@@ -36,7 +36,7 @@ export abstract class BaseRunnerResultAnalyzer {
     }
 
     public analyzeError(error: string): void {
-        logger.info(error);
+        logger.error(this.unescape(error));
     }
 
     public feedBack(): ITestResult[] {
