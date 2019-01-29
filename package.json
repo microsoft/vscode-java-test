@@ -285,7 +285,7 @@
         "watch": "webpack --mode development --watch --info-verbosity verbose",
         "test": "gulp install-dependency && node ./node_modules/vscode/bin/test",
         "lint": "gulp lint",
-        "buildplugin": "gulp build-plugin",
+        "build-plugin": "gulp build-plugin",
         "vscode:prepublish": "gulp resources && webpack --mode production"
     },
     "extensionDependencies": [
