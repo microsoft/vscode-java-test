@@ -34,10 +34,10 @@ class TestConfigManager {
         if (!_.isEmpty(configSetting)) {
             // Use the new config schema
             const configItems: IExecutionConfig[] = [];
-            if (_.isPlainObject(configSetting)) {
-                configItems.push(configSetting as IExecutionConfig);
-            } else if (_.isArray(configSetting)) {
+            if (_.isArray(configSetting)) {
                 configItems.push(...configSetting);
+            } else if (_.isPlainObject(configSetting)) {
+                configItems.push(configSetting);
             }
 
             const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
