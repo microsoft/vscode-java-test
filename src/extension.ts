@@ -4,8 +4,8 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { commands, Disposable, Extension, ExtensionContext, extensions, languages, Range, Uri, window } from 'vscode';
-import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import { Extension, ExtensionContext, extensions, languages, Range, Uri, window } from 'vscode';
+import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
@@ -54,22 +54,17 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testReportProvider,
         logger,
         languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerExecutor.run(tests, false /* isDebug */)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerExecutor.run(tests, true /* isDebug */)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await runTestsFromExplorer(node)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await debugTestsFromExplorer(node)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestItem[]) => await testReportProvider.report(tests)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => showOutputChannel()),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
-        instrumentAndRegisterCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerExecutor.run(tests, false /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerExecutor.run(tests, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await runTestsFromExplorer(node)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await debugTestsFromExplorer(node)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestItem[]) => await testReportProvider.report(tests)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => showOutputChannel()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
     );
-}
-
-function instrumentAndRegisterCommand(name: string, cb: (...args: any[]) => any): Disposable {
-    const instrumented: (...args: any[]) => any = instrumentOperation(name, async (_operationId: string, ...args: any[]) => await cb(...args));
-    return commands.registerCommand(name, instrumented);
 }
 
 async function getJavaHome(): Promise<string> {
