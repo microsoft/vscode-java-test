@@ -27,15 +27,6 @@ gulp.task('build-plugin', (done) => {
     done();
 });
 
-gulp.task('download-server', (done) => {
-    download('http://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz')
-        .pipe(decompress())
-        .pipe(gulp.dest(path.join(serverDir, 'jdtls')));
-    done();
-});
-
-gulp.task('build-server', gulp.series('build-plugin', 'download-server'));
-
 // Lint
 gulp.task('checkstyle', (done) => {
     cp.execSync(`${mvnw()} verify`, { cwd: serverDir, stdio: [0, 1, 2] });
