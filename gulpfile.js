@@ -20,8 +20,10 @@ gulp.task('build-plugin', (done) => {
     cp.execSync(`${mvnw()} clean package`, { cwd: serverDir, stdio: [0, 1, 2] });
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.plugin/target/*.jar'))
         .pipe(gulp.dest('./server'));
-    gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/*-jar-with-dependencies.jar'))
+    gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/*.jar'))
         .pipe(gulp.dest('./server'));
+        gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/lib/*.jar'))
+        .pipe(gulp.dest('./server/lib'));
     done();
 });
 
