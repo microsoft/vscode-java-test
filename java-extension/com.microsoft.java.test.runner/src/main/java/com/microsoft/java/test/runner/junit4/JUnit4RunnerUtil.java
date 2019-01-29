@@ -58,8 +58,8 @@ public class JUnit4RunnerUtil {
             final Runner runner = request.getRunner();
             return new JUnit4TestReference(runner, runner.getDescription());
         } catch (final Throwable e) {
-            final String message = String.format("Exception occurred when constructing the suite %s. Details: %s.", suite,
-                    e.getMessage());
+            final String message = String.format("Exception occurred when constructing the suite %s. Details: %s.",
+                    suite, e.getMessage());
             stream.println(new TestMessageItem(message, e));
             return null;
         }
@@ -71,8 +71,8 @@ public class JUnit4RunnerUtil {
             final Runner runner = request.getRunner();
             return new JUnit4TestReference(runner, runner.getDescription());
         } catch (final Throwable e) {
-            final String message = String.format("Exception occurred when constructing the suite %s. Details: %s.", suite,
-                    e.getMessage());
+            final String message = String.format("Exception occurred when constructing the suite %s. Details: %s.",
+                    suite, e.getMessage());
             stream.println(new TestMessageItem(message, e));
             return null;
         }
