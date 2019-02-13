@@ -12,7 +12,7 @@ You can report issues whenever:
 - Identify a reproducible problem within the extension
 - Have a feature request
 
-### Look for an Existing Issue
+### Looking for an Existing Issue
 Before creating a new issue, please do a search to see if the issue or feature request has already been filed.
 
 If you find your issue already exists, make relevant comments and add your reaction:
@@ -49,17 +49,17 @@ The extension has three major modules, which are listed as follow:
 7. In the `Target definitions` panel, select `JDTLS.EXT - /com.microsoft.java.test.plugin/target.target`
 8. Click `Apply and Close`
 
-### Debug the Extension Client
+### Debugging the Extension Client
 1. Open the base directory of Java Test Runner in VS Code
 2. Hit `F5` to launch the extension in debug mode
  
-### Debug the Java Language Server plugin
+### Debugging the Java Language Server plugin
 1. In Eclipse, create a new `Debug Configurations`, select the type as `Remote Java Application`
 2. In the `Connect` panel, find the `Port` setting in `Connection Properties` and set it to `1044`
 3. In the `Source` panel, click `Add` > `Java Project`, select `com.microsoft.java.test.plugin` and click `OK`
 4. Click `Apply` to save the configurations
 5. Click `Debug` to start the debug session
 
-### Debug the Java Test Runner
+### Debugging the Java Test Runner
 - The Java Test Runner is a normal Maven project, you can open it with whatever the development tools you prefer, for example, VS Code
 - The Java Test Runner is an executable jar, the main class is `com.microsoft.java.test.runner.Launcher`
