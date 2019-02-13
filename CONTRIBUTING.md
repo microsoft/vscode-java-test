@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Java Test Runner!
 There are many ways in which you can contribute, beyond writing code. Please read the following document to check how you can get involved.
 
 ## Questions and Feedback
-Have questions or feadback? Feel free to let us know! You can share your thoughts in our Gitter channel: [![Gitter](https://badges.gitter.im/Microsoft/vscode-java-test.svg)](https://gitter.im/Microsoft/vscode-java-test)
+Have questions or feedback? Feel free to let us know! You can share your thoughts in our Gitter channel: [![Gitter](https://badges.gitter.im/Microsoft/vscode-java-test.svg)](https://gitter.im/Microsoft/vscode-java-test)
 
 ## Reporting Issues
 You can report issues whenever:
@@ -20,8 +20,8 @@ If you find your issue already exists, make relevant comments and add your react
 - 👎 - downvote
  
 ### Writing Good Bug Reports and Feature Requests
-Inorder to let us know better about the issue, please make sure the following items are included with each issue:
-- Version of VS Code
+In order to let us know better about the issue, please make sure the following items are included with each issue:
+- The version of VS Code
 - Your operating system
 - Reproducible steps
 - What you expected to see, versus what you actually saw
@@ -30,7 +30,7 @@ Inorder to let us know better about the issue, please make sure the following it
 - Errors from the Dev Tools Console (open from the menu: Help > Toggle Developer Tools)
  
 ## Contributing Fixes
-If you are interested in writing code to fix issues, please check the following content to see how to setup the develop environment.
+If you are interested in writing code to fix issues, please check the following content to see how to set up the developing environment.
 
 ### Overview
 The extension has three major modules, which are listed as follow:
