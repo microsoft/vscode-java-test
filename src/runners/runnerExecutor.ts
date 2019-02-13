@@ -45,15 +45,13 @@ class RunnerExecutor {
                     continue;
                 }
 
-                const resolvedConfig: IExecutionConfig = resolve(config, Uri.parse(tests[0].uri));
-
                 await window.withProgress(
                     { location: ProgressLocation.Notification, cancellable: true },
                     async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        await runner.setup(tests, isDebug, resolvedConfig);
+                        await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].uri)));
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         await runner.execPreLaunchTaskIfExist();
