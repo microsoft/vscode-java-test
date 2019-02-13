@@ -14,7 +14,6 @@ import { IExecutionConfig } from '../../runConfigs';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
 import { killProcess } from '../../utils/cpUtils';
-import { resolveWorkingDirectory } from '../../utils/settingUtils';
 import { ITestRunner } from '../ITestRunner';
 import { ITestResult } from '../models';
 import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
@@ -57,7 +56,7 @@ export abstract class BaseRunner implements ITestRunner {
 
     public async run(): Promise<ITestResult[]> {
         const commandParams: string[] = await this.constructCommandParams();
-        const options: cp.SpawnOptions = { cwd: this.config ? resolveWorkingDirectory(this.tests[0].uri, this.config.workingDirectory) : undefined, env: process.env };
+        const options: cp.SpawnOptions = { cwd: this.config ? this.config.workingDirectory : undefined, env: process.env };
         if (this.config && this.config.env) {
             options.env = {...this.config.env, ...options.env};
         }

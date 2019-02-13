@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, ExtensionContext, Progress, ProgressLocation, window } from 'vscode';
+import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -10,6 +10,7 @@ import { testConfigManager } from '../testConfigManager';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
+import { resolve } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
@@ -43,13 +44,14 @@ class RunnerExecutor {
                     logger.info('Test job is canceled.');
                     continue;
                 }
+
                 await window.withProgress(
                     { location: ProgressLocation.Notification, cancellable: true },
                     async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        await runner.setup(tests, isDebug, config);
+                        await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].uri)));
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         await runner.execPreLaunchTaskIfExist();
