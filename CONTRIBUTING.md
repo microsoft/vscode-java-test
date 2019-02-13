@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Java Test Runner!
 There are many ways in which you can contribute, beyond writing code. Please read the following document to check how you can get involved.
 
 ## Questions and Feedback
-If you have any questions or feadback, feel free to let us know! You can share your thoughts in our gitter channel: [![Gitter](https://badges.gitter.im/Microsoft/vscode-java-test.svg)](https://gitter.im/Microsoft/vscode-java-test)
+Have questions or feadback? Feel free to let us know! You can share your thoughts in our gitter channel: [![Gitter](https://badges.gitter.im/Microsoft/vscode-java-test.svg)](https://gitter.im/Microsoft/vscode-java-test)
 
 ## Reporting Issues
 You can report issues whenever:

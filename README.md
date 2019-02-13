@@ -46,11 +46,11 @@ You can find the following commands in the Command Palette (<kbd>**F1**</kbd> / 
 - [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
 
-## Feedback and Questions
-
-You can find the full list of issues at [Issue Tracker](https://github.com/Microsoft/vscode-java-test/issues). You can submit a [bug or feature suggestion](https://github.com/Microsoft/vscode-java-test/issues/new).
-
-Feel free to [![Gitter](https://badges.gitter.im/Microsoft/vscode-java-test.svg)](https://gitter.im/Microsoft/vscode-java-test) when you meet any problem.
+## Contribuing and Feedback
+If you are interested in providing feedback or contributing directly to the code base, please check the document [Contributing to Java Test Runner](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md), which covers the following parts:
+- [Questions and Feedback](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md#questions-and-feedback)
+- [Reporting Issues](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md#reporting-issues)
+- [Contributing Fixes](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md#contributing-fixes)
 
 ## License
 
