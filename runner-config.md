@@ -42,7 +42,7 @@ If you want to bypass any existing configurations, you can use the built-in conf
 ```json
 {
     "name": "default",
-    "workingDirectory": "$(workspaceFolder)"
+    "workingDirectory": "${workspaceFolder}"
 }
 ```
 
