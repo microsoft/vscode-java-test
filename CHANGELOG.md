@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Fixed
 - SecurityException when running JUnit 5 tests. [#477](https://github.com/Microsoft/vscode-java-test/issues/477)
 - Wrong order of arguments passing to Test Runner. [#592](https://github.com/Microsoft/vscode-java-test/issues/592)
-- Fail to resolve configurations which contain ${workspacefolder}. [#599](https://github.com/Microsoft/vscode-java-test/issues/599)
-- Report page always goes back to the top after the navigation buttion is clicked. [#606](https://github.com/Microsoft/vscode-java-test/issues/606)
+- Fail to resolve configurations which contain ${workspaceFolder}. [#599](https://github.com/Microsoft/vscode-java-test/issues/599)
+- Report page always goes back to the top after the navigation button is clicked. [#606](https://github.com/Microsoft/vscode-java-test/issues/606)
 
 ## 0.14.0 - 2019-01-21
 
@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## 0.7.1 - 2018-07-11
 
 ### Fixed
-- Fix the issue that the test runer hangs for some tests.
+- Fix the issue that the test runner hangs for some tests.
 - Fix classpath resolution issue for the scenario that there are multiple projects in a workspace folder. [#176](https://github.com/Microsoft/vscode-java-test/issues/176)
 - Fix bug for default working directory. [#229](https://github.com/Microsoft/vscode-java-test/issues/229)
 - Fix bug for test output analyzer. [#231](https://github.com/Microsoft/vscode-java-test/issues/231)
