@@ -29,6 +29,8 @@ export function resolve(config: IExecutionConfig, uri: Uri): IExecutionConfig {
     if (config.workingDirectory) {
         if (workspaceRegexp.test(config.workingDirectory)) {
             resolvedConfig.workingDirectory = config.workingDirectory.replace(workspaceRegexp, workspaceFolder.uri.fsPath);
+        } else {
+            resolvedConfig.workingDirectory = config.workingDirectory;
         }
     }
 
@@ -37,6 +39,8 @@ export function resolve(config: IExecutionConfig, uri: Uri): IExecutionConfig {
         for (const arg of config.args) {
             if (needResolve(arg)) {
                 resolvedConfig.args.push(arg.replace(workspaceRegexp, workspaceFolder.uri.fsPath));
+            } else {
+                resolvedConfig.args.push(arg);
             }
         }
     }
@@ -46,6 +50,8 @@ export function resolve(config: IExecutionConfig, uri: Uri): IExecutionConfig {
         for (const vmarg of config.vmargs as string[]) {
             if (needResolve(vmarg)) {
                 resolvedConfig.vmargs.push(vmarg.replace(workspaceRegexp, workspaceFolder.uri.fsPath));
+            } else {
+                resolvedConfig.vmargs.push(vmarg);
             }
         }
     }
@@ -55,6 +61,8 @@ export function resolve(config: IExecutionConfig, uri: Uri): IExecutionConfig {
         for (const key of Object.keys(config.env)) {
             if (needResolve(config.env[key])) {
                 resolvedConfig.env[key] = config.env[key].replace(workspaceRegexp, workspaceFolder.uri.fsPath);
+            } else {
+                resolvedConfig.env[key] = config.env[key];
             }
         }
     }
