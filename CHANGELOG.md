@@ -4,6 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.14.1 - 2019-02-19
+
+## Added
+- Support ${workspaceFolder} in 'vmargs', 'args' and the value of each entry in 'env' in the test configurations. [#602](https://github.com/Microsoft/vscode-java-test/issues/602)
+
+## Fixed
+- SecurityException when running JUnit 5 tests. [#477](https://github.com/Microsoft/vscode-java-test/issues/477)
+- Wrong order of arguments passing to Test Runner. [#592](https://github.com/Microsoft/vscode-java-test/issues/592)
+- Fail to resolve configurations which contain ${workspacefolder}. [#599](https://github.com/Microsoft/vscode-java-test/issues/599)
+- Report page always goes back to the top after the navigation buttion is clicked. [#606](https://github.com/Microsoft/vscode-java-test/issues/606)
+
 ## 0.14.0 - 2019-01-21
 
 ## Added
