@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Disposable, Uri, workspace, TextDocumentChangeEvent } from 'vscode';
+import { Disposable, TextDocumentChangeEvent, Uri, workspace } from 'vscode';
 import { ITestResult, ITestResultDetails } from './runners/models';
 
 class TestResultManager implements Disposable {
@@ -12,8 +12,8 @@ class TestResultManager implements Disposable {
             const fsPath: string = e.document.fileName;
             if (this.testResultMap.has(fsPath)) {
                 this.testResultMap.set(fsPath, new Map<string, ITestResultDetails>());
-            }            
-        });        
+            }
+        });
     }
 
     public storeResult(...results: ITestResult[]): void {
