@@ -1,11 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Uri, workspace } from 'vscode';
 import { ITestResult, ITestResultDetails } from './runners/models';
 
 class TestResultManager implements Disposable {
     private testResultMap: Map<string, Map<string, ITestResultDetails>> = new Map<string, Map<string, ITestResultDetails>>();
+
+    constructor() {
+        workspace.onDidChangeTextDocument( e=> {
+            const fsPath: string = e.document.fileName;
+            if (this.testResultMap.has(fsPath)) {
+                this.testResultMap.set(fsPath, new Map<string, ITestResultDetails>());
+            }            
+        });        
+    }
 
     public storeResult(...results: ITestResult[]): void {
         for (const result of results) {
