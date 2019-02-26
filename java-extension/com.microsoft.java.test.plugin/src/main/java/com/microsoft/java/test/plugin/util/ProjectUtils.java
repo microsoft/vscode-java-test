@@ -119,6 +119,18 @@ public final class ProjectUtils {
                 .collect(Collectors.toList());
     }
 
+    public static Set<IPath> getTestOutputPath(IJavaProject project) throws JavaModelException {
+        final IClasspathEntry[] entries = project.getRawClasspath();
+        final IPath projectLocation = project.getProject().getLocation();
+        return Arrays.stream(entries)
+                .filter(entry -> isTest(entry))
+                .map(entry -> {
+                    final IPath relativePath = entry.getOutputLocation().makeRelativeTo(project.getPath());
+                    return projectLocation.append(relativePath);
+                })
+                .collect(Collectors.toSet());
+    }
+
     private static boolean isTest(IClasspathEntry entry) {
         if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
             return false;
