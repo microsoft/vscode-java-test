@@ -20,6 +20,7 @@ import org.eclipse.jdt.launching.JavaRuntime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -56,10 +57,24 @@ public class RuntimeClassPathUtils {
             }
         }
 
-        final List<String> classPathList = new ArrayList<>();
+        final Set<String> classPathSet = new HashSet<>();
         for (final IJavaProject project : projectsToTest) {
-            classPathList.addAll(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
+            final String[] classPathArray = JavaRuntime.computeDefaultRuntimeClassPath(project);
+            final Set<IPath> testEntriePaths = ProjectUtils.getTestOutputPath(project);
+            Arrays.sort(classPathArray, Comparator.comparing((String pathStr) -> {
+                final Path path = new Path(pathStr);
+                if (path.toFile().isFile()) {
+                    return 1;
+                }
+                for (final IPath testPath: testEntriePaths) {
+                    if (testPath.isPrefixOf(path)) {
+                        return -1;
+                    }
+                }
+                return 1;
+            }));
+            classPathSet.addAll(Arrays.asList(classPathArray));
         }
-        return classPathList.toArray(new String[classPathList.size()]);
+        return classPathSet.toArray(new String[classPathSet.size()]);
     }
 }
