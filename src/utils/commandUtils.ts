@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as _ from 'lodash';
 import { commands, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { IProjectInfo, ISearchTestItemParams, ITestItem } from '../protocols';
@@ -26,8 +27,8 @@ export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {
 }
 
 export async function resolveRuntimeClassPath(paths: string[]): Promise<string[]> {
-    return await executeJavaLanguageServerCommand<string[]>(
-        JavaTestRunnerDelegateCommands.RESOLVE_RUNTIME_CLASSPATH, paths) || [];
+    return _.uniq(await executeJavaLanguageServerCommand<string[]>(
+        JavaTestRunnerDelegateCommands.RESOLVE_RUNTIME_CLASSPATH, paths) || []);
 }
 
 export async function getProjectInfo(folderUri: Uri): Promise<IProjectInfo[]> {
