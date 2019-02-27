@@ -57,7 +57,7 @@ public class RuntimeClassPathUtils {
             }
         }
 
-        final Set<String> classPathSet = new HashSet<>();
+        final List<String> classPathList = new ArrayList<>();
         for (final IJavaProject project : projectsToTest) {
             final String[] classPathArray = JavaRuntime.computeDefaultRuntimeClassPath(project);
             final Set<IPath> testEntriePaths = ProjectUtils.getTestOutputPath(project);
@@ -73,8 +73,8 @@ public class RuntimeClassPathUtils {
                 }
                 return 1;
             }));
-            classPathSet.addAll(Arrays.asList(classPathArray));
+            classPathList.addAll(Arrays.asList(classPathArray));
         }
-        return classPathSet.toArray(new String[classPathSet.size()]);
+        return classPathList.toArray(new String[classPathList.size()]);
     }
 }
