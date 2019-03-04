@@ -4,8 +4,6 @@
 import { Range } from 'vscode';
 
 export interface ILocation {
-    displayName: string;
-    fullName: string;
     uri: string;
     range: Range;
 }

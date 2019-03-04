@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as _ from 'lodash';
 import { Uri } from 'vscode';
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
@@ -47,7 +46,6 @@ export abstract class BaseRunnerResultAnalyzer {
             this.flatTestItems(test, itemMap);
         }
         this.parseResults(result, itemMap);
-        this.addSkippedTests(result, itemMap);
         return result;
     }
 
@@ -63,7 +61,7 @@ export abstract class BaseRunnerResultAnalyzer {
 
     protected parseResults(resultArray: ITestResult[], itemMap: Map<string, ITestItem>): void {
         for (const [key, value] of this.testResults.entries()) {
-            let result: ITestResult = Object.assign(_.cloneDeep(defaultResult), {
+            let result: ITestResult = Object.assign({}, defaultResult, {
                 fullName: key,
                 details: value,
             });
@@ -86,11 +84,12 @@ export abstract class BaseRunnerResultAnalyzer {
             resultArray.push(result);
             itemMap.delete(key);
         }
+        this.addSkippedTests(resultArray, itemMap);
     }
 
     protected addSkippedTests(result: ITestResult[], itemMap: Map<string, ITestItem>): void {
         for (const item of itemMap.values()) {
-            result.push(Object.assign(defaultResult, {
+            result.push(Object.assign({}, defaultResult, {
                 displayName: item.displayName,
                 fullName: item.fullName,
                 uri: Uri.parse(item.uri).toString(),
