@@ -15,10 +15,10 @@ import com.microsoft.java.test.plugin.model.TestKind;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
-    protected static final String[] TEST_METHOD_ANNOTATIONS = { "org.testng.annotations.Test" };
-
     public TestNGTestSearcher() {
-        super(TEST_METHOD_ANNOTATIONS);
+        super();
+        this.testMethodAnnotations = new String[] { "org.testng.annotations.Test" };
+        this.testClassAnnotations = new String[] {};
     }
 
     @Override

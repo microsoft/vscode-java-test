@@ -101,6 +101,13 @@ public class TestSearchUtils {
                 // Assume the kinds of all methods are the same.
                 parent.setKind(testMethodList.get(0).getKind());
                 resultList.add(parent);
+                continue;
+            }
+            // Check if the class can still run tests even no method is annotated.
+            // For example, annotated with @RunWith
+            final TestItem runableClass = TestFrameworkUtils.resolveTestItemForClass(type);
+            if (runableClass != null) {
+                resultList.add(runableClass);
             }
         }
 
@@ -189,6 +196,9 @@ public class TestSearchUtils {
                         return;
                     }
                     final TestItem methodItem = TestFrameworkUtils.resoveTestItemForMethod(method);
+                    if (methodItem == null) {
+                        return;
+                    }
                     final IType type = (IType) method.getParent();
                     final TestItem classItem = classMap.get(type.getFullyQualifiedName());
                     if (classItem != null) {
@@ -199,6 +209,16 @@ public class TestSearchUtils {
                         newClassItem.addChild(methodItem);
                         classMap.put(type.getFullyQualifiedName(), newClassItem);
                     }
+                } else if (element instanceof IType) {
+                    final IType type = (IType) element;
+                    if (classMap.containsKey(type.getFullyQualifiedName())) {
+                        return;
+                    }
+                    final TestItem item = TestFrameworkUtils.resolveTestItemForClass(type);
+                    if (item == null) {
+                        return;
+                    }
+                    classMap.put(type.getFullyQualifiedName(), item);
                 }
             }
 
@@ -209,7 +229,7 @@ public class TestSearchUtils {
 
         for (final TestItem testClass : classMap.values()) {
             if (testClass.getChildren() == null || testClass.getChildren().size() <= 0) {
-                continue;
+                searchResult.add(testClass);
             } else if (testClass.getChildren().size() == 1) {
                 searchResult.add(testClass.getChildren().get(0));
             } else {
