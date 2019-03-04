@@ -1,10 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ITestItemBase } from '../protocols';
+import { Range } from 'vscode';
 
-export interface ITestResult extends ITestItemBase {
-    result: ITestResultDetails;
+export interface ITestResult {
+    details: ITestResultDetails;
+    uri: string | undefined;
+    range: Range | undefined;
+    displayName: string;
+    fullName: string;
 }
 
 export interface ITestResultDetails {
@@ -20,3 +24,11 @@ export enum TestStatus {
     Fail = 'Fail',
     Skip = 'Skip',
 }
+
+export const defaultResult: ITestResult = {
+    displayName: '',
+    fullName: '',
+    uri: undefined,
+    range: undefined,
+    details: { status: TestStatus.Skip },
+};

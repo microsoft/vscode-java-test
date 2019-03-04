@@ -3,15 +3,17 @@
 
 import { Range } from 'vscode';
 
-export interface ITestItemBase {
+export interface ILocation {
     displayName: string;
     fullName: string;
     uri: string;
     range: Range;
 }
 
-export interface ITestItem extends ITestItemBase {
-    children: ITestItem[];
+export interface ITestItem extends ILocation {
+    displayName: string;
+    fullName: string;
+    children: ITestItem[] | undefined;
     kind: TestKind;
     project: string;
     level: TestLevel;

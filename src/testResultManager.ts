@@ -9,11 +9,14 @@ class TestResultManager implements Disposable {
 
     public storeResult(...results: ITestResult[]): void {
         for (const result of results) {
+            if (!result.uri) {
+                continue;
+            }
             const fsPath: string = Uri.parse(result.uri).fsPath;
             if (!this.testResultMap.has(fsPath)) {
                 this.testResultMap.set(fsPath, new Map<string, ITestResultDetails>());
             }
-            this.testResultMap.get(fsPath)!.set(result.fullName, result.result);
+            this.testResultMap.get(fsPath)!.set(result.fullName, result.details);
         }
     }
 

@@ -86,6 +86,9 @@ class TestCodeLensProvider implements CodeLensProvider {
                     return false;
                 }
                 const keyCollection: string[] = Array.from(resultsInFsPath.keys());
+                if (!test.children) {
+                    return false;
+                }
                 for (const child of test.children) {
                     if (child.level === TestLevel.Method && keyCollection.indexOf(child.fullName) >= 0) {
                         return true;
@@ -101,7 +104,7 @@ class TestCodeLensProvider implements CodeLensProvider {
         const testMethods: ITestItem[] = [];
         if (test.level === TestLevel.Method) {
             testMethods.push(test);
-        } else {
+        } else if (test.children) {
             // Get methods from class
             testMethods.push(...test.children);
         }
