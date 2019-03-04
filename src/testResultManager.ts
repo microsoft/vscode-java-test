@@ -1,14 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Disposable, Uri } from 'vscode';
+import * as fse from 'fs-extra';
+import * as path from 'path';
+import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ITestResult, ITestResultDetails } from './runners/models';
+import { getTestSourcePaths } from './utils/commandUtils';
 
 class TestResultManager implements Disposable {
     private testResultMap: Map<string, Map<string, ITestResultDetails>> = new Map<string, Map<string, ITestResultDetails>>();
 
-    public storeResult(...results: ITestResult[]): void {
+    public async storeResult(workspaceFolder: WorkspaceFolder, ...results: ITestResult[]): Promise<void> {
         for (const result of results) {
+            result.uri = result.uri || await this.resolveFsPathFromFullName(workspaceFolder, result.fullName);
             if (!result.uri) {
                 continue;
             }
@@ -34,6 +38,19 @@ class TestResultManager implements Disposable {
 
     public dispose(): void {
         this.testResultMap.clear();
+    }
+
+    private async resolveFsPathFromFullName(workspaceFolder: WorkspaceFolder, fullName: string): Promise<string | undefined> {
+        const classFullyQualifiedName: string = fullName.slice(0, fullName.indexOf('$') > -1 ? fullName.indexOf('$') : fullName.indexOf('#'));
+        const relativePath: string = path.join(...classFullyQualifiedName.split('.'));
+        const classPathEntries: string[] = await getTestSourcePaths([workspaceFolder.uri.toString()]);
+        for (const classPathEntry of classPathEntries) {
+            const possiblePath: string = `${path.join(Uri.file(classPathEntry).fsPath, relativePath)}.java`;
+            if (await fse.pathExists(possiblePath)) {
+                return Uri.file(possiblePath).toString();
+            }
+        }
+        return undefined;
     }
 }
 

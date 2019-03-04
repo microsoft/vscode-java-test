@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window } from 'vscode';
+import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -39,7 +39,9 @@ class RunnerExecutor {
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
             for (const [runner, tests] of this._runnerMap.entries()) {
-                const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(tests, isDebug);
+                // The test items that belong to a test runner, here the test items should be in the same workspace folder.
+                const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].uri));
+                const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(workspaceFolder, isDebug);
                 if (!config) {
                     logger.info('Test job is canceled.');
                     continue;
@@ -59,7 +61,7 @@ class RunnerExecutor {
                             return;
                         }
                         const results: ITestResult[] = await runner.run();
-                        testResultManager.storeResult(...results);
+                        await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
                         finalResults.push(...results);
                     },
                 );
