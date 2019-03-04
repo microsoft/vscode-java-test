@@ -12,6 +12,7 @@
 package com.microsoft.java.test.plugin.util;
 
 import com.google.gson.Gson;
+import com.microsoft.java.test.plugin.model.Location;
 import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -216,6 +218,34 @@ public class TestSearchUtils {
                 searchResult.add(testClass);
             }
         }
+        return searchResult;
+    }
+
+    public static List<Location> searchLocation(List<Object> arguments, IProgressMonitor monitor) throws CoreException {
+        final List<Location> searchResult = new LinkedList<>();
+        if (arguments == null || arguments.size() == 0) {
+            throw new RuntimeException("Invalid aruguments to search the location.");
+        }
+        // For now, input will only be a method.
+        final String methodFullName = ((String) arguments.get(0)).replaceAll("[$#]", ".");
+        final SearchPattern pattern = SearchPattern.createPattern(methodFullName, IJavaSearchConstants.METHOD,
+                IJavaSearchConstants.DECLARATIONS, SearchPattern.R_PATTERN_MATCH);
+        final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
+                .getJavaProjects();
+        final IJavaSearchScope scope = SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
+        final SearchRequestor requestor = new SearchRequestor() {
+            @Override
+            public void acceptSearchMatch(SearchMatch match) throws CoreException {
+                final Object element = match.getElement();
+                if (element instanceof IMethod) {
+                    final IMethod method = (IMethod) element;
+                    searchResult.add(new Location(JDTUtils.getFileURI(method.getResource()),
+                            TestItemUtils.parseTestItemRange(method)));
+                }
+            }
+        };
+        new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
+                scope, requestor, monitor);
         return searchResult;
     }
 

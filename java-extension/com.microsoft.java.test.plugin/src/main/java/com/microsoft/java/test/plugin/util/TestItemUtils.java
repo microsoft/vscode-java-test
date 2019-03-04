@@ -53,6 +53,14 @@ public class TestItemUtils {
         }
     }
 
+    public static Range parseTestItemRange(IJavaElement element) throws JavaModelException {
+        if (element instanceof ISourceReference) {
+            final ISourceRange range = ((ISourceReference) element).getNameRange();
+            return JDTUtils.toRange(element.getOpenable(), range.getOffset(), range.getLength());
+        }
+        return null;
+    }
+
     private static String parseTestItemFullName(IJavaElement element, TestLevel level) {
         switch (level) {
             case CLASS:
@@ -65,13 +73,5 @@ public class TestItemUtils {
             default:
                 return element.getElementName();
         }
-    }
-
-    private static Range parseTestItemRange(IJavaElement element) throws JavaModelException {
-        if (element instanceof ISourceReference) {
-            final ISourceRange range = ((ISourceReference) element).getNameRange();
-            return JDTUtils.toRange(element.getOpenable(), range.getOffset(), range.getLength());
-        }
-        return null;
     }
 }
