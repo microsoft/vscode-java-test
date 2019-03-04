@@ -21,10 +21,6 @@ public class TestItem extends Location {
 
     private String fullName;
 
-    private String uri;
-
-    private Range range;
-
     private List<TestItem> children;
 
     private TestLevel level;

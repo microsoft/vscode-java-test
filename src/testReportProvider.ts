@@ -50,7 +50,7 @@ class TestReportProvider implements Disposable {
             }
             switch (message.command) {
                 case JavaTestRunnerCommands.OPEN_DOCUMENT:
-                    if (message.uri) {
+                    if (message.uri && message.range) {
                         return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
                     } else if (message.fullName) {
                         const items: ILocation[] = await searchTestLocation(message.fullName);
@@ -63,10 +63,13 @@ class TestReportProvider implements Disposable {
                             if (pick) {
                                 return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
                             }
+                        } else {
+                            logger.error('No test item could be found from Language Server.');
                         }
                     } else {
                         logger.error('Could not open the document, Neither the Uri nor full name is null.');
                     }
+                    break;
                 default:
                     return;
             }
