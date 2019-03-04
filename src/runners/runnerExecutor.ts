@@ -40,7 +40,7 @@ class RunnerExecutor {
             this._runnerMap = this.classifyTestsByKind(testItems);
             for (const [runner, tests] of this._runnerMap.entries()) {
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
-                const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].uri));
+                const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
                 const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(workspaceFolder, isDebug);
                 if (!config) {
                     logger.info('Test job is canceled.');
@@ -53,7 +53,7 @@ class RunnerExecutor {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].uri)));
+                        await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].location.uri)));
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         await runner.execPreLaunchTaskIfExist();

@@ -47,7 +47,7 @@ export abstract class BaseRunner implements ITestRunner {
         this.port = isDebug ? await getPort() : undefined;
         this.tests = tests;
         this.isDebug = isDebug;
-        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.uri).fsPath);
+        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
         const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
         this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
         this.classpath = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
@@ -94,7 +94,7 @@ export abstract class BaseRunner implements ITestRunner {
                 }
             });
             if (this.isDebug) {
-                const uri: Uri = Uri.parse(this.tests[0].uri);
+                const uri: Uri = Uri.parse(this.tests[0].location.uri);
                 setTimeout(() => {
                     debug.startDebugging(workspace.getWorkspaceFolder(uri), {
                         name: 'Debug Java Tests',

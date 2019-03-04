@@ -50,7 +50,7 @@ class TestCodeLensProvider implements CodeLensProvider {
         const codeLenses: CodeLens[] = [];
         codeLenses.push(
             new CodeLens(
-                test.range,
+                test.location.range,
                 {
                     title: 'Run Test',
                     command: JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS,
@@ -59,7 +59,7 @@ class TestCodeLensProvider implements CodeLensProvider {
                 },
             ),
             new CodeLens(
-                test.range,
+                test.location.range,
                 {
                     title: 'Debug Test',
                     command: JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS,
@@ -78,10 +78,10 @@ class TestCodeLensProvider implements CodeLensProvider {
     private hasTestResult(test: ITestItem): boolean {
         switch (test.level) {
             case TestLevel.Method:
-                return testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName) !== undefined;
+                return testResultManager.getResultDetails(Uri.parse(test.location.uri).fsPath, test.fullName) !== undefined;
             case TestLevel.Class:
             case TestLevel.NestedClass:
-                const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.uri).fsPath);
+                const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.location.uri).fsPath);
                 if (!resultsInFsPath) {
                     return false;
                 }
@@ -109,7 +109,7 @@ class TestCodeLensProvider implements CodeLensProvider {
             testMethods.push(...test.children);
         }
         return new CodeLens(
-            test.range,
+            test.location.range,
             {
                 title: this.getTestStatusIcon(testMethods),
                 command: JavaTestRunnerCommands.SHOW_TEST_REPORT,
@@ -121,7 +121,7 @@ class TestCodeLensProvider implements CodeLensProvider {
 
     private getTestStatusIcon(testMethods: ITestItem[]): string {
         for (const method of testMethods) {
-            const testResult: ITestResultDetails | undefined = testResultManager.getResultDetails(Uri.parse(method.uri).fsPath, method.fullName);
+            const testResult: ITestResultDetails | undefined = testResultManager.getResultDetails(Uri.parse(method.location.uri).fsPath, method.fullName);
             if (!testResult || testResult.status === TestStatus.Skip) {
                 return '?';
             } else if (testResult.status === TestStatus.Fail) {

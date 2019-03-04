@@ -8,7 +8,7 @@ export interface ILocation {
     range: Range;
 }
 
-export interface ITestItem extends ILocation {
+export interface ITestItem {
     displayName: string;
     fullName: string;
     children: ITestItem[] | undefined;
@@ -16,6 +16,7 @@ export interface ITestItem extends ILocation {
     project: string;
     level: TestLevel;
     paramTypes: string[];
+    location: ILocation;
 }
 
 export interface ISearchTestItemParams {

@@ -64,8 +64,8 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
             result.displayName,
             result.fullName,
             result.level,
-            Uri.parse(result.uri).fsPath,
-            result.range,
+            Uri.parse(result.location.uri).fsPath,
+            result.location.range,
         ));
     }
 

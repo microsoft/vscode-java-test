@@ -1,18 +1,17 @@
 /*******************************************************************************
-* Copyright (c) 2018 Microsoft Corporation and others.
-* All rights reserved. This program and the accompanying materials
-* are made available under the terms of the Eclipse Public License v1.0
-* which accompanies this distribution, and is available at
-* http://www.eclipse.org/legal/epl-v10.html
-*
-* Contributors:
-*     Microsoft Corporation - initial API and implementation
-*******************************************************************************/
+ * Copyright (c) 2018 Microsoft Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Microsoft Corporation - initial API and implementation
+ *******************************************************************************/
 
 package com.microsoft.java.test.plugin.util;
 
 import com.google.gson.Gson;
-import com.microsoft.java.test.plugin.model.Location;
 import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
@@ -42,6 +41,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
+import org.eclipse.lsp4j.Location;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -244,7 +244,7 @@ public class TestSearchUtils {
     public static List<Location> searchLocation(List<Object> arguments, IProgressMonitor monitor) throws CoreException {
         final List<Location> searchResult = new LinkedList<>();
         if (arguments == null || arguments.size() == 0) {
-            throw new RuntimeException("Invalid aruguments to search the location.");
+            throw new IllegalArgumentException("Invalid aruguments to search the location.");
         }
         // For now, input will only be a method.
         final String methodFullName = ((String) arguments.get(0)).replaceAll("[$#]", ".");
@@ -284,7 +284,7 @@ public class TestSearchUtils {
         switch (params.getLevel()) {
             case ROOT:
                 final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
-                        .getJavaProjects();
+                .getJavaProjects();
                 return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
                 final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(params.getUri()));

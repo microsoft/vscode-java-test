@@ -70,8 +70,8 @@ export abstract class BaseRunnerResultAnalyzer {
             if (item) {
                 result =  {
                     displayName: item.displayName,
-                    uri: Uri.parse(item.uri).toString(),
-                    range: item.range,
+                    uri: Uri.parse(item.location.uri).toString(),
+                    range: item.location.range,
                     fullName: key,
                     details: value,
                 };
@@ -92,8 +92,8 @@ export abstract class BaseRunnerResultAnalyzer {
             result.push(Object.assign({}, defaultResult, {
                 displayName: item.displayName,
                 fullName: item.fullName,
-                uri: Uri.parse(item.uri).toString(),
-                range: item.range,
+                uri: Uri.parse(item.location.uri).toString(),
+                range: item.location.range,
             }));
         }
     }
