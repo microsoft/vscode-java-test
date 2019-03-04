@@ -4,7 +4,7 @@
 import * as _ from 'lodash';
 import { commands, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
-import { IProjectInfo, ISearchTestItemParams, ITestItem } from '../protocols';
+import { ILocation, IProjectInfo, ISearchTestItemParams, ITestItem } from '../protocols';
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
     return await executeJavaLanguageServerCommand<string[]>(
@@ -24,6 +24,11 @@ export async function searchTestItemsAll(request: ISearchTestItemParams): Promis
 export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
         JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri) || [];
+}
+
+export async function searchTestLocation(fullName: string): Promise<ILocation[]> {
+    return await executeJavaLanguageServerCommand<ILocation[]>(
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_LOCATION, fullName) || [];
 }
 
 export async function resolveRuntimeClassPath(paths: string[]): Promise<string[]> {

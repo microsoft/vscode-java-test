@@ -23,7 +23,7 @@ mixin collapseMethodTable(children, type)
                                 span.badge.badge-secondary Skipped
                         div.col-2.text-right #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
                         div.col-1.text-right
-                            a(href="#", title="Navigate to Source", uri=`${method.uri}`, range=`${method.range}`)
+                            a(href="#", title="Navigate to Source", uri=`${method.uri ? method.uri : ''}`, range=`${method.range ? method.range : ''}`, fullname=`${entry[0]}#${method.displayName}`)
                                 i.fa.fa-external-link
                     div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
                         div.row

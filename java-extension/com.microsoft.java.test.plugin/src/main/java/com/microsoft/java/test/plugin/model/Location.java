@@ -9,15 +9,15 @@
 *     Microsoft Corporation - initial API and implementation
 *******************************************************************************/
 
- package com.microsoft.java.test.plugin.model;
+package com.microsoft.java.test.plugin.model;
 
- import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.Range;
 
- public class Location {
+public class Location {
     protected String uri;
     protected Range range;
 
-     public Location(String uri, Range range) {
+    public Location(String uri, Range range) {
         this.uri = uri;
         this.range = range;
     }

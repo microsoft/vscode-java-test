@@ -3,12 +3,13 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, Range, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
+import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
-import {  } from './protocols';
+import { ILocation } from './protocols';
 import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
+import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
 
 class TestReportProvider implements Disposable {
@@ -43,17 +44,29 @@ class TestReportProvider implements Disposable {
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
 
-        this.panel.webview.onDidReceiveMessage((message: any) => {
+        this.panel.webview.onDidReceiveMessage(async (message: any) => {
             if (!message) {
                 return;
             }
             switch (message.command) {
                 case JavaTestRunnerCommands.OPEN_DOCUMENT:
-                    if (!message.uri) {
-                        logger.error('Could not open the document, the Uri in the message is null.');
-                        return;
+                    if (message.uri) {
+                        return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
+                    } else if (message.fullName) {
+                        const items: ILocation[] = await searchTestLocation(message.fullName);
+                        if (items.length === 1) {
+                            return openTextDocument(Uri.parse(items[0].uri), items[0].range);
+                        } else if (items.length > 1) {
+                            const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
+                                return { label: message.fullName, detail: Uri.parse(item.uri).fsPath, location: item };
+                            }), { placeHolder: 'Select the file you want to navigate to' });
+                            if (pick) {
+                                return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
+                            }
+                        }
+                    } else {
+                        logger.error('Could not open the document, Neither the Uri nor full name is null.');
                     }
-                    return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
                 default:
                     return;
             }
@@ -142,6 +155,10 @@ interface IReportMethod {
     uri: string | undefined;
     range: string | undefined;
     result: ITestResultDetails;
+}
+
+interface ILocationQuickPick extends QuickPickItem {
+    location: ILocation;
 }
 
 export const testReportProvider: TestReportProvider = new TestReportProvider();
