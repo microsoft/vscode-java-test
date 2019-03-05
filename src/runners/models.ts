@@ -12,7 +12,7 @@ export interface ITestResult {
 
 export interface ITestResultDetails {
     status?: TestStatus;
-    details?: string;
+    trace?: string;
     message?: string;
     duration?: string;
     summary?: string;

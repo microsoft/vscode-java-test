@@ -62,7 +62,7 @@ public class TestResultListener implements TestExecutionListener {
                 .println(MessageUtils.create(TestMessageConstants.TEST_IGNORED,
                         new Pair(TestMessageConstants.ID, testIdentifier.getUniqueId()),
                         new Pair(TestMessageConstants.TYPE, testIdentifier.getType().toString()),
-                        new Pair(TestMessageConstants.DETAILS, reason)));
+                        new Pair(TestMessageConstants.TRACE, reason)));
     }
 
     @Override
@@ -84,7 +84,7 @@ public class TestResultListener implements TestExecutionListener {
                         new Pair(TestMessageConstants.TYPE, testIdentifier.getType().toString()),
                         new Pair(TestMessageConstants.DURATION, String.valueOf(getDuration(testIdentifier))),
                         new Pair(TestMessageConstants.STATUS, result.getStatus().toString()),
-                        new Pair(TestMessageConstants.DETAILS, detailMsg)));
+                        new Pair(TestMessageConstants.TRACE, detailMsg)));
 
     }
 

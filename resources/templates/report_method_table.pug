@@ -36,8 +36,8 @@ mixin collapseMethodTable(children, type)
                                 h6 Stack trace:
                         div.row
                             div.col
-                                if method.details && method.details.details
+                                if method.details && method.details.trace
                                     pre
-                                        code #{method.details.details}
+                                        code #{method.details.trace}
                                 else
                                     span N/A
