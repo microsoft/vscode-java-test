@@ -13,31 +13,31 @@ mixin collapseMethodTable(children, type)
                     div.row.accordion-toggle.collapsed
                         div.col-8(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details") #{method.displayName}
                         div.col-1.text-right
-                            if !method.result
+                            if !method.details
                                 span.badge.badge-warning Not run
-                            else if method.result.status === 'Pass'
+                            else if method.details.status === 'Pass'
                                 span.badge.badge-success Passed
-                            else if method.result.status === 'Fail'
+                            else if method.details.status === 'Fail'
                                 span.badge.badge-danger Failed
                             else
                                 span.badge.badge-secondary Skipped
-                        div.col-2.text-right #{method.result && method.result.duration ? method.result.duration + "ms" : "N/A"}
+                        div.col-2.text-right #{method.details && method.details.duration ? method.details.duration + "ms" : "N/A"}
                         div.col-1.text-right
-                            a(href="#", title="Navigate to Source", uri=`${method.uri ? method.uri : ''}`, range=`${method.range ? method.range : ''}`, fullname=`${entry[0]}#${method.displayName}`)
+                            a(href="#", title="Navigate to Source", uri=`${method.location && method.location.uri ? method.location.uri : ''}`, range=`${method.location && method.location.range ? JSON.stringify(method.location.range) : ''}`, fullname=`${method.fullName}`)
                                 i.fa.fa-external-link
                     div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
                         div.row
                             div.col
                                 h6 Message:
                         div.row
-                            div.col.mb-1 #{method.result && method.result.message ? method.result.message : "N/A"}
+                            div.col.mb-1 #{method.details && method.details.message ? method.details.message : "N/A"}
                         div.row
                             div.col
                                 h6 Stack trace:
                         div.row
                             div.col
-                                if method.result && method.result.details
+                                if method.details && method.details.details
                                     pre
-                                        code #{method.result.details}
+                                        code #{method.details.details}
                                 else
                                     span N/A

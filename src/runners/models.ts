@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range } from 'vscode';
+import { ILocation } from '../protocols';
 
 export interface ITestResult {
     details: ITestResultDetails;
-    uri: string | undefined;
-    range: Range | undefined;
+    location: ILocation | undefined;
     displayName: string;
     fullName: string;
 }
@@ -28,7 +27,6 @@ export enum TestStatus {
 export const defaultResult: ITestResult = {
     displayName: '',
     fullName: '',
-    uri: undefined,
-    range: undefined,
+    location: undefined,
     details: { status: TestStatus.Skip },
 };

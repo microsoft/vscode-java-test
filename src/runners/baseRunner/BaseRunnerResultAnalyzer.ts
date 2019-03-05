@@ -70,8 +70,7 @@ export abstract class BaseRunnerResultAnalyzer {
             if (item) {
                 result =  {
                     displayName: item.displayName,
-                    uri: Uri.parse(item.location.uri).toString(),
-                    range: item.location.range,
+                    location: item.location,
                     fullName: key,
                     details: value,
                 };

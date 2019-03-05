@@ -12,11 +12,16 @@ class TestResultManager implements Disposable {
 
     public async storeResult(workspaceFolder: WorkspaceFolder, ...results: ITestResult[]): Promise<void> {
         for (const result of results) {
-            result.uri = result.uri || await this.resolveFsPathFromFullName(workspaceFolder, result.fullName);
-            if (!result.uri) {
+            let uri: string | undefined;
+            if (!result.location || result.location.uri) {
+                uri = await this.resolveFsPathFromFullName(workspaceFolder, result.fullName);
+            } else {
+                uri = result.location.uri;
+            }
+            if (!uri) {
                 continue;
             }
-            const fsPath: string = Uri.parse(result.uri).fsPath;
+            const fsPath: string = Uri.parse(uri).fsPath;
             if (!this.testResultMap.has(fsPath)) {
                 this.testResultMap.set(fsPath, new Map<string, ITestResultDetails>());
             }

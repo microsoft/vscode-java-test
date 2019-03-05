@@ -8,7 +8,7 @@ import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
 import { ILocation } from './protocols';
-import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
+import { ITestResult, TestStatus } from './runners/models';
 import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
 
@@ -85,9 +85,9 @@ class TestReportProvider implements Disposable {
     }
 
     public async provideHtmlContent(testResults: ITestResult[]): Promise<string> {
-        const allResultsMap: Map<string, IReportMethod[]> = new Map();
-        const passedResultMap: Map<string, IReportMethod[]> = new Map();
-        const failedResultMap: Map<string, IReportMethod[]> = new Map();
+        const allResultsMap: Map<string, ITestResult[]> = new Map();
+        const passedResultMap: Map<string, ITestResult[]> = new Map();
+        const failedResultMap: Map<string, ITestResult[]> = new Map();
         let passedCount: number = 0;
         let failedCount: number = 0;
         let skippedCount: number = 0;
@@ -131,33 +131,15 @@ class TestReportProvider implements Disposable {
         }
     }
 
-    private putMethodResultIntoMap(map: Map<string, IReportMethod[]>, result: ITestResult): void {
+    private putMethodResultIntoMap(map: Map<string, ITestResult[]>, result: ITestResult): void {
         const classFullName: string = result.fullName.substr(0, result.fullName.indexOf('#'));
-        const displayName: string = result.displayName ? result.displayName : result.fullName.slice(result.fullName.indexOf('#') + 1);
-        const methods: IReportMethod[] | undefined = map.get(classFullName);
+        const methods: ITestResult[] | undefined = map.get(classFullName);
         if (methods) {
-            methods.push({
-                displayName,
-                uri: result.uri,
-                range: JSON.stringify(result.range),
-                result: result.details,
-            });
+            methods.push(result);
         } else {
-            map.set(classFullName, [{
-                displayName,
-                uri: result.uri,
-                range: JSON.stringify(result.range),
-                result: result.details,
-            }]);
+            map.set(classFullName, [result]);
         }
     }
-}
-
-interface IReportMethod {
-    displayName: string;
-    uri: string | undefined;
-    range: string | undefined;
-    result: ITestResultDetails;
 }
 
 interface ILocationQuickPick extends QuickPickItem {
