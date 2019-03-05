@@ -60,6 +60,7 @@ public class TestResultListener implements TestExecutionListener {
     public void executionSkipped(TestIdentifier testIdentifier, String reason) {
         TestOutputStream.instance()
                 .println(MessageUtils.create(TestMessageConstants.TEST_IGNORED,
+                        new Pair(TestMessageConstants.ID, testIdentifier.getUniqueId()),
                         new Pair(TestMessageConstants.TYPE, testIdentifier.getType().toString()),
                         new Pair(TestMessageConstants.DETAILS, reason)));
     }
