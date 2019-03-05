@@ -77,7 +77,7 @@ public class TestRunnerMessageHelper {
             exception.printStackTrace(printWriter);
             final String stackTrace = writer.getBuffer().toString();
             attributes.add(new Pair(TestMessageConstants.MESSAGE, failMessage));
-            attributes.add(new Pair(TestMessageConstants.DETAILS, stackTrace));
+            attributes.add(new Pair(TestMessageConstants.TRACE, stackTrace));
         } else {
             attributes.add(new Pair(TestMessageConstants.MESSAGE, ""));
         }

@@ -28,7 +28,7 @@ public class TestMessageConstants {
     public static final String SUITE_TREE_STARTED = "suiteTreeStarted";
     public static final String SUITE_TREE_ENDED = "suiteTreeEnded";
     public static final String MESSAGE = "message";
-    public static final String DETAILS = "details";
+    public static final String TRACE = "trace";
     public static final String STATUS = "status";
     public static final String TEST_FAILED = "testFailed";
     public static final String TEST_RESULT_SUMMARY = "testSummary";

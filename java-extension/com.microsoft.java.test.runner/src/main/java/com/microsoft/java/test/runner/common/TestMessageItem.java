@@ -36,7 +36,7 @@ public class TestMessageItem {
     public TestMessageItem(String message, Throwable e) {
         this(TestMessageType.Error, TestMessageConstants.TEST_RUNNER_ERROR,
                 new Pair(TestMessageConstants.MESSAGE, message),
-                new Pair(TestMessageConstants.DETAILS, getStacktrace(e)));
+                new Pair(TestMessageConstants.TRACE, getStacktrace(e)));
     }
 
     private static String getStacktrace(Throwable throwable) {

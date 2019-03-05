@@ -28,7 +28,7 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 this.testResults.set(this.parseFullyQualifiedNameFromId(outputData.attributes.id),
                 {
                     status: TestStatus.Skip,
-                    details: outputData.attributes.details,
+                    trace: outputData.attributes.trace,
                 });
                 break;
             case TEST_FINISH:
@@ -37,7 +37,7 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                     return;
                 }
                 res.status = this.parseTestStatus(outputData.attributes.status);
-                res.details = outputData.attributes.details;
+                res.trace = outputData.attributes.trace;
                 res.duration = outputData.attributes.duration;
                 break;
         }
@@ -84,7 +84,7 @@ interface IJUnit5TestAttributes  {
     duration: string;
     status: JUnit5TestStatus;
     message: string;
-    details: string;
+    trace: string;
 }
 
 enum JUnit5TestType {

@@ -25,7 +25,7 @@ export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 }
                 failedResult.status = TestStatus.Fail;
                 failedResult.message = outputData.attributes.message;
-                failedResult.details = outputData.attributes.details;
+                failedResult.trace = outputData.attributes.trace;
                 break;
             case TEST_FINISH:
                 const finishedResult: ITestResultDetails | undefined = this.testResults.get(outputData.attributes.name);
@@ -52,7 +52,7 @@ interface ITestNGAttributes  {
     duration: string;
     location: string;
     message: string;
-    details: string;
+    trace: string;
 }
 
 enum TestNGOutputType {
