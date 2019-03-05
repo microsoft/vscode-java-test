@@ -21,7 +21,7 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
     public JUnit4TestSearcher() {
         super();
-        this.testMethodAnnotations = new String[] { "org.junit.Test" };
+        this.testMethodAnnotations = new String[] { "org.junit.Test", "org.junit.experimental.theories.Theory" };
         this.testClassAnnotations = new String[] { "org.junit.runner.RunWith" };
     }
 
