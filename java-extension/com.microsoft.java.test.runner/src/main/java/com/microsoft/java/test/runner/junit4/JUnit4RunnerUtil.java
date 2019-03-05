@@ -52,7 +52,8 @@ public class JUnit4RunnerUtil {
 
     private static JUnit4TestReference getRequestForOneMethod(String suite, int separatorIndex) {
         try {
-            final Class<?> suiteClass = Class.forName(suite.substring(0, separatorIndex));
+            final Class<?> suiteClass = Class.forName(suite.substring(0, separatorIndex), false,
+                    JUnit4RunnerUtil.class.getClassLoader());
             final String method = suite.substring(separatorIndex + 1);
             final Request request = Request.method(suiteClass, method);
             final Runner runner = request.getRunner();
@@ -67,7 +68,8 @@ public class JUnit4RunnerUtil {
 
     private static JUnit4TestReference getRequestForClass(String suite) {
         try {
-            final Request request = Request.aClass(Class.forName(suite));
+            final Request request = Request.aClass(Class.forName(suite, false,
+                    JUnit4RunnerUtil.class.getClassLoader()));
             final Runner runner = request.getRunner();
             return new JUnit4TestReference(runner, runner.getDescription());
         } catch (final ClassNotFoundException e) {

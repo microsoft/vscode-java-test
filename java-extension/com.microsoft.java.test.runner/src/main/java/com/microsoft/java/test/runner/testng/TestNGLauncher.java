@@ -50,11 +50,12 @@ public class TestNGLauncher implements ITestLauncher {
     }
 
     private static String getClassName(String clazz) throws ClassNotFoundException {
-        return Class.forName(clazz).getName();
+        return Class.forName(clazz, false, TestNGLauncher.class.getClassLoader()).getName();
     }
 
     private static String getClassNameFromMethod(String clazz) throws ClassNotFoundException {
-        return Class.forName(clazz.substring(0, clazz.lastIndexOf("#"))).getName();
+        return Class.forName(clazz.substring(0, clazz.lastIndexOf("#")), false,
+                TestNGLauncher.class.getClassLoader()).getName();
     }
 
     private static String getMethodName(String clazz) {
