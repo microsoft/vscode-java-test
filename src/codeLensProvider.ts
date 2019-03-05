@@ -95,11 +95,12 @@ class TestCodeLensProvider implements CodeLensProvider {
                 if (!resultsInFsPath) {
                     break;
                 }
+                const testMethodMap: Map<string, ITestItem> = new Map<string, ITestItem>();
                 for (const child of test.children) {
-                    details = resultsInFsPath.get(child.fullName);
-                    if (child.level === TestLevel.Method && details) {
-                        testResults.push(Object.assign({}, child, {details}));
-                    }
+                    testMethodMap.set(child.fullName, child);
+                }
+                for (const key of resultsInFsPath.keys()) {
+                    testResults.push(Object.assign({fullName: key, displayName: key}, testMethodMap.get(key), { details: resultsInFsPath.get(key) as ITestResultDetails }));
                 }
             default:
                 break;

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Uri } from 'vscode';
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
 import { defaultResult, ITestResult, ITestResultDetails } from '../models';
@@ -82,18 +81,6 @@ export abstract class BaseRunnerResultAnalyzer {
 
             resultArray.push(result);
             itemMap.delete(key);
-        }
-        this.addSkippedTests(resultArray, itemMap);
-    }
-
-    protected addSkippedTests(result: ITestResult[], itemMap: Map<string, ITestItem>): void {
-        for (const item of itemMap.values()) {
-            result.push(Object.assign({}, defaultResult, {
-                displayName: item.displayName,
-                fullName: item.fullName,
-                uri: Uri.parse(item.location.uri).toString(),
-                range: item.location.range,
-            }));
         }
     }
 
