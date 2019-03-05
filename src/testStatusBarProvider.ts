@@ -35,9 +35,9 @@ class TestStatusBarProvider implements Disposable {
         let failedNum: number = 0;
         let passedNum: number = 0;
         for (const result of results) {
-            if (result.result.status === TestStatus.Fail) {
+            if (result.details.status === TestStatus.Fail) {
                 failedNum++;
-            } else if (result.result.status === TestStatus.Pass) {
+            } else if (result.details.status === TestStatus.Pass) {
                 passedNum++;
             }
         }

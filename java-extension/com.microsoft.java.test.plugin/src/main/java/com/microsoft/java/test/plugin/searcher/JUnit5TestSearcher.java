@@ -34,13 +34,11 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
     protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
 
-    protected static final String[] TEST_METHOD_ANNOTATIONS = {
-        "org.junit.jupiter.api.Test",
-        "org.junit.jupiter.params.ParameterizedTest"
-    };
-
     public JUnit5TestSearcher() {
-        super(TEST_METHOD_ANNOTATIONS);
+        super();
+        this.testMethodAnnotations = new String[] { "org.junit.jupiter.api.Test",
+            "org.junit.jupiter.params.ParameterizedTest" };
+        this.testClassAnnotations = new String[] {};
     }
 
     @Override

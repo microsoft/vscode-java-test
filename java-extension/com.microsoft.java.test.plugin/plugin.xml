@@ -9,6 +9,7 @@
       <command id="vscode.java.test.search.items" />
       <command id="vscode.java.test.search.items.all" />
       <command id="vscode.java.test.search.codelens" />
+      <command id="vscode.java.test.search.location" />
     </delegateCommandHandler>
   </extension>
 </plugin>

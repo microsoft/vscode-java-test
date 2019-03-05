@@ -3,13 +3,13 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, Range, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
+import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
-import { ITestItemBase } from './protocols';
-import { ITestResultDetails, TestStatus } from './runners/models';
-import { testResultManager } from './testResultManager';
+import { ILocation } from './protocols';
+import { ITestResult, TestStatus } from './runners/models';
+import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
 
 class TestReportProvider implements Disposable {
@@ -25,7 +25,7 @@ class TestReportProvider implements Disposable {
         this.resourceBasePath = path.join(this.context.extensionPath, 'resources', 'templates');
     }
 
-    public async report(tests: ITestItemBase[]): Promise<void> {
+    public async report(tests: ITestResult[]): Promise<void> {
         const position: ViewColumn = getReportPosition();
         if (!this.panel) {
             this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', position, {
@@ -44,17 +44,32 @@ class TestReportProvider implements Disposable {
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
 
-        this.panel.webview.onDidReceiveMessage((message: any) => {
+        this.panel.webview.onDidReceiveMessage(async (message: any) => {
             if (!message) {
                 return;
             }
             switch (message.command) {
                 case JavaTestRunnerCommands.OPEN_DOCUMENT:
-                    if (!message.uri) {
-                        logger.error('Could not open the document, the Uri in the message is null.');
-                        return;
+                    if (message.uri && message.range) {
+                        return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
+                    } else if (message.fullName) {
+                        const items: ILocation[] = await searchTestLocation(message.fullName);
+                        if (items.length === 1) {
+                            return openTextDocument(Uri.parse(items[0].uri), items[0].range);
+                        } else if (items.length > 1) {
+                            const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
+                                return { label: message.fullName, detail: Uri.parse(item.uri).fsPath, location: item };
+                            }), { placeHolder: 'Select the file you want to navigate to' });
+                            if (pick) {
+                                return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
+                            }
+                        } else {
+                            logger.error('No test item could be found from Language Server.');
+                        }
+                    } else {
+                        logger.error('Could not open the document, Neither the Uri nor full name is null.');
                     }
-                    return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
+                    break;
                 default:
                     return;
             }
@@ -63,32 +78,29 @@ class TestReportProvider implements Disposable {
         this.panel.reveal(position);
     }
 
-    public async update(tests: ITestItemBase[]): Promise<void> {
+    public async update(tests: ITestResult[]): Promise<void> {
         if (this.panel) {
             this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
         }
     }
 
-    public async provideHtmlContent(tests: ITestItemBase[]): Promise<string> {
-        const allResultsMap: Map<string, IReportMethod[]> = new Map();
-        const passedResultMap: Map<string, IReportMethod[]> = new Map();
-        const failedResultMap: Map<string, IReportMethod[]> = new Map();
-        let allCount: number = 0;
+    public async provideHtmlContent(testResults: ITestResult[]): Promise<string> {
+        const allResultsMap: Map<string, ITestResult[]> = new Map();
+        const passedResultMap: Map<string, ITestResult[]> = new Map();
+        const failedResultMap: Map<string, ITestResult[]> = new Map();
         let passedCount: number = 0;
         let failedCount: number = 0;
         let skippedCount: number = 0;
-        for (const test of tests) {
-            const result: ITestResultDetails | undefined = testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName);
-            allCount++;
+        for (const result of testResults) {
             if (result) {
-                this.putMethodResultIntoMap(allResultsMap, test, result);
-                switch (result.status) {
+                this.putMethodResultIntoMap(allResultsMap, result);
+                switch (result.details.status) {
                     case TestStatus.Pass:
-                        this.putMethodResultIntoMap(passedResultMap, test, result);
+                        this.putMethodResultIntoMap(passedResultMap, result);
                         passedCount++;
                         break;
                     case TestStatus.Fail:
-                        this.putMethodResultIntoMap(failedResultMap, test, result);
+                        this.putMethodResultIntoMap(failedResultMap, result);
                         failedCount++;
                         break;
                     case TestStatus.Skip:
@@ -102,7 +114,7 @@ class TestReportProvider implements Disposable {
             tests: allResultsMap,
             passedTests: passedResultMap,
             failedTests: failedResultMap,
-            allCount,
+            allCount: testResults.length,
             passedCount,
             failedCount,
             skippedCount,
@@ -119,32 +131,19 @@ class TestReportProvider implements Disposable {
         }
     }
 
-    private putMethodResultIntoMap(map: Map<string, IReportMethod[]>, test: ITestItemBase, result: ITestResultDetails): void {
-        const classFullName: string = test.fullName.substr(0, test.fullName.indexOf('#'));
-        const methods: IReportMethod[] | undefined = map.get(classFullName);
+    private putMethodResultIntoMap(map: Map<string, ITestResult[]>, result: ITestResult): void {
+        const classFullName: string = result.fullName.substr(0, result.fullName.indexOf('#'));
+        const methods: ITestResult[] | undefined = map.get(classFullName);
         if (methods) {
-            methods.push({
-                displayName: test.displayName,
-                uri: test.uri,
-                range: JSON.stringify(test.range),
-                result,
-            });
+            methods.push(result);
         } else {
-            map.set(classFullName, [{
-                displayName: test.displayName,
-                uri: test.uri,
-                range: JSON.stringify(test.range),
-                result,
-            }]);
+            map.set(classFullName, [result]);
         }
     }
 }
 
-interface IReportMethod {
-    displayName: string;
-    uri: string;
-    range: string;
-    result: ITestResultDetails;
+interface ILocationQuickPick extends QuickPickItem {
+    location: ILocation;
 }
 
 export const testReportProvider: TestReportProvider = new TestReportProvider();

@@ -4,7 +4,7 @@
 import { Uri } from 'vscode';
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
-import { ITestResult, ITestResultDetails, TestStatus } from '../models';
+import { defaultResult, ITestResult, ITestResultDetails } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
     protected testResults: Map<string, ITestResultDetails> = new Map<string, ITestResultDetails>();
@@ -41,35 +41,60 @@ export abstract class BaseRunnerResultAnalyzer {
 
     public feedBack(): ITestResult[] {
         const result: ITestResult[] = [];
+        const itemMap: Map<string, ITestItem> = new Map<string, ITestItem>();
         for (const test of this.tests) {
-            this.processTestItemRecursively(test, result);
+            this.flatTestItems(test, itemMap);
         }
+        this.parseResults(result, itemMap);
         return result;
-    }
-
-    protected processTestItemRecursively(testItem: ITestItem, resultList: ITestResult[]): void {
-        if (testItem.level === TestLevel.Method) {
-            resultList.push(this.processMethod(testItem));
-        } else {
-            testItem.children.forEach((child: ITestItem) => this.processTestItemRecursively(child, resultList));
-        }
     }
 
     protected abstract processData(data: string): void;
 
-    protected processMethod(test: ITestItem): ITestResult {
-        let testResultDetails: ITestResultDetails | undefined = this.testResults.get(test.fullName);
-        if (!testResultDetails) {
-            testResultDetails = { status: TestStatus.Skip };
+    protected flatTestItems(item: ITestItem, map: Map<string, ITestItem>): void {
+        if (item.level === TestLevel.Method) {
+            map.set(item.fullName, item);
+        } else if (item.children) {
+            item.children.forEach((child: ITestItem) => this.flatTestItems(child, map));
         }
+    }
 
-        return {
-            displayName: test.displayName,
-            fullName: test.fullName,
-            uri: Uri.parse(test.uri).toString(),
-            range: test.range,
-            result: testResultDetails,
-        };
+    protected parseResults(resultArray: ITestResult[], itemMap: Map<string, ITestItem>): void {
+        for (const [key, value] of this.testResults.entries()) {
+            let result: ITestResult = Object.assign({}, defaultResult, {
+                fullName: key,
+                details: value,
+            });
+
+            const item: ITestItem | undefined = itemMap.get(key);
+            if (item) {
+                result =  {
+                    displayName: item.displayName,
+                    location: item.location,
+                    fullName: key,
+                    details: value,
+                };
+            } else {
+                result = Object.assign(result, {
+                    displayName: key.slice(key.indexOf('#') + 1),
+                });
+            }
+
+            resultArray.push(result);
+            itemMap.delete(key);
+        }
+        this.addSkippedTests(resultArray, itemMap);
+    }
+
+    protected addSkippedTests(result: ITestResult[], itemMap: Map<string, ITestItem>): void {
+        for (const item of itemMap.values()) {
+            result.push(Object.assign({}, defaultResult, {
+                displayName: item.displayName,
+                fullName: item.fullName,
+                uri: Uri.parse(item.location.uri).toString(),
+                range: item.location.range,
+            }));
+        }
     }
 
     protected unescape(content: string): string {
@@ -78,9 +103,5 @@ export abstract class BaseRunnerResultAnalyzer {
             .replace(/\\n/gm, '\n')
             .replace(/\\t/gm, '\t')
             .replace(/\\b/gm, '\b');
-    }
-
-    protected get outputRegex(): RegExp {
-        return this.regex;
     }
 }

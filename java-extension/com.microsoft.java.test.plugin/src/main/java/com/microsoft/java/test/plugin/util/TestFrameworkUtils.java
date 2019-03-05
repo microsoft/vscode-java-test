@@ -17,9 +17,12 @@ import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
+import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
 import java.util.Arrays;
@@ -40,10 +43,18 @@ public class TestFrameworkUtils {
         return null;
     }
 
-    public static Optional<IAnnotation> getAnnotation(IMethod method, String methodAnnotation) {
+    public static TestItem resolveTestItemForClass(IType type) throws JavaModelException {
+        for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
+            if (searcher.isTestClass(type)) {
+                return searcher.parseTestItem(type);
+            }
+        }
+        return null;
+    }
+
+    public static Optional<IAnnotation> getAnnotation(IMember member, String memberAnnotation) {
         try {
-            final Optional<IAnnotation> matched = Arrays.stream(method.getAnnotations())
-                    .filter(annotation -> methodAnnotation.endsWith(annotation.getElementName())).findAny();
+            final Optional<IAnnotation> matched = getMatchedAnnotation(member, memberAnnotation);
             if (!matched.isPresent()) {
                 return Optional.empty();
             }
@@ -53,24 +64,39 @@ public class TestFrameworkUtils {
             }
 
             final String name = annotation.getElementName();
-            final String[][] fullNameArr = method.getDeclaringType().resolveType(name);
+
+            String[][] fullNameArr = null;
+            if (IType.class.isInstance(member) && member.getDeclaringType() == null) {
+                fullNameArr = ((IType) member).resolveType(name);
+            } else {
+                member.getDeclaringType().resolveType(name);
+            }
             if (fullNameArr == null) {
-                final ICompilationUnit cu = method.getCompilationUnit();
-                if (cu != null && cu.getImport(methodAnnotation).exists()) {
+                final ICompilationUnit cu = member.getCompilationUnit();
+                if (cu != null && cu.getImport(memberAnnotation).exists()) {
                     return Optional.of(annotation);
                 } else {
                     return Optional.empty();
                 }
             }
             final String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
-            return fullName.equals(methodAnnotation) ?
+            return fullName.equals(memberAnnotation) ?
                 Optional.of(annotation) : Optional.empty();
         } catch (final JavaModelException e) {
             return Optional.empty();
         }
     }
 
-    public static boolean hasAnnotation(IMethod method, String methodAnnotation) {
-        return getAnnotation(method, methodAnnotation).isPresent();
+    public static boolean hasAnnotation(IMember member, String annotation) {
+        return getAnnotation(member, annotation).isPresent();
+    }
+
+    protected static Optional<IAnnotation> getMatchedAnnotation(IMember member, String annotationToSearch)
+            throws JavaModelException {
+        if (!IAnnotatable.class.isInstance(member)) {
+            return Optional.empty();
+        }
+        return Arrays.stream(((IAnnotatable) member).getAnnotations())
+                .filter(annotation -> annotationToSearch.endsWith(annotation.getElementName())).findAny();
     }
 }

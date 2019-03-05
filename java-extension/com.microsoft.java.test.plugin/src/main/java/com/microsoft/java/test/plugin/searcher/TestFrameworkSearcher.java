@@ -15,6 +15,7 @@ import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 
@@ -24,9 +25,15 @@ public interface TestFrameworkSearcher {
 
     boolean isTestMethod(IMethod method);
 
+    boolean isTestClass(IType type);
+
     String[] getTestMethodAnnotations();
+
+    String[] getTestClassAnnotations();
 
     SearchPattern getSearchPattern();
 
     TestItem parseTestItem(IMethod method) throws JavaModelException;
+
+    TestItem parseTestItem(IType type) throws JavaModelException;
 }

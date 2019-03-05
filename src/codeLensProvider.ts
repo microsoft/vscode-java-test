@@ -5,7 +5,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, Tex
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
 import { ITestItem, TestLevel } from './protocols';
-import { ITestResultDetails, TestStatus } from './runners/models';
+import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
 import { testResultManager } from './testResultManager';
 import { searchTestCodeLens } from './utils/commandUtils';
 import { isDarwin } from './utils/platformUtils';
@@ -50,7 +50,7 @@ class TestCodeLensProvider implements CodeLensProvider {
         const codeLenses: CodeLens[] = [];
         codeLenses.push(
             new CodeLens(
-                test.range,
+                test.location.range,
                 {
                     title: 'Run Test',
                     command: JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS,
@@ -59,7 +59,7 @@ class TestCodeLensProvider implements CodeLensProvider {
                 },
             ),
             new CodeLens(
-                test.range,
+                test.location.range,
                 {
                     title: 'Debug Test',
                     command: JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS,
@@ -69,59 +69,63 @@ class TestCodeLensProvider implements CodeLensProvider {
             ),
         );
 
-        if (this.hasTestResult(test)) {
-            codeLenses.push(this.parseCodeLensForTestResult(test));
+        const resultLens: CodeLens | undefined = this.parseCodeLensForTestResult(test);
+        if (resultLens) {
+            codeLenses.push(resultLens);
         }
         return codeLenses;
     }
 
-    private hasTestResult(test: ITestItem): boolean {
+    private parseCodeLensForTestResult(test: ITestItem): CodeLens | undefined {
+        const testResults: ITestResult[] = [];
+        let details: ITestResultDetails | undefined;
         switch (test.level) {
             case TestLevel.Method:
-                return testResultManager.getResultDetails(Uri.parse(test.uri).fsPath, test.fullName) !== undefined;
+                details = testResultManager.getResultDetails(Uri.parse(test.location.uri).fsPath, test.fullName);
+                if (details) {
+                    testResults.push(Object.assign({}, test, {details}));
+                }
+                break;
             case TestLevel.Class:
             case TestLevel.NestedClass:
-                const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.uri).fsPath);
-                if (!resultsInFsPath) {
-                    return false;
+                if (!test.children) {
+                    break;
                 }
-                const keyCollection: string[] = Array.from(resultsInFsPath.keys());
+                const resultsInFsPath: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uri.parse(test.location.uri).fsPath);
+                if (!resultsInFsPath) {
+                    break;
+                }
                 for (const child of test.children) {
-                    if (child.level === TestLevel.Method && keyCollection.indexOf(child.fullName) >= 0) {
-                        return true;
+                    details = resultsInFsPath.get(child.fullName);
+                    if (child.level === TestLevel.Method && details) {
+                        testResults.push(Object.assign({}, child, {details}));
                     }
                 }
-                return false;
             default:
-                return false;
+                break;
         }
+
+        if (testResults.length) {
+            return new CodeLens(
+                test.location.range,
+                {
+                    title: this.getTestStatusIcon(testResults),
+                    command: JavaTestRunnerCommands.SHOW_TEST_REPORT,
+                    tooltip: 'Show Report',
+                    arguments: [testResults],
+                },
+            );
+        }
+
+        return undefined;
     }
 
-    private parseCodeLensForTestResult(test: ITestItem): CodeLens {
-        const testMethods: ITestItem[] = [];
-        if (test.level === TestLevel.Method) {
-            testMethods.push(test);
-        } else {
-            // Get methods from class
-            testMethods.push(...test.children);
-        }
-        return new CodeLens(
-            test.range,
-            {
-                title: this.getTestStatusIcon(testMethods),
-                command: JavaTestRunnerCommands.SHOW_TEST_REPORT,
-                tooltip: 'Show Report',
-                arguments: [testMethods],
-            },
-        );
-    }
-
-    private getTestStatusIcon(testMethods: ITestItem[]): string {
-        for (const method of testMethods) {
-            const testResult: ITestResultDetails | undefined = testResultManager.getResultDetails(Uri.parse(method.uri).fsPath, method.fullName);
-            if (!testResult || testResult.status === TestStatus.Skip) {
+    private getTestStatusIcon(testResults: ITestResult[]): string {
+        for (const result of testResults) {
+            const details: ITestResultDetails = result.details;
+            if (!details || details.status === TestStatus.Skip) {
                 return '?';
-            } else if (testResult.status === TestStatus.Fail) {
+            } else if (details.status === TestStatus.Fail) {
                 return '❌';
             }
         }

@@ -10,7 +10,6 @@ import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY,
     HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY } from './constants/configs';
 import { LEARN_MORE, NEVER_SHOW, NO, YES } from './constants/dialogOptions';
-import { ITestItem } from './protocols';
 import { __BUILTIN_CONFIG__, IExecutionConfig, IExecutionConfigGroup, ITestConfig } from './runConfigs';
 
 class TestConfigManager {
@@ -22,11 +21,9 @@ class TestConfigManager {
         return this.configRelativePath;
     }
 
-    // The test items that belong to a test runner, here the test items should be in the same workspace folder.
-    public async loadRunConfig(tests: ITestItem[], isDebug: boolean): Promise<IExecutionConfig | undefined> {
-        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].uri));
+    public async loadRunConfig(workspaceFolder: WorkspaceFolder | undefined, isDebug: boolean): Promise<IExecutionConfig | undefined> {
         if (!workspaceFolder) {
-            window.showErrorMessage(`Failed to get workspace folder for the test item: ${tests[0].uri}.`);
+            window.showErrorMessage('Failed to get workspace folder for the test items.');
             return undefined;
         }
 

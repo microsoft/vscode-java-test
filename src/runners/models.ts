@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ITestItemBase } from '../protocols';
+import { ILocation } from '../protocols';
 
-export interface ITestResult extends ITestItemBase {
-    result: ITestResultDetails;
+export interface ITestResult {
+    details: ITestResultDetails;
+    location: ILocation | undefined;
+    displayName: string;
+    fullName: string;
 }
 
 export interface ITestResultDetails {
@@ -20,3 +23,10 @@ export enum TestStatus {
     Fail = 'Fail',
     Skip = 'Skip',
 }
+
+export const defaultResult: ITestResult = {
+    displayName: '',
+    fullName: '',
+    location: undefined,
+    details: { status: TestStatus.Skip },
+};

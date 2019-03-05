@@ -19,7 +19,8 @@ html(lang="en")
                     vscode.postMessage({
                         command: 'java.test.open.document',
                         uri: $this.attr('uri'),
-                        range: $this.attr('range')
+                        range: $this.attr('range'),
+                        fullName: $this.attr('fullName'),
                     });
                     return false;
                 });
