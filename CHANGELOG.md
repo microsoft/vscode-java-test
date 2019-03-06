@@ -4,6 +4,15 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+## Added
+- Support JUnit 4 `@RunWith` annotation. [#272](https://github.com/Microsoft/vscode-java-test/issues/272)
+- Support JUnit 4 `@Theory` annotation. [#628](https://github.com/Microsoft/vscode-java-test/issues/628)
+- Support JUnit 5 `@RepeatedTest` annotation. [#594](https://github.com/Microsoft/vscode-java-test/issues/594)
+
+## Fixed
+- [Bug fixed](https://github.com/Microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+milestone%3A0.15.0+label%3Abug)
+
 ## 0.14.1 - 2019-02-19
 
 ## Added
