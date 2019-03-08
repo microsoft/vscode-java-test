@@ -101,6 +101,7 @@ class TestCodeLensProvider implements CodeLensProvider {
                     testMethodMap.set(child.fullName, child);
                 }
                 for (const key of resultsInFsPath.keys()) {
+                    // Only consider the child-methods of the test item, inner class is not taken into consideration.
                     if (key.startsWith(`${test.fullName}#`)) {
                         testResults.push(Object.assign({fullName: key, displayName: key}, testMethodMap.get(key), { details: resultsInFsPath.get(key) as ITestResultDetails }));
                     }
