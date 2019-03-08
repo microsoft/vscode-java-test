@@ -79,6 +79,7 @@ class TestCodeLensProvider implements CodeLensProvider {
     private parseCodeLensForTestResult(test: ITestItem): CodeLens | undefined {
         const testResults: ITestResult[] = [];
         let details: ITestResultDetails | undefined;
+        const totalNumber: number = this.getTotalMethodNumber(test);
         switch (test.level) {
             case TestLevel.Method:
                 details = testResultManager.getResultDetails(Uri.parse(test.location.uri).fsPath, test.fullName);
@@ -100,7 +101,9 @@ class TestCodeLensProvider implements CodeLensProvider {
                     testMethodMap.set(child.fullName, child);
                 }
                 for (const key of resultsInFsPath.keys()) {
-                    testResults.push(Object.assign({fullName: key, displayName: key}, testMethodMap.get(key), { details: resultsInFsPath.get(key) as ITestResultDetails }));
+                    if (key.startsWith(`${test.fullName}#`)) {
+                        testResults.push(Object.assign({fullName: key, displayName: key}, testMethodMap.get(key), { details: resultsInFsPath.get(key) as ITestResultDetails }));
+                    }
                 }
             default:
                 break;
@@ -110,7 +113,7 @@ class TestCodeLensProvider implements CodeLensProvider {
             return new CodeLens(
                 test.location.range,
                 {
-                    title: this.getTestStatusIcon(testResults),
+                    title: this.getTestStatusIcon(testResults, totalNumber),
                     command: JavaTestRunnerCommands.SHOW_TEST_REPORT,
                     tooltip: 'Show Report',
                     arguments: [testResults],
@@ -121,17 +124,34 @@ class TestCodeLensProvider implements CodeLensProvider {
         return undefined;
     }
 
-    private getTestStatusIcon(testResults: ITestResult[]): string {
+    private getTestStatusIcon(testResults: ITestResult[], totalNumber: number): string {
+        let passedCount: number = 0;
         for (const result of testResults) {
             const details: ITestResultDetails = result.details;
-            if (!details || details.status === TestStatus.Skip) {
-                return '?';
-            } else if (details.status === TestStatus.Fail) {
+            if (details.status === TestStatus.Fail) {
                 return '❌';
+            } else if (details.status === TestStatus.Pass) {
+                passedCount++;
             }
         }
 
+        if (passedCount < totalNumber) {
+            return '?';
+        }
+
         return isDarwin() ? '✅' : '✔️';
+    }
+
+    private getTotalMethodNumber(item: ITestItem): number {
+        if (item.level === TestLevel.Method) {
+            return 1;
+        }
+        if (item.level === TestLevel.Class || item.level === TestLevel.NestedClass) {
+            if (item.children) {
+                return item.children.length;
+            }
+        }
+        return 0;
     }
 }
 
