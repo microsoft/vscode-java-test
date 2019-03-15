@@ -6,7 +6,7 @@ import * as fse from 'fs-extra';
 import * as getPort from 'get-port';
 import * as os from 'os';
 import * as path from 'path';
-import { debug, Uri, workspace } from 'vscode';
+import { debug, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../../constants/configs';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
@@ -134,6 +134,7 @@ export abstract class BaseRunner implements ITestRunner {
             commandParams.push('-Xdebug', `-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=${this.port}`);
         }
 
+        commandParams.push(`-Dfile.encoding=${this.getJavaEncoding()}`);
         if (this.config && this.config.vmargs) {
             commandParams.push(...this.config.vmargs.filter(Boolean));
         }
@@ -199,5 +200,19 @@ export abstract class BaseRunner implements ITestRunner {
             return fullPath;
         }
         throw new Error(`Failed to find path: ${fullPath}`);
+    }
+
+    private getJavaEncoding(): string {
+        const config: WorkspaceConfiguration = workspace.getConfiguration();
+        const languageConfig: {} | undefined = config.get('[java]');
+        let javaEncoding: string | null = null;
+        if (languageConfig != null) {
+            javaEncoding = languageConfig['files.encoding'];
+        }
+
+        if (javaEncoding == null) {
+            javaEncoding = config.get<string>('files.encoding', 'UTF-8');
+        }
+        return javaEncoding;
     }
 }
