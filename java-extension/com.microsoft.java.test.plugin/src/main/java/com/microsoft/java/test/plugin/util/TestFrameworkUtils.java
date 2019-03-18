@@ -69,7 +69,7 @@ public class TestFrameworkUtils {
             if (IType.class.isInstance(member) && member.getDeclaringType() == null) {
                 fullNameArr = ((IType) member).resolveType(name);
             } else {
-                member.getDeclaringType().resolveType(name);
+                fullNameArr = member.getDeclaringType().resolveType(name);
             }
             if (fullNameArr == null) {
                 final ICompilationUnit cu = member.getCompilationUnit();
