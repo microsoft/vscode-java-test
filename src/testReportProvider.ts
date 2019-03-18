@@ -40,40 +40,40 @@ class TestReportProvider implements Disposable {
             this.panel.onDidDispose(() => {
                 this.panel = undefined;
             }, null, this.context.subscriptions);
+
+            this.panel.webview.onDidReceiveMessage(async (message: any) => {
+                if (!message) {
+                    return;
+                }
+                switch (message.command) {
+                    case JavaTestRunnerCommands.OPEN_DOCUMENT:
+                        if (message.uri && message.range) {
+                            return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
+                        } else if (message.fullName) {
+                            const items: ILocation[] = await searchTestLocation(message.fullName);
+                            if (items.length === 1) {
+                                return openTextDocument(Uri.parse(items[0].uri), items[0].range);
+                            } else if (items.length > 1) {
+                                const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
+                                    return { label: message.fullName, detail: Uri.parse(item.uri).fsPath, location: item };
+                                }), { placeHolder: 'Select the file you want to navigate to' });
+                                if (pick) {
+                                    return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
+                                }
+                            } else {
+                                logger.error('No test item could be found from Language Server.');
+                            }
+                        } else {
+                            logger.error('Could not open the document, Neither the Uri nor full name is null.');
+                        }
+                        break;
+                    default:
+                        return;
+                }
+            }, null, this.context.subscriptions);
         }
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
-
-        this.panel.webview.onDidReceiveMessage(async (message: any) => {
-            if (!message) {
-                return;
-            }
-            switch (message.command) {
-                case JavaTestRunnerCommands.OPEN_DOCUMENT:
-                    if (message.uri && message.range) {
-                        return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
-                    } else if (message.fullName) {
-                        const items: ILocation[] = await searchTestLocation(message.fullName);
-                        if (items.length === 1) {
-                            return openTextDocument(Uri.parse(items[0].uri), items[0].range);
-                        } else if (items.length > 1) {
-                            const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
-                                return { label: message.fullName, detail: Uri.parse(item.uri).fsPath, location: item };
-                            }), { placeHolder: 'Select the file you want to navigate to' });
-                            if (pick) {
-                                return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
-                            }
-                        } else {
-                            logger.error('No test item could be found from Language Server.');
-                        }
-                    } else {
-                        logger.error('Could not open the document, Neither the Uri nor full name is null.');
-                    }
-                    break;
-                default:
-                    return;
-            }
-        });
 
         this.panel.reveal(position);
     }
