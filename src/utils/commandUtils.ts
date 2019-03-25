@@ -42,6 +42,6 @@ async function executeJavaLanguageServerCommand<T>(...rest: any[]): Promise<T | 
         return await commands.executeCommand<T>(JavaLanguageServerCommands.EXECUTE_WORKSPACE_COMMAND, ...rest);
     } catch (error) {
         logger.error(error.toString());
-        return undefined;
+        throw error;
     }
 }
