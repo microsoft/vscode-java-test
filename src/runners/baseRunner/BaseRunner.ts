@@ -78,8 +78,8 @@ export abstract class BaseRunner implements ITestRunner {
                 data = data.concat(iconv.decode(buffer, this.encoding));
                 const index: number = data.lastIndexOf(os.EOL);
                 if (index >= 0) {
-                    testResultAnalyzer.analyzeData(data.substring(0, index));
-                    data = data.substring(index);
+                    testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
+                    data = data.substring(index + os.EOL.length);
                 }
             });
             this.process.on('close', (signal: number) => {
@@ -208,21 +208,20 @@ export abstract class BaseRunner implements ITestRunner {
     private getJavaEncoding(): string {
         const encoding: string = this.getEncodingFromTestConfig() || this.getEncodingFromSetting();
         if (!iconv.encodingExists(encoding)) {
-            throw new Error(`Invalid encoding: ${encoding}`);
+            logger.error(`Unsupported encoding: ${encoding}, fallback to UTF-8.`);
+            return 'utf8';
         }
         return encoding;
     }
 
     private getEncodingFromTestConfig(): string | undefined {
-        const encodingArgPrefix: string = '-Dfile.encoding=';
         if (this.config && this.config.vmargs) {
-            // loop backwards since the latter vmarg will override the previous one
-            for (let i: number = this.config.vmargs.length - 1; i >= 0; i--) {
-                const arg: string = this.config.vmargs[i] as string;
-                const index: number = arg.indexOf(encodingArgPrefix);
-                if (index >= 0) {
-                    return arg.slice(index + encodingArgPrefix.length);
-                }
+            const vmArgsString: string = this.config.vmargs.join(' ');
+            const encodingKey: string = '-Dfile.encoding=';
+            const index: number = vmArgsString.lastIndexOf(encodingKey);
+            if (index > -1) {
+                // loop backwards since the latter vmarg will override the previous one
+                return vmArgsString.slice(index + encodingKey.length).split(' ')[0];
             }
         }
         return undefined;
