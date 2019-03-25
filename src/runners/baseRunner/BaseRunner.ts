@@ -4,6 +4,7 @@
 import * as cp from 'child_process';
 import * as fse from 'fs-extra';
 import * as getPort from 'get-port';
+import * as iconv from 'iconv-lite';
 import * as os from 'os';
 import * as path from 'path';
 import { debug, Uri, workspace, WorkspaceConfiguration } from 'vscode';
@@ -26,6 +27,7 @@ export abstract class BaseRunner implements ITestRunner {
     protected isDebug: boolean;
     protected classpath: string;
     protected config: IExecutionConfig | undefined;
+    protected encoding: string;
     protected isCanceled: boolean;
 
     constructor(
@@ -52,6 +54,7 @@ export abstract class BaseRunner implements ITestRunner {
         this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
         this.classpath = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
         this.config = config;
+        this.encoding = this.getJavaEncoding();
     }
 
     public async run(): Promise<ITestResult[]> {
@@ -62,29 +65,29 @@ export abstract class BaseRunner implements ITestRunner {
         }
         return new Promise<ITestResult[]>((resolve: (result: ITestResult[]) => void, reject: (error: Error) => void): void => {
             const testResultAnalyzer: BaseRunnerResultAnalyzer = this.getTestResultAnalyzer();
-            let buffer: string = '';
+            let data: string = '';
             this.process = cp.spawn(path.join(this.javaHome, 'bin', 'java'), commandParams, options);
             this.process.on('error', (error: Error) => {
                 logger.error('Failed to launch the runner', error);
                 reject(error);
             });
-            this.process.stderr.on('data', (data: Buffer) => {
-                testResultAnalyzer.analyzeError(data.toString());
+            this.process.stderr.on('data', (buffer: Buffer) => {
+                testResultAnalyzer.analyzeError(iconv.decode(buffer, this.encoding));
             });
-            this.process.stdout.on('data', (data: Buffer) => {
-                buffer = buffer.concat(data.toString());
-                const index: number = buffer.lastIndexOf(os.EOL);
+            this.process.stdout.on('data', (buffer: Buffer) => {
+                data = data.concat(iconv.decode(buffer, this.encoding));
+                const index: number = data.lastIndexOf(os.EOL);
                 if (index >= 0) {
-                    testResultAnalyzer.analyzeData(buffer.substring(0, index));
-                    buffer = buffer.substring(index);
+                    testResultAnalyzer.analyzeData(data.substring(0, index));
+                    data = data.substring(index);
                 }
             });
             this.process.on('close', (signal: number) => {
                 if (this.isCanceled) {
                     return resolve([]);
                 }
-                if (buffer.length > 0) {
-                    testResultAnalyzer.analyzeData(buffer);
+                if (data.length > 0) {
+                    testResultAnalyzer.analyzeData(data);
                 }
                 const result: ITestResult[] = testResultAnalyzer.feedBack();
                 if (signal && signal !== 0) {
@@ -134,7 +137,7 @@ export abstract class BaseRunner implements ITestRunner {
             commandParams.push('-Xdebug', `-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=${this.port}`);
         }
 
-        commandParams.push(`-Dfile.encoding=${this.getJavaEncoding()}`);
+        commandParams.push(`-Dfile.encoding=${this.encoding}`);
         if (this.config && this.config.vmargs) {
             commandParams.push(...this.config.vmargs.filter(Boolean));
         }
@@ -203,9 +206,33 @@ export abstract class BaseRunner implements ITestRunner {
     }
 
     private getJavaEncoding(): string {
-        const config: WorkspaceConfiguration = workspace.getConfiguration();
-        const languageConfig: {} | undefined = config.get('[java]');
+        const encoding: string = this.getEncodingFromTestConfig() || this.getEncodingFromSetting();
+        if (!iconv.encodingExists(encoding)) {
+            throw new Error(`Invalid encoding: ${encoding}`);
+        }
+        return encoding;
+    }
+
+    private getEncodingFromTestConfig(): string | undefined {
+        const encodingArgPrefix: string = '-Dfile.encoding=';
+        if (this.config && this.config.vmargs) {
+            // loop backwards since the latter vmarg will override the previous one
+            for (let i: number = this.config.vmargs.length - 1; i >= 0; i--) {
+                const arg: string = this.config.vmargs[i] as string;
+                const index: number = arg.indexOf(encodingArgPrefix);
+                if (index >= 0) {
+                    return arg.slice(index + encodingArgPrefix.length);
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private getEncodingFromSetting(): string {
         let javaEncoding: string | null = null;
+        // One runner will contain all tests in one workspace with the same test framework.
+        const config: WorkspaceConfiguration = workspace.getConfiguration(undefined, Uri.parse(this.tests[0].location.uri));
+        const languageConfig: {} | undefined = config.get('[java]');
         if (languageConfig != null) {
             javaEncoding = languageConfig['files.encoding'];
         }
