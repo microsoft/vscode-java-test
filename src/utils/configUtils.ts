@@ -5,10 +5,11 @@ import * as crypto from 'crypto';
 import * as fse from 'fs-extra';
 import * as _ from 'lodash';
 import * as path from 'path';
-import { ConfigurationTarget, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder, TextDocument } from 'vscode';
+import { ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { BUILTIN_CONFIG_NAME, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
-import { NEVER_SHOW, NO, YES, OPEN_SETTING } from '../constants/dialogOptions';
+import { NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
 import { __BUILTIN_CONFIG__, IExecutionConfig, ITestConfig } from '../runConfigs';
+import { logger } from '../logger/logger';
 
 export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined): Promise<IExecutionConfig | undefined> {
     if (!workspaceFolder) {
@@ -58,19 +59,27 @@ export async function migrateTestConfig(): Promise<void> {
     const deprecatedConfigPath: string[] = deprecatedConfigs.map((uri: Uri) => uri.fsPath);
     const selectedConfig: string[] | undefined = await window.showQuickPick(deprecatedConfigPath, {
         ignoreFocusOut: true,
-        placeHolder: 'Select the configuration you want to migrate',
+        placeHolder: 'Select the configuration(s) you want to migrate',
         canPickMany: true,
     });
     if (!selectedConfig) {
         return;
     }
     for (const config of selectedConfig) {
-        await migrate(config);
+        try {
+            await migrate(config);
+        } catch (error) {
+            await window.showErrorMessage(`Failed to migrate the configuration file: ${config}`);
+        }
     }
-    const choice: string | undefined = await window.showInformationMessage('Test run configurations have been successfully migrated, you can check it in the workspace folder settings.', OPEN_SETTING);
+    const choice: string | undefined = await window.showInformationMessage('Migration finished, you can check it in the workspace folder settings.', OPEN_SETTING);
     if (choice === OPEN_SETTING) {
         for (const config of selectedConfig) {
             const settingUri: Uri = Uri.file(path.join(config, '..', 'settings.json'));
+            if (await !fse.existsSync(settingUri.fsPath)) {
+                logger.error(`workspace setting not found: ${settingUri.fsPath}`);
+                continue;
+            }
             const document: TextDocument = await workspace.openTextDocument(settingUri);
             await window.showTextDocument(document, { preview: false });
         }
