@@ -40,7 +40,8 @@
         "onCommand:java.test.cancel",
         "onCommand:java.test.show.report",
         "onCommand:java.test.show.output",
-        "onCommand:java.test.open.log"
+        "onCommand:java.test.open.log",
+        "onCommand:java.test.config.migrate"
     ],
     "main": "./dist/extension",
     "contributes": {
@@ -147,12 +148,11 @@
                     "dark": "resources/media/dark/refresh.svg"
                 },
                 "category": "Java"
-            }
-        ],
-        "jsonValidation": [
+            },
             {
-                "fileMatch": "launch.test.json",
-                "url": "./launch.test.schema.json"
+                "command": "java.test.config.migrate",
+                "title": "%contributes.commands.java.test.config.migrate.title%",
+                "category": "Java"
             }
         ],
         "configuration": {
