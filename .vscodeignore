@@ -17,5 +17,4 @@ webpack.*.js
 node_modules
 *.log
 demo
-runner-config.md
 CONTRIBUTING.md
