@@ -8,8 +8,8 @@ import * as path from 'path';
 import { ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { BUILTIN_CONFIG_NAME, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
 import { NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
-import { __BUILTIN_CONFIG__, IExecutionConfig, ITestConfig } from '../runConfigs';
 import { logger } from '../logger/logger';
+import { __BUILTIN_CONFIG__, IExecutionConfig, ITestConfig } from '../runConfigs';
 
 export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined): Promise<IExecutionConfig | undefined> {
     if (!workspaceFolder) {
