@@ -56,7 +56,6 @@ class RunnerExecutor {
                         await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].location.uri)));
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
-                        await runner.execPreLaunchTaskIfExist();
                         if (token.isCancellationRequested) {
                             return;
                         }

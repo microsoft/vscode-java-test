@@ -7,7 +7,6 @@ import { ITestResult } from './models';
 
 export interface ITestRunner {
     setup(tests: ITestItem[], isDebug: boolean, config?: IExecutionConfig): Promise<void>;
-    execPreLaunchTaskIfExist(): Promise<void>;
     run(): Promise<ITestResult[]>;
     cleanUp(isCancel: boolean): Promise<void>;
 }

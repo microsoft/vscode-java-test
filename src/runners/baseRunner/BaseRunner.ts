@@ -8,7 +8,6 @@ import * as iconv from 'iconv-lite';
 import * as os from 'os';
 import * as path from 'path';
 import { debug, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { CHILD_PROCESS_MAX_BUFFER_SIZE } from '../../constants/configs';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
@@ -151,40 +150,6 @@ export abstract class BaseRunner implements ITestRunner {
         }
 
         return commandParams;
-    }
-
-    public async execPreLaunchTaskIfExist(): Promise<void> {
-        return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
-            if (!this.config || !this.config.preLaunchTask) {
-                return resolve();
-            }
-
-            this.process = cp.exec(
-                this.config.preLaunchTask,
-                {
-                    maxBuffer: CHILD_PROCESS_MAX_BUFFER_SIZE,
-                    cwd: this.config.workingDirectory,
-                },
-            );
-
-            this.process.on('error', (err: Error) => {
-                logger.error('Failed to run pre-launch task', err);
-                return reject(err);
-            });
-            this.process.stderr.on('data', (data: Buffer) => {
-                logger.info(data.toString());
-            });
-            this.process.stdout.on('data', (data: Buffer) => {
-                logger.info(data.toString());
-            });
-            this.process.on('close', (signal: number) => {
-                if (signal && signal !== 0) {
-                    return reject(new Error(`Prelaunch task exited with code ${signal}.`));
-                } else {
-                    return resolve();
-                }
-            });
-        });
     }
 
     protected abstract getRunnerCommandParams(): string[];
