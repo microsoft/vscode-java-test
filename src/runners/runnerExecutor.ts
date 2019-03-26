@@ -6,10 +6,10 @@ import { testCodeLensProvider } from '../codeLensProvider';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
-import { testConfigManager } from '../testConfigManager';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
+import { loadRunConfig } from '../utils/configUtils';
 import { resolve } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
@@ -41,7 +41,7 @@ class RunnerExecutor {
             for (const [runner, tests] of this._runnerMap.entries()) {
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
-                const config: IExecutionConfig | undefined = await testConfigManager.loadRunConfig(workspaceFolder, isDebug);
+                const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
                 if (!config) {
                     logger.info('Test job is canceled.');
                     continue;
@@ -56,7 +56,6 @@ class RunnerExecutor {
                         await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].location.uri)));
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
-                        await runner.execPreLaunchTaskIfExist();
                         if (token.isCancellationRequested) {
                             return;
                         }
