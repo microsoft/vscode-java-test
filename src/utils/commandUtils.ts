@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { commands, Uri } from 'vscode';
+import { commands } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
-import { ILocation, IProjectInfo, ISearchTestItemParams, ITestItem } from '../protocols';
+import { logger } from '../logger/logger';
+import { ILocation, ISearchTestItemParams, ITestItem } from '../protocols';
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
     return await executeJavaLanguageServerCommand<string[]>(
@@ -36,11 +37,11 @@ export async function resolveRuntimeClassPath(paths: string[]): Promise<string[]
         JavaTestRunnerDelegateCommands.RESOLVE_RUNTIME_CLASSPATH, paths) || []);
 }
 
-export async function getProjectInfo(folderUri: Uri): Promise<IProjectInfo[]> {
-    return await executeJavaLanguageServerCommand<IProjectInfo[]>(
-        JavaTestRunnerDelegateCommands.GET_PROJECT_INFO, folderUri.toString()) || [];
-}
-
-function executeJavaLanguageServerCommand<T>(...rest: any[]): Thenable<T | undefined> {
-    return commands.executeCommand<T>(JavaLanguageServerCommands.EXECUTE_WORKSPACE_COMMAND, ...rest);
+async function executeJavaLanguageServerCommand<T>(...rest: any[]): Promise<T | undefined> {
+    try {
+        return await commands.executeCommand<T>(JavaLanguageServerCommands.EXECUTE_WORKSPACE_COMMAND, ...rest);
+    } catch (error) {
+        logger.error(error.toString());
+        throw error;
+    }
 }
