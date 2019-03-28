@@ -5,9 +5,9 @@ import * as crypto from 'crypto';
 import * as fse from 'fs-extra';
 import * as _ from 'lodash';
 import * as path from 'path';
-import { ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
-import { BUILTIN_CONFIG_NAME, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
-import { NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
+import { commands, ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
+import { LEARN_MORE, NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
 import { __BUILTIN_CONFIG__, IExecutionConfig, ITestConfig } from '../runConfigs';
 
@@ -72,8 +72,13 @@ export async function migrateTestConfig(): Promise<void> {
             await window.showErrorMessage(`Failed to migrate the configuration file: ${config}`);
         }
     }
-    const choice: string | undefined = await window.showInformationMessage('Migration finished, you can check it in the workspace folder settings.', OPEN_SETTING);
-    if (choice === OPEN_SETTING) {
+    const choice: string | undefined = await window.showInformationMessage("Migration finished, would you like to remove the deprecated 'launch.test.json' file(s)?", YES, OPEN_SETTING, LEARN_MORE);
+    if (choice === YES) {
+        for (const config of selectedConfig) {
+            await fse.remove(config);
+        }
+        window.showInformationMessage("Successfully removed the deprecated 'launch.test.json' file(s).");
+    } else if (choice === OPEN_SETTING) {
         for (const config of selectedConfig) {
             const settingUri: Uri = Uri.file(path.join(config, '..', 'settings.json'));
             if (await !fse.existsSync(settingUri.fsPath)) {
@@ -83,10 +88,12 @@ export async function migrateTestConfig(): Promise<void> {
             const document: TextDocument = await workspace.openTextDocument(settingUri);
             await window.showTextDocument(document, { preview: false });
         }
+    } else if (choice === LEARN_MORE) {
+        commands.executeCommand('vscode.open', Uri.parse(CONFIG_DOCUMENT_URL));
     }
 }
 
-async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder?: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
+async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
     interface IRunConfigQuickPick extends QuickPickItem {
         item: IExecutionConfig;
     }
@@ -110,14 +117,13 @@ async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder?: Wo
     }
     const selection: IRunConfigQuickPick | undefined = await window.showQuickPick(choices, {
         ignoreFocusOut: true,
-        placeHolder: 'Select test configuration' + `${workspaceFolder ? ` for workspace folder: "${workspaceFolder.name}"` : ''}`,
+        placeHolder: `Select test configuration for workspace folder: "${workspaceFolder.name}"`,
     });
     if (!selection) {
         return undefined;
     }
-    if (workspaceFolder) {
-        askPreferenceForConfig(configs, selection.item, workspaceFolder.uri);
-    }
+
+    askPreferenceForConfig(configs, selection.item, workspaceFolder.uri);
 
     return selection.item;
 }
@@ -149,20 +155,23 @@ async function migrate(configPath: string): Promise<void> {
     const workspaceConfig: WorkspaceConfiguration = workspace.getConfiguration(undefined, Uri.file(configPath));
     const configSetting: IExecutionConfig[] | IExecutionConfig = workspaceConfig.get<IExecutionConfig[] | IExecutionConfig>(CONFIG_SETTING_KEY, {});
     let configItems: IExecutionConfig[] = [];
-    if (_.isArray(configSetting)) {
-        configItems.push(...configSetting);
-    } else if (_.isPlainObject(configSetting)) {
-        configItems.push(configSetting);
+    if (!_.isEmpty(configSetting)) {
+        if (_.isArray(configSetting)) {
+            configItems.push(...configSetting);
+        } else if (_.isPlainObject(configSetting)) {
+            configItems.push(configSetting);
+        }
     }
+
     const deprecatedConfig: ITestConfig = await fse.readJSON(configPath);
     if (deprecatedConfig.debug && deprecatedConfig.debug.items) {
         for (const item of deprecatedConfig.debug.items) {
-            configItems.push(_.omit(item, ['projectName', 'preLaunchTask']));
+            configItems.push(_.omit(item, ['name', 'projectName', 'preLaunchTask']));
         }
     }
     if (deprecatedConfig.run && deprecatedConfig.run.items) {
         for (const item of deprecatedConfig.run.items) {
-            configItems.push(_.omit(item, ['projectName', 'preLaunchTask']));
+            configItems.push(_.omit(item, ['name', 'projectName', 'preLaunchTask']));
         }
     }
     configItems = _.uniqWith(configItems, _.isEqual);
