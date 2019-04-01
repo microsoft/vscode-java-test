@@ -25,6 +25,8 @@ export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined
             configItems.push(...configSetting);
         } else if (_.isPlainObject(configSetting)) {
             configItems.push(configSetting);
+        } else if (_.isArrayLike(configSetting)) {
+            configItems.push(configSetting);
         }
 
         const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
