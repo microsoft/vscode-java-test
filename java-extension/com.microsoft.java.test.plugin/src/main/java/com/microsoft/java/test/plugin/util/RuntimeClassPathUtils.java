@@ -11,8 +11,6 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -30,6 +28,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
 
 @SuppressWarnings({ "unchecked", "restriction" })
 public class RuntimeClassPathUtils {
