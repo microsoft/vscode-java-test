@@ -1,16 +1,17 @@
 /*******************************************************************************
-* Copyright (c) 2018 Microsoft Corporation and others.
-* All rights reserved. This program and the accompanying materials
-* are made available under the terms of the Eclipse Public License v1.0
-* which accompanies this distribution, and is available at
-* http://www.eclipse.org/legal/epl-v10.html
-*
-* Contributors:
-*     Microsoft Corporation - initial API and implementation
-*******************************************************************************/
+ * Copyright (c) 2018-2019 Microsoft Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Microsoft Corporation - initial API and implementation
+ *******************************************************************************/
 
 package com.microsoft.java.test.plugin.util;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -28,9 +29,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
+
+@SuppressWarnings({ "unchecked", "restriction" })
 public class RuntimeClassPathUtils {
 
-    @SuppressWarnings("unchecked")
     public static String[] resolveRuntimeClassPath(List<Object> arguments) throws CoreException {
         if (arguments == null || arguments.size() == 0) {
             return new String[0];
@@ -49,9 +52,10 @@ public class RuntimeClassPathUtils {
         for (final IPath testPath : testPaths) {
             final Iterator<IJavaProject> iterator = javaProjectSet.iterator();
             while (iterator.hasNext()) {
-                final IJavaProject project = iterator.next();
-                if (project.getProject().getLocation().isPrefixOf(testPath)) {
-                    projectsToTest.add(project);
+                final IJavaProject javaProject = iterator.next();
+                final IProject project = javaProject.getProject();
+                if (belongToProject(testPath, project)) {
+                    projectsToTest.add(javaProject);
                     iterator.remove();
                 }
             }
@@ -76,5 +80,21 @@ public class RuntimeClassPathUtils {
             classPathList.addAll(Arrays.asList(classPathArray));
         }
         return classPathList.toArray(new String[classPathList.size()]);
+    }
+
+    private static boolean belongToProject(IPath testPath, IProject project) {
+        // Check if the path belongs to visible project
+        if (project.getLocation() != null && project.getLocation().isPrefixOf(testPath)) {
+            return true;
+        }
+
+
+        // Check if the path belongs to invisible project
+        final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
+        if (linkedLocation != null && linkedLocation.isPrefixOf(testPath)) {
+            return true;
+        }
+
+        return false;
     }
 }
