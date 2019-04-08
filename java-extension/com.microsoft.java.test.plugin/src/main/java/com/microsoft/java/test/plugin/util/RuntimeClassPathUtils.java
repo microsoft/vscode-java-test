@@ -54,7 +54,7 @@ public class RuntimeClassPathUtils {
             while (iterator.hasNext()) {
                 final IJavaProject javaProject = iterator.next();
                 final IProject project = javaProject.getProject();
-                if (belongToVisibleProject(testPath, project) || belongToInvisibleProject(testPath, project)) {
+                if (belongToProject(testPath, project)) {
                     projectsToTest.add(javaProject);
                     iterator.remove();
                 }
@@ -82,18 +82,19 @@ public class RuntimeClassPathUtils {
         return classPathList.toArray(new String[classPathList.size()]);
     }
 
-    private static boolean belongToVisibleProject(IPath testPath, IProject project) {
-        if (project.getLocation() == null) {
-            return false;
+    private static boolean belongToProject(IPath testPath, IProject project) {
+        // Check if the path belongs to visible project
+        if (project.getLocation() != null && project.getLocation().isPrefixOf(testPath)) {
+            return true;
         }
-        return project.getLocation().isPrefixOf(testPath);
-    }
 
-    private static boolean belongToInvisibleProject(IPath testPath, IProject project) {
+
+        // Check if the path belongs to invisible project
         final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
-        if (linkedLocation == null) {
-            return false;
+        if (linkedLocation != null && linkedLocation.isPrefixOf(testPath)) {
+            return true;
         }
-        return linkedLocation.isPrefixOf(testPath);
+
+        return false;
     }
 }
