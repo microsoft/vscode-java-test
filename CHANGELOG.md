@@ -4,6 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.16.0 - 2019-04-10
+## Added
+- Add a new command `Java: Migrate Deprecated 'launch.test.json'` to help migrate the `launch.test.json` files. [PR#664](https://github.com/Microsoft/vscode-java-test/pull/664)
+
+## Removed
+- Stop supporting `launch.test.json`. [#650](https://github.com/Microsoft/vscode-java-test/issues/650)
+
+## Fixed
+- Encoding issue for the Test Runner. [PR#662](https://github.com/Microsoft/vscode-java-test/pull/662)
+- Can resolve the classpath of the invisible project. [#348](https://github.com/Microsoft/vscode-java-test/issues/348)
+
 ## 0.15.1 - 2019-03-19
 ## Fixed
 - [Bugs fixed](https://github.com/Microsoft/vscode-java-test/issues?q=is%3Aissue+milestone%3A0.15.1+is%3Aclosed+label%3Abug)
