@@ -59,6 +59,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 > Note: If you cannot see the Code Lens in your editor, please refer to this [issue comment](https://github.com/Microsoft/vscode-java-test/issues/470#issuecomment-444681714) as a workaround.
 
+---
 
 ### Test Explorer
 
@@ -71,6 +72,8 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 > Note: If the Test Explorer is empty, please refer to this [issue comment](https://github.com/Microsoft/vscode-java-test/issues/470#issuecomment-444681714) as a workaround.
 
+---
+
 ### Customize Test Configurations
 <p align="center">
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/configuration.png" style="border-radius: 15px" alt="Customize Test Configurations"/>
@@ -79,6 +82,8 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 - Sometimes you may want to customize the configuration for running the test cases. To achieve this, you can add it into your workspace settings under the section: `java.test.config`.
 
 > Note: More details can be found [here](https://github.com/Microsoft/vscode-java-test/wiki/Run-with-Configuration).
+
+---
 
 ### View Test Report
 
