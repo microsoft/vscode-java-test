@@ -50,12 +50,12 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ## Features
 
-### Run/Debug through Code Lens
+### Run/Debug Test Cases
 <p align="center">
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/run_codelens.png" style="border-radius: 15px" alt="Run Code Lens"/>
 </p>
 
-- The extension will generate `Run Test` and `Debug Test` shortcuts above the class and method definition. Simply click on them will start running or debugging the target test cases.
+- The extension will generate `Run Test` and `Debug Test` shortcuts (also known as Code Lens) above the class and method definition. Simply click on them will start running or debugging the target test cases.
 
 > Note: If you cannot see the Code Lens in your editor, please refer to this [issue comment](https://github.com/Microsoft/vscode-java-test/issues/470#issuecomment-444681714) as a workaround.
 
@@ -86,7 +86,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/status_bar.png" style="border-radius: 15px" alt="Status Bar"/>
 </p>
 
-- After running/debugging the test cases, the status bar will show the final results. Simply click on it to show the Test Report..
+- After running/debugging the test cases, the status bar will show the final results. Simply click on it to show the Test Report.
 - You can also click the ✔️ or ❌ mark in Code Lens to open the Test Report.
 
 <p align="center">
