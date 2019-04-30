@@ -52,7 +52,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ### Run/Debug Test Cases
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/run_codelens.png" style="border-radius: 15px" alt="Run Code Lens"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/run_codelens.png" style="border-radius: 15px" alt="Run Code Lens"/>
 </p>
 
 - The extension will generate `Run Test` and `Debug Test` shortcuts (also known as Code Lens) above the class and method definition. Simply click on them will start running or debugging the target test cases.
@@ -64,7 +64,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 ### Test Explorer
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/run_explorer.png" style="border-radius: 15px" alt="Run Explorer"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/run_explorer.png" style="border-radius: 15px" alt="Run Explorer"/>
 </p>
 
 - The Test Explorer is the place to show all the test cases in your project. You can also run/debug your test cases from here.
@@ -76,7 +76,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ### Customize Test Configurations
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/configuration.png" style="border-radius: 15px" alt="Customize Test Configurations"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/configuration.png" style="border-radius: 15px" alt="Customize Test Configurations"/>
 </p>
 
 - Sometimes you may want to customize the configuration for running the test cases. To achieve this, you can add it into your workspace settings under the section: `java.test.config`.
@@ -88,14 +88,14 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 ### View Test Report
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/status_bar.png" style="border-radius: 15px" alt="Status Bar"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/status_bar.png" style="border-radius: 15px" alt="Status Bar"/>
 </p>
 
 - After running/debugging the test cases, the status bar will show the final results. Simply click on it to show the Test Report.
 - You can also click the ✔️ or ❌ mark in Code Lens to open the Test Report.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/cs/new-readme/demo/report_navigate.png" style="border-radius: 15px" alt="Status Bar"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/report_navigate.png" style="border-radius: 15px" alt="Status Bar"/>
 </p>
 
 - You can navigate to the source location of the target test case by clicking the navigate button.
