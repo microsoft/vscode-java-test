@@ -22,6 +22,7 @@ import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
 import { migrateTestConfig } from './utils/configUtils';
+import { listTestSourcePaths } from './commands/testPathCommands';
 
 export async function activate(context: ExtensionContext): Promise<void> {
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'));
@@ -67,6 +68,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.LIST_TEST_SOURCE_PATHS, async () => await listTestSourcePaths()),
     );
 }
 

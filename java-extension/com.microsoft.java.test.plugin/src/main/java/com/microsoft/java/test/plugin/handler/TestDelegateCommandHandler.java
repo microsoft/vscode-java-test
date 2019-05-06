@@ -12,7 +12,7 @@
 package com.microsoft.java.test.plugin.handler;
 
 import com.microsoft.java.test.plugin.util.ProjectInfoFetcher;
-import com.microsoft.java.test.plugin.util.ProjectUtils;
+import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 import com.microsoft.java.test.plugin.util.RuntimeClassPathUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
@@ -37,7 +37,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
         switch (commandId) {
             case GET_TEST_SOURCE_PATH:
-                return ProjectUtils.getTestSourcePaths(arguments, monitor);
+                return ProjectTestUtils.listTestSourcePaths(arguments, monitor);
             case COMPUTE_RUNTIME_CLASSPATH:
                 return RuntimeClassPathUtils.resolveRuntimeClassPath(arguments);
             case GET_PROJECT_INFO:

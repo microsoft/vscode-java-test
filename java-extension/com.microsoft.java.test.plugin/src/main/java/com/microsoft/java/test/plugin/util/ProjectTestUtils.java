@@ -11,35 +11,78 @@
 
 package com.microsoft.java.test.plugin.util;
 
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
-public final class ProjectUtils {
+public final class ProjectTestUtils {
 
     private static final String TEST_SCOPE = "test";
     private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
     private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
+
+    @SuppressWarnings("unchecked")
+    public static List<TestSourcePath> listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
+            throws JavaModelException, URISyntaxException {
+        final List<TestSourcePath> testSourcePathList = new ArrayList<>();
+        if (arguments == null || arguments.size() == 0) {
+            return testSourcePathList;
+        }
+
+        final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
+        for (final String uri : uriArray) {
+            final Set<IJavaProject> projectSet = parseProjects(new URI(uri));
+            for (final IJavaProject javaProject : projectSet) {
+                final IProject project = javaProject.getProject();
+                final String projectName = project.getName();
+                String projectType = "General";
+                if (ProjectUtils.isMavenProject(project)) {
+                    projectType = "Maven";
+                }
+
+                if (ProjectUtils.isGradleProject(project)) {
+                    projectType = "Gradle";
+                }
+
+                IContainer projectRoot = project;
+                if (!ProjectUtils.isVisibleProject(project)) {
+                    projectType = "Workspace";
+                    final IFolder workspaceLinkFolder = project.getFolder(ProjectUtils.WORKSPACE_LINK);
+                    if (!workspaceLinkFolder.isLinked()) {
+                        continue;
+                    }
+
+                    projectRoot = workspaceLinkFolder;
+                }
+                for (final IPath path : getTestPath(javaProject)) {
+                    final IPath relativePath = path.makeRelativeTo(javaProject.getPath());
+                    final IPath location = projectRoot.getRawLocation().append(relativePath);
+                    testSourcePathList.add(new TestSourcePath(location.toOSString(), projectName, projectType));
+                }
+            }
+        }
+        return testSourcePathList;
+    }
 
     /**
      * Method to get the valid paths which contains test code
@@ -73,35 +116,12 @@ public final class ProjectUtils {
     }
 
     public static Set<IJavaProject> parseProjects(URI rootFolderURI) {
-        final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-        final IProject[] projects = workspaceRoot.getProjects();
-        final IPath parent = filePathFromURI(rootFolderURI);
-        return Arrays.stream(projects)
-                .filter(p -> parent.isPrefixOf(p.getLocation()))
-                .map(p -> getJavaProject(p))
-                .filter(p -> p != null)
-                .collect(Collectors.toSet());
-    }
-
-    public static boolean isJavaProject(IProject project) {
-        if (project == null || !project.exists()) {
-            return false;
+        final IPath parentPath = filePathFromURI(rootFolderURI);
+        if (parentPath == null) {
+            return Collections.emptySet();
         }
-        try {
-            if (!project.isNatureEnabled(JavaCore.NATURE_ID)) {
-                return false;
-            }
-        } catch (final CoreException e) {
-            return false;
-        }
-        return true;
-    }
-
-    public static IJavaProject getJavaProject(IProject project) {
-        if (isJavaProject(project)) {
-            return JavaCore.create(project);
-        }
-        return null;
+        return Arrays.stream(ProjectUtils.getJavaProjects())
+                .filter(p -> parentPath.isPrefixOf(p.getProject().getLocation())).collect(Collectors.toSet());
     }
 
     public static IPath filePathFromURI(URI uri) {
@@ -113,22 +133,17 @@ public final class ProjectUtils {
 
     public static List<IPath> getTestPath(IJavaProject project) throws JavaModelException {
         final IClasspathEntry[] entries = project.getRawClasspath();
-        return Arrays.stream(entries)
-                .filter(entry -> isTest(entry))
-                .map(entry -> entry.getPath())
+        return Arrays.stream(entries).filter(entry -> isTest(entry)).map(entry -> entry.getPath())
                 .collect(Collectors.toList());
     }
 
     public static Set<IPath> getTestOutputPath(IJavaProject project) throws JavaModelException {
         final IClasspathEntry[] entries = project.getRawClasspath();
         final IPath projectLocation = project.getProject().getLocation();
-        return Arrays.stream(entries)
-                .filter(entry -> isTest(entry))
-                .map(entry -> {
-                    final IPath relativePath = entry.getOutputLocation().makeRelativeTo(project.getPath());
-                    return projectLocation.append(relativePath);
-                })
-                .collect(Collectors.toSet());
+        return Arrays.stream(entries).filter(entry -> isTest(entry)).map(entry -> {
+            final IPath relativePath = entry.getOutputLocation().makeRelativeTo(project.getPath());
+            return projectLocation.append(relativePath);
+        }).collect(Collectors.toSet());
     }
 
     private static boolean isTest(IClasspathEntry entry) {
@@ -144,6 +159,18 @@ public final class ProjectUtils {
         }
 
         return entry.isTest();
+    }
+
+    public static class TestSourcePath {
+        public String path;
+        public String projectName;
+        public String projectType;
+
+        TestSourcePath(String path, String projectName, String projectType) {
+            this.path = path;
+            this.projectName = projectName;
+            this.projectType = projectType;
+        }
     }
 
 }

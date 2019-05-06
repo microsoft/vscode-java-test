@@ -28,7 +28,7 @@ public final class ProjectInfoFetcher {
         final String folder = (String) arguments.get(0);
         try {
             final URI uri = new URI(folder);
-            final Set<IJavaProject> projects = ProjectUtils.parseProjects(uri);
+            final Set<IJavaProject> projects = ProjectTestUtils.parseProjects(uri);
             return projects.stream()
                     .map(p -> new ProjectInfo(p.getProject().getLocationURI(), p.getProject().getName()))
                     .toArray(ProjectInfo[]::new);

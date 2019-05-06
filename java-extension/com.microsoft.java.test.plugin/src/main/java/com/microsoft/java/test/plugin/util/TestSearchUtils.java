@@ -271,7 +271,7 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
-        for (final IPath testRootPath : ProjectUtils.getTestPath(project)) {
+        for (final IPath testRootPath : ProjectTestUtils.getTestPath(project)) {
             if (testRootPath.isPrefixOf(element.getPath())) {
                 return true;
             }
@@ -287,7 +287,7 @@ public class TestSearchUtils {
                 .getJavaProjects();
                 return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
-                final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(params.getUri()));
+                final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(new URI(params.getUri()));
                 return SearchEngine.createJavaSearchScope(projectSet.toArray(new IJavaElement[projectSet.size()]),
                         IJavaSearchScope.SOURCES);
             case PACKAGE:
@@ -328,7 +328,7 @@ public class TestSearchUtils {
 
     private static void searchInFolder(List<TestItem> resultList, SearchTestItemParams params)
             throws URISyntaxException, JavaModelException {
-        final Set<IJavaProject> projectSet = ProjectUtils.parseProjects(new URI(params.getUri()));
+        final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(new URI(params.getUri()));
         for (final IJavaProject project : projectSet) {
             for (final IPackageFragment packageFragment : project.getPackageFragments()) {
                 if (isInTestScope(packageFragment) && packageFragment.getCompilationUnits().length > 0) {
