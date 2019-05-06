@@ -4,9 +4,9 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
+import { ITestSourcePath } from './commands/testPathCommands';
 import { ITestResult, ITestResultDetails } from './runners/models';
 import { getTestSourcePaths } from './utils/commandUtils';
-import { ITestSourcePath } from './commands/testPathCommands';
 
 class TestResultManager implements Disposable {
     private testResultMap: Map<string, Map<string, ITestResultDetails>> = new Map<string, Map<string, ITestResultDetails>>();

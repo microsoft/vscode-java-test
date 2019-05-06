@@ -3,10 +3,10 @@
 
 import * as _ from 'lodash';
 import { commands } from 'vscode';
+import { ITestSourcePath } from '../commands/testPathCommands';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem } from '../protocols';
-import { ITestSourcePath } from '../commands/testPathCommands';
 
 export async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
     return await executeJavaLanguageServerCommand<ITestSourcePath[]>(

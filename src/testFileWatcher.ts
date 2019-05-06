@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Disposable, ExtensionContext, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { ITestSourcePath } from './commands/testPathCommands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
 import { logger } from './logger/logger';
 import { getTestSourcePaths } from './utils/commandUtils';
-import { ITestSourcePath } from './commands/testPathCommands';
 
 class TestFileWatcher {
 
