@@ -121,7 +121,8 @@ public final class ProjectTestUtils {
             return Collections.emptySet();
         }
         return Arrays.stream(ProjectUtils.getJavaProjects())
-                .filter(p -> parentPath.isPrefixOf(p.getProject().getLocation())).collect(Collectors.toSet());
+                .filter(p -> parentPath.isPrefixOf(p.getProject().getLocation()))
+                .collect(Collectors.toSet());
     }
 
     public static IPath filePathFromURI(URI uri) {
@@ -133,17 +134,22 @@ public final class ProjectTestUtils {
 
     public static List<IPath> getTestPath(IJavaProject project) throws JavaModelException {
         final IClasspathEntry[] entries = project.getRawClasspath();
-        return Arrays.stream(entries).filter(entry -> isTest(entry)).map(entry -> entry.getPath())
+        return Arrays.stream(entries)
+                .filter(entry -> isTest(entry))
+                .map(entry -> entry.getPath())
                 .collect(Collectors.toList());
     }
 
     public static Set<IPath> getTestOutputPath(IJavaProject project) throws JavaModelException {
         final IClasspathEntry[] entries = project.getRawClasspath();
         final IPath projectLocation = project.getProject().getLocation();
-        return Arrays.stream(entries).filter(entry -> isTest(entry)).map(entry -> {
-            final IPath relativePath = entry.getOutputLocation().makeRelativeTo(project.getPath());
-            return projectLocation.append(relativePath);
-        }).collect(Collectors.toSet());
+        return Arrays.stream(entries)
+                .filter(entry -> isTest(entry))
+                .map(entry -> {
+                    final IPath relativePath = entry.getOutputLocation().makeRelativeTo(project.getPath());
+                    return projectLocation.append(relativePath);
+                })
+                .collect(Collectors.toSet());
     }
 
     private static boolean isTest(IClasspathEntry entry) {
