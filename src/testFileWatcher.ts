@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Disposable, ExtensionContext, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { ITestSourcePath } from './commands/testPathCommands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
@@ -13,9 +14,9 @@ class TestFileWatcher {
     public async initialize(context: ExtensionContext): Promise<void> {
         if (workspace.workspaceFolders) {
             try {
-                const paths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
-                for (const path of paths) {
-                    const pattern: RelativePattern = new RelativePattern(Uri.file(path).fsPath, '**/*.{[jJ][aA][vV][aA]}');
+                const sourcePaths: ITestSourcePath[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
+                for (const sourcePath of sourcePaths) {
+                    const pattern: RelativePattern = new RelativePattern(Uri.file(sourcePath.path).fsPath, '**/*.{[jJ][aA][vV][aA]}');
                     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
                     this.registerWatcherListeners(watcher, context.subscriptions);
                     context.subscriptions.push(watcher);
