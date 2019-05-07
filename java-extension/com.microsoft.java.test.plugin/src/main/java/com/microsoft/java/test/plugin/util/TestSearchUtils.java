@@ -43,7 +43,6 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Location;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -287,7 +286,7 @@ public class TestSearchUtils {
                 .getJavaProjects();
                 return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
-                final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(new URI(params.getUri()));
+                final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(params.getUri());
                 return SearchEngine.createJavaSearchScope(projectSet.toArray(new IJavaElement[projectSet.size()]),
                         IJavaSearchScope.SOURCES);
             case PACKAGE:
@@ -328,7 +327,7 @@ public class TestSearchUtils {
 
     private static void searchInFolder(List<TestItem> resultList, SearchTestItemParams params)
             throws URISyntaxException, JavaModelException {
-        final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(new URI(params.getUri()));
+        final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(params.getUri());
         for (final IJavaProject project : projectSet) {
             for (final IPackageFragment packageFragment : project.getPackageFragments()) {
                 if (isInTestScope(packageFragment) && packageFragment.getCompilationUnits().length > 0) {
