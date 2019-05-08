@@ -16,17 +16,15 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
+import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,9 +39,17 @@ public final class ProjectTestUtils {
     private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
     private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
 
+    /**
+     * Method to get the valid paths which contains test code
+     *
+     * @param arguments Array of the workspace folder path
+     * @param monitor
+     * @throws URISyntaxException
+     * @throws JavaModelException
+     */
     @SuppressWarnings("unchecked")
     public static List<TestSourcePath> listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
-            throws JavaModelException, URISyntaxException {
+            throws JavaModelException {
         final List<TestSourcePath> testSourcePathList = new ArrayList<>();
         if (arguments == null || arguments.size() == 0) {
             return testSourcePathList;
@@ -51,7 +57,7 @@ public final class ProjectTestUtils {
 
         final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
         for (final String uri : uriArray) {
-            final Set<IJavaProject> projectSet = parseProjects(new URI(uri));
+            final Set<IJavaProject> projectSet = parseProjects(uri);
             for (final IJavaProject javaProject : projectSet) {
                 final IProject project = javaProject.getProject();
                 final String projectName = project.getName();
@@ -84,52 +90,14 @@ public final class ProjectTestUtils {
         return testSourcePathList;
     }
 
-    /**
-     * Method to get the valid paths which contains test code
-     *
-     * @param arguments Array of the workspace folder path
-     * @param monitor
-     * @throws URISyntaxException
-     * @throws JavaModelException
-     */
-    @SuppressWarnings("unchecked")
-    public static String[] getTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
-            throws URISyntaxException, JavaModelException {
-
-        final List<String> resultList = new ArrayList<>();
-        if (arguments == null || arguments.size() == 0) {
-            return new String[0];
-        }
-
-        final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
-        for (final String uri : uriArray) {
-            final Set<IJavaProject> projectSet = parseProjects(new URI(uri));
-            for (final IJavaProject project : projectSet) {
-                for (final IPath path : getTestPath(project)) {
-                    final IPath projectBasePath = project.getProject().getLocation();
-                    final IPath relativePath = path.makeRelativeTo(project.getPath());
-                    resultList.add(projectBasePath.append(relativePath).toOSString());
-                }
-            }
-        }
-        return resultList.toArray(new String[resultList.size()]);
-    }
-
-    public static Set<IJavaProject> parseProjects(URI rootFolderURI) {
-        final IPath parentPath = filePathFromURI(rootFolderURI);
+    public static Set<IJavaProject> parseProjects(String uriStr) {
+        final IPath parentPath = ResourceUtils.filePathFromURI(uriStr);
         if (parentPath == null) {
             return Collections.emptySet();
         }
         return Arrays.stream(ProjectUtils.getJavaProjects())
                 .filter(p -> parentPath.isPrefixOf(p.getProject().getLocation()))
                 .collect(Collectors.toSet());
-    }
-
-    public static IPath filePathFromURI(URI uri) {
-        if ("file".equals(uri.getScheme())) {
-            return Path.fromOSString(Paths.get(uri).toString());
-        }
-        return null;
     }
 
     public static List<IPath> getTestPath(IJavaProject project) throws JavaModelException {

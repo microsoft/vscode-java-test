@@ -15,8 +15,6 @@ import com.microsoft.java.test.plugin.model.ProjectInfo;
 
 import org.eclipse.jdt.core.IJavaProject;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 
@@ -25,16 +23,10 @@ public final class ProjectInfoFetcher {
         if (arguments == null || arguments.size() == 0) {
             return new ProjectInfo[0];
         }
-        final String folder = (String) arguments.get(0);
-        try {
-            final URI uri = new URI(folder);
-            final Set<IJavaProject> projects = ProjectTestUtils.parseProjects(uri);
-            return projects.stream()
-                    .map(p -> new ProjectInfo(p.getProject().getLocationURI(), p.getProject().getName()))
-                    .toArray(ProjectInfo[]::new);
-        } catch (final URISyntaxException e) {
-            // skip
-        }
-        return new ProjectInfo[0];
+        final String folderUri = (String) arguments.get(0);
+        final Set<IJavaProject> projects = ProjectTestUtils.parseProjects(folderUri);
+        return projects.stream()
+                .map(p -> new ProjectInfo(p.getProject().getLocationURI(), p.getProject().getName()))
+                .toArray(ProjectInfo[]::new);
     }
 }
