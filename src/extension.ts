@@ -40,7 +40,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         throw new Error('Could not find Java home.');
     }
 
-    testFileWatcher.initialize(context);
+    testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
@@ -55,6 +55,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testStatusBarProvider,
         testResultManager,
         testReportProvider,
+        testFileWatcher,
         logger,
         languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
