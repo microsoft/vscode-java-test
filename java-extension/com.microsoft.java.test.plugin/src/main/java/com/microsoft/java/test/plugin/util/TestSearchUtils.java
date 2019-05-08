@@ -16,6 +16,7 @@ import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -29,6 +30,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -40,6 +42,7 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Location;
 
@@ -270,8 +273,11 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
-        for (final IPath testRootPath : ProjectTestUtils.getTestPath(project)) {
-            if (testRootPath.isPrefixOf(element.getPath())) {
+        for (final IPath sourcePath  : ProjectUtils.listSourcePaths(project)) {
+            if (!ProjectTestUtils.isTest(project, sourcePath)) {
+                continue;
+            }
+            if (sourcePath.isPrefixOf(element.getPath())) {
                 return true;
             }
         }
@@ -290,7 +296,7 @@ public class TestSearchUtils {
                 return SearchEngine.createJavaSearchScope(projectSet.toArray(new IJavaElement[projectSet.size()]),
                         IJavaSearchScope.SOURCES);
             case PACKAGE:
-                final IJavaElement packageElement = JDTUtils.resolvePackage(params.getUri());
+                final IJavaElement packageElement = resolvePackage(params.getUri(), params.getFullName());
                 return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
                         IJavaSearchScope.SOURCES);
             case CLASS:
@@ -339,12 +345,36 @@ public class TestSearchUtils {
 
     private static void searchInPackage(List<TestItem> resultList, SearchTestItemParams params)
             throws JavaModelException {
-        final IPackageFragment packageFragment = JDTUtils.resolvePackage(params.getUri());
+        final IPackageFragment packageFragment = resolvePackage(params.getUri(), params.getFullName());
+        if (packageFragment == null) {
+            return;
+        }
+
         for (final ICompilationUnit unit : packageFragment.getCompilationUnits()) {
             for (final IType type : unit.getTypes()) {
                 resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS));
             }
         }
+    }
+
+    private static IPackageFragment resolvePackage(String uriString, String fullName) throws JavaModelException {
+        if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
+            final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
+                    ResourcesPlugin.getWorkspace().getRoot()::findContainersForLocationURI);
+            final IJavaElement element = JavaCore.create(resource);
+            if (element instanceof IPackageFragmentRoot) {
+                final IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) element;
+                for (final IJavaElement child : packageRoot.getChildren()) {
+                    if (child instanceof IPackageFragment && ((IPackageFragment) child).isDefaultPackage()) {
+                        return (IPackageFragment) child;
+                    }
+                }
+            }
+        } else {
+            return JDTUtils.resolvePackage(uriString);
+        }
+
+        return null;
     }
 
     private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params)

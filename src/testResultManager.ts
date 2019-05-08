@@ -14,10 +14,10 @@ class TestResultManager implements Disposable {
     public async storeResult(workspaceFolder: WorkspaceFolder, ...results: ITestResult[]): Promise<void> {
         for (const result of results) {
             let uri: string | undefined;
-            if (!result.location || result.location.uri) {
-                uri = await this.resolveFsPathFromFullName(workspaceFolder, result.fullName);
-            } else {
+            if (result.location && result.location.uri) {
                 uri = result.location.uri;
+            } else {
+                uri = await this.resolveFsPathFromFullName(workspaceFolder, result.fullName);
             }
             if (!uri) {
                 continue;

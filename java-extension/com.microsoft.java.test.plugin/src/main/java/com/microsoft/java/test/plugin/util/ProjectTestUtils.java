@@ -29,15 +29,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
 
 @SuppressWarnings("restriction")
 public final class ProjectTestUtils {
 
     private static final String TEST_SCOPE = "test";
-    private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
-    private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
 
     /**
      * Method to get the valid paths which contains test code
@@ -96,7 +97,7 @@ public final class ProjectTestUtils {
             return Collections.emptySet();
         }
         return Arrays.stream(ProjectUtils.getJavaProjects())
-                .filter(p -> parentPath.isPrefixOf(p.getProject().getLocation()))
+                .filter(p -> belongToProject(parentPath, p.getProject()))
                 .collect(Collectors.toSet());
     }
 
@@ -114,25 +115,57 @@ public final class ProjectTestUtils {
         return Arrays.stream(entries)
                 .filter(entry -> isTest(entry))
                 .map(entry -> {
-                    final IPath relativePath = entry.getOutputLocation().makeRelativeTo(project.getPath());
+                    final IPath outputLocation = entry.getOutputLocation();
+                    if (outputLocation == null) {
+                        return null;
+                    }
+                    final IPath relativePath = outputLocation.makeRelativeTo(project.getPath());
                     return projectLocation.append(relativePath);
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
 
-    private static boolean isTest(IClasspathEntry entry) {
+    public static boolean isTest(IJavaProject project, IPath path) {
+        try {
+            final IClasspathEntry entry = project.getClasspathEntryFor(path);
+            if (entry == null) {
+                return false;
+            }
+            return isTest(entry);
+        } catch (final JavaModelException e) {
+            return false;
+        }
+    }
+
+    public static boolean isTest(IClasspathEntry entry) {
         if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
             return false;
         }
 
         for (final IClasspathAttribute attribute : entry.getExtraAttributes()) {
-            if (MAVEN_SCOPE_ATTRIBUTE.equals(attribute.getName()) ||
-                    GRADLE_SCOPE_ATTRIBUTE.equals(attribute.getName())) {
-                return TEST_SCOPE.equals(attribute.getValue());
+            if (TEST_SCOPE.equals(attribute.getName())) {
+                return "true".equalsIgnoreCase(attribute.getValue());
             }
         }
 
         return entry.isTest();
+    }
+
+    public static boolean belongToProject(IPath testPath, IProject project) {
+        // Check if the path belongs to visible project
+        if (project.getLocation() != null && project.getLocation().isPrefixOf(testPath)) {
+            return true;
+        }
+
+
+        // Check if the path belongs to invisible project
+        final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
+        if (linkedLocation != null && linkedLocation.isPrefixOf(testPath)) {
+            return true;
+        }
+
+        return false;
     }
 
     public static class TestSourcePath {
