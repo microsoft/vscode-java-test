@@ -346,7 +346,7 @@ public class TestSearchUtils {
     private static void searchInPackage(List<TestItem> resultList, SearchTestItemParams params)
             throws JavaModelException {
         final IPackageFragment packageFragment = resolvePackage(params.getUri(), params.getFullName());
-         if (packageFragment == null) {
+        if (packageFragment == null) {
             return;
         }
 
@@ -359,7 +359,8 @@ public class TestSearchUtils {
 
     private static IPackageFragment resolvePackage(String uriString, String fullName) throws JavaModelException {
         if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
-            final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString), ResourcesPlugin.getWorkspace().getRoot()::findContainersForLocationURI);
+            final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
+                    ResourcesPlugin.getWorkspace().getRoot()::findContainersForLocationURI);
             final IJavaElement element = JavaCore.create(resource);
             if (element instanceof IPackageFragmentRoot) {
                 final IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) element;

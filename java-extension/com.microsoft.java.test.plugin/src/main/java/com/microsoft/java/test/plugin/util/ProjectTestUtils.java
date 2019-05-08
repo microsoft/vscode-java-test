@@ -136,9 +136,9 @@ public final class ProjectTestUtils {
         } catch (final JavaModelException e) {
             return false;
         }
-     }
+    }
 
-     public static boolean isTest(IClasspathEntry entry) {
+    public static boolean isTest(IClasspathEntry entry) {
         if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
             return false;
         }
