@@ -6,14 +6,14 @@
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/resources/logo.png" width="150" height="150" alt="">
 </p>
 <p align="center">
-  <a href="https://travis-ci.org/Microsoft/vscode-java-test">
-    <img src="https://img.shields.io/travis/Microsoft/vscode-java-test.svg?style=flat-square" alt="">
+  <a href="https://travis-ci.org/microsoft/vscode-java-test">
+    <img src="https://img.shields.io/travis/microsoft/vscode-java-test.svg?style=flat-square" alt="">
   </a>
-  <a href="https://lgtm.com/projects/g/Microsoft/vscode-java-test/alerts/?mode=list">
-    <img src="https://img.shields.io/lgtm/alerts/g/Microsoft/vscode-java-test.svg?style=flat-square" alt="">
+  <a href="https://lgtm.com/projects/g/microsoft/vscode-java-test/alerts/?mode=list">
+    <img src="https://img.shields.io/lgtm/alerts/g/microsoft/vscode-java-test.svg?style=flat-square" alt="">
   </a>
-  <a href="https://gitter.im/Microsoft/vscode-java-test">
-    <img src="https://img.shields.io/gitter/room/Microsoft/vscode-java-test.svg?style=flat-square" alt="">
+  <a href="https://gitter.im/microsoft/vscode-java-test">
+    <img src="https://img.shields.io/gitter/room/microsoft/vscode-java-test.svg?style=flat-square" alt="">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test">
     <img src="https://img.shields.io/visual-studio-marketplace/d/vscjava.vscode-java-test.svg?style=flat-square" alt="">
