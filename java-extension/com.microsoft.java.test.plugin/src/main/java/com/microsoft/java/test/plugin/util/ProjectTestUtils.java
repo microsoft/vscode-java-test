@@ -99,7 +99,8 @@ public final class ProjectTestUtils {
                     final IPath relativePath = path.makeRelativeTo(projectRoot.getFullPath());
                     final IPath location = projectRoot.getRawLocation().append(relativePath);
                     final IPath displayPath = getWorkspacePath(location);
-                    testSourcePathList.add(new SourcePathInfo(location.toOSString(), displayPath.toOSString(), isTest(javaProject, path), projectName, projectType));
+                    testSourcePathList.add(new SourcePathInfo(location.toOSString(), displayPath.toOSString(),
+                            isTest(javaProject, path), projectName, projectType));
                 }
             }
         }
@@ -122,7 +123,8 @@ public final class ProjectTestUtils {
                 if (targetProject == null) {
                     final IPath workspaceRoot = ProjectUtils.findBelongedWorkspaceRoot(sourceFolderPath);
                     if (workspaceRoot == null) {
-                        return new Result(false, "Cannot find belonged workspace for source path: " + sourceFolderPath.toOSString());
+                        return new Result(false, 
+                                "Cannot find belonged workspace for source path: " + sourceFolderPath.toOSString());
                     }
 
                     targetProject = ProjectUtils.createInvisibleProjectIfNotExist(workspaceRoot);
@@ -135,7 +137,8 @@ public final class ProjectTestUtils {
                 }
 
                 final IPath relativeSourcePath = sourceFolderPath.makeRelativeTo(projectLocation);
-                final IPath sourcePath = relativeSourcePath.isEmpty() ? projectRootResource.getFullPath() : projectRootResource.getFolder(relativeSourcePath).getFullPath();
+                final IPath sourcePath = relativeSourcePath.isEmpty() ? projectRootResource.getFullPath() :
+                        projectRootResource.getFolder(relativeSourcePath).getFullPath();
                 final IJavaProject javaProject = JavaCore.create(targetProject);
                 final IClasspathEntry[] clonedEntries = javaProject.getRawClasspath().clone();
                 for (int i = 0; i < clonedEntries.length; i++) {
@@ -238,20 +241,23 @@ public final class ProjectTestUtils {
     }
 
     private static IProject findBelongedProject(IPath sourceFolder) {
-        final List<IProject> projects = Stream.of(ProjectUtils.getAllProjects()).filter(ProjectUtils::isJavaProject).sorted(new Comparator<IProject>() {
-            @Override
-            public int compare(IProject p1, IProject p2) {
-                return p2.getLocation().toOSString().length() - p1.getLocation().toOSString().length();
-            }
-        }).collect(Collectors.toList());
+        final List<IProject> projects = Stream.of(ProjectUtils.getAllProjects())
+                .filter(ProjectUtils::isJavaProject)
+                .sorted(new Comparator<IProject>() {
+                    @Override
+                    public int compare(IProject p1, IProject p2) {
+                        return p2.getLocation().toOSString().length() - p1.getLocation().toOSString().length();
+                    }
+                })
+                .collect(Collectors.toList());
 
-         for (final IProject project : projects) {
+        for (final IProject project : projects) {
             if (project.getLocation().isPrefixOf(sourceFolder)) {
                 return project;
             }
         }
 
-         return null;
+        return null;
     }
 
     private static IClasspathEntry updateTestAttributes(IClasspathEntry entry, boolean isTest) {
@@ -264,7 +270,8 @@ public final class ProjectTestUtils {
         if (isTest) {
             extraAttributes.add(JavaCore.newClasspathAttribute(TEST_SCOPE, String.valueOf(true)));
         }
-        return JavaCore.newSourceEntry(entry.getPath(), entry.getInclusionPatterns(), entry.getExclusionPatterns(), entry.getOutputLocation(), extraAttributes.toArray(new IClasspathAttribute[0]));
+        return JavaCore.newSourceEntry(entry.getPath(), entry.getInclusionPatterns(), entry.getExclusionPatterns(),
+                entry.getOutputLocation(), extraAttributes.toArray(new IClasspathAttribute[0]));
     }
 
     private static IPath getWorkspacePath(IPath path) {
