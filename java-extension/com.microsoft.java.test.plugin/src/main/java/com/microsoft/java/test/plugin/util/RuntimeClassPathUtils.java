@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
-
 @SuppressWarnings({ "unchecked", "restriction" })
 public class RuntimeClassPathUtils {
 
@@ -51,7 +49,7 @@ public class RuntimeClassPathUtils {
             while (iterator.hasNext()) {
                 final IJavaProject javaProject = iterator.next();
                 final IProject project = javaProject.getProject();
-                if (belongToProject(testPath, project)) {
+                if (ProjectTestUtils.belongToProject(testPath, project)) {
                     projectsToTest.add(javaProject);
                     iterator.remove();
                 }
@@ -77,21 +75,5 @@ public class RuntimeClassPathUtils {
             classPathList.addAll(Arrays.asList(classPathArray));
         }
         return classPathList.toArray(new String[classPathList.size()]);
-    }
-
-    private static boolean belongToProject(IPath testPath, IProject project) {
-        // Check if the path belongs to visible project
-        if (project.getLocation() != null && project.getLocation().isPrefixOf(testPath)) {
-            return true;
-        }
-
-
-        // Check if the path belongs to invisible project
-        final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
-        if (linkedLocation != null && linkedLocation.isPrefixOf(testPath)) {
-            return true;
-        }
-
-        return false;
     }
 }
