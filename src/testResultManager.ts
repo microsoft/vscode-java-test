@@ -51,6 +51,9 @@ class TestResultManager implements Disposable {
         const relativePath: string = path.join(...classFullyQualifiedName.split('.'));
         const classPathEntries: ITestSourcePath[] = await getTestSourcePaths([workspaceFolder.uri.toString()]);
         for (const classPathEntry of classPathEntries) {
+            if (!classPathEntry.isTest) {
+                continue;
+            }
             const possiblePath: string = `${path.join(Uri.file(classPathEntry.path).fsPath, relativePath)}.java`;
             if (await fse.pathExists(possiblePath)) {
                 return Uri.file(possiblePath).toString();
