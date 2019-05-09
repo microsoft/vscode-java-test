@@ -10,7 +10,7 @@
     "contributes.commands.java.test.cancel.title": "Cancel Test Job",
     "contributes.commands.java.test.explorer.refresh.title": "Refresh",
     "contributes.commands.java.test.config.migrate.title": "Migrate Deprecated 'launch.test.json'",
-    "contributes.commands.java.test.listTestSourcePaths.title": "Update project test source paths",
+    "contributes.commands.java.test.updateTestSourcePaths.title": "Update project test source paths",
     "configuration.java.test.report.position.description": "Specify where to show the test report",
     "configuration.java.test.log.level.description": "Specify the level of the test logs",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "Specify whether the extension will show hint dialog when deprecated configuration file is used",

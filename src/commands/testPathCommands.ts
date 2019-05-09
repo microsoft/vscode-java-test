@@ -5,9 +5,9 @@ import { QuickPickItem, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { testExplorer } from '../explorer/testExplorer';
 import { testFileWatcher } from '../testFileWatcher';
-import { getTestSourcePaths, updateTestSourcePaths } from '../utils/commandUtils';
+import { getTestSourcePaths, updateTestClasspathEntries } from '../utils/commandUtils';
 
-export async function listTestSourcePaths(): Promise<void> {
+export async function updateTestSourcePaths(): Promise<void> {
     if (!workspace.workspaceFolders) {
         window.showInformationMessage('No workspace opened in VS Code.');
         return;
@@ -29,7 +29,7 @@ export async function listTestSourcePaths(): Promise<void> {
         }
         const changedSourcePath: ITestSourcePath[] = getChangedSourcePath(sourcePaths, selectedTestPaths.map((item: QuickPickItem) => item.description!));
         if (changedSourcePath.length > 0) {
-            const result: IResult | undefined = await updateTestSourcePaths(changedSourcePath);
+            const result: IResult | undefined = await updateTestClasspathEntries(changedSourcePath);
             if (result && result.status) {
                 testCodeLensProvider.refresh();
                 testExplorer.refresh();

@@ -155,8 +155,8 @@
                 "category": "Java"
             },
             {
-                "command": "java.test.listTestSourcePaths",
-                "title": "%contributes.commands.java.test.listTestSourcePaths.title%",
+                "command": "java.test.updateTestSourcePaths",
+                "title": "%contributes.commands.java.test.updateTestSourcePaths.title%",
                 "category": "Java"
             }
         ],
