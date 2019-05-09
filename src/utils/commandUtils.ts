@@ -13,7 +13,7 @@ export async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath
         JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, uri) || [];
 }
 
-export async function updateTestSourcePaths(paths: ITestSourcePath[]): Promise<IResult | undefined> {
+export async function updateTestClasspathEntries(paths: ITestSourcePath[]): Promise<IResult | undefined> {
     return await executeJavaLanguageServerCommand<IResult>(JavaTestRunnerDelegateCommands.UPDATE_TEST_SOURCE_PATH, JSON.stringify(paths));
 }
 

@@ -43,6 +43,7 @@ class TestFileWatcher implements Disposable {
                 disposable.dispose();
             }
         }
+        this.disposables = [];
     }
 
     private registerWatcherListeners(watcher: FileSystemWatcher): void {
