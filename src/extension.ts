@@ -79,7 +79,7 @@ async function getJavaHome(): Promise<string> {
         if (extensionApi && extensionApi.javaRequirement) {
             return extensionApi.javaRequirement.java_home;
         }
-    } catch (error) {
+    } catch (err) {
         // Swallow the error
     }
 
