@@ -19,3 +19,6 @@ node_modules
 demo
 CONTRIBUTING.md
 .github/**
+
+# Ignore output of code sign
+server/*.md
