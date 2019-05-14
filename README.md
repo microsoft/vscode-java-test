@@ -6,8 +6,8 @@
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/resources/logo.png" width="150" height="150" alt="">
 </p>
 <p align="center">
-  <a href="https://travis-ci.org/microsoft/vscode-java-test">
-    <img src="https://img.shields.io/travis/microsoft/vscode-java-test.svg?style=flat-square" alt="">
+  <a href="https://dev.azure.com/mseng/VSJava/_build/latest?definitionId=8790">
+    <img src="https://img.shields.io/azure-devops/build/mseng/a4d27ce2-a42d-4b71-8eef-78cee9a9728e/8790.svg?style=flat-square" alt="">
   </a>
   <a href="https://lgtm.com/projects/g/microsoft/vscode-java-test/alerts/?mode=list">
     <img src="https://img.shields.io/lgtm/alerts/g/microsoft/vscode-java-test.svg?style=flat-square" alt="">
