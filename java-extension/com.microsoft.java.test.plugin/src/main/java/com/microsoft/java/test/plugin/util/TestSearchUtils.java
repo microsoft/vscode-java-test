@@ -273,6 +273,9 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
+        if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
+            return true;
+        }
         for (final IPath sourcePath  : ProjectUtils.listSourcePaths(project)) {
             if (!ProjectTestUtils.isTest(project, sourcePath)) {
                 continue;
