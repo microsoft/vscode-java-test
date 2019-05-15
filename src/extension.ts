@@ -9,7 +9,6 @@ import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentO
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
-import { updateTestSourcePaths } from './commands/testPathCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
@@ -69,7 +68,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.UPDATE_TEST_SOURCE_PATHS, async () => await updateTestSourcePaths()),
     );
 }
 

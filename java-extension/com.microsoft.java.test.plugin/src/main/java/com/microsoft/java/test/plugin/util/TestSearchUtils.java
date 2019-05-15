@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
+import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 import org.eclipse.lsp4j.Location;
 
 import java.net.URISyntaxException;
@@ -273,9 +274,15 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
+        // Ignore default project
+        if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+            return false;
+        }
+        // Always return true Eclipse & invisible project
         if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
             return true;
         }
+        // For Maven & Gradle project, only search in test source paths
         for (final IPath sourcePath  : ProjectUtils.listSourcePaths(project)) {
             if (!ProjectTestUtils.isTest(project, sourcePath)) {
                 continue;

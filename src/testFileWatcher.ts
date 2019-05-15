@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import { Disposable, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
-import { ITestSourcePath } from './commands/testPathCommands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
 import { TestTreeNode } from './explorer/TestTreeNode';
@@ -17,12 +16,9 @@ class TestFileWatcher implements Disposable {
         this.dispose();
         if (workspace.workspaceFolders) {
             try {
-                const sourcePaths: ITestSourcePath[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
+                const sourcePaths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
                 for (const sourcePath of sourcePaths) {
-                    if (!sourcePath.isTest) {
-                        continue;
-                    }
-                    const pattern: RelativePattern = new RelativePattern(Uri.file(sourcePath.path).fsPath, '**/*.{[jJ][aA][vV][aA]}');
+                    const pattern: RelativePattern = new RelativePattern(Uri.file(sourcePath).fsPath, '**/*.{[jJ][aA][vV][aA]}');
                     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
                     this.registerWatcherListeners(watcher);
                     this.disposables.push(watcher);

@@ -6,8 +6,7 @@ export namespace JavaLanguageServerCommands {
 }
 
 export namespace JavaTestRunnerDelegateCommands {
-    export const GET_SOURCE_PATH: string = 'vscode.java.test.get.sourcepath';
-    export const UPDATE_TEST_SOURCE_PATH: string = 'vscode.java.test.update.sourcepath';
+    export const GET_TEST_SOURCE_PATH: string = 'vscode.java.test.get.testpath';
     export const SEARCH_TEST_ITEMS: string = 'vscode.java.test.search.items';
     export const SEARCH_TEST_ITEMS_ALL: string = 'vscode.java.test.search.items.all';
     export const SEARCH_TEST_CODE_LENS: string = 'vscode.java.test.search.codelens';
@@ -30,5 +29,4 @@ export namespace JavaTestRunnerCommands {
     export const OPEN_TEST_LOG: string = 'java.test.open.log';
     export const JAVA_TEST_CANCEL: string = 'java.test.cancel';
     export const JAVA_CONFIG_MIGRATE: string = 'java.test.config.migrate';
-    export const UPDATE_TEST_SOURCE_PATHS: string = 'java.test.updateTestSourcePaths';
 }

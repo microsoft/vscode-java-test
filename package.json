@@ -153,11 +153,6 @@
                 "command": "java.test.config.migrate",
                 "title": "%contributes.commands.java.test.config.migrate.title%",
                 "category": "Java"
-            },
-            {
-                "command": "java.test.updateTestSourcePaths",
-                "title": "%contributes.commands.java.test.updateTestSourcePaths.title%",
-                "category": "Java"
             }
         ],
         "configuration": {

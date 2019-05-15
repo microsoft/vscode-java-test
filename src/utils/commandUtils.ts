@@ -3,18 +3,13 @@
 
 import * as _ from 'lodash';
 import { commands } from 'vscode';
-import { IResult, ITestSourcePath } from '../commands/testPathCommands';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem } from '../protocols';
 
-export async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
-    return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
-        JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, uri) || [];
-}
-
-export async function updateTestClasspathEntries(paths: ITestSourcePath[]): Promise<IResult | undefined> {
-    return await executeJavaLanguageServerCommand<IResult>(JavaTestRunnerDelegateCommands.UPDATE_TEST_SOURCE_PATH, JSON.stringify(paths));
+export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
+    return await executeJavaLanguageServerCommand<string[]>(
+        JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
 }
 
 export async function searchTestItems(params: ISearchTestItemParams): Promise<ITestItem[]> {
