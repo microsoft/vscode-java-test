@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
+import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 import org.eclipse.lsp4j.Location;
 
 import java.net.URISyntaxException;
@@ -55,6 +56,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("restriction")
 public class TestSearchUtils {
@@ -288,8 +290,10 @@ public class TestSearchUtils {
             throws JavaModelException, URISyntaxException {
         switch (params.getLevel()) {
             case ROOT:
-                final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
-                .getJavaProjects();
+                final IJavaProject[] projects = Stream.of(ProjectUtils.getJavaProjects())
+                        .filter(javaProject -> !ProjectsManager.DEFAULT_PROJECT_NAME
+                                .equals(javaProject.getProject().getName()))
+                        .toArray(IJavaProject[]::new);
                 return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
                 final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(params.getUri());
