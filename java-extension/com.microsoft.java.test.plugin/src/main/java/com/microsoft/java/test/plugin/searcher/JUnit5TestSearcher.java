@@ -16,6 +16,7 @@ import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
@@ -37,13 +38,42 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
     public JUnit5TestSearcher() {
         super();
         this.testMethodAnnotations = new String[] { "org.junit.jupiter.api.Test",
-            "org.junit.jupiter.params.ParameterizedTest", "org.junit.jupiter.api.RepeatedTest" };
+            "org.junit.jupiter.params.ParameterizedTest", "org.junit.jupiter.api.RepeatedTest",
+            "org.junit.jupiter.api.TestFactory" };
         this.testClassAnnotations = new String[] {};
     }
 
     @Override
     public TestKind getTestKind() {
         return TestKind.JUnit5;
+    }
+
+    @Override
+    public boolean isTestMethod(IMethod method) {
+        try {
+            final int flags = method.getFlags();
+            if (Flags.isAbstract(flags) || Flags.isStatic(flags) || Flags.isPrivate(flags)) {
+                return false;
+            }
+            // 'V' is void signature
+            if (method.isConstructor()) {
+                return false;
+            }
+            for (final String annotation : this.testMethodAnnotations) {
+                if (TestFrameworkUtils.hasAnnotation(method, annotation)) {
+                    if ("org.junit.jupiter.api.TestFactory".equals(annotation)) {
+                        return true;
+                    } else if ("V".equals(method.getReturnType())) {
+                        // Other annotations need the return type to be void
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (final JavaModelException e) {
+            // ignore
+            return false;
+        }
     }
 
     @SuppressWarnings("rawtypes")

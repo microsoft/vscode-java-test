@@ -47,7 +47,7 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         if (!id) {
             return id;
         }
-        const regex: RegExp = /\[class:(.*?)\]\/\[(?:method|test-template):(.*)\]/gm;
+        const regex: RegExp = /\[class:(.*?)\]\/\[(?:method|test-template|test-factory):(.*)\]/gm;
         const match: RegExpExecArray | null = regex.exec(id);
         if (match && match.length === 3) {
             let methodName: string = match[2];

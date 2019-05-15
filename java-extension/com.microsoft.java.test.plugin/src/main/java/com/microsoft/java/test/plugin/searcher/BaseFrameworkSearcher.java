@@ -17,7 +17,6 @@ import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 import com.microsoft.java.test.plugin.util.TestItemUtils;
 
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -40,29 +39,6 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
     @Override
     public String[] getTestClassAnnotations() {
         return this.testClassAnnotations;
-    }
-
-    @Override
-    public boolean isTestMethod(IMethod method) {
-        try {
-            final int flags = method.getFlags();
-            if (Flags.isAbstract(flags) || Flags.isStatic(flags)) {
-                return false;
-            }
-            // 'V' is void signature
-            if (method.isConstructor() || !"V".equals(method.getReturnType())) {
-                return false;
-            }
-            for (final String annotation : this.getTestMethodAnnotations()) {
-                if (TestFrameworkUtils.hasAnnotation(method, annotation)) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (final JavaModelException e) {
-            // ignore
-            return false;
-        }
     }
 
     @Override
