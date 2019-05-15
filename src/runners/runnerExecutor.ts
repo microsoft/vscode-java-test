@@ -9,6 +9,7 @@ import { IExecutionConfig } from '../runConfigs';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
+import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolve } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
@@ -45,6 +46,15 @@ class RunnerExecutor {
                 if (!config) {
                     logger.info('Test job is canceled.');
                     continue;
+                }
+
+                // Auto add '--enable-preview' vmArgs if the java project enables COMPILER_PB_ENABLE_PREVIEW_FEATURES flag.
+                if (await shouldEnablePreviewFlag('', tests[0].project)) {
+                    if (config.vmargs) {
+                        config.vmargs.push('--enable-preview');
+                    } else {
+                        config.vmargs = ['--enable-preview'];
+                    }
                 }
 
                 await window.withProgress(

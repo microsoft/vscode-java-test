@@ -38,6 +38,24 @@ export async function resolveRuntimeClassPath(paths: string[]): Promise<string[]
         JavaTestRunnerDelegateCommands.RESOLVE_RUNTIME_CLASSPATH, paths) || []);
 }
 
+export async function checkProjectSettings(className: string, projectName: string, inheritedOptions: boolean, expectedOptions: {[key: string]: string}): Promise<boolean> {
+    return await executeJavaLanguageServerCommand<boolean>(
+        JavaTestRunnerDelegateCommands.JAVA_CHECK_PROJECT_SETTINGS, JSON.stringify({
+            className,
+            projectName,
+            inheritedOptions,
+            expectedOptions,
+        })) || false;
+}
+
+const COMPILER_PB_ENABLE_PREVIEW_FEATURES: string = 'org.eclipse.jdt.core.compiler.problem.enablePreviewFeatures';
+export async function shouldEnablePreviewFlag(className: string, projectName: string): Promise<boolean> {
+    const expectedOptions: { [x: string]: string; } = {
+        [COMPILER_PB_ENABLE_PREVIEW_FEATURES]: 'enabled',
+    };
+    return await checkProjectSettings(className, projectName, true, expectedOptions);
+}
+
 async function executeJavaLanguageServerCommand<T>(...rest: any[]): Promise<T | undefined> {
     try {
         return await commands.executeCommand<T>(JavaLanguageServerCommands.EXECUTE_WORKSPACE_COMMAND, ...rest);
