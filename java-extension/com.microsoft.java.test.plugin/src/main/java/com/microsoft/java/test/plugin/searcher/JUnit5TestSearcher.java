@@ -55,7 +55,6 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
             if (Flags.isAbstract(flags) || Flags.isStatic(flags) || Flags.isPrivate(flags)) {
                 return false;
             }
-            // 'V' is void signature
             if (method.isConstructor()) {
                 return false;
             }
