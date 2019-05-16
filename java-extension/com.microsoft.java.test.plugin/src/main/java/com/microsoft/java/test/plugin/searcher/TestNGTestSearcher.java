@@ -12,6 +12,11 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
+
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
@@ -24,5 +29,28 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
     @Override
     public TestKind getTestKind() {
         return TestKind.TestNG;
+    }
+
+    @Override
+    public boolean isTestMethod(IMethod method) {
+        try {
+            final int flags = method.getFlags();
+            if (Flags.isAbstract(flags) || Flags.isStatic(flags)) {
+                return false;
+            }
+            // 'V' is void signature
+            if (method.isConstructor() || !"V".equals(method.getReturnType())) {
+                return false;
+            }
+            for (final String annotation : this.testMethodAnnotations) {
+                if (TestFrameworkUtils.hasAnnotation(method, annotation)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (final JavaModelException e) {
+            // ignore
+            return false;
+        }
     }
 }
