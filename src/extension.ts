@@ -9,7 +9,6 @@ import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentO
 import { testCodeLensProvider } from './codeLensProvider';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
-import { listTestSourcePaths } from './commands/testPathCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
@@ -40,7 +39,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         throw new Error('Could not find Java home.');
     }
 
-    testFileWatcher.initialize(context);
+    testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerExecutor.initialize(javaHome, context);
     testReportProvider.initialize(context);
@@ -55,6 +54,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testStatusBarProvider,
         testResultManager,
         testReportProvider,
+        testFileWatcher,
         logger,
         languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, testCodeLensProvider),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
@@ -68,7 +68,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.LIST_TEST_SOURCE_PATHS, async () => await listTestSourcePaths()),
     );
 }
 

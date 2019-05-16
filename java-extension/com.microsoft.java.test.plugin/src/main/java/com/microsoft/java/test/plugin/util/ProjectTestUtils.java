@@ -11,8 +11,6 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -39,6 +37,8 @@ import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
 public final class ProjectTestUtils {
 
     private static final String TEST_SCOPE = "test";
+    private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
+    private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
 
     /**
      * Method to get the valid paths which contains test code
@@ -49,46 +49,25 @@ public final class ProjectTestUtils {
      * @throws JavaModelException
      */
     @SuppressWarnings("unchecked")
-    public static List<TestSourcePath> listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
+    public static String[] listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
             throws JavaModelException {
-        final List<TestSourcePath> testSourcePathList = new ArrayList<>();
+        final List<String> resultList = new ArrayList<>();
         if (arguments == null || arguments.size() == 0) {
-            return testSourcePathList;
+            return new String[0];
         }
 
         final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
         for (final String uri : uriArray) {
             final Set<IJavaProject> projectSet = parseProjects(uri);
-            for (final IJavaProject javaProject : projectSet) {
-                final IProject project = javaProject.getProject();
-                final String projectName = project.getName();
-                String projectType = "General";
-                if (ProjectUtils.isMavenProject(project)) {
-                    projectType = "Maven";
-                }
-
-                if (ProjectUtils.isGradleProject(project)) {
-                    projectType = "Gradle";
-                }
-
-                IContainer projectRoot = project;
-                if (!ProjectUtils.isVisibleProject(project)) {
-                    projectType = "Workspace";
-                    final IFolder workspaceLinkFolder = project.getFolder(ProjectUtils.WORKSPACE_LINK);
-                    if (!workspaceLinkFolder.isLinked()) {
-                        continue;
-                    }
-
-                    projectRoot = workspaceLinkFolder;
-                }
-                for (final IPath path : getTestPath(javaProject)) {
-                    final IPath relativePath = path.makeRelativeTo(javaProject.getPath());
-                    final IPath location = projectRoot.getRawLocation().append(relativePath);
-                    testSourcePathList.add(new TestSourcePath(location.toOSString(), projectName, projectType));
+            for (final IJavaProject project : projectSet) {
+                for (final IPath path : getTestPath(project)) {
+                    final IPath projectBasePath = project.getProject().getLocation();
+                    final IPath relativePath = path.makeRelativeTo(project.getPath());
+                    resultList.add(projectBasePath.append(relativePath).toOSString());
                 }
             }
         }
-        return testSourcePathList;
+        return resultList.toArray(new String[resultList.size()]);
     }
 
     public static Set<IJavaProject> parseProjects(String uriStr) {
@@ -144,6 +123,10 @@ public final class ProjectTestUtils {
         }
 
         for (final IClasspathAttribute attribute : entry.getExtraAttributes()) {
+            if (MAVEN_SCOPE_ATTRIBUTE.equals(attribute.getName()) ||
+                    GRADLE_SCOPE_ATTRIBUTE.equals(attribute.getName())) {
+                return TEST_SCOPE.equals(attribute.getValue());
+            }
             if (TEST_SCOPE.equals(attribute.getName())) {
                 return "true".equalsIgnoreCase(attribute.getValue());
             }
@@ -167,17 +150,4 @@ public final class ProjectTestUtils {
 
         return false;
     }
-
-    public static class TestSourcePath {
-        public String path;
-        public String projectName;
-        public String projectType;
-
-        TestSourcePath(String path, String projectName, String projectType) {
-            this.path = path;
-            this.projectName = projectName;
-            this.projectType = projectType;
-        }
-    }
-
 }

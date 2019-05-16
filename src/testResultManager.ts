@@ -4,7 +4,6 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
-import { ITestSourcePath } from './commands/testPathCommands';
 import { ITestResult, ITestResultDetails } from './runners/models';
 import { getTestSourcePaths } from './utils/commandUtils';
 
@@ -49,9 +48,9 @@ class TestResultManager implements Disposable {
     private async resolveFsPathFromFullName(workspaceFolder: WorkspaceFolder, fullName: string): Promise<string | undefined> {
         const classFullyQualifiedName: string = fullName.slice(0, fullName.indexOf('$') > -1 ? fullName.indexOf('$') : fullName.indexOf('#'));
         const relativePath: string = path.join(...classFullyQualifiedName.split('.'));
-        const classPathEntries: ITestSourcePath[] = await getTestSourcePaths([workspaceFolder.uri.toString()]);
+        const classPathEntries: string[] = await getTestSourcePaths([workspaceFolder.uri.toString()]);
         for (const classPathEntry of classPathEntries) {
-            const possiblePath: string = `${path.join(Uri.file(classPathEntry.path).fsPath, relativePath)}.java`;
+            const possiblePath: string = `${path.join(Uri.file(classPathEntry).fsPath, relativePath)}.java`;
             if (await fse.pathExists(possiblePath)) {
                 return Uri.file(possiblePath).toString();
             }
