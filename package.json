@@ -287,7 +287,7 @@
         "lint": "gulp lint",
         "build-plugin": "gulp build-plugin",
         "build-resources": "gulp build-resources",
-        "vscode:prepublish": "gulp resources && webpack --mode production"
+        "vscode:prepublish": "gulp build-resources && webpack --mode production"
     },
     "extensionDependencies": [
         "vscjava.vscode-java-debug"
