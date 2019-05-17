@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.17.0
+### Added
+Support Junit 5 TestFactory annotation. [#644](https://github.com/microsoft/vscode-java-test/issues/644)
+
+### Changed
+Automatically add "--enable-preview" to vmargs when necessary. [#669](https://github.com/microsoft/vscode-java-test/issues/669)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.17.0)
+
 ## 0.16.0 - 2019-04-10
 ## Added
 - Add a new command `Java: Migrate Deprecated 'launch.test.json'` to help migrate the `launch.test.json` files. [PR#664](https://github.com/Microsoft/vscode-java-test/pull/664)
