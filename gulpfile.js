@@ -63,7 +63,7 @@ gulp.task('download-resources', (done) => {
     done();
 });
 
-gulp.task('resources', gulp.series('sass', 'download-resources'));
+gulp.task('build-resources', gulp.series('sass', 'download-resources'));
 
 // For test
 gulp.task('install-java-language-server', async (done) => {
