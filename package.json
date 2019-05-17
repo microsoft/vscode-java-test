@@ -286,7 +286,8 @@
         "test": "gulp install-dependency && node ./node_modules/vscode/bin/test",
         "lint": "gulp lint",
         "build-plugin": "gulp build-plugin",
-        "vscode:prepublish": "gulp resources && webpack --mode production"
+        "build-resources": "gulp build-resources",
+        "vscode:prepublish": "gulp build-resources && webpack --mode production"
     },
     "extensionDependencies": [
         "vscjava.vscode-java-debug"
