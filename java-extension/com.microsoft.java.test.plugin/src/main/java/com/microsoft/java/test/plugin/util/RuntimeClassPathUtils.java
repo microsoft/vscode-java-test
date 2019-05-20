@@ -49,7 +49,7 @@ public class RuntimeClassPathUtils {
             while (iterator.hasNext()) {
                 final IJavaProject javaProject = iterator.next();
                 final IProject project = javaProject.getProject();
-                if (ProjectTestUtils.belongToProject(testPath, project)) {
+                if (ProjectTestUtils.isPathBelongToProject(testPath, project)) {
                     projectsToTest.add(javaProject);
                     iterator.remove();
                 }

@@ -43,6 +43,7 @@ The extension has three major modules, which are listed as follow:
 2. `cd vscode-java-test`
 3. Install the node dependencies: `npm install`
 4. Build the Java modules: `npm run build-plugin`
+5. Build the test report resources: `npm run build-resources`
 > Note: The below steps are only required if you want to debug the Java Language Server plugin
 5. Import `java-extension/com.microsoft.java.test.plugin` in Eclipse
 6. Click `Window` > `Preferences` > `Plug-in Development` > `Target Platform`
