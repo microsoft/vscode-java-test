@@ -76,7 +76,7 @@ public final class ProjectTestUtils {
             return Collections.emptySet();
         }
         return Arrays.stream(ProjectUtils.getJavaProjects())
-                .filter(p -> belongToProject(parentPath, p.getProject()))
+                .filter(p -> isProjectBelongToPath(p.getProject(), parentPath))
                 .collect(Collectors.toSet());
     }
 
@@ -135,7 +135,23 @@ public final class ProjectTestUtils {
         return entry.isTest();
     }
 
-    public static boolean belongToProject(IPath testPath, IProject project) {
+    public static boolean isProjectBelongToPath(IProject project, IPath path) {
+     // Check for visible project
+        if (project.getLocation() != null && path.isPrefixOf(project.getLocation())) {
+            return true;
+        }
+
+
+        // Check for invisible project
+        final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
+        if (linkedLocation != null && path.isPrefixOf(linkedLocation)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isPathBelongToProject(IPath testPath, IProject project) {
         // Check if the path belongs to visible project
         if (project.getLocation() != null && project.getLocation().isPrefixOf(testPath)) {
             return true;
