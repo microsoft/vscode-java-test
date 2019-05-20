@@ -4,7 +4,7 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## 0.17.0
+## 0.17.0 - 2019-05-22
 ### Added
 Support Junit 5 TestFactory annotation. [#644](https://github.com/microsoft/vscode-java-test/issues/644)
 
