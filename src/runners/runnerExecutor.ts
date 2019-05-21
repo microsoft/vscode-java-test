@@ -17,6 +17,8 @@ import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
 import { ITestResult } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
+import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
+import { showOutputChannel } from '../commands/logCommands';
 
 class RunnerExecutor {
     private _javaHome: string;
@@ -75,13 +77,17 @@ class RunnerExecutor {
                     },
                 );
             }
-        } catch (error) {
-            window.showErrorMessage(`${error}`);
-            testStatusBarProvider.showFailure();
-        } finally {
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensProvider.refresh();
             testReportProvider.update(finalResults);
+        } catch (error) {
+            window.showErrorMessage(`${error}`, OPEN_OUTPUT_CHANNEL).then((choice: string | undefined) => {
+                if (choice === OPEN_OUTPUT_CHANNEL) {
+                    showOutputChannel();
+                }
+            });
+            testStatusBarProvider.showFailure();
+        } finally {
             await this.cleanUp(false);
         }
     }

@@ -36,6 +36,7 @@ public class Launcher {
     }
 
     private static final int EXIT_WITH_INVALID_INPUT_CODE = -1;
+    private static final int EXIT_WITH_UNKNOWN_EXCEPTION = -2;
 
     public static void main(String[] args) {
         int exitStatus = 0;
@@ -53,6 +54,9 @@ public class Launcher {
             launcher.execute(params);
         } catch (final ParameterException e) {
             exitStatus = EXIT_WITH_INVALID_INPUT_CODE;
+            System.err.println(e.getMessage());
+        } catch (final Throwable e) {
+            exitStatus = EXIT_WITH_UNKNOWN_EXCEPTION;
             System.err.println(e.getMessage());
         } finally {
             System.exit(exitStatus);
