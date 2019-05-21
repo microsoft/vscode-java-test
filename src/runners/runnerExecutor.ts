@@ -4,6 +4,7 @@
 import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
 import { showOutputChannel } from '../commands/logCommands';
+import { ReportShowSetting } from '../constants/configs';
 import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -13,11 +14,11 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
-import { resolve } from '../utils/settingUtils';
+import { getShowReportSetting, resolve } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
-import { ITestResult } from './models';
+import { ITestResult, TestStatus } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
 class RunnerExecutor {
@@ -79,7 +80,7 @@ class RunnerExecutor {
             }
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensProvider.refresh();
-            testReportProvider.update(finalResults);
+            this.showReportIsNeeded(finalResults);
         } catch (error) {
             window.showErrorMessage(`${error}`, OPEN_OUTPUT_CHANNEL).then((choice: string | undefined) => {
                 if (choice === OPEN_OUTPUT_CHANNEL) {
@@ -159,6 +160,30 @@ class RunnerExecutor {
                 return new TestNGRunner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             default:
                 return undefined;
+        }
+    }
+
+    private showReportIsNeeded(finalResults: ITestResult[]): void {
+        const showSetting: string = getShowReportSetting();
+        switch (showSetting) {
+            case ReportShowSetting.Always:
+                testReportProvider.report(finalResults);
+                break;
+            case ReportShowSetting.OnFail:
+                const hasFailedTests: boolean = finalResults.some((result: ITestResult) => {
+                    return result.details.status === TestStatus.Fail;
+                });
+                if (hasFailedTests) {
+                    testReportProvider.report(finalResults);
+                } else {
+                    testReportProvider.update(finalResults);
+                }
+                break;
+            case ReportShowSetting.Never:
+                    testReportProvider.update(finalResults);
+                    break;
+            default:
+                break;
         }
     }
 }

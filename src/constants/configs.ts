@@ -16,6 +16,15 @@ export const BUILTIN_CONFIG_NAME: string = 'default';
 export const REPORT_POSITION_SETTING_KEY: string = 'java.test.report.position';
 export const DEFAULT_REPORT_POSITION: string = 'sideView';
 
+export const REPORT_SHOW_SETTING_KEY: string = 'java.test.report.showAfterExecution';
+export const DEFAULT_REPORT_SHOW: string = 'onFailure';
+
 export const HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY: string = 'java.test.message.hintForDeprecatedConfig';
 export const CONFIG_DOCUMENT_URL: string = 'https://aka.ms/java-test-config';
 export const HINT_FOR_DEFAULT_CONFIG_SETTING_KEY: string = 'java.test.message.hintForSetingDefaultConfig';
+
+export enum ReportShowSetting {
+    Always = 'always',
+    OnFail = 'onFailure',
+    Never = 'never',
+}

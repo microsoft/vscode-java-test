@@ -158,6 +158,17 @@
         "configuration": {
             "title": "Java Test Runner",
             "properties": {
+                "java.test.report.showAfterExecution": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "onFailure",
+                        "never"
+                    ],
+                    "default": "onFailure",
+                    "description": "%configuration.java.test.report.showAfterExecution.description%",
+                    "scope": "application"
+                },
                 "java.test.report.position": {
                     "type": "string",
                     "enum": [
