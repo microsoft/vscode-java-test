@@ -35,7 +35,7 @@ export abstract class BaseRunnerResultAnalyzer {
     }
 
     public analyzeError(error: string): void {
-        logger.info(error);
+        logger.info(this.unescape(error));
     }
 
     public feedBack(): ITestResult[] {
@@ -89,6 +89,7 @@ export abstract class BaseRunnerResultAnalyzer {
             .replace(/\\f/gm, '\f')
             .replace(/\\n/gm, '\n')
             .replace(/\\t/gm, '\t')
-            .replace(/\\b/gm, '\b');
+            .replace(/\\b/gm, '\b')
+            .replace(/\\"/gm, '"');
     }
 }
