@@ -180,8 +180,8 @@ class RunnerExecutor {
                 }
                 break;
             case ReportShowSetting.Never:
-                    testReportProvider.update(finalResults);
-                    break;
+                testReportProvider.update(finalResults);
+                break;
             default:
                 break;
         }
