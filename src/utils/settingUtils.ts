@@ -3,7 +3,7 @@
 
 import * as _ from 'lodash';
 import { Uri, ViewColumn, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
-import { DEFAULT_LOG_LEVEL, DEFAULT_REPORT_POSITION, LOG_LEVEL_SETTING_KEY, REPORT_POSITION_SETTING_KEY } from '../constants/configs';
+import { DEFAULT_LOG_LEVEL, DEFAULT_REPORT_POSITION, DEFAULT_REPORT_SHOW, LOG_LEVEL_SETTING_KEY, REPORT_POSITION_SETTING_KEY, REPORT_SHOW_SETTING_KEY } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { IExecutionConfig } from '../runConfigs';
 
@@ -15,6 +15,10 @@ export function getReportPosition(): ViewColumn {
 
 export function getLogLevel(): string {
     return workspace.getConfiguration().get<string>(LOG_LEVEL_SETTING_KEY, DEFAULT_LOG_LEVEL);
+}
+
+export function getShowReportSetting(): string {
+    return workspace.getConfiguration().get<string>(REPORT_SHOW_SETTING_KEY, DEFAULT_REPORT_SHOW);
 }
 
 const workspaceRegexp: RegExp = /\$\{workspacefolder\}/i;
