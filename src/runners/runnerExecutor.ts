@@ -3,6 +3,8 @@
 
 import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
+import { showOutputChannel } from '../commands/logCommands';
+import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
@@ -75,13 +77,17 @@ class RunnerExecutor {
                     },
                 );
             }
-        } catch (error) {
-            window.showErrorMessage(`${error}`);
-            testStatusBarProvider.showFailure();
-        } finally {
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensProvider.refresh();
             testReportProvider.update(finalResults);
+        } catch (error) {
+            window.showErrorMessage(`${error}`, OPEN_OUTPUT_CHANNEL).then((choice: string | undefined) => {
+                if (choice === OPEN_OUTPUT_CHANNEL) {
+                    showOutputChannel();
+                }
+            });
+            testStatusBarProvider.showFailure();
+        } finally {
             await this.cleanUp(false);
         }
     }

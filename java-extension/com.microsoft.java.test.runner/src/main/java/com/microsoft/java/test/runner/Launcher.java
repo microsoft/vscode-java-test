@@ -12,6 +12,8 @@
 package com.microsoft.java.test.runner;
 
 import com.microsoft.java.test.runner.common.ITestLauncher;
+import com.microsoft.java.test.runner.common.TestMessageItem;
+import com.microsoft.java.test.runner.common.TestOutputStream;
 import com.microsoft.java.test.runner.exceptions.ParameterException;
 import com.microsoft.java.test.runner.junit4.JUnit4Launcher;
 import com.microsoft.java.test.runner.junit5.CustomizedConsoleLauncher;
@@ -36,6 +38,7 @@ public class Launcher {
     }
 
     private static final int EXIT_WITH_INVALID_INPUT_CODE = -1;
+    private static final int EXIT_WITH_UNKNOWN_EXCEPTION = -2;
 
     public static void main(String[] args) {
         int exitStatus = 0;
@@ -53,7 +56,10 @@ public class Launcher {
             launcher.execute(params);
         } catch (final ParameterException e) {
             exitStatus = EXIT_WITH_INVALID_INPUT_CODE;
-            System.err.println(e.getMessage());
+            TestOutputStream.instance().println(new TestMessageItem("Invalid Parameter.", e));
+        } catch (final Throwable e) {
+            exitStatus = EXIT_WITH_UNKNOWN_EXCEPTION;
+            TestOutputStream.instance().println(new TestMessageItem("Exception happens in the Test Runner.", e));
         } finally {
             System.exit(exitStatus);
         }
