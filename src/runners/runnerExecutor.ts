@@ -3,6 +3,8 @@
 
 import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensProvider } from '../codeLensProvider';
+import { showOutputChannel } from '../commands/logCommands';
+import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
@@ -17,8 +19,6 @@ import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
 import { ITestResult } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
-import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
-import { showOutputChannel } from '../commands/logCommands';
 
 class RunnerExecutor {
     private _javaHome: string;
