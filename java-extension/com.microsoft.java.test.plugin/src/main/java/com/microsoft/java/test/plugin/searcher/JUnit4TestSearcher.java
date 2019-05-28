@@ -20,10 +20,12 @@ import org.eclipse.jdt.core.JavaModelException;
 
 public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
+    public static final String RUN_WITH = "org.junit.runner.RunWith";
+
     public JUnit4TestSearcher() {
         super();
         this.testMethodAnnotations = new String[] { "org.junit.Test", "org.junit.experimental.theories.Theory" };
-        this.testClassAnnotations = new String[] { "org.junit.runner.RunWith" };
+        this.testClassAnnotations = new String[] { RUN_WITH };
     }
 
     @Override

@@ -33,6 +33,8 @@ import java.util.Optional;
 
 public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
+    public static final String NESTED = "org.junit.jupiter.api.Nested";
+
     protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
 
     public JUnit5TestSearcher() {
@@ -40,7 +42,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
         this.testMethodAnnotations = new String[] { "org.junit.jupiter.api.Test",
             "org.junit.jupiter.params.ParameterizedTest", "org.junit.jupiter.api.RepeatedTest",
             "org.junit.jupiter.api.TestFactory" };
-        this.testClassAnnotations = new String[] {};
+        this.testClassAnnotations = new String[] { NESTED };
     }
 
     @Override

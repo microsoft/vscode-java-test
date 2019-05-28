@@ -47,17 +47,44 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         if (!id) {
             return id;
         }
-        const regex: RegExp = /\[class:(.*?)\]\/\[(?:method|test-template|test-factory):(.*)\]/gm;
-        const match: RegExpExecArray | null = regex.exec(id);
-        if (match && match.length === 3) {
-            let methodName: string = match[2];
-            const index: number = methodName.indexOf('(');
-            if (index >= 0) {
-                methodName = methodName.substring(0, index);
+        let res: string = '';
+        const regex: RegExp = /\[(.*?):(.*?)\]/g;
+        while (true) {
+            const execResult: RegExpExecArray | null = regex.exec(id);
+            if (!execResult || execResult.length < 3) {
+                break;
             }
-            return `${match[1]}#${methodName}`;
+            switch (execResult[1]) {
+                case 'class':
+                    res += execResult[2];
+                    break;
+                case 'nested-class':
+                    res += `$${execResult[2]}`;
+                    break;
+                case 'method':
+                case 'test-template':
+                case 'test-factory':
+                    let methodName: string = execResult[2];
+                    const index: number = methodName.indexOf('(');
+                    if (index >= 0) {
+                        methodName = methodName.substring(0, index);
+                    }
+                    res += `#${methodName}`;
+                    break;
+            }
         }
-        return '';
+        return res;
+        // const regex: RegExp = /\[class:(.*?)\]\/\[(?:method|test-template|test-factory):(.*)\]/g;
+        // const match: RegExpExecArray | null = regex.exec(id);
+        // if (match && match.length === 3) {
+        //     let methodName: string = match[2];
+        //     const index: number = methodName.indexOf('(');
+        //     if (index >= 0) {
+        //         methodName = methodName.substring(0, index);
+        //     }
+        //     return `${match[1]}#${methodName}`;
+        // }
+        // return '';
     }
 
     private parseTestStatus(status: JUnit5TestStatus): TestStatus {
