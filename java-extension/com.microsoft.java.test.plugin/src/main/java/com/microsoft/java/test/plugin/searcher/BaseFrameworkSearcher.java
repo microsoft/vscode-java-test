@@ -81,6 +81,6 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
 
     @Override
     public TestItem parseTestItem(IType type) throws JavaModelException {
-        return TestItemUtils.constructTestItem(type, TestItemUtils.getTestLevelForIType(type), this.getTestKind());
+        return TestItemUtils.constructTestItem(type, TestLevel.CLASS, this.getTestKind());
     }
 }

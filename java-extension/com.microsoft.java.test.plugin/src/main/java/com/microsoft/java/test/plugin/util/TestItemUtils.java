@@ -15,7 +15,6 @@ import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -55,14 +54,6 @@ public class TestItemUtils {
         return new TestItem(displayName, fullName, uri, projectName, Collections.emptyList(), range, level, kind);
     }
 
-    public static TestLevel getTestLevelForIType(IType type) {
-        if (type.getParent() instanceof ICompilationUnit) {
-            return TestLevel.CLASS;
-        } else {
-            return TestLevel.NESTED_CLASS;
-        }
-    }
-
     public static Range parseTestItemRange(IJavaElement element) throws JavaModelException {
         if (element instanceof ISourceReference) {
             final ISourceRange range = ((ISourceReference) element).getNameRange();
@@ -74,7 +65,6 @@ public class TestItemUtils {
     private static String parseTestItemFullName(IJavaElement element, TestLevel level) {
         switch (level) {
             case CLASS:
-            case NESTED_CLASS:
                 final IType type = (IType) element;
                 return type.getFullyQualifiedName();
             case METHOD:
