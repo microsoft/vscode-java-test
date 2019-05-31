@@ -14,7 +14,10 @@ package com.microsoft.java.test.plugin.util;
 import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
+import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
+import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -24,7 +27,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -32,6 +34,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -107,11 +110,10 @@ public class TestSearchUtils {
                 resultList.add(parent);
                 continue;
             }
-            // Check if the class can still run tests even no method is annotated.
-            // For example, annotated with @RunWith
-            final TestItem runableClass = TestFrameworkUtils.resolveTestItemForClass(type);
-            if (runableClass != null) {
-                resultList.add(runableClass);
+            // Class annotated by @RunWith should be considered as a Suite even it has no test method children
+            if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH)) {
+                resultList.add(TestItemUtils.constructTestItem(type, TestItemUtils.getTestLevelForIType(type),
+                        TestKind.JUnit));
             }
         }
 
@@ -430,21 +432,27 @@ public class TestSearchUtils {
     }
 
     private static boolean isTestableClass(IType type) throws JavaModelException {
-        int flags = type.getFlags();
+        final int flags = type.getFlags();
         if (Flags.isInterface(flags) || Flags.isAbstract(flags)) {
             return false;
         }
-        IJavaElement parent = type.getParent();
-        while (true) {
-            if (parent instanceof ICompilationUnit || parent instanceof IClassFile) {
-                return true;
-            }
-            if (!(parent instanceof IType) || !Flags.isStatic(flags) || !Flags.isPublic(flags)) {
-                return false;
-            }
-            flags = ((IType) parent).getFlags();
-            parent = parent.getParent();
+
+        final IJavaElement parent = type.getParent();
+
+        if (parent instanceof ITypeRoot) {
+            return true;
         }
+
+        if (!(parent instanceof IType)) {
+            return false;
+        }
+
+        if (TestFrameworkUtils.hasAnnotation(type, JUnit5TestSearcher.NESTED) ||
+                (Flags.isStatic(flags) && Flags.isPublic(flags))) {
+            return true;
+        }
+
+        return false;
     }
 
     private static boolean isJavaElementExist(IJavaElement element) {
