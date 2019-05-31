@@ -88,7 +88,6 @@ class TestCodeLensProvider implements CodeLensProvider {
                 }
                 break;
             case TestLevel.Class:
-            case TestLevel.NestedClass:
                 if (!test.children) {
                     break;
                 }
@@ -147,7 +146,7 @@ class TestCodeLensProvider implements CodeLensProvider {
         if (item.level === TestLevel.Method) {
             return 1;
         }
-        if (item.level === TestLevel.Class || item.level === TestLevel.NestedClass) {
+        if (item.level === TestLevel.Class) {
             if (item.children) {
                 return item.children.length;
             }

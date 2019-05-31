@@ -27,8 +27,5 @@ public enum TestLevel {
     CLASS,
 
     @SerializedName("4")
-    NESTED_CLASS,
-
-    @SerializedName("5")
     METHOD;
 }

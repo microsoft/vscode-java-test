@@ -103,7 +103,7 @@ public class TestSearchUtils {
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList());
             if (testMethodList.size() > 0) {
-                final TestItem parent = TestItemUtils.constructTestItem(type, TestItemUtils.getTestLevelForIType(type));
+                final TestItem parent = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
                 parent.setChildren(testMethodList);
                 // Assume the kinds of all methods are the same.
                 parent.setKind(testMethodList.get(0).getKind());
@@ -112,8 +112,7 @@ public class TestSearchUtils {
             }
             // Class annotated by @RunWith should be considered as a Suite even it has no test method children
             if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH)) {
-                resultList.add(TestItemUtils.constructTestItem(type, TestItemUtils.getTestLevelForIType(type),
-                        TestKind.JUnit));
+                resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit));
             }
         }
 
@@ -149,9 +148,6 @@ public class TestSearchUtils {
                 break;
             case CLASS:
                 searchInClass(resultList, params);
-                break;
-            case NESTED_CLASS:
-                searchInNestedClass(resultList, params);
                 break;
             default:
                 break;
@@ -210,8 +206,7 @@ public class TestSearchUtils {
                     if (classItem != null) {
                         classItem.addChild(methodItem);
                     } else {
-                        final TestItem newClassItem = TestItemUtils.constructTestItem(type,
-                                TestItemUtils.getTestLevelForIType(type));
+                        final TestItem newClassItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
                         newClassItem.addChild(methodItem);
                         classMap.put(type.getFullyQualifiedName(), newClassItem);
                     }
@@ -315,7 +310,6 @@ public class TestSearchUtils {
                 return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
                         IJavaSearchScope.SOURCES);
             case CLASS:
-            case NESTED_CLASS:
                 final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
                 final IType[] types = compilationUnit.getAllTypes();
                 for (final IType type : types) {
@@ -395,10 +389,14 @@ public class TestSearchUtils {
     private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params)
             throws JavaModelException {
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(params.getUri());
-        for (final IType type : unit.getTypes()) {
+        for (final IType type : unit.getAllTypes()) {
             if (type.getFullyQualifiedName().equals(params.getFullName())) {
                 for (final IType innerType : type.getTypes()) {
-                    resultList.add(TestItemUtils.constructTestItem(innerType, TestLevel.NESTED_CLASS));
+                    resultList.add(TestItemUtils.constructTestItem(innerType, TestLevel.CLASS));
+                }
+
+                if (!isTestableClass(type)) {
+                    continue;
                 }
                 for (final IMethod method : type.getMethods()) {
                     final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
@@ -408,27 +406,6 @@ public class TestSearchUtils {
                 }
             }
         }
-    }
-
-    private static void searchInNestedClass(List<TestItem> resultList, SearchTestItemParams params)
-            throws JavaModelException {
-        final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
-        for (final IType type : compilationUnit.getAllTypes()) {
-            if (type.getFullyQualifiedName().equals(params.getFullName())) {
-                resultList.addAll(searchTestMethodsOfType(type));
-            }
-        }
-    }
-
-    private static List<TestItem> searchTestMethodsOfType(IType type) throws JavaModelException {
-        final List<TestItem> results = new LinkedList<>();
-        for (final IMethod method : type.getMethods()) {
-            final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
-            if (item != null) {
-                results.add(item);
-            }
-        }
-        return results;
     }
 
     private static boolean isTestableClass(IType type) throws JavaModelException {

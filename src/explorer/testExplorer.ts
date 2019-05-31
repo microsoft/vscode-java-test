@@ -84,7 +84,6 @@ export class TestExplorer implements TreeDataProvider<TestTreeNode> {
                     light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'method.svg')),
                 };
             case TestLevel.Class:
-            case TestLevel.NestedClass:
                 return {
                     dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'class.svg')),
                     light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'class.svg')),

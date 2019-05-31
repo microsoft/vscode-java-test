@@ -35,8 +35,7 @@ export enum TestLevel {
     Folder = 1,
     Package = 2,
     Class = 3,
-    NestedClass = 4,
-    Method = 5,
+    Method = 4,
 }
 
 export enum TestKind {
