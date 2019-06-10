@@ -100,6 +100,8 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 - You can navigate to the source location of the target test case by clicking the navigate button.
 
+> Note: You can use `java.test.report.showAfterExecution` to configure whether to automatically show the test report after execution. By default, it will be shown when there are failed tests. 
+
 
 ## Settings
 
