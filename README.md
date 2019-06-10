@@ -106,6 +106,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 | Setting Name | Description | Default Value |
 |---|---|---|
 | `java.test.report.position` | Specify where to show the test report. Supported values are: `sideView`, `currentView`. | `sideView` |
+| `java.test.report.showAfterExecution` | Specify if the test report will automatically be shown after execution. Supported values are: `always`, `onFailure`, `never`. | `onFailure` |
 | `java.test.log.level` | Specify the level of the test logs. Supported values are: `error`, `info`, `verbose`. | `info` |
 | `java.test.config` | Specify the configuration for the test cases to run with. [More details](https://aka.ms/java-test-config). | `{}` |
 | `java.test.defaultConfig` | Specify the name of the default test configuration. | `""` |

@@ -4,46 +4,57 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.18.0 - 2019-06-11
+### Added
+- Support automatically show the test report after execution. [#673](https://github.com/microsoft/vscode-java-test/issues/673)
+- Support JUnit 5 `@Nested` annotation. [#685](https://github.com/microsoft/vscode-java-test/issues/685)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+label%3Abug+milestone%3A0.18.0+is%3Aclosed)
+
 ## 0.17.0 - 2019-05-22
 ### Added
-Support Junit 5 TestFactory annotation. [#644](https://github.com/microsoft/vscode-java-test/issues/644)
+- Support Junit 5 TestFactory annotation. [#644](https://github.com/microsoft/vscode-java-test/issues/644)
 
 ### Changed
-Automatically add "--enable-preview" to vmargs when necessary. [#669](https://github.com/microsoft/vscode-java-test/issues/669)
+- Automatically add "--enable-preview" to vmargs when necessary. [#669](https://github.com/microsoft/vscode-java-test/issues/669)
 
 ### Fixed
 - [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.17.0)
 
 ## 0.16.0 - 2019-04-10
-## Added
+
+### Added
 - Add a new command `Java: Migrate Deprecated 'launch.test.json'` to help migrate the `launch.test.json` files. [PR#664](https://github.com/Microsoft/vscode-java-test/pull/664)
 
-## Removed
+### Removed
 - Stop supporting `launch.test.json`. [#650](https://github.com/Microsoft/vscode-java-test/issues/650)
 
-## Fixed
+### Fixed
 - Encoding issue for the Test Runner. [PR#662](https://github.com/Microsoft/vscode-java-test/pull/662)
 - Can resolve the classpath of the invisible project. [#348](https://github.com/Microsoft/vscode-java-test/issues/348)
 
 ## 0.15.1 - 2019-03-19
-## Fixed
+
+### Fixed
 - [Bugs fixed](https://github.com/Microsoft/vscode-java-test/issues?q=is%3Aissue+milestone%3A0.15.1+is%3Aclosed+label%3Abug)
 
 ## 0.15.0 - 2019-03-11
-## Added
+
+### Added
 - Support JUnit 4 `@RunWith` annotation. [#272](https://github.com/Microsoft/vscode-java-test/issues/272)
 - Support JUnit 4 `@Theory` annotation. [#628](https://github.com/Microsoft/vscode-java-test/issues/628)
 - Support JUnit 5 `@RepeatedTest` annotation. [#594](https://github.com/Microsoft/vscode-java-test/issues/594)
 
-## Fixed
+### Fixed
 - [Bugs fixed](https://github.com/Microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+milestone%3A0.15.0+label%3Abug)
 
 ## 0.14.1 - 2019-02-19
 
-## Added
+### Added
 - Support ${workspaceFolder} in 'vmargs', 'args' and the value of each entry in 'env' in the test configurations. [#602](https://github.com/Microsoft/vscode-java-test/issues/602)
 
-## Fixed
+### Fixed
 - SecurityException when running JUnit 5 tests. [#477](https://github.com/Microsoft/vscode-java-test/issues/477)
 - Wrong order of arguments passing to Test Runner. [#592](https://github.com/Microsoft/vscode-java-test/issues/592)
 - Fail to resolve configurations which contain ${workspaceFolder}. [#599](https://github.com/Microsoft/vscode-java-test/issues/599)
@@ -51,14 +62,14 @@ Automatically add "--enable-preview" to vmargs when necessary. [#669](https://gi
 
 ## 0.14.0 - 2019-01-21
 
-## Added
+### Added
 - Add the log level setting. [#555](https://github.com/Microsoft/vscode-java-test/issues/555)
 - Navigate to the source code from the test explorer. [#558](https://github.com/Microsoft/vscode-java-test/issues/558)
 
-## Changed
+### Changed
 - Redesign the user experience of running tests with configurations. [More details](https://aka.ms/java-test-config) [#524](https://github.com/Microsoft/vscode-java-test/issues/524)
 
-## Fixed
+### Fixed
 - Fix the bug that test scope is wrong when triggering tests from inner class level. [#411](https://github.com/Microsoft/vscode-java-test/issues/411)
 - Fix the bug that tests which contain inner class will be skipped if triggered from the test explorer. [#460](https://github.com/Microsoft/vscode-java-test/issues/460)
 - Improve the test output format. [#505](https://github.com/Microsoft/vscode-java-test/issues/505)
@@ -66,58 +77,58 @@ Automatically add "--enable-preview" to vmargs when necessary. [#669](https://gi
 
 ## 0.13.0 - 2018-12-27
 
-## Added
+### Added
 - Add Chinese language support. [#437](https://github.com/Microsoft/vscode-java-test/issues/437)
 
-## Changed
+### Changed
 - Use webpack to improve the extension startup time. [#495](https://github.com/Microsoft/vscode-java-test/issues/495)
 - Change the activation events of the extension. [#516](https://github.com/Microsoft/vscode-java-test/issues/516)
 - Change the style of the test report. [#517](https://github.com/Microsoft/vscode-java-test/issues/517)
 
-## Fixed
+### Fixed
 - Fix the bug that test explorer will keep refreshing when opening a large project. [#461](https://github.com/Microsoft/vscode-java-test/issues/461)
 - Fix several bugs that cause the extension fails to run test cases. ([#134](https://github.com/Microsoft/vscode-java-test/issues/134), [#488](https://github.com/Microsoft/vscode-java-test/issues/488), [#504](https://github.com/Microsoft/vscode-java-test/issues/504), [#515](https://github.com/Microsoft/vscode-java-test/issues/515))
 
 ## 0.12.0 - 2018-12-10
 
-## Added
+### Added
 - Add a way to persist test logs into log files. [#452](https://github.com/Microsoft/vscode-java-test/issues/452)
 - Add @DisplayName support in the test report for JUnit 5. [#446](https://github.com/Microsoft/vscode-java-test/issues/446)
 - Add @ParameterizedTest support for JUnit 5. [#107](https://github.com/Microsoft/vscode-java-test/issues/107)
 
-## Changed
+### Changed
 - Improve the test report page. ([#397](https://github.com/Microsoft/vscode-java-test/issues/397), [#486](https://github.com/Microsoft/vscode-java-test/issues/486), [#489](https://github.com/Microsoft/vscode-java-test/issues/489))
 - Change the foreground color of the status bar items. [#467](https://github.com/Microsoft/vscode-java-test/issues/467)
 
-## Fixed
+### Fixed
 - Fix the bug that test runners will run forever. [#482](https://github.com/Microsoft/vscode-java-test/issues/482)
 
 ## 0.11.1 - 2018-11-26
 
-## Added
+### Added
 - Add JUnit 5's @DisplayName support in test explorer. (Thanks for [@BaerMitUmlaut](https://github.com/BaerMitUmlaut))
 
-## Fixed
+### Fixed
 - "Cannot read property 'indexOf' of undefined" bug when running JUnit 5 tests. [#455](https://github.com/Microsoft/vscode-java-test/issues/455)
 - Will run all tests in class if triggering test from method level in test explorer. [#441](https://github.com/Microsoft/vscode-java-test/issues/441)
 - Cannot run tests when the project is a multi-module Maven project. [#443](https://github.com/Microsoft/vscode-java-test/issues/443)
 
 ## 0.11.0 - 2018-11-09
 
-## Added
+### Added
 - Add TestNG support.
 
-## Changed
+### Changed
 - Test explorer change to lazy-load mechanism.
 - Always resolve the classpath before running test jobs - no need to trigger `Refresh Classpath` anymore.
 
 ## 0.10.0 - 2018-10-10
 
-## Changed
+### Changed
 - Sort packages alphabetically in Test Explorer. [#310](https://github.com/Microsoft/vscode-java-test/issues/310)
 - Get JAVA_HOME location through calling the API exposed by the Java Language Server. [#319](https://github.com/Microsoft/vscode-java-test/issues/319)
 
-## Fixed
+### Fixed
 - Fix a bug that code lenses are not in the correct place. [#36](https://github.com/Microsoft/vscode-java-test/issues/36)
 
 ## 0.9.0 - 2018-09-20
