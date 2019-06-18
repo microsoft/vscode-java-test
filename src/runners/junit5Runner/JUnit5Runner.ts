@@ -8,7 +8,9 @@ import { JUnit5RunnerResultAnalyzer } from './JUnit5RunnerResultAnalyzer';
 
 export class JUnit5Runner extends BaseRunner {
     public getRunnerCommandParams(): string[] {
-        return ['junit5', ...this.constructParamsForTests()];
+        // Set --include-classname to '.*' to treat all class name as valid test class.
+        // See: https://github.com/microsoft/vscode-java-test/issues/381#issuecomment-502943158
+        return ['junit5', '--include-classname', '.*', ...this.constructParamsForTests()];
     }
 
     public getTestResultAnalyzer(): BaseRunnerResultAnalyzer {
