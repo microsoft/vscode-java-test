@@ -75,7 +75,7 @@ class TestReportProvider implements Disposable {
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
 
-        this.panel.reveal(position);
+        this.panel.reveal(this.panel.viewColumn || position);
     }
 
     public async update(tests: ITestResult[]): Promise<void> {
