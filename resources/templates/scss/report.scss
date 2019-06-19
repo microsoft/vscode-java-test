@@ -23,7 +23,7 @@ $code-color: var(--vscode-foreground);
   margin-right: 0.5rem;
 }
 
-.accordion-toggle.collapsed>div:nth-child(1):before {
+.accordion-toggle>div.collapsed:nth-child(1):before {
   content: "\f0da";
   margin-right: 0.5rem;
 }

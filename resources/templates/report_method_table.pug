@@ -10,8 +10,8 @@ mixin collapseMethodTable(children, type)
             each method in entry[1]
                 - methodIdx++
                 li.list-group-item.list-group-item-action
-                    div.row.accordion-toggle.collapsed
-                        div.col-8(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details") #{method.displayName}
+                    div.row.accordion-toggle
+                        div.col-8.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details") #{method.displayName}
                         div.col-1.text-right
                             if !method.details
                                 span.badge.badge-warning Not run
