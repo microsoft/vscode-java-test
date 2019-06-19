@@ -9,7 +9,7 @@ import { commands, ConfigurationTarget, QuickPickItem, TextDocument, Uri, window
 import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
 import { LEARN_MORE, NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
-import { __BUILTIN_CONFIG__, IExecutionConfig, ITestConfig } from '../runConfigs';
+import { getBuiltinConfig, IExecutionConfig, ITestConfig } from '../runConfigs';
 
 export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined): Promise<IExecutionConfig | undefined> {
     if (!workspaceFolder) {
@@ -30,24 +30,24 @@ export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined
         const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
         if (defaultConfigName) {
             if (defaultConfigName === BUILTIN_CONFIG_NAME) {
-                return __BUILTIN_CONFIG__;
+                return getBuiltinConfig();
             }
             const defaultConfigs: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
                 return config.name === defaultConfigName;
             });
             if (defaultConfigs.length === 0) {
                 window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, use the built-in configuration instead.`);
-                return __BUILTIN_CONFIG__;
+                return getBuiltinConfig();
             } else if (defaultConfigs.length > 1) {
                 window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, use the built-in configuration instead.`);
-                return __BUILTIN_CONFIG__;
+                return getBuiltinConfig();
             } else {
                 return defaultConfigs[0];
             }
         }
         return await selectQuickPick(configItems, workspaceFolder);
     }
-    return __BUILTIN_CONFIG__;
+    return getBuiltinConfig();
 }
 
 export async function migrateTestConfig(): Promise<void> {
@@ -99,10 +99,11 @@ async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: Wor
     }
 
     const choices: IRunConfigQuickPick[] = [];
+    const newBuiltinConfig: IExecutionConfig = getBuiltinConfig();
     choices.push({
         label: 'Built-in Configuration',
-        detail: JSON.stringify(__BUILTIN_CONFIG__),
-        item: __BUILTIN_CONFIG__,
+        detail: JSON.stringify(newBuiltinConfig),
+        item: newBuiltinConfig,
     });
     for (let i: number = 0; i < configs.length; i++) {
         const label: string = configs[i].name ? configs[i].name! : `Configuration #${i + 1}`;

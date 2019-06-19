@@ -21,7 +21,11 @@ export interface ITestConfig {
     debug: IExecutionConfigGroup;
 }
 
-export const __BUILTIN_CONFIG__: IExecutionConfig = {
+export function getBuiltinConfig(): IExecutionConfig {
+    return Object.assign({}, BUILTIN_CONFIG);
+}
+
+const BUILTIN_CONFIG: IExecutionConfig = {
     name: BUILTIN_CONFIG_NAME,
     workingDirectory: '${workspaceFolder}',
 };
