@@ -8,13 +8,30 @@ import { JUnit5RunnerResultAnalyzer } from './JUnit5RunnerResultAnalyzer';
 
 export class JUnit5Runner extends BaseRunner {
     public getRunnerCommandParams(): string[] {
-        // Set --include-classname to '.*' to treat all class name as valid test class.
-        // See: https://github.com/microsoft/vscode-java-test/issues/381#issuecomment-502943158
-        return ['junit5', '--include-classname', '.*', ...this.constructParamsForTests()];
+        const params: string[] = ['junit5'];
+        if (!this.hasClassNameParam()) {
+            // Set --include-classname to '.*' to treat all class name as valid test class.
+            // See: https://github.com/microsoft/vscode-java-test/issues/381.
+            params.push('--include-classname', '.*');
+        }
+
+        params.push(...this.constructParamsForTests());
+
+        return params;
     }
 
     public getTestResultAnalyzer(): BaseRunnerResultAnalyzer {
         return new JUnit5RunnerResultAnalyzer(this.tests);
+    }
+
+    private hasClassNameParam(): boolean {
+        if (!this.config || !this.config.args) {
+            return false;
+        }
+
+        return this.config.args.some((element: string) => {
+            return element === '-n' || element === '--include-classname';
+        });
     }
 
     private constructParamsForTests(): string[] {
