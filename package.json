@@ -179,6 +179,12 @@
                     "description": "%configuration.java.test.report.position.description%",
                     "scope": "window"
                 },
+                "java.test.editor.enableShortcuts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%configuration.java.test.editor.enableShortcuts.description%",
+                    "scope": "application"
+                },
                 "java.test.log.level": {
                     "type": "string",
                     "enum": [

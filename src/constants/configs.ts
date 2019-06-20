@@ -16,6 +16,8 @@ export const BUILTIN_CONFIG_NAME: string = 'default';
 export const REPORT_POSITION_SETTING_KEY: string = 'java.test.report.position';
 export const DEFAULT_REPORT_POSITION: string = 'sideView';
 
+export const ENABLE_EDITOR_SHORTCUTS_KEY: string = 'java.test.editor.enableShortcuts';
+
 export const REPORT_SHOW_SETTING_KEY: string = 'java.test.report.showAfterExecution';
 export const DEFAULT_REPORT_SHOW: string = 'onFailure';
 
