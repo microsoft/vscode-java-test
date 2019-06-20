@@ -231,7 +231,8 @@ public class TestSearchUtils {
         for (final TestItem testClass : classMap.values()) {
             if (testClass.getChildren() == null || testClass.getChildren().size() <= 0) {
                 searchResult.add(testClass);
-            } else if (testClass.getChildren().size() == 1) {
+            } else if (testClass.getChildren().size() == 1 && params.getLevel() == TestLevel.METHOD) {
+                // If test level is method, only add the method into the result instead of the class
                 searchResult.add(testClass.getChildren().get(0));
             } else {
                 // Assume the kinds of all methods are the same.

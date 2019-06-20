@@ -6,6 +6,7 @@ import * as path from 'path';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ITestResult, ITestResultDetails } from './runners/models';
 import { getTestSourcePaths } from './utils/commandUtils';
+import { isTestMethodName } from './utils/protocolUtils';
 
 class TestResultManager implements Disposable {
     private testResultMap: Map<string, Map<string, ITestResultDetails>> = new Map<string, Map<string, ITestResultDetails>>();
@@ -35,6 +36,27 @@ class TestResultManager implements Disposable {
             return resultsInFsPath.get(testFullName);
         }
         return undefined;
+    }
+
+    public removeResultDetails(fsPath: string, testFullName: string): void {
+        const resultsInFsPath: Map<string, ITestResultDetails> | undefined = this.getResults(fsPath);
+        if (resultsInFsPath) {
+            resultsInFsPath.delete(testFullName);
+        }
+    }
+
+    public removeResultDetailsUnderTheClass(fsPath: string, testFullName: string): void {
+        if (isTestMethodName(testFullName)) {
+            return;
+        }
+        const resultsInFsPath: Map<string, ITestResultDetails> | undefined = this.getResults(fsPath);
+        if (resultsInFsPath) {
+            for (const key of resultsInFsPath.keys()) {
+                if (key.startsWith(testFullName)) {
+                    resultsInFsPath.delete(key);
+                }
+            }
+        }
     }
 
     public getResults(fsPath: string): Map<string, ITestResultDetails> | undefined {
