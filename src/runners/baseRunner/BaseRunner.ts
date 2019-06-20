@@ -11,9 +11,11 @@ import { debug, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
+import { testResultManager } from '../../testResultManager';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
 import { killProcess } from '../../utils/cpUtils';
+import { isTestMethodName } from '../../utils/protocolUtils';
 import { ITestRunner } from '../ITestRunner';
 import { ITestResult } from '../models';
 import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
@@ -54,6 +56,7 @@ export abstract class BaseRunner implements ITestRunner {
         this.classpath = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
         this.config = config;
         this.encoding = this.getJavaEncoding();
+        this.clearTestResults(tests);
     }
 
     public async run(): Promise<ITestResult[]> {
@@ -205,5 +208,15 @@ export abstract class BaseRunner implements ITestRunner {
             javaEncoding = config.get<string>('files.encoding', 'UTF-8');
         }
         return javaEncoding;
+    }
+
+    private clearTestResults(items: ITestItem[]): void {
+        for (const item of items) {
+            if (isTestMethodName(item.fullName)) {
+                testResultManager.removeResultDetails(Uri.parse(item.location.uri).fsPath, item.fullName);
+            } else {
+                testResultManager.removeResultDetailsUnderTheClass(Uri.parse(item.location.uri).fsPath, item.fullName);
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@ export class JUnit5Runner extends BaseRunner {
         if (!this.hasClassNameParam()) {
             // Set --include-classname to '.*' to treat all class name as valid test class.
             // See: https://github.com/microsoft/vscode-java-test/issues/381.
-            params.push('--include-classname', '.*');
+            params.push('--include-classname', '".*"');
         }
 
         params.push(...this.constructParamsForTests());

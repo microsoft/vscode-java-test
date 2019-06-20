@@ -19,3 +19,7 @@ export function constructSearchTestItemParams(node?: TestTreeNode): ISearchTestI
         fullName: '',
     };
 }
+
+export function isTestMethodName(fullName: string): boolean {
+    return fullName.includes('#');
+}
