@@ -2,15 +2,15 @@
 // Licensed under the MIT license.
 
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, Uri } from 'vscode';
-import { JavaTestRunnerCommands } from './constants/commands';
-import { logger } from './logger/logger';
-import { ITestItem, TestLevel } from './protocols';
-import { ITestResult, ITestResultDetails, TestStatus } from './runners/models';
-import { testResultManager } from './testResultManager';
-import { searchTestCodeLens } from './utils/commandUtils';
-import { isDarwin } from './utils/platformUtils';
+import { JavaTestRunnerCommands } from '../constants/commands';
+import { logger } from '../logger/logger';
+import { ITestItem, TestLevel } from '../protocols';
+import { ITestResult, ITestResultDetails, TestStatus } from '../runners/models';
+import { testResultManager } from '../testResultManager';
+import { searchTestCodeLens } from '../utils/commandUtils';
+import { isDarwin } from '../utils/platformUtils';
 
-class TestCodeLensProvider implements CodeLensProvider {
+export class TestCodeLensProvider implements CodeLensProvider {
     private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     get onDidChangeCodeLenses(): Event<void> {
@@ -154,5 +154,3 @@ class TestCodeLensProvider implements CodeLensProvider {
         return 0;
     }
 }
-
-export const testCodeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();

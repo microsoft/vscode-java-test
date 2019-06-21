@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
-import { testCodeLensProvider } from '../codeLensProvider';
+import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { showOutputChannel } from '../commands/logCommands';
 import { ReportShowSetting } from '../constants/configs';
 import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
@@ -79,7 +79,7 @@ class RunnerExecutor {
                 );
             }
             testStatusBarProvider.showTestResult(finalResults);
-            testCodeLensProvider.refresh();
+            testCodeLensController.refresh();
             this.showReportIsNeeded(finalResults);
         } catch (error) {
             window.showErrorMessage(`${error}`, OPEN_OUTPUT_CHANNEL).then((choice: string | undefined) => {
