@@ -69,6 +69,7 @@ export abstract class BaseRunner implements ITestRunner {
             const testResultAnalyzer: BaseRunnerResultAnalyzer = this.getTestResultAnalyzer();
             let data: string = '';
             this.process = cp.spawn(path.join(this.javaHome, 'bin', 'java'), commandParams, options);
+            logger.verbose(`Executing: '${[path.join(this.javaHome, 'bin', 'java'), ...commandParams].join(' ')}'${os.EOL}`);
             this.process.on('error', (error: Error) => {
                 logger.error('Failed to launch the runner', error);
                 reject(error);
