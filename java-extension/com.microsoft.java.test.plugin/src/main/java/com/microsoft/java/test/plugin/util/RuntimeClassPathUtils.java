@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -75,29 +74,15 @@ public class RuntimeClassPathUtils {
 
         final List<String> classPathList = new ArrayList<>();
         for (final IJavaProject project : projectsToTest) {
-            final String[] classPathArray = resolveClasspath(project);
-            final Set<IPath> testEntriePaths = ProjectTestUtils.getTestOutputPath(project);
-            Arrays.sort(classPathArray, Comparator.comparing((String pathStr) -> {
-                final Path path = new Path(pathStr);
-                if (path.toFile().isFile()) {
-                    return 1;
-                }
-                for (final IPath testPath: testEntriePaths) {
-                    if (testPath.isPrefixOf(path)) {
-                        return -1;
-                    }
-                }
-                return 1;
-            }));
-            classPathList.addAll(Arrays.asList(classPathArray));
+            classPathList.addAll(Arrays.asList(resolveClasspath(project)));
         }
         return classPathList.toArray(new String[classPathList.size()]);
     }
 
     private static String[] resolveClasspath(IJavaProject javaProject) throws CoreException {
-//        final JUnitLaunchConfigurationDelegate delegate = new JUnitLaunchConfigurationDelegate();
-        final ILaunchConfiguration launchConfig = new JavaApplicationLaunchConfiguration(javaProject.getProject());
-//        delegate.getClasspath(launchConfig);
+        // Use launch configuration to resolve the classpath.
+        // See: https://github.com/microsoft/vscode-java-test/issues/623.
+        final ILaunchConfiguration launchConfig = new JUnitLaunchConfiguration(javaProject.getProject());
         final IRuntimeClasspathEntry[] unresolved = JavaRuntime.computeUnresolvedRuntimeClasspath(launchConfig);
         final IRuntimeClasspathEntry[] resolved = JavaRuntime.resolveRuntimeClasspath(unresolved, launchConfig);
         final Set<String> classpaths = new LinkedHashSet<>();
@@ -114,8 +99,8 @@ public class RuntimeClassPathUtils {
         return classpaths.toArray(new String[classpaths.size()]);
     }
 
-    private static class JavaApplicationLaunchConfiguration extends LaunchConfiguration {
-        public static final String JAVA_APPLICATION_LAUNCH = "<?xml version=\"1.0\" encoding=\"UTF-8\"" +
+    private static class JUnitLaunchConfiguration extends LaunchConfiguration {
+        public static final String JUNIT_LAUNCH = "<?xml version=\"1.0\" encoding=\"UTF-8\"" +
                 " standalone=\"no\"?>\n" +
                 "<launchConfiguration type=\"org.eclipse.jdt.junit.launchconfig\">\n" +
                 "<listAttribute key=\"org.eclipse.debug.core.MAPPED_RESOURCE_PATHS\">\n" +
@@ -130,7 +115,7 @@ public class RuntimeClassPathUtils {
         private String sourcepathProvider;
         private final LaunchConfigurationInfo launchInfo;
 
-        protected JavaApplicationLaunchConfiguration(IProject project) throws CoreException {
+        protected JUnitLaunchConfiguration(IProject project) throws CoreException {
             super(String.valueOf(new Date().getTime()), null, false);
             this.project = project;
             if (ProjectUtils.isMavenProject(project)) {
@@ -139,7 +124,7 @@ public class RuntimeClassPathUtils {
             } else if (ProjectUtils.isGradleProject(project)) {
                 classpathProvider = "org.eclipse.buildship.core.classpathprovider";
             }
-            this.launchInfo = new JavaLaunchConfigurationInfo(JAVA_APPLICATION_LAUNCH);
+            this.launchInfo = new JavaLaunchConfigurationInfo(JUNIT_LAUNCH);
         }
 
         @Override
