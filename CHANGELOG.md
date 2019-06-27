@@ -4,6 +4,13 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.18.1 - 2019-06-28
+### Added
+- Support customizing the visibility of `Run Test` and `Debug Test` CodeLens through setting: `java.test.editor.enableShortcuts`. [#374](https://github.com/microsoft/vscode-java-test/issues/374)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+milestone%3A0.18.1+is%3Aclosed+label%3Abug)
+
 ## 0.18.0 - 2019-06-11
 ### Added
 - Support automatically show the test report after execution. [#673](https://github.com/microsoft/vscode-java-test/issues/673)
