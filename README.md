@@ -114,6 +114,9 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 | `java.test.config` | Specify the configuration for the test cases to run with. [More details](https://aka.ms/java-test-config). | `{}` |
 | `java.test.defaultConfig` | Specify the name of the default test configuration. | `""` |
 
+## FAQ
+If you meet any problem when using the extension, please refer to the [FAQ](https://github.com/microsoft/vscode-java-test/wiki/FAQ) to check if there is an answer to your problem.
+
 ## Contributing and Feedback
 
 If you are interested in providing feedback or contributing directly to the code base, please check the document [Contributing to Java Test Runner](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md), which covers the following parts:
