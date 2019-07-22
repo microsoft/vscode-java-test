@@ -59,7 +59,7 @@ public class TestItemUtils {
             final ISourceRange range = ((ISourceReference) element).getNameRange();
             return JDTUtils.toRange(element.getOpenable(), range.getOffset(), range.getLength());
         }
-        return null;
+        return new Range();
     }
 
     private static String parseTestItemFullName(IJavaElement element, TestLevel level) {
