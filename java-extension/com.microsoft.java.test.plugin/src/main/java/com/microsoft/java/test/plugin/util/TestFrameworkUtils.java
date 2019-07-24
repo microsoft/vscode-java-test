@@ -32,7 +32,7 @@ import java.util.Set;
 public class TestFrameworkUtils {
 
     public static final TestFrameworkSearcher[] FRAMEWORK_SEARCHERS = new TestFrameworkSearcher[] {
-            new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
+        new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
 
     public static TestItem resoveTestItemForMethod(IMethod method) throws JavaModelException {
         for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
