@@ -19,15 +19,15 @@ import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
-import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public class TestFrameworkUtils {
 
@@ -52,51 +52,93 @@ public class TestFrameworkUtils {
         return null;
     }
 
-    public static Optional<IAnnotation> getAnnotation(IMember member, String memberAnnotation) {
-        try {
-            final Optional<IAnnotation> matched = getMatchedAnnotation(member, memberAnnotation);
-            if (!matched.isPresent()) {
-                return Optional.empty();
-            }
-            final IAnnotation annotation = matched.get();
-            if (!annotation.exists()) {
-                return Optional.empty();
-            }
-
-            final String name = annotation.getElementName();
-
-            String[][] fullNameArr = null;
-            if (IType.class.isInstance(member) && member.getDeclaringType() == null) {
-                fullNameArr = ((IType) member).resolveType(name);
-            } else {
-                fullNameArr = member.getDeclaringType().resolveType(name);
-            }
-            if (fullNameArr == null) {
-                final ICompilationUnit cu = member.getCompilationUnit();
-                if (cu != null && cu.getImport(memberAnnotation).exists()) {
-                    return Optional.of(annotation);
-                } else {
-                    return Optional.empty();
-                }
-            }
-            final String fullName = Arrays.stream(fullNameArr[0]).collect(Collectors.joining("."));
-            return fullName.equals(memberAnnotation) ?
-                Optional.of(annotation) : Optional.empty();
-        } catch (final JavaModelException e) {
-            return Optional.empty();
-        }
-    }
-
-    public static boolean hasAnnotation(IMember member, String annotation) {
-        return getAnnotation(member, annotation).isPresent();
-    }
-
-    protected static Optional<IAnnotation> getMatchedAnnotation(IMember member, String annotationToSearch)
-            throws JavaModelException {
+    /**
+     * Find the {@link IAnnotation} if the {@link IMember} is annotated with the given annotation string.
+     *
+     * @param member the {@link IMember} to search.
+     * @param annotationToSearch The annotation string.
+     * @param checkHierarchy Specify whether to search the whole annotation hierarchy.
+     */
+    public static Optional<IAnnotation> getAnnotation(IMember member, String annotationToSearch,
+            boolean checkHierarchy) {
         if (!IAnnotatable.class.isInstance(member)) {
             return Optional.empty();
         }
-        return Arrays.stream(((IAnnotatable) member).getAnnotations())
-                .filter(annotation -> annotationToSearch.endsWith(annotation.getElementName())).findAny();
+
+        final IJavaProject javaProject = member.getJavaProject();
+        if (javaProject == null) {
+            return Optional.empty();
+        }
+
+        final IType declaringType = member.getDeclaringType();
+        if (declaringType == null) {
+            return Optional.empty();
+        }
+
+        final IAnnotatable annotatable = (IAnnotatable) member;
+        try {
+            for (final IAnnotation annotation : annotatable.getAnnotations()) {
+                final IType annotationType = getResolvedType(annotation.getElementName(), declaringType, javaProject);
+                if (annotationType != null) {
+                    if (annotationToSearch.equals(annotationType.getFullyQualifiedName())) {
+                        return Optional.of(annotation);
+                    }
+                }
+                if (checkHierarchy) {
+                    final Set<IType> hierarchy = new HashSet<>();
+                    if (matchesInAnnotationHierarchy(annotationToSearch, annotationType, javaProject, hierarchy)) {
+                        return Optional.of(annotation);
+                    }
+                }
+            }
+        } catch (final JavaModelException e) {
+            // Swallow the exception
+            return Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Check the given {@link IMember} has annotated with the given annotation string.
+     *
+     * @param member the {@link IMember} to search.
+     * @param annotationToSearch The annotation string.
+     * @param checkHierarchy Specify whether to search the whole annotation hierarchy.
+     */
+    public static boolean hasAnnotation(IMember member, String annotationToSearch, boolean checkHierarchy) {
+        return getAnnotation(member, annotationToSearch, checkHierarchy).isPresent();
+    }
+
+    private static IType getResolvedType(String typeName, IType type, IJavaProject javaProject)
+            throws JavaModelException {
+        IType resolvedType = null;
+        if (typeName != null) {
+            final int pos = typeName.indexOf('<');
+            if (pos != -1) {
+                typeName = typeName.substring(0, pos);
+            }
+            final String[][] resolvedTypeNames = type.resolveType(typeName);
+            if (resolvedTypeNames != null && resolvedTypeNames.length > 0) {
+                final String[] resolvedTypeName = resolvedTypeNames[0];
+                resolvedType = javaProject.findType(resolvedTypeName[0], resolvedTypeName[1]);
+            }
+        }
+        return resolvedType;
+    }
+
+    private static boolean matchesInAnnotationHierarchy(String annotationFullName, IType annotationType,
+            IJavaProject javaProject, Set<IType> hierarchy) throws JavaModelException {
+        if (annotationType != null) {
+            for (final IAnnotation annotation : annotationType.getAnnotations()) {
+                final IType annType = getResolvedType(annotation.getElementName(), annotationType, javaProject);
+                if (annType != null && hierarchy.add(annType)) {
+                    if (annotationFullName.equals(annotationType.getFullyQualifiedName()) ||
+                            matchesInAnnotationHierarchy(annotationFullName, annType, javaProject, hierarchy)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

@@ -61,7 +61,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
                 return false;
             }
             for (final String annotation : this.testMethodAnnotations) {
-                if (TestFrameworkUtils.hasAnnotation(method, annotation)) {
+                if (TestFrameworkUtils.hasAnnotation(method, annotation, true /*checkHierarchy*/)) {
                     if ("org.junit.jupiter.api.TestFactory".equals(annotation)) {
                         return true;
                     } else if ("V".equals(method.getReturnType())) {
@@ -83,7 +83,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
         final TestItem item = super.parseTestItem(method);
         // Check if the method has annotated with @DisplayName
         final Optional<IAnnotation> annotation = TestFrameworkUtils.getAnnotation(method,
-                DISPLAY_NAME_ANNOTATION_JUNIT5);
+                DISPLAY_NAME_ANNOTATION_JUNIT5, false /*checkHierarchy*/);
         if (annotation.isPresent()) {
             item.setDisplayName((String) annotation.get().getMemberValuePairs()[0].getValue());
         }
