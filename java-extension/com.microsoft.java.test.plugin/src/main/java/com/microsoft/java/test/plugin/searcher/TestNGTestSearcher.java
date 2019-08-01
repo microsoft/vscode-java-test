@@ -43,7 +43,7 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
                 return false;
             }
             for (final String annotation : this.testMethodAnnotations) {
-                if (TestFrameworkUtils.hasAnnotation(method, annotation)) {
+                if (TestFrameworkUtils.hasAnnotation(method, annotation, false /*checkHierarchy*/)) {
                     return true;
                 }
             }

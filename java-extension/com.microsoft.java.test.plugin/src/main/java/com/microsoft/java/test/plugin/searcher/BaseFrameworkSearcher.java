@@ -44,7 +44,7 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
     @Override
     public boolean isTestClass(IType type) {
         for (final String annotation : this.getTestClassAnnotations()) {
-            if (TestFrameworkUtils.hasAnnotation(type, annotation)) {
+            if (TestFrameworkUtils.hasAnnotation(type, annotation, false /*checkHierarchy*/)) {
                 return true;
             }
         }

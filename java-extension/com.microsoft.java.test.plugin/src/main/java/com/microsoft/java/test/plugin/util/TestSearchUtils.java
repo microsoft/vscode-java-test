@@ -111,7 +111,7 @@ public class TestSearchUtils {
                 continue;
             }
             // Class annotated by @RunWith should be considered as a Suite even it has no test method children
-            if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH)) {
+            if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH, false /*checkHierarchy*/)) {
                 resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit));
             }
         }
@@ -425,7 +425,7 @@ public class TestSearchUtils {
             return false;
         }
 
-        if (TestFrameworkUtils.hasAnnotation(type, JUnit5TestSearcher.NESTED) ||
+        if (TestFrameworkUtils.hasAnnotation(type, JUnit5TestSearcher.NESTED, false /*checkHierarchy*/) ||
                 (Flags.isStatic(flags) && Flags.isPublic(flags))) {
             return true;
         }
