@@ -41,7 +41,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
         super();
         this.testMethodAnnotations = new String[] { "org.junit.jupiter.api.Test",
             "org.junit.jupiter.params.ParameterizedTest", "org.junit.jupiter.api.RepeatedTest",
-            "org.junit.jupiter.api.TestFactory" };
+            "org.junit.jupiter.api.TestFactory", "org.junit.jupiter.api.TestTemplate" };
         this.testClassAnnotations = new String[] { NESTED };
     }
 
