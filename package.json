@@ -307,6 +307,7 @@
         "vscode:prepublish": "gulp build-resources && webpack --mode production"
     },
     "extensionDependencies": [
+        "redhat.java",
         "vscjava.vscode-java-debug"
     ],
     "devDependencies": {
