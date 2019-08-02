@@ -122,17 +122,19 @@ public final class ProjectTestUtils {
             return false;
         }
 
+        if (entry.isTest()) {
+            return true;
+        }
+
         for (final IClasspathAttribute attribute : entry.getExtraAttributes()) {
             if (MAVEN_SCOPE_ATTRIBUTE.equals(attribute.getName()) ||
                     GRADLE_SCOPE_ATTRIBUTE.equals(attribute.getName())) {
-                return TEST_SCOPE.equals(attribute.getValue());
-            }
-            if (TEST_SCOPE.equals(attribute.getName())) {
-                return "true".equalsIgnoreCase(attribute.getValue());
+                // the attribute value might be "test" or "integrationTest"
+                return attribute.getValue() != null && attribute.getValue().toLowerCase().contains(TEST_SCOPE);
             }
         }
 
-        return entry.isTest();
+        return false;
     }
 
     public static boolean isProjectBelongToPath(IProject project, IPath path) {
