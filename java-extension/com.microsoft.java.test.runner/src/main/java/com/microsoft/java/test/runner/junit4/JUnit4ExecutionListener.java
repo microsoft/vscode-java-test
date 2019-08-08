@@ -46,44 +46,68 @@ public class JUnit4ExecutionListener extends RunListener {
 
     @Override
     public void testStarted(Description description) throws Exception {
+        final String methodName = description.getMethodName();
+        if (methodName == null) {
+            return;
+        }
         updateCurrentSuite(description);
         myCurrentTestStart = System.currentTimeMillis();
 
-        TestRunnerMessageHelper.testStarted(description.getClassName() + "#" + description.getMethodName());
+        TestRunnerMessageHelper.testStarted(description.getClassName() + "#" + methodName);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
+        final String methodName = description.getMethodName();
+        if (methodName == null) {
+            return;
+        }
         final long duration = System.currentTimeMillis() - myCurrentTestStart;
 
-        TestRunnerMessageHelper.testFinished(description.getClassName() + "#" + description.getMethodName(), duration);
+        TestRunnerMessageHelper.testFinished(description.getClassName() + "#" + methodName, duration);
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
+        final String methodName = failure.getDescription().getMethodName();
+        if (methodName == null) {
+            return;
+        }
         final long duration = System.currentTimeMillis() - myCurrentTestStart;
 
         TestRunnerMessageHelper.testFailed(
-                failure.getDescription().getClassName() + "#" + failure.getDescription().getMethodName(),
+                failure.getDescription().getClassName() + "#" + methodName,
                 failure.getException(), duration);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
+        final String methodName = failure.getDescription().getMethodName();
+        if (methodName == null) {
+            return;
+        }
         final long duration = System.currentTimeMillis() - myCurrentTestStart;
 
-        TestRunnerMessageHelper.testFailed(failure.getDescription().getMethodName(), failure.getException(), duration);
+        TestRunnerMessageHelper.testFailed(methodName, failure.getException(), duration);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
+        final String methodName = description.getMethodName();
+        if (methodName == null) {
+            return;
+        }
         updateCurrentSuite(description);
-        TestRunnerMessageHelper.testIgnored(description.getClassName() + "#" + description.getMethodName());
+        TestRunnerMessageHelper.testIgnored(description.getClassName() + "#" + methodName);
     }
 
     public void suiteSendTree(Description description) {
         if (description.isTest()) {
-            TestRunnerMessageHelper.treeNode(description.getClassName(), description.getMethodName());
+            final String methodName = description.getMethodName();
+            if (methodName == null) {
+                return;
+            }
+            TestRunnerMessageHelper.treeNode(description.getClassName(), methodName);
         } else {
             TestRunnerMessageHelper.suiteTreeNodeStarted(description.getClassName());
             for (final Description child : description.getChildren()) {
