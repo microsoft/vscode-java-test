@@ -70,7 +70,12 @@ public class TestFrameworkUtils {
             return Optional.empty();
         }
 
-        final IType declaringType = member.getDeclaringType();
+        IType declaringType = null;
+        if (IMethod.class.isInstance(member)) {
+            declaringType = member.getDeclaringType();
+        } else if (IType.class.isInstance(member)) {
+            declaringType = (IType) member;
+        }
         if (declaringType == null) {
             return Optional.empty();
         }
