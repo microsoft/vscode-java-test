@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, commands, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { showOutputChannel } from '../commands/logCommands';
+import { JavaLanguageServerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
 import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
@@ -14,7 +15,7 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
-import { getShowReportSetting, resolve } from '../utils/settingUtils';
+import { getShowReportSetting, needsBuildWorkspace, resolve } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
@@ -40,6 +41,12 @@ class RunnerExecutor {
 
         this._isRunning = true;
         const finalResults: ITestResult[] = [];
+
+        const needContinue: boolean = await this.buildWorkspaeIfNeeded();
+        if (!needContinue) {
+            return;
+        }
+
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
             for (const [runner, tests] of this._runnerMap.entries()) {
@@ -112,6 +119,24 @@ class RunnerExecutor {
             logger.error('Failed to clean up', error);
         }
         this._isRunning = false;
+    }
+
+    private async buildWorkspaeIfNeeded(): Promise<boolean> {
+        if (needsBuildWorkspace()) {
+            try {
+                // Directly call this Language Server command since we hard depend on it.
+                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false);
+            } catch (err) {
+                const ans: string | undefined = await window.showErrorMessage(
+                    'Build failed, do you want to continue?',
+                    'Proceed',
+                    'Abort');
+                if (ans !== 'Proceed') {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {
