@@ -316,7 +316,7 @@
         "@types/mocha": "^2.2.48",
         "@types/node": "^6.0.110",
         "@types/pug": "^2.0.4",
-        "@types/vscode": "^1.32.0",
+        "@types/vscode": "1.32.0",
         "bootstrap": "^4.3.1",
         "gulp": "^4.0.0",
         "gulp-decompress": "^2.0.2",
