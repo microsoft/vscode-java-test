@@ -8,7 +8,6 @@ const sass = require('gulp-sass');
 const decompress = require('gulp-decompress');
 const download = require('gulp-download');
 const path = require('path');
-const fse = require('fs-extra');
 const os = require('os');
 
 const serverDir = path.join(__dirname, 'java-extension');
@@ -64,36 +63,6 @@ gulp.task('download-resources', (done) => {
 });
 
 gulp.task('build-resources', gulp.series('sass', 'download-resources'));
-
-// For test
-gulp.task('install-java-language-server', async (done) => {
-    await installExtension('redhat', 'java', '0.31.0');
-    done();
-});
-
-gulp.task('install-java-debug', async (done) => {
-    await installExtension('vscjava', 'vscode-java-debug', '0.13.0');
-    done();
-});
-
-gulp.task('install-dependency', gulp.series('install-java-language-server', 'install-java-debug'));
-
-async function installExtension(publisher, identifier, version) {
-    const extensionPath = path.join(vscodeExtensionsPath, `${publisher}.${identifier}-${version}`);
-    if (!await fse.pathExists(extensionPath)) {
-        return download(`http://ms-vscode.gallery.vsassets.io/_apis/public/gallery/publisher/${publisher}/extension/${identifier}/${version}/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage`)
-            .pipe(decompress({
-                filter: file => file.path.startsWith('extension/'),
-                map: file => {
-                    file.path = file.path.slice('extension/'.length);
-                    return file;
-                }
-            }))
-            .pipe(gulp.dest(extensionPath));
-    } else {
-        console.log(`${publisher}.${identifier}-${version} already installed.`);
-    }
-}
 
 function isWin() {
     return /^win/.test(process.platform);
