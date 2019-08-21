@@ -3,7 +3,7 @@
 
 import * as _ from 'lodash';
 import { Uri, ViewColumn, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
-import { BUILD_BEFORE_LAUNCH_SETTING_KEY, DEFAULT_LOG_LEVEL, DEFAULT_REPORT_POSITION, DEFAULT_REPORT_SHOW, LOG_LEVEL_SETTING_KEY, REPORT_POSITION_SETTING_KEY, REPORT_SHOW_SETTING_KEY } from '../constants/configs';
+import { BUILD_BEFORE_LAUNCH_SETTING_KEY, DEFAULT_LOG_LEVEL, DEFAULT_REPORT_POSITION, DEFAULT_REPORT_SHOW, LOG_LEVEL_SETTING_KEY, REPORT_POSITION_SETTING_KEY, REPORT_SHOW_SETTING_KEY, SAVE_ALL_BEFORE_LAUNCH_SETTING_KEY } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { IExecutionConfig } from '../runConfigs';
 
@@ -13,7 +13,11 @@ export function getReportPosition(): ViewColumn {
     return position === DEFAULT_REPORT_POSITION ? ViewColumn.Two : ViewColumn.Active;
 }
 
-export function needsBuildWorkspace(): boolean {
+export function needSaveAll(): boolean {
+    return workspace.getConfiguration().get<boolean>(SAVE_ALL_BEFORE_LAUNCH_SETTING_KEY, true);
+}
+
+export function needBuildWorkspace(): boolean {
     return workspace.getConfiguration().get<boolean>(BUILD_BEFORE_LAUNCH_SETTING_KEY, true);
 }
 

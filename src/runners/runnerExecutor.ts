@@ -15,7 +15,7 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
-import { getShowReportSetting, needsBuildWorkspace, resolve } from '../utils/settingUtils';
+import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolve } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
@@ -42,6 +42,7 @@ class RunnerExecutor {
         this._isRunning = true;
         const finalResults: ITestResult[] = [];
 
+        await this.saveAllIfNeeded();
         const needContinue: boolean = await this.buildWorkspaeIfNeeded();
         if (!needContinue) {
             return;
@@ -121,8 +122,14 @@ class RunnerExecutor {
         this._isRunning = false;
     }
 
+    private async saveAllIfNeeded(): Promise<void> {
+        if (needSaveAll()) {
+            await workspace.saveAll();
+        }
+    }
+
     private async buildWorkspaeIfNeeded(): Promise<boolean> {
-        if (needsBuildWorkspace()) {
+        if (needBuildWorkspace()) {
             try {
                 // Directly call this Language Server command since we hard depend on it.
                 await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false /*incremental build*/);
