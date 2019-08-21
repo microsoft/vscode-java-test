@@ -125,7 +125,7 @@ class RunnerExecutor {
         if (needsBuildWorkspace()) {
             try {
                 // Directly call this Language Server command since we hard depend on it.
-                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false);
+                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false /*incremental build*/);
             } catch (err) {
                 const ans: string | undefined = await window.showErrorMessage(
                     'Build failed, do you want to continue?',
