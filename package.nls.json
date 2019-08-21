@@ -13,6 +13,7 @@
     "configuration.java.test.report.showAfterExecution.description": "Specify if the test report will automatically be shown after execution",
     "configuration.java.test.report.position.description": "Specify where to show the test report",
     "configuration.java.test.editor.enableShortcuts.description": "Specify whether to show the Code Lenses in editor or not",
+    "configuration.java.test.forceBuildBeforeLaunchTest.description": "Specify whether to force build the workspace before launching the test",
     "configuration.java.test.log.level.description": "Specify the level of the test logs",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "Specify whether the extension will show hint dialog when deprecated configuration file is used",
     "configuration.java.test.message.hintForSetingDefaultConfig.description": "Specify whether the extension will show hint to set default test configuration",

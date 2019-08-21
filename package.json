@@ -185,6 +185,12 @@
                     "description": "%configuration.java.test.editor.enableShortcuts.description%",
                     "scope": "application"
                 },
+                "java.test.forceBuildBeforeLaunchTest": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%configuration.java.test.forceBuildBeforeLaunchTest.description%",
+                    "scope": "application"
+                },
                 "java.test.log.level": {
                     "type": "string",
                     "enum": [

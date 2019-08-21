@@ -110,6 +110,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 | `java.test.report.position` | Specify where to show the test report. Supported values are: `sideView`, `currentView`. | `sideView` |
 | `java.test.report.showAfterExecution` | Specify if the test report will automatically be shown after execution. Supported values are: `always`, `onFailure`, `never`. | `onFailure` |
 | `java.test.editor.enableShortcuts` | Specify whether to show the Code Lenses in editor or not. | `true` |
+| `java.test.forceBuildBeforeLaunchTest` | Specify whether to force build the workspace before launching the test | `true` |
 | `java.test.log.level` | Specify the level of the test logs. Supported values are: `error`, `info`, `verbose`. | `info` |
 | `java.test.config` | Specify the configuration for the test cases to run with. [More details](https://aka.ms/java-test-config). | `{}` |
 | `java.test.defaultConfig` | Specify the name of the default test configuration. | `""` |

@@ -3,6 +3,8 @@
 
 export const MAX_CLASS_PATH_LENGTH: number = 4096;
 
+export const BUILD_BEFORE_LAUNCH_SETTING_KEY: string = 'java.test.forceBuildBeforeLaunchTest';
+
 export const LOG_FILE_NAME: string = 'java_test_runner.log';
 export const LOG_FILE_MAX_SIZE: number = 5 * 1024 * 1024;
 export const LOG_FILE_MAX_NUMBER: number = 2;

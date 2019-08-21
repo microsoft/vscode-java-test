@@ -3,6 +3,7 @@
 
 export namespace JavaLanguageServerCommands {
     export const EXECUTE_WORKSPACE_COMMAND: string = 'java.execute.workspaceCommand';
+    export const JAVA_BUILD_WORKSPACE: string = 'java.workspace.compile';
 }
 
 export namespace JavaTestRunnerDelegateCommands {
