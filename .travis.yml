@@ -25,4 +25,4 @@ script:
 - npm run build-plugin
 - npm run compile
 - vsce package
-- npm test --silent
+- npm test

@@ -3,7 +3,7 @@
 
 import * as cp from 'child_process';
 import * as fse from 'fs-extra';
-import * as getPort from 'get-port';
+import { default as getPort } from 'get-port';
 import * as iconv from 'iconv-lite';
 import * as os from 'os';
 import * as path from 'path';
