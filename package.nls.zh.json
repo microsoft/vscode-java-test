@@ -13,6 +13,7 @@
     "configuration.java.test.report.showAfterExecution.description": "设定测试报告是否会在测试完成后自动显示",
     "configuration.java.test.report.position.description": "设定测试报告的显示位置",
     "configuration.java.test.editor.enableShortcuts.description": "设定是否在编辑器内显示 Code Lens 快捷方式",
+    "configuration.java.test.saveAllBeforLaunchTest.description": "设定在执行测试之前是否需要保存工作空间内的所有文件",
     "configuration.java.test.forceBuildBeforeLaunchTest.description": "设定在执行测试之前是否需要构建工作空间",
     "configuration.java.test.log.level.description": "设定日志级别",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "设定插件是否会对使用弃用的配置文件进行提示",
