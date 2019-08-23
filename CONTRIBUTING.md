@@ -50,6 +50,8 @@ The extension has three major modules, which are listed as follow:
 5. Install the [Eclipse PDE Support extension](https://marketplace.visualstudio.com/items?itemName=yaozheng.vscode-pde) in your VS Code
 6. Open a Java file and wait until 👍 shows in the right-bottom of the status bar 
 
+> Sometimes, if you find the code navigation is not working, please reload your VS Code.
+
 #### Use Eclipse
 5. Import `java-extension/com.microsoft.java.test.plugin` in Eclipse
 6. Click `Window` > `Preferences` > `Plug-in Development` > `Target Platform`
