@@ -32,7 +32,6 @@ target/
 .classpath
 .project
 .settings
-javaConfig.json
 **/.checkstyle
 target/
 bin/
