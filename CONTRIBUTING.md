@@ -44,16 +44,15 @@ The extension has three major modules, which are listed as follow:
 3. Install the node dependencies: `npm install`
 4. Build the Java modules: `npm run build-plugin`
 5. Build the test report resources: `npm run build-resources`
-6. Install the [Eclipse PDE Support extension](https://marketplace.visualstudio.com/items?itemName=yaozheng.vscode-pde) in your VS Code
-7. Open a Java file and wait until 👍 shows in the right-bottom of the status bar
-    > Note: Step 6 & 7 are only required if you want to debug the code in Java Test Plugin. Sometimes, if you find the code navigation is not working in the Java code, please reload your VS Code.
+6. Open the directory `vscode-java-test` in VS Code
+7. Install the [Eclipse PDE Support extension](https://marketplace.visualstudio.com/items?itemName=yaozheng.vscode-pde) in your VS Code
+8. Open a Java file and wait until 👍 shows in the right-bottom of the status bar
+    > Note: Sometimes, if you find the code navigation is not working in the Java code, please reload your VS Code.
 
 ### Debugging
-
-1. Open the base directory of Java Test Runner in VS Code
-2. Hit `F5` to launch the extension in debug mode
+1. Hit `F5` (or run Launch Extension in the debug viewlet) to launch the extension in debug mode
     > This will open a new VS Code window as a debug session. Open a Java project folder and let the extension be activated, then you can debug it.
-3. If you want to debug the Java Test Plugin, simply launch with the [launch configuration](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) named `Debug Test Runner Java Plugin (Attach)`.
+2. If you want to debug the Java Test Plugin, run [Debug Test Runner Java Plugin (Attach)](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) in the debug viewlet.
 
 > Note: If the Java code is changed by you, please run `npm run build-plugin` before you start debugging.
 
