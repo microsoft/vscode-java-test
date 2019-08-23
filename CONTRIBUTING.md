@@ -50,7 +50,7 @@ The extension has three major modules, which are listed as follow:
     > Note: Sometimes, if you find the code navigation is not working in the Java code, please reload your VS Code.
 
 ### Debugging
-1. Hit `F5` (or run Launch Extension in the debug viewlet) to launch the extension in debug mode
+1. Hit `F5` (or run `Launch Extension` in the debug viewlet) to launch the extension in debug mode
     > This will open a new VS Code window as a debug session. Open a Java project folder and let the extension be activated, then you can debug it.
 2. If you want to debug the Java Test Plugin, run [Debug Test Runner Java Plugin (Attach)](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) in the debug viewlet.
 
