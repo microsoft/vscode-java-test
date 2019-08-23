@@ -63,7 +63,7 @@ The extension has three major modules, which are listed as follow:
 2. Hit `F5` to launch the extension in debug mode
  
 ### Debugging the Java plugin
-To debug the Java plugin, we need to first launch the extension. After the Java Language Server is activated, we can use attach mode to debug the Java code
+To debug the Java plugin, we need to first [launch the extension](#debugging-the-extension-client). After the Java Language Server is activated, we can use attach mode to debug the Java code
 
 #### Use VS Code (Preferred)
 1. Simply launch with the [launch configuration](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) named `Debug Test Runner Java Plugin (Attach)`.
