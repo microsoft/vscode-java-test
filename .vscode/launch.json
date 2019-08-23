@@ -14,6 +14,13 @@
             "preLaunchTask": "npm: watch"
         },
         {
+            "type": "java",
+            "name": "Debug Test Runner Java Plugin (Attach)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 1044
+        },
+        {
             "name": "Launch Tests",
             "type": "extensionHost",
             "request": "launch",
