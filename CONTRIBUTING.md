@@ -35,7 +35,7 @@ If you are interested in writing code to fix issues, please check the following 
 ### Overview
 The extension has three major modules, which are listed as follow:
 - The extension client written in TypeScript - UI logic mostly
-- [The Java Language Server plugin](https://github.com/Microsoft/vscode-java-test/tree/master/java-extension/com.microsoft.java.test.plugin) written in Java - Inspect the Java project 
+- [The Java Test Plugin](https://github.com/Microsoft/vscode-java-test/tree/master/java-extension/com.microsoft.java.test.plugin) written in Java - Inspect the Java project 
 - [The Java Test Runner](https://github.com/Microsoft/vscode-java-test/tree/master/java-extension/com.microsoft.java.test.runner) written in Java - An executable jar to running the test cases
 
 ### Setup
@@ -44,22 +44,17 @@ The extension has three major modules, which are listed as follow:
 3. Install the node dependencies: `npm install`
 4. Build the Java modules: `npm run build-plugin`
 5. Build the test report resources: `npm run build-resources`
-> Note: The below steps are only required if you want to debug the Java Language Server plugin
-5. Import `java-extension/com.microsoft.java.test.plugin` in Eclipse
-6. Click `Window` > `Preferences` > `Plug-in Development` > `Target Platform`
-7. In the `Target definitions` panel, select `JDTLS.EXT - /com.microsoft.java.test.plugin/target.target`
-8. Click `Apply and Close`
+6. Open the directory `vscode-java-test` in VS Code
+7. Install the [Eclipse PDE Support extension](https://marketplace.visualstudio.com/items?itemName=yaozheng.vscode-pde) in your VS Code
+8. Open a Java file and wait until 👍 shows in the right-bottom of the status bar
+    > Note: Sometimes, if you find the code navigation is not working in the Java code, please reload your VS Code.
 
-### Debugging the Extension Client
-1. Open the base directory of Java Test Runner in VS Code
-2. Hit `F5` to launch the extension in debug mode
- 
-### Debugging the Java Language Server plugin
-1. In Eclipse, create a new `Debug Configurations`, select the type as `Remote Java Application`
-2. In the `Connect` panel, find the `Port` setting in `Connection Properties` and set it to `1044`
-3. In the `Source` panel, click `Add` > `Java Project`, select `com.microsoft.java.test.plugin` and click `OK`
-4. Click `Apply` to save the configurations
-5. Click `Debug` to start the debug session
+### Debugging
+1. Hit `F5` (or run `Launch Extension` in the debug viewlet) to launch the extension in debug mode
+    > This will open a new VS Code window as a debug session. Open a Java project folder and let the extension be activated, then you can debug it.
+2. If you want to debug the Java Test Plugin, run [Debug Test Runner Java Plugin (Attach)](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) in the debug viewlet.
+
+> Note: If the Java code is changed by you, please run `npm run build-plugin` before you start debugging.
 
 ### Debugging the Java Test Runner
 - The Java Test Runner is a normal Maven project, you can open it with whatever the development tools you prefer, for example, VS Code
