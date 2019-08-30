@@ -24,6 +24,16 @@ export enum TestStatus {
     Skip = 'Skip',
 }
 
+export interface ITestOutputData {
+    type: TestOutputType;
+    name: string;
+}
+
+export enum TestOutputType {
+    Info,
+    Error,
+}
+
 export const defaultResult: ITestResult = {
     displayName: '',
     fullName: '',

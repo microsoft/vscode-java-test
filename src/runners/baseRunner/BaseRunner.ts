@@ -5,6 +5,7 @@ import * as cp from 'child_process';
 import * as fse from 'fs-extra';
 import { default as getPort } from 'get-port';
 import * as iconv from 'iconv-lite';
+import { Server, Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import { debug, Uri, workspace, WorkspaceConfiguration } from 'vscode';
@@ -26,6 +27,8 @@ export abstract class BaseRunner implements ITestRunner {
     protected port: number | undefined;
     protected tests: ITestItem[];
     protected isDebug: boolean;
+    protected server: Server;
+    protected socket: Socket;
     protected classpath: string;
     protected config: IExecutionConfig | undefined;
     protected encoding: string;
@@ -46,10 +49,11 @@ export abstract class BaseRunner implements ITestRunner {
         return 'com.microsoft.java.test.runner.Launcher';
     }
 
-    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<void> {
+    public async setup(tests: ITestItem[], isDebug: boolean = false, server: Server, config?: IExecutionConfig): Promise<void> {
         this.port = isDebug ? await getPort() : undefined;
         this.tests = tests;
         this.isDebug = isDebug;
+        this.server = server;
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
         const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
         this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
@@ -74,17 +78,33 @@ export abstract class BaseRunner implements ITestRunner {
                 logger.error('Failed to launch the runner', error);
                 reject(error);
             });
+            this.server.on('connection', (socket: Socket) => {
+                this.socket = socket;
+                socket.on('error', (err: Error) => {
+                    reject(err);
+                });
+
+                socket.on('data', (buffer: Buffer) => {
+                    data = data.concat(iconv.decode(buffer, this.encoding));
+                    const index: number = data.lastIndexOf(os.EOL);
+                    if (index >= 0) {
+                        testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
+                        data = data.substring(index + os.EOL.length);
+                    }
+                });
+            });
+
+            this.server.on('error', (err: Error) => {
+                reject(err);
+            });
+
             this.process.stderr.on('data', (buffer: Buffer) => {
-                testResultAnalyzer.analyzeError(iconv.decode(buffer, this.encoding));
+                logger.error(iconv.decode(buffer, this.encoding));
             });
             this.process.stdout.on('data', (buffer: Buffer) => {
-                data = data.concat(iconv.decode(buffer, this.encoding));
-                const index: number = data.lastIndexOf(os.EOL);
-                if (index >= 0) {
-                    testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
-                    data = data.substring(index + os.EOL.length);
-                }
+                logger.info(iconv.decode(buffer, this.encoding));
             });
+
             this.process.on('close', (signal: number) => {
                 if (this.isCanceled) {
                     return resolve([]);
@@ -99,6 +119,7 @@ export abstract class BaseRunner implements ITestRunner {
                     resolve(result);
                 }
             });
+
             if (this.isDebug) {
                 const uri: Uri = Uri.parse(this.tests[0].location.uri);
                 setTimeout(() => {
@@ -127,6 +148,7 @@ export abstract class BaseRunner implements ITestRunner {
                 await fse.remove(this.storagePathForCurrentSession);
                 this.storagePathForCurrentSession = undefined;
             }
+            this.socket.destroy();
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
@@ -146,6 +168,8 @@ export abstract class BaseRunner implements ITestRunner {
         }
 
         commandParams.push(this.runnerMainClassName);
+
+        commandParams.push(`${this.server.address().port}`);
 
         commandParams.push(...this.getRunnerCommandParams());
 

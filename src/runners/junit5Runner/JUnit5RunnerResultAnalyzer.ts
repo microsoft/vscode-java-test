@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestResultDetails, TestStatus } from '../models';
+import { ITestOutputData, ITestResultDetails, TestStatus } from '../models';
 
 const TEST_START: string = 'testStarted';
 const TEST_IGNORED: string = 'testIgnored';
@@ -11,6 +11,7 @@ const TEST_FINISH: string = 'testFinished';
 export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
+        super.processData(data);
         const outputData: IJUnit5TestOutputData = JSON.parse(data) as IJUnit5TestOutputData;
         if (outputData.attributes.type !== JUnit5TestType.Test) {
             return;
@@ -88,8 +89,7 @@ export class JUnit5RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     }
 }
 
-interface IJUnit5TestOutputData {
-    name: string;
+interface IJUnit5TestOutputData extends ITestOutputData {
     attributes: IJUnit5TestAttributes;
 }
 

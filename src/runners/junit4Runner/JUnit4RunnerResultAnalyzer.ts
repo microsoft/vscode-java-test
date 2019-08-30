@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestResultDetails, TestStatus } from '../models';
+import { ITestOutputData, ITestResultDetails, TestStatus } from '../models';
 
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';
@@ -11,6 +11,7 @@ const TEST_FINISH: string = 'testFinished';
 export class JUnit4RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
+        super.processData(data);
         const outputData: IJUnit4TestOutputData = JSON.parse(data) as IJUnit4TestOutputData;
         switch (outputData.name) {
             case TEST_START:
@@ -41,9 +42,7 @@ export class JUnit4RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     }
 }
 
-interface IJUnit4TestOutputData {
-    type: JUnit4TestOutputType;
-    name: string;
+interface IJUnit4TestOutputData extends ITestOutputData {
     attributes: IJUnitTestAttributes;
 }
 
@@ -53,9 +52,4 @@ interface IJUnitTestAttributes  {
     location: string;
     message: string;
     trace: string;
-}
-
-enum JUnit4TestOutputType {
-    Info,
-    Error,
 }

@@ -19,6 +19,8 @@ import com.microsoft.java.test.runner.junit4.JUnit4Launcher;
 import com.microsoft.java.test.runner.junit5.CustomizedConsoleLauncher;
 import com.microsoft.java.test.runner.testng.TestNGLauncher;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class Launcher {
     private static final String JUNIT = "junit";
     private static final String JUNIT5 = "junit5";
     private static final String TESTNG = "testng";
+    private static final String LOCAL_HOST = "127.0.0.1";
 
     private static final Map<String, ITestLauncher> launcherMap;
 
@@ -42,17 +45,21 @@ public class Launcher {
 
     public static void main(String[] args) {
         int exitStatus = 0;
+        Socket clientSocket = null;
         try {
             if (args == null || args.length == 0) {
                 throw new ParameterException("No arguments provided.");
             }
 
-            final ITestLauncher launcher = launcherMap.get(args[0]);
+            final int portNumber = Integer.parseInt(args[0]);
+            clientSocket = new Socket(LOCAL_HOST, portNumber);
+            TestOutputStream.instance().initialize(clientSocket.getOutputStream());
+            final ITestLauncher launcher = launcherMap.get(args[1]);
             if (launcher == null) {
-                throw new ParameterException("Unsupported runner type: " + args[0] + ".");
+                throw new ParameterException("Unsupported runner type: " + args[1] + ".");
             }
 
-            final String[] params = Arrays.copyOfRange(args, 1, args.length);
+            final String[] params = Arrays.copyOfRange(args, 2, args.length);
             launcher.execute(params);
         } catch (final ParameterException e) {
             exitStatus = EXIT_WITH_INVALID_INPUT_CODE;
@@ -61,6 +68,14 @@ public class Launcher {
             exitStatus = EXIT_WITH_UNKNOWN_EXCEPTION;
             TestOutputStream.instance().println(new TestMessageItem("Exception happens in the Test Runner.", e));
         } finally {
+            TestOutputStream.instance().close();
+            try {
+                if (clientSocket != null) {
+                    clientSocket.close();
+                }
+            } catch (IOException e) {
+                // Do nothing
+            }
             System.exit(exitStatus);
         }
     }

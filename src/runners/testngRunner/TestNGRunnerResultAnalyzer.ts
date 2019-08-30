@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestResultDetails, TestStatus } from '../models';
+import { ITestOutputData, ITestResultDetails, TestStatus } from '../models';
 
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';
@@ -11,6 +11,7 @@ const TEST_FINISH: string = 'testFinished';
 export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
+        super.processData(data);
         const outputData: ITestNGOutputData = JSON.parse(data) as ITestNGOutputData;
         switch (outputData.name) {
             case TEST_START:
@@ -41,9 +42,7 @@ export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     }
 }
 
-interface ITestNGOutputData {
-    type: TestNGOutputType;
-    name: string;
+interface ITestNGOutputData extends ITestOutputData {
     attributes: ITestNGAttributes;
 }
 
@@ -53,9 +52,4 @@ interface ITestNGAttributes  {
     location: string;
     message: string;
     trace: string;
-}
-
-enum TestNGOutputType {
-    Info,
-    Error,
 }
