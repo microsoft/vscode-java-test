@@ -3,7 +3,7 @@
 
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
-import { defaultResult, ITestResult, ITestResultDetails } from '../models';
+import { defaultResult, ITestOutputData, ITestResult, ITestResultDetails, TestOutputType } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
     protected testResults: Map<string, ITestResultDetails> = new Map<string, ITestResultDetails>();
@@ -23,7 +23,6 @@ export abstract class BaseRunnerResultAnalyzer {
                 // Message from Test Runner executable
                 try {
                     this.processData(match[1]);
-                    logger.verbose(this.unescape(line));
                 } catch (error) {
                     logger.error(`Failed to parse output data: ${data}`, error);
                 }
@@ -32,10 +31,6 @@ export abstract class BaseRunnerResultAnalyzer {
                 logger.info(line);
             }
         }
-    }
-
-    public analyzeError(error: string): void {
-        logger.error(this.unescape(error));
     }
 
     public feedBack(): ITestResult[] {
@@ -48,7 +43,15 @@ export abstract class BaseRunnerResultAnalyzer {
         return result;
     }
 
-    protected abstract processData(data: string): void;
+    protected processData(data: string): void {
+        const outputData: ITestOutputData = JSON.parse(data) as ITestOutputData;
+        if (outputData.type === TestOutputType.Error) {
+            logger.error(this.unescape(data));
+        } else {
+            // Append '\n' becuase the original line separator has been splitted
+            logger.verbose(this.unescape(data) + '\n');
+        }
+    }
 
     protected flatTestItems(item: ITestItem, map: Map<string, ITestItem>): void {
         if (item.level === TestLevel.Method) {

@@ -3,6 +3,8 @@
 
 export const MAX_CLASS_PATH_LENGTH: number = 4096;
 
+export const LOCAL_HOST: string = '127.0.0.1';
+
 export const SAVE_ALL_BEFORE_LAUNCH_SETTING_KEY: string = 'java.test.saveAllBeforLaunchTest';
 
 export const BUILD_BEFORE_LAUNCH_SETTING_KEY: string = 'java.test.forceBuildBeforeLaunchTest';

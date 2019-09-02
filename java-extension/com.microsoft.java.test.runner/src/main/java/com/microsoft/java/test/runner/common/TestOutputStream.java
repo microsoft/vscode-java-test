@@ -18,12 +18,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
-import java.io.PrintStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Type;
 
 public class TestOutputStream implements TestStream {
-    private final PrintStream out;
-    private final PrintStream err;
+
+    private PrintWriter out;
 
     private static final JsonSerializer<TestMessageItem> serializer = new JsonSerializer<TestMessageItem>() {
         @Override
@@ -41,9 +42,12 @@ public class TestOutputStream implements TestStream {
         }
     };
 
-    private TestOutputStream() {
-        this.out = System.out;
-        this.err = System.err;
+    private TestOutputStream() { }
+
+    public void initialize(OutputStream outputStream) {
+        if (out == null) {
+            out = new PrintWriter(outputStream, true);
+        }
     }
 
     private static class SingletonHelper {
@@ -57,19 +61,13 @@ public class TestOutputStream implements TestStream {
     @Override
     public void println(TestMessageItem item) {
         final String content = toJson(item);
-        if (item.type == TestMessageType.Error) {
-            this.err.println(content);
-            this.err.println();
-        } else {
-            this.out.println(content);
-            this.out.println();
-        }
+        out.println(content);
+        out.println();
     }
 
     @Override
-    public void flush() {
-        this.out.flush();
-        this.err.flush();
+    public void close() {
+        out.close();
     }
 
     private static String toJson(TestMessageItem item) {

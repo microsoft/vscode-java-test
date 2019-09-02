@@ -14,5 +14,5 @@ package com.microsoft.java.test.runner.common;
 public interface TestStream {
     void println(TestMessageItem item);
 
-    void flush();
+    void close();
 }
