@@ -37,40 +37,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.1</version>
-                <executions>
-                    <execution>
-                        <?m2e execute onConfiguration?>
-                        <id>get-libs</id>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <phase>validate</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <skip>false</skip>
-                    <outputDirectory>${basedir}/lib/</outputDirectory>
-                    <!-- baseVersion is to avoid SNAPSHOT dependencies 
-                        being copied with ever daily changing timestamp -->
-                    <useBaseVersion>true</useBaseVersion>
-                    <artifactItems>
-                        <artifactItem>
-                            <groupId>com.google.code.gson</groupId>
-                            <artifactId>gson</artifactId>
-                            <version>2.7</version>
-                        </artifactItem>
-                        <artifactItem>
-                            <groupId>org.apache.commons</groupId>
-                            <artifactId>commons-lang3</artifactId>
-                            <version>3.9</version>
-                        </artifactItem>
-                    </artifactItems>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>target-platform-configuration</artifactId>
                 <version>${tycho-version}</version>
