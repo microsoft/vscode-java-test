@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017, 2018 Microsoft Corporation and others.
+* Copyright (c) 2017, 2019 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 
 package com.microsoft.java.test.plugin.handler;
 
+import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils;
 import com.microsoft.java.test.plugin.util.ProjectInfoFetcher;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 import com.microsoft.java.test.plugin.util.RuntimeClassPathUtils;
@@ -31,6 +32,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String SEARCH_TEST_ALL_ITEMS = "vscode.java.test.search.items.all";
     private static final String SEARCH_TEST_CODE_LENS = "vscode.java.test.search.codelens";
     private static final String SEARCH_TEST_LOCATION = "vscode.java.test.search.location";
+    private static final String RESOLVE_JUNIT_ARGUMENT = "vscode.java.test.junit.argument";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -50,6 +52,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return TestSearchUtils.searchCodeLens(arguments, monitor);
             case SEARCH_TEST_LOCATION:
                 return TestSearchUtils.searchLocation(arguments, monitor);
+            case RESOLVE_JUNIT_ARGUMENT:
+                return JUnitLaunchUtils.resolveLaunchArgument(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));
