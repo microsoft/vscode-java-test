@@ -16,6 +16,8 @@ Require-Bundle: org.eclipse.jdt.core,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.jdt.core.manipulation,
- org.eclipse.debug.core
-Bundle-ClassPath: .,
- lib/gson-2.7.jar
+ org.eclipse.debug.core,
+ org.eclipse.jdt.junit.core,
+ org.apache.commons.lang3;bundle-version="3.1.0",
+ com.google.gson;bundle-version="2.7.0"
+Bundle-ClassPath: .
