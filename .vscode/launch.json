@@ -18,7 +18,8 @@
             "name": "Debug Test Runner Java Plugin (Attach)",
             "request": "attach",
             "hostName": "localhost",
-            "port": 1044
+            "port": 1044,
+            "projectName": "com.microsoft.java.test.plugin",
         },
         {
             "name": "Launch Tests",
