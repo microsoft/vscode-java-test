@@ -1,6 +1,5 @@
 {
     "description": "Run and debug JUnit or TestNG test cases",
-    "contributes.views.explorer.testExplorer.name": "Test Explorer",
     "contributes.commands.java.test.show.output.title": "Show Test Output",
     "contributes.commands.java.test.open.log.title": "Open Test Runner Log",
     "contributes.commands.java.test.explorer.run.title": "Run Test",
