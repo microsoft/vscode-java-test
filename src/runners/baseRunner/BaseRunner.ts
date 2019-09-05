@@ -7,7 +7,7 @@ import * as iconv from 'iconv-lite';
 import { createServer, Server, Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
-import { DebugConfiguration, Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { DebugConfiguration, Uri } from 'vscode';
 import { LOCAL_HOST } from '../../constants/configs';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
@@ -15,6 +15,7 @@ import { IExecutionConfig } from '../../runConfigs';
 import { testResultManager } from '../../testResultManager';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
+import { getJavaEncoding } from '../../utils/launchUtils';
 import { isTestMethodName } from '../../utils/protocolUtils';
 import { ITestRunner } from '../ITestRunner';
 import { ITestResult } from '../models';
@@ -33,14 +34,34 @@ export abstract class BaseRunner implements ITestRunner {
         protected storagePath: string | undefined,
         protected extensionPath: string) {}
 
-    public abstract get testResultAnalyzer(): BaseRunnerResultAnalyzer;
+    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<DebugConfiguration> {
+        await this.startSocketServer();
+        this.clearTestResults(tests);
+        this.tests = tests;
+        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
+        const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
+        this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
+        const classPathString: string = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
 
-    public get runnerDir(): string {
-        return path.join(this.extensionPath, 'server');
-    }
+        let env: {} = process.env;
+        if (config && config.env) {
+            env = {...env, ...config.env};
+        }
 
-    public get runnerMainClassName(): string {
-        return 'com.microsoft.java.test.runner.Launcher';
+        return {
+            name: 'Launch Java Tests',
+            type: 'java',
+            request: 'launch',
+            mainClass: this.runnerMainClassName,
+            projectName: tests[0].project,
+            cwd: config ? config.workingDirectory : undefined,
+            classPaths: classPathString,
+            args: this.getApplicationArgs(config),
+            vmArgs: this.getVmArgs(config),
+            encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
+            env,
+            noDebug: !isDebug ? true : false,
+        };
     }
 
     public async run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]> {
@@ -83,37 +104,6 @@ export abstract class BaseRunner implements ITestRunner {
         });
     }
 
-    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<DebugConfiguration> {
-        await this.startSocketServer();
-
-        this.clearTestResults(tests);
-        this.tests = tests;
-        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
-        const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
-        this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
-        const classPathString: string = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
-
-        let env: {} = process.env;
-        if (config && config.env) {
-            env = {...env, ...config.env};
-        }
-
-        return {
-            name: 'Launch Java Tests',
-            type: 'java',
-            request: 'launch',
-            mainClass: this.runnerMainClassName,
-            projectName: tests[0].project,
-            cwd: config ? config.workingDirectory : undefined,
-            classPaths: classPathString,
-            args: this.getApplicationArgs(config),
-            vmArgs: this.getVmArgs(config),
-            encoding: this.getJavaEncoding(config),
-            env,
-            noDebug: !isDebug ? true : false,
-        };
-    }
-
     public async cleanUp(isCancel: boolean): Promise<void> {
         this.isCanceled = isCancel;
         try {
@@ -131,6 +121,16 @@ export abstract class BaseRunner implements ITestRunner {
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
+    }
+
+    protected abstract get testResultAnalyzer(): BaseRunnerResultAnalyzer;
+
+    protected get runnerDir(): string {
+        return path.join(this.extensionPath, 'server');
+    }
+
+    protected get runnerMainClassName(): string {
+        return 'com.microsoft.java.test.runner.Launcher';
     }
 
     protected getVmArgs(config?: IExecutionConfig): string[] {
@@ -163,15 +163,6 @@ export abstract class BaseRunner implements ITestRunner {
         return [];
     }
 
-    protected getJavaEncoding(config?: IExecutionConfig): string {
-        const encoding: string = this.getEncodingFromTestConfig(config) || this.getEncodingFromSetting();
-        if (!iconv.encodingExists(encoding)) {
-            logger.error(`Unsupported encoding: ${encoding}, fallback to UTF-8.`);
-            return 'utf8';
-        }
-        return encoding;
-    }
-
     protected clearTestResults(items: ITestItem[]): void {
         for (const item of items) {
             if (isTestMethodName(item.fullName)) {
@@ -185,7 +176,9 @@ export abstract class BaseRunner implements ITestRunner {
     protected async startSocketServer(): Promise<void> {
         this.server = createServer();
         const socketPort: number = await getPort();
-        this.server.listen(socketPort, LOCAL_HOST);
+        await new Promise((resolve: () => void): void => {
+            this.server.listen(socketPort, LOCAL_HOST, resolve);
+        });
     }
 
     private async getRunnerJarFilePath(): Promise<string> {
@@ -202,33 +195,5 @@ export abstract class BaseRunner implements ITestRunner {
             return fullPath;
         }
         throw new Error(`Failed to find path: ${fullPath}`);
-    }
-
-    private getEncodingFromTestConfig(config?: IExecutionConfig): string | undefined {
-        if (config && config.vmargs) {
-            const vmArgsString: string = config.vmargs.join(' ');
-            const encodingKey: string = '-Dfile.encoding=';
-            const index: number = vmArgsString.lastIndexOf(encodingKey);
-            if (index > -1) {
-                // loop backwards since the latter vmarg will override the previous one
-                return vmArgsString.slice(index + encodingKey.length).split(' ')[0];
-            }
-        }
-        return undefined;
-    }
-
-    private getEncodingFromSetting(): string {
-        let javaEncoding: string | null = null;
-        // One runner will contain all tests in one workspace with the same test framework.
-        const config: WorkspaceConfiguration = workspace.getConfiguration(undefined, Uri.parse(this.tests[0].location.uri));
-        const languageConfig: {} | undefined = config.get('[java]');
-        if (languageConfig != null) {
-            javaEncoding = languageConfig['files.encoding'];
-        }
-
-        if (javaEncoding == null) {
-            javaEncoding = config.get<string>('files.encoding', 'UTF-8');
-        }
-        return javaEncoding;
     }
 }

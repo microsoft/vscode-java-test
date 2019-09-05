@@ -16,6 +16,8 @@ import { JUnit5RunnerResultAnalyzer } from './JUnit5RunnerResultAnalyzer';
 
 export class JUnit5Runner extends BaseRunner {
 
+    // TODO: Use Eclipse runner to launch the tests
+
     protected process: cp.ChildProcess | undefined;
 
     public getRunnerCommandParams(config?: IExecutionConfig): string[] {
@@ -31,7 +33,7 @@ export class JUnit5Runner extends BaseRunner {
         return params;
     }
 
-    public get testResultAnalyzer(): BaseRunnerResultAnalyzer {
+    protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
         if (!this.runnerResultAnalyzer) {
             this.runnerResultAnalyzer = new JUnit5RunnerResultAnalyzer(this.tests);
         }
@@ -65,11 +67,13 @@ export class JUnit5Runner extends BaseRunner {
             commandParams.push(`-Dfile.encoding=${launchConfiguration.encoding}`);
         }
 
+        if (launchConfiguration.classPaths) {
+            commandParams.push('-cp', launchConfiguration.classPaths);
+        }
+
         if (launchConfiguration.mainClass) {
             commandParams.push(launchConfiguration.mainClass);
         }
-
-        commandParams.push(`${this.server.address().port}`);
 
         if (launchConfiguration.args) {
             commandParams.push(...launchConfiguration.args);

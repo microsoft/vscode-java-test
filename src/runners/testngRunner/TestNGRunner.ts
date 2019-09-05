@@ -21,13 +21,6 @@ export class TestNGRunner extends BaseRunner {
         return ['testng', ...this.tests.map((t: ITestItem) => t.fullName)];
     }
 
-    public get testResultAnalyzer(): BaseRunnerResultAnalyzer {
-        if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new TestNGRunnerResultAnalyzer(this.tests);
-        }
-        return this.runnerResultAnalyzer;
-    }
-
     public async cleanUp(isCancel: boolean): Promise<void> {
         super.cleanUp(isCancel);
         try {
@@ -38,6 +31,13 @@ export class TestNGRunner extends BaseRunner {
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
+    }
+
+    protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
+        if (!this.runnerResultAnalyzer) {
+            this.runnerResultAnalyzer = new TestNGRunnerResultAnalyzer(this.tests);
+        }
+        return this.runnerResultAnalyzer;
     }
 
     protected async launchTests(launchConfiguration: DebugConfiguration): Promise<void> {
@@ -55,11 +55,13 @@ export class TestNGRunner extends BaseRunner {
             commandParams.push(`-Dfile.encoding=${launchConfiguration.encoding}`);
         }
 
+        if (launchConfiguration.classPaths) {
+            commandParams.push('-cp', launchConfiguration.classPaths);
+        }
+
         if (launchConfiguration.mainClass) {
             commandParams.push(launchConfiguration.mainClass);
         }
-
-        commandParams.push(`${this.server.address().port}`);
 
         if (launchConfiguration.args) {
             commandParams.push(...launchConfiguration.args);
