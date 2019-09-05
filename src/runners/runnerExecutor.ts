@@ -10,7 +10,7 @@ import { JavaLanguageServerCommands } from '../constants/commands';
 import { LOCAL_HOST, ReportShowSetting } from '../constants/configs';
 import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
-import { ITestItem, TestKind } from '../protocols';
+import { ISearchTestItemParams, ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
@@ -36,7 +36,7 @@ class RunnerExecutor {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean, searchParam?: ISearchTestItemParams): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -67,7 +67,7 @@ class RunnerExecutor {
                 }
 
                 // Auto add '--enable-preview' vmArgs if the java project enables COMPILER_PB_ENABLE_PREVIEW_FEATURES flag.
-                if (await shouldEnablePreviewFlag('', tests[0].project)) {
+                if (!(runner instanceof JUnit4Runner) && await shouldEnablePreviewFlag('', tests[0].project)) {
                     if (config.vmargs) {
                         config.vmargs.push('--enable-preview');
                     } else {
@@ -81,7 +81,7 @@ class RunnerExecutor {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        await runner.setup(tests, isDebug, this._server, resolve(config, Uri.parse(tests[0].location.uri)));
+                        await runner.setup(tests, isDebug, this._server, resolve(config, Uri.parse(tests[0].location.uri)), searchParam);
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         if (token.isCancellationRequested) {

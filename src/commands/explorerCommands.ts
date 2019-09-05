@@ -24,11 +24,11 @@ export async function debugTestsFromExplorer(node?: TestTreeNode): Promise<void>
 
 async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode): Promise<void> {
     let tests: ITestItem[] = [];
+    const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
     await window.withProgress(
         { location: ProgressLocation.Notification, cancellable: true },
         async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
             progress.report({ message: 'Searching test items...' });
-            const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
             tests = await searchTestItemsAll(searchParam);
             if (token.isCancellationRequested) {
                 tests = [];
@@ -42,6 +42,6 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode): 
         },
     );
     if (tests.length > 0) {
-        return runnerExecutor.run(tests, isDebug);
+        return runnerExecutor.run(tests, isDebug, searchParam);
     }
 }

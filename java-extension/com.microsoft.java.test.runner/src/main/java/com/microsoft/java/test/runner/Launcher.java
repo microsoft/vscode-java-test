@@ -15,7 +15,6 @@ import com.microsoft.java.test.runner.common.ITestLauncher;
 import com.microsoft.java.test.runner.common.TestMessageItem;
 import com.microsoft.java.test.runner.common.TestOutputStream;
 import com.microsoft.java.test.runner.exceptions.ParameterException;
-import com.microsoft.java.test.runner.junit4.JUnit4Launcher;
 import com.microsoft.java.test.runner.junit5.CustomizedConsoleLauncher;
 import com.microsoft.java.test.runner.testng.TestNGLauncher;
 
@@ -26,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Launcher {
-    private static final String JUNIT = "junit";
     private static final String JUNIT5 = "junit5";
     private static final String TESTNG = "testng";
     private static final String LOCAL_HOST = "127.0.0.1";
@@ -35,7 +33,6 @@ public class Launcher {
 
     static {
         launcherMap = new HashMap<>();
-        launcherMap.put(JUNIT, new JUnit4Launcher());
         launcherMap.put(JUNIT5, new CustomizedConsoleLauncher());
         launcherMap.put(TESTNG, new TestNGLauncher());
     }

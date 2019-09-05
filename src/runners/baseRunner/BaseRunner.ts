@@ -148,7 +148,9 @@ export abstract class BaseRunner implements ITestRunner {
                 await fse.remove(this.storagePathForCurrentSession);
                 this.storagePathForCurrentSession = undefined;
             }
-            this.socket.destroy();
+            if (this.socket) {
+                this.socket.destroy();
+            }
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
@@ -180,6 +182,25 @@ export abstract class BaseRunner implements ITestRunner {
         return commandParams;
     }
 
+    protected getJavaEncoding(): string {
+        const encoding: string = this.getEncodingFromTestConfig() || this.getEncodingFromSetting();
+        if (!iconv.encodingExists(encoding)) {
+            logger.error(`Unsupported encoding: ${encoding}, fallback to UTF-8.`);
+            return 'utf8';
+        }
+        return encoding;
+    }
+
+    protected clearTestResults(items: ITestItem[]): void {
+        for (const item of items) {
+            if (isTestMethodName(item.fullName)) {
+                testResultManager.removeResultDetails(Uri.parse(item.location.uri).fsPath, item.fullName);
+            } else {
+                testResultManager.removeResultDetailsUnderTheClass(Uri.parse(item.location.uri).fsPath, item.fullName);
+            }
+        }
+    }
+
     protected abstract getRunnerCommandParams(): string[];
 
     private async getRunnerJarFilePath(): Promise<string> {
@@ -196,15 +217,6 @@ export abstract class BaseRunner implements ITestRunner {
             return fullPath;
         }
         throw new Error(`Failed to find path: ${fullPath}`);
-    }
-
-    private getJavaEncoding(): string {
-        const encoding: string = this.getEncodingFromTestConfig() || this.getEncodingFromSetting();
-        if (!iconv.encodingExists(encoding)) {
-            logger.error(`Unsupported encoding: ${encoding}, fallback to UTF-8.`);
-            return 'utf8';
-        }
-        return encoding;
     }
 
     private getEncodingFromTestConfig(): string | undefined {
@@ -233,15 +245,5 @@ export abstract class BaseRunner implements ITestRunner {
             javaEncoding = config.get<string>('files.encoding', 'UTF-8');
         }
         return javaEncoding;
-    }
-
-    private clearTestResults(items: ITestItem[]): void {
-        for (const item of items) {
-            if (isTestMethodName(item.fullName)) {
-                testResultManager.removeResultDetails(Uri.parse(item.location.uri).fsPath, item.fullName);
-            } else {
-                testResultManager.removeResultDetailsUnderTheClass(Uri.parse(item.location.uri).fsPath, item.fullName);
-            }
-        }
     }
 }
