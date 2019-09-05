@@ -6,6 +6,7 @@ import { commands } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem } from '../protocols';
+import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
     return await executeJavaLanguageServerCommand<string[]>(
@@ -53,6 +54,22 @@ export async function shouldEnablePreviewFlag(className: string, projectName: st
         [COMPILER_PB_ENABLE_PREVIEW_FEATURES]: 'enabled',
     };
     return await checkProjectSettings(className, projectName, true, expectedOptions);
+}
+
+export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, runFromRoot: boolean = false): Promise<IJUnitLaunchArguments> {
+    const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
+        JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
+            uri,
+            classFullName,
+            testName,
+            runFromRoot,
+        }));
+
+    if (!argument) {
+        throw new Error('Failed to parse the JUnit launch arguments');
+    }
+
+    return argument;
 }
 
 async function executeJavaLanguageServerCommand<T>(...rest: any[]): Promise<T | undefined> {

@@ -15,3 +15,12 @@ export class JUnit4Runner extends BaseRunner {
         return new JUnit4RunnerResultAnalyzer(this.tests);
     }
 }
+
+export interface IJUnitLaunchArguments {
+    mainClass: string;
+    projectName: string;
+    classpath: string[];
+    modulepath: string[];
+    vmArguments: string[];
+    programArguments: string[];
+}

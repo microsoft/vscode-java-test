@@ -10,6 +10,7 @@
       <command id="vscode.java.test.search.items.all" />
       <command id="vscode.java.test.search.codelens" />
       <command id="vscode.java.test.search.location" />
+      <command id="vscode.java.test.junit.argument" />
     </delegateCommandHandler>
   </extension>
 </plugin>
