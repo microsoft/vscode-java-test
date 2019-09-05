@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { default as getPort } from 'get-port';
-import { createServer, Server } from 'net';
-import { CancellationToken, commands, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, commands, DebugConfiguration, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { showOutputChannel } from '../commands/logCommands';
 import { JavaLanguageServerCommands } from '../constants/commands';
-import { LOCAL_HOST, ReportShowSetting } from '../constants/configs';
+import { ReportShowSetting } from '../constants/configs';
 import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
 import { ISearchTestItemParams, ITestItem, TestKind } from '../protocols';
@@ -27,7 +25,6 @@ import { TestNGRunner } from './testngRunner/TestNGRunner';
 class RunnerExecutor {
     private _javaHome: string;
     private _context: ExtensionContext;
-    private _server: Server;
     private _isRunning: boolean;
     private _runnerMap: Map<ITestRunner, ITestItem[]> | undefined;
 
@@ -50,10 +47,6 @@ class RunnerExecutor {
         if (!needContinue) {
             return;
         }
-
-        this._server = createServer();
-        const socketPort: number = await getPort();
-        this._server.listen(socketPort, LOCAL_HOST);
 
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
@@ -81,13 +74,13 @@ class RunnerExecutor {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        await runner.setup(tests, isDebug, this._server, resolve(config, Uri.parse(tests[0].location.uri)), searchParam);
+                        const launchConfiguration: DebugConfiguration = await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].location.uri)), searchParam);
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         if (token.isCancellationRequested) {
                             return;
                         }
-                        const results: ITestResult[] = await runner.run();
+                        const results: ITestResult[] = await runner.run(launchConfiguration);
                         await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
                         finalResults.push(...results);
                     },
@@ -119,11 +112,6 @@ class RunnerExecutor {
                 this._runnerMap = undefined;
             }
             await Promise.all(promises);
-
-            this._server.removeAllListeners();
-            this._server.close(() => {
-                this._server.unref();
-            });
 
             if (isCancel) {
                 logger.info('Test job is canceled.');
