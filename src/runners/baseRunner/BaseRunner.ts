@@ -13,7 +13,6 @@ import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
 import { testResultManager } from '../../testResultManager';
-import * as classpathUtils from '../../utils/classpathUtils';
 import { resolveRuntimeClassPath } from '../../utils/commandUtils';
 import { getJavaEncoding } from '../../utils/launchUtils';
 import { isTestMethodName } from '../../utils/protocolUtils';
