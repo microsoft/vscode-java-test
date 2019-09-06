@@ -57,7 +57,7 @@ export abstract class BaseRunner implements ITestRunner {
             vmArgs: this.getVmArgs(config),
             encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
             env,
-            noDebug: !isDebug ? true : false,
+            noDebug: !isDebug,
         };
     }
 
@@ -101,7 +101,7 @@ export abstract class BaseRunner implements ITestRunner {
         });
     }
 
-    public async cleanUp(isCancel: boolean): Promise<void> {
+    public async tearDown(isCancel: boolean): Promise<void> {
         this.isCanceled = isCancel;
         try {
             if (this.storagePathForCurrentSession) {

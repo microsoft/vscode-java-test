@@ -9,5 +9,5 @@ import { ITestResult } from './models';
 export interface ITestRunner {
     setup(tests: ITestItem[], isDebug: boolean, config?: IExecutionConfig, searchParam?: ISearchTestItemParams): Promise<DebugConfiguration>;
     run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]>;
-    cleanUp(isCancel: boolean): Promise<void>;
+    tearDown(isCancel: boolean): Promise<void>;
 }

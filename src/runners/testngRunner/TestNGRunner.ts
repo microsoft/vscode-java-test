@@ -23,8 +23,8 @@ export class TestNGRunner extends BaseRunner {
         return ['testng', ...this.tests.map((t: ITestItem) => t.fullName)];
     }
 
-    public async cleanUp(isCancel: boolean): Promise<void> {
-        super.cleanUp(isCancel);
+    public async tearDown(isCancel: boolean): Promise<void> {
+        super.tearDown(isCancel);
         try {
             if (this.process) {
                 await killProcess(this.process);

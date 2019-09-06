@@ -15,7 +15,7 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
-import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolve } from '../utils/settingUtils';
+import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolveVariablesInConfig } from '../utils/settingUtils';
 import { ITestRunner } from './ITestRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
@@ -42,10 +42,21 @@ class RunnerExecutor {
         this._isRunning = true;
         const finalResults: ITestResult[] = [];
 
-        await this.saveAllIfNeeded();
-        const needContinue: boolean = await this.buildWorkspaeIfNeeded();
-        if (!needContinue) {
-            return;
+        await this.saveFilesIfNeeded();
+
+        if (needBuildWorkspace()) {
+            try {
+                // Directly call this Language Server command since we hard depend on it.
+                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false /*incremental build*/);
+            } catch (err) {
+                const ans: string | undefined = await window.showErrorMessage(
+                    'Build failed, do you want to continue?',
+                    'Proceed',
+                    'Abort');
+                if (ans !== 'Proceed') {
+                    return;
+                }
+            }
         }
 
         try {
@@ -74,7 +85,7 @@ class RunnerExecutor {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        const launchConfiguration: DebugConfiguration = await runner.setup(tests, isDebug, resolve(config, Uri.parse(tests[0].location.uri)), searchParam);
+                        const launchConfiguration: DebugConfiguration = await runner.setup(tests, isDebug, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)), searchParam);
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         if (token.isCancellationRequested) {
@@ -106,7 +117,7 @@ class RunnerExecutor {
             const promises: Array<Promise<void>> = [];
             if (this._runnerMap) {
                 for (const runner of this._runnerMap.keys()) {
-                    promises.push(runner.cleanUp(isCancel));
+                    promises.push(runner.tearDown(isCancel));
                 }
                 this._runnerMap.clear();
                 this._runnerMap = undefined;
@@ -122,28 +133,10 @@ class RunnerExecutor {
         this._isRunning = false;
     }
 
-    private async saveAllIfNeeded(): Promise<void> {
+    private async saveFilesIfNeeded(): Promise<void> {
         if (needSaveAll()) {
             await workspace.saveAll();
         }
-    }
-
-    private async buildWorkspaeIfNeeded(): Promise<boolean> {
-        if (needBuildWorkspace()) {
-            try {
-                // Directly call this Language Server command since we hard depend on it.
-                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false /*incremental build*/);
-            } catch (err) {
-                const ans: string | undefined = await window.showErrorMessage(
-                    'Build failed, do you want to continue?',
-                    'Proceed',
-                    'Abort');
-                if (ans !== 'Proceed') {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {

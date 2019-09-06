@@ -42,8 +42,8 @@ export class JUnit5Runner extends BaseRunner {
         return this.runnerResultAnalyzer;
     }
 
-    public async cleanUp(isCancel: boolean): Promise<void> {
-        super.cleanUp(isCancel);
+    public async tearDown(isCancel: boolean): Promise<void> {
+        super.tearDown(isCancel);
         try {
             if (this.process) {
                 await killProcess(this.process);
