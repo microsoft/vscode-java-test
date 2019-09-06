@@ -4,11 +4,13 @@
 import * as cp from 'child_process';
 import { default as getPort } from 'get-port';
 import * as iconv from 'iconv-lite';
+import * as os from 'os';
 import * as path from 'path';
 import { debug, DebugConfiguration, Uri, workspace } from 'vscode';
 import { logger } from '../../logger/logger';
 import { TestLevel } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
+import * as classpathUtils from '../../utils/classpathUtils';
 import { killProcess } from '../../utils/cpUtils';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
@@ -68,7 +70,8 @@ export class JUnit5Runner extends BaseRunner {
         }
 
         if (launchConfiguration.classPaths) {
-            commandParams.push('-cp', launchConfiguration.classPaths);
+            this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
+            commandParams.push('-cp', await classpathUtils.getClassPathString(launchConfiguration.classPaths, this.storagePathForCurrentSession));
         }
 
         if (launchConfiguration.mainClass) {

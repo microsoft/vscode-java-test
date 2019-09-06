@@ -39,9 +39,7 @@ export abstract class BaseRunner implements ITestRunner {
         this.clearTestResults(tests);
         this.tests = tests;
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
-        const classpaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
-        this.storagePathForCurrentSession = path.join(this.storagePath || os.tmpdir(), new Date().getTime().toString());
-        const classPathString: string = await classpathUtils.getClassPathString(classpaths, this.storagePathForCurrentSession);
+        const classPaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
 
         let env: {} = process.env;
         if (config && config.env) {
@@ -55,7 +53,7 @@ export abstract class BaseRunner implements ITestRunner {
             mainClass: this.runnerMainClassName,
             projectName: tests[0].project,
             cwd: config ? config.workingDirectory : undefined,
-            classPaths: classPathString,
+            classPaths,
             args: this.getApplicationArgs(config),
             vmArgs: this.getVmArgs(config),
             encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
