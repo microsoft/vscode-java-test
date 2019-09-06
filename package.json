@@ -52,7 +52,7 @@
             "test": [
                 {
                     "id": "testExplorer",
-                    "name": "%contributes.views.explorer.testExplorer.name%"
+                    "name": "Java"
                 }
             ]
         },
