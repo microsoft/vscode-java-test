@@ -14,9 +14,10 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
+import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolveVariablesInConfig } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
-import { ITestRunner } from './ITestRunner';
+import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
 import { ITestResult, TestStatus } from './models';
@@ -26,14 +27,14 @@ class RunnerScheduler {
     private _javaHome: string;
     private _context: ExtensionContext;
     private _isRunning: boolean;
-    private _runnerMap: Map<ITestRunner, ITestItem[]> | undefined;
+    private _runnerMap: Map<BaseRunner, ITestItem[]> | undefined;
 
     public initialize(javaHome: string, context: ExtensionContext): void {
         this._javaHome = javaHome;
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean, node?: TestTreeNode): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean, node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -85,7 +86,10 @@ class RunnerScheduler {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        const launchConfiguration: DebugConfiguration = await runner.setup(tests, isDebug, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)), node);
+                        await runner.setup(tests);
+                        if (!launchConfiguration) {
+                            launchConfiguration = await resolveLaunchConfigurationForRunner(runner, tests, isDebug, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)), node);
+                        }
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         if (token.isCancellationRequested) {
@@ -134,7 +138,7 @@ class RunnerScheduler {
         }
     }
 
-    private classifyTestsByKind(tests: ITestItem[]): Map<ITestRunner, ITestItem[]> {
+    private classifyTestsByKind(tests: ITestItem[]): Map<BaseRunner, ITestItem[]> {
         const testMap: Map<string, ITestItem[]> = this.mapTestsByProjectAndKind(tests);
         return this.mapTestsByRunner(testMap);
     }
@@ -157,10 +161,10 @@ class RunnerScheduler {
         return map;
     }
 
-    private mapTestsByRunner(testsPerProjectAndKind: Map<string, ITestItem[]>): Map<ITestRunner, ITestItem[]> {
-        const map: Map<ITestRunner, ITestItem[]> = new Map<ITestRunner, ITestItem[]>();
+    private mapTestsByRunner(testsPerProjectAndKind: Map<string, ITestItem[]>): Map<BaseRunner, ITestItem[]> {
+        const map: Map<BaseRunner, ITestItem[]> = new Map<BaseRunner, ITestItem[]>();
         for (const tests of testsPerProjectAndKind.values()) {
-            const runner: ITestRunner | undefined = this.getRunnerByKind(tests[0].kind);
+            const runner: BaseRunner | undefined = this.getRunnerByKind(tests[0].kind);
             if (runner) {
                 map.set(runner, tests);
             } else {
@@ -170,7 +174,7 @@ class RunnerScheduler {
         return map;
     }
 
-    private getRunnerByKind(kind: TestKind): ITestRunner | undefined {
+    private getRunnerByKind(kind: TestKind): BaseRunner | undefined {
         switch (kind) {
             case TestKind.JUnit:
                 return new JUnit4Runner(this._javaHome, this._context.storagePath, this._context.extensionPath);

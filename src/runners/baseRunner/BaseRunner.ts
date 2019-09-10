@@ -13,8 +13,6 @@ import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
 import { testResultManager } from '../../testResultManager';
-import { resolveRuntimeClassPath } from '../../utils/commandUtils';
-import { getJavaEncoding } from '../../utils/launchUtils';
 import { isTestMethodName } from '../../utils/protocolUtils';
 import { ITestRunner } from '../ITestRunner';
 import { ITestResult } from '../models';
@@ -33,32 +31,10 @@ export abstract class BaseRunner implements ITestRunner {
         protected storagePath: string | undefined,
         protected extensionPath: string) {}
 
-    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig): Promise<DebugConfiguration> {
+    public async setup(tests: ITestItem[]): Promise<void> {
         await this.startSocketServer();
         this.clearTestResults(tests);
         this.tests = tests;
-        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
-        const classPaths: string[] = [...await resolveRuntimeClassPath(testPaths), await this.getRunnerJarFilePath(), await this.getRunnerLibPath()];
-
-        let env: {} = process.env;
-        if (config && config.env) {
-            env = {...env, ...config.env};
-        }
-
-        return {
-            name: 'Launch Java Tests',
-            type: 'java',
-            request: 'launch',
-            mainClass: this.runnerMainClassName,
-            projectName: tests[0].project,
-            cwd: config ? config.workingDirectory : undefined,
-            classPaths,
-            args: this.getApplicationArgs(config),
-            vmArgs: this.getVmArgs(config),
-            encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
-            env,
-            noDebug: !isDebug,
-        };
     }
 
     public async run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]> {
@@ -71,7 +47,7 @@ export abstract class BaseRunner implements ITestRunner {
                 });
 
                 socket.on('data', (buffer: Buffer) => {
-                    data = data.concat(iconv.decode(buffer, launchConfiguration.encoding));
+                    data = data.concat(iconv.decode(buffer, launchConfiguration.encoding || 'utf8'));
                     const index: number = data.lastIndexOf(os.EOL);
                     if (index >= 0) {
                         this.testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
@@ -122,17 +98,28 @@ export abstract class BaseRunner implements ITestRunner {
         }
     }
 
-    protected abstract get testResultAnalyzer(): BaseRunnerResultAnalyzer;
-
-    protected get runnerDir(): string {
-        return path.join(this.extensionPath, 'server');
+    public get runnerJarFilePath(): Promise<string> {
+        return this.getPath('com.microsoft.java.test.runner.jar');
     }
 
-    protected get runnerMainClassName(): string {
+    public get runnerLibPath(): Promise<string> {
+        return this.getPath('lib');
+    }
+
+    public get runnerMainClassName(): string {
         return 'com.microsoft.java.test.runner.Launcher';
     }
 
-    protected getVmArgs(config?: IExecutionConfig): string[] {
+    public get serverPort(): number {
+        const address: { port: number; family: string; address: string; } = this.server.address();
+        if (address) {
+            return address.port;
+        }
+
+        throw new Error('The socket server is not started yet.');
+    }
+
+    public getVmArgs(config?: IExecutionConfig): string[] {
         const vmArgs: string[] = [];
         vmArgs.push('-ea');
 
@@ -143,7 +130,7 @@ export abstract class BaseRunner implements ITestRunner {
         return vmArgs;
     }
 
-    protected getApplicationArgs(config?: IExecutionConfig): string[] {
+    public getApplicationArgs(config?: IExecutionConfig): string[] {
         const applicationArgs: string[] = [];
         applicationArgs.push(`${this.server.address().port}`);
 
@@ -154,6 +141,12 @@ export abstract class BaseRunner implements ITestRunner {
         }
 
         return applicationArgs;
+    }
+
+    protected abstract get testResultAnalyzer(): BaseRunnerResultAnalyzer;
+
+    protected get runnerDir(): string {
+        return path.join(this.extensionPath, 'server');
     }
 
     protected abstract async launchTests(launchConfiguration: DebugConfiguration): Promise<void>;
@@ -178,14 +171,6 @@ export abstract class BaseRunner implements ITestRunner {
         await new Promise((resolve: () => void): void => {
             this.server.listen(socketPort, LOCAL_HOST, resolve);
         });
-    }
-
-    private async getRunnerJarFilePath(): Promise<string> {
-        return this.getPath('com.microsoft.java.test.runner.jar');
-    }
-
-    private async getRunnerLibPath(): Promise<string> {
-        return this.getPath('lib');
     }
 
     private async getPath(subPath: string): Promise<string> {

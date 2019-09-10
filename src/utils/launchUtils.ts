@@ -5,10 +5,40 @@ import * as iconv from 'iconv-lite';
 import { DebugConfiguration, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
-import { ITestItem, TestLevel } from '../protocols';
+import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
+import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
-import { resolveJUnitLaunchArguments } from './commandUtils';
+import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
+
+export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], isDebug: boolean, config?: IExecutionConfig, node?: TestTreeNode): Promise<DebugConfiguration> {
+    if (tests[0].kind === TestKind.JUnit) {
+        return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, isDebug, config, node);
+    } else {
+        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
+        const classPaths: string[] = [...await resolveRuntimeClassPath(testPaths), await runner.runnerJarFilePath, await runner.runnerLibPath];
+
+        let env: {} = process.env;
+        if (config && config.env) {
+            env = {...env, ...config.env};
+        }
+
+        return {
+            name: 'Launch Java Tests',
+            type: 'java',
+            request: 'launch',
+            mainClass: runner.runnerMainClassName,
+            projectName: tests[0].project,
+            cwd: config ? config.workingDirectory : undefined,
+            classPaths,
+            args: runner.getApplicationArgs(config),
+            vmArgs: runner.getVmArgs(config),
+            encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
+            env,
+            noDebug: !isDebug,
+        };
+    }
+}
 
 export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, isDebug: boolean, config?: IExecutionConfig, node?: TestTreeNode): Promise<DebugConfiguration> {
     const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, node);
