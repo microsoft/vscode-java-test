@@ -30,7 +30,7 @@ export function getShowReportSetting(): string {
 }
 
 const workspaceRegexp: RegExp = /\$\{workspacefolder\}/i;
-export function resolve(config: IExecutionConfig, uri: Uri): IExecutionConfig {
+export function resolveVariablesInConfig(config: IExecutionConfig, uri: Uri): IExecutionConfig {
     const resolvedConfig: IExecutionConfig = {};
     const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(uri);
     if (!workspaceFolder) {
