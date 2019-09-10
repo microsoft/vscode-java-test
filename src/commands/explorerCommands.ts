@@ -52,7 +52,3 @@ async function searchTestItems(node: TestTreeNode): Promise<ITestItem[]> {
         );
     });
 }
-
-// export async function runExeternalTestRequest(node: TestTreeNode, launchConfiguration: DebugConfiguration, isDebug: boolean = false) : Promise<void> {
-
-// }
