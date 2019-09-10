@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 import { debug, DebugConfiguration, Uri, workspace } from 'vscode';
-import { ISearchTestItemParams, ITestItem } from '../../protocols';
+import { TestTreeNode } from '../../explorer/TestTreeNode';
+import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
 import { getDebugConfigurationForEclispeRunner as getEclispeJUnitRunnerLaunchConfig } from '../../utils/launchUtils';
 import { BaseRunner } from '../baseRunner/BaseRunner';
@@ -11,12 +12,12 @@ import { JUnit4RunnerResultAnalyzer } from './JUnit4RunnerResultAnalyzer';
 
 export class JUnit4Runner extends BaseRunner {
 
-    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig, searchParam?: ISearchTestItemParams): Promise<DebugConfiguration> {
+    public async setup(tests: ITestItem[], isDebug: boolean = false, config?: IExecutionConfig, node?: TestTreeNode): Promise<DebugConfiguration> {
         await this.startSocketServer();
         this.clearTestResults(tests);
         this.tests = tests;
 
-        return getEclispeJUnitRunnerLaunchConfig(tests[0], this.server.address().port, isDebug, config, searchParam);
+        return getEclispeJUnitRunnerLaunchConfig(tests[0], this.server.address().port, isDebug, config, node);
     }
 
     protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {

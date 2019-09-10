@@ -3,14 +3,15 @@
 
 import * as iconv from 'iconv-lite';
 import { DebugConfiguration, Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
-import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
+import { ITestItem, TestLevel } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
 import { resolveJUnitLaunchArguments } from './commandUtils';
 
-export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, isDebug: boolean, config?: IExecutionConfig, searchParam?: ISearchTestItemParams): Promise<DebugConfiguration> {
-    const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, searchParam);
+export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, isDebug: boolean, config?: IExecutionConfig, node?: TestTreeNode): Promise<DebugConfiguration> {
+    const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, node);
     junitLaunchArgs.programArguments.push('-port', `${socketPort}`);
     if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
@@ -38,29 +39,32 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, soc
     };
 }
 
-async function getJUnitLaunchArguments(test: ITestItem, searchParam?: ISearchTestItemParams): Promise<IJUnitLaunchArguments> {
+async function getJUnitLaunchArguments(test: ITestItem, node?: TestTreeNode): Promise<IJUnitLaunchArguments> {
     let className: string = '';
     let methodName: string = '';
     let runFromRoot: boolean = false;
     let uri: string = '';
+    let fullName: string = '';
 
-    if (!searchParam || searchParam.level === TestLevel.Class || searchParam.level === TestLevel.Method) {
-        const nameArray: string[] = test.fullName.split('#');
-        className = nameArray[0];
-        if (nameArray.length > 1) {
-            methodName = nameArray[1];
-        }
-    }
-
-    if (searchParam) {
-        if (searchParam.level === TestLevel.Root) {
+    if (!node) {
+        // From Code Lens
+        uri = test.location.uri;
+        fullName = test.fullName;
+    } else {
+        // From Test Explorer
+        if (node.level === TestLevel.Root) {
             runFromRoot = true;
             uri = workspace.getWorkspaceFolder(Uri.parse(test.location.uri))!.uri.toString();
         } else {
-            uri = searchParam.uri;
+            uri = Uri.file(node.fsPath).toString();
+            fullName = node.fullName;
         }
-    } else {
-        uri = test.location.uri;
+    }
+
+    const nameArray: string[] = fullName.split('#');
+    className = nameArray[0];
+    if (nameArray.length > 1) {
+        methodName = nameArray[1];
     }
 
     return await resolveJUnitLaunchArguments(uri, className, methodName, runFromRoot);

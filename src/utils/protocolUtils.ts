@@ -5,18 +5,19 @@ import { Uri } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { ISearchTestItemParams, TestLevel } from '../protocols';
 
-export function constructSearchTestItemParams(node?: TestTreeNode): ISearchTestItemParams {
-    if (node) {
+export function constructSearchTestItemParams(node: TestTreeNode): ISearchTestItemParams {
+    if (node.level === TestLevel.Root) {
         return {
-            uri: Uri.file(node.fsPath).toString(),
-            level: node.level,
-            fullName: node.fullName,
+            uri: '',
+            level: TestLevel.Root,
+            fullName: '',
         };
     }
+
     return {
-        uri: '',
-        level: TestLevel.Root,
-        fullName: '',
+        uri: Uri.file(node.fsPath).toString(),
+        level: node.level,
+        fullName: node.fullName,
     };
 }
 

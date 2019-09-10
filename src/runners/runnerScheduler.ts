@@ -7,8 +7,9 @@ import { showOutputChannel } from '../commands/logCommands';
 import { JavaLanguageServerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
 import { OPEN_OUTPUT_CHANNEL } from '../constants/dialogOptions';
+import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
-import { ISearchTestItemParams, ITestItem, TestKind } from '../protocols';
+import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
@@ -33,7 +34,7 @@ class RunnerScheduler {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean, searchParam?: ISearchTestItemParams): Promise<void> {
+    public async run(testItems: ITestItem[], isDebug: boolean, node?: TestTreeNode): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -85,7 +86,7 @@ class RunnerScheduler {
                         token.onCancellationRequested(() => {
                             this.cleanUp(true /* isCancel */);
                         });
-                        const launchConfiguration: DebugConfiguration = await runner.setup(tests, isDebug, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)), searchParam);
+                        const launchConfiguration: DebugConfiguration = await runner.setup(tests, isDebug, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)), node);
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});
                         if (token.isCancellationRequested) {
