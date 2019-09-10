@@ -5,7 +5,7 @@ import { CancellationToken, Progress, ProgressLocation, Range, TextDocument, Uri
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
 import { ISearchTestItemParams, ITestItem } from '../protocols';
-import { runnerExecutor } from '../runners/runnerExecutor';
+import { runnerScheduler } from '../runners/runnerScheduler';
 import { searchTestItemsAll } from '../utils/commandUtils';
 import { constructSearchTestItemParams } from '../utils/protocolUtils';
 
@@ -42,6 +42,6 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode): 
         },
     );
     if (tests.length > 0) {
-        return runnerExecutor.run(tests, isDebug, searchParam);
+        return runnerScheduler.run(tests, isDebug, searchParam);
     }
 }
