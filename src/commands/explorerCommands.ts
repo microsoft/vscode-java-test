@@ -4,7 +4,7 @@
 import { CancellationToken, Progress, ProgressLocation, Range, TextDocument, Uri, ViewColumn, window, workspace } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
-import { ISearchTestItemParams, ITestItem } from '../protocols';
+import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
 import { runnerScheduler } from '../runners/runnerScheduler';
 import { searchTestItemsAll } from '../utils/commandUtils';
 import { constructSearchTestItemParams } from '../utils/protocolUtils';
@@ -23,25 +23,32 @@ export async function debugTestsFromExplorer(node?: TestTreeNode): Promise<void>
 }
 
 async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode): Promise<void> {
-    let tests: ITestItem[] = [];
-    const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
-    await window.withProgress(
-        { location: ProgressLocation.Notification, cancellable: true },
-        async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-            progress.report({ message: 'Searching test items...' });
-            tests = await searchTestItemsAll(searchParam);
-            if (token.isCancellationRequested) {
-                tests = [];
-                logger.info('Test job is canceled.');
-                return;
-            }
-            if (tests.length === 0) {
-                logger.info('No test items found.');
-                return;
-            }
-        },
-    );
-    if (tests.length > 0) {
-        return runnerScheduler.run(tests, isDebug, searchParam);
+    if (!node) {
+        node = new TestTreeNode('', '', TestLevel.Root, '');
     }
+    const tests: ITestItem[] = await searchTestItems(node);
+    if (tests.length <= 0) {
+        logger.info('No test items found.');
+        return;
+    }
+
+    return runnerScheduler.run(tests, isDebug, node);
+}
+
+async function searchTestItems(node: TestTreeNode): Promise<ITestItem[]> {
+    return new Promise<ITestItem[]>((resolve: (result: ITestItem[]) => void): void => {
+        const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
+        window.withProgress(
+            { location: ProgressLocation.Notification, cancellable: true },
+            async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
+                progress.report({ message: 'Searching test items...' });
+                const tests: ITestItem[] = await searchTestItemsAll(searchParam);
+                if (token.isCancellationRequested) {
+                    logger.info('Test job is canceled.');
+                    return resolve([]);
+                }
+                return resolve(tests);
+            },
+        );
+    });
 }
