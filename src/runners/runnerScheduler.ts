@@ -22,7 +22,7 @@ import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
 import { ITestResult, TestStatus } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
-class RunnerExecutor {
+class RunnerScheduler {
     private _javaHome: string;
     private _context: ExtensionContext;
     private _isRunning: boolean;
@@ -99,7 +99,7 @@ class RunnerExecutor {
             }
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
-            this.showReportIsNeeded(finalResults);
+            this.showReportIfNeeded(finalResults);
         } catch (error) {
             window.showErrorMessage(`${error}`, OPEN_OUTPUT_CHANNEL).then((choice: string | undefined) => {
                 if (choice === OPEN_OUTPUT_CHANNEL) {
@@ -188,7 +188,7 @@ class RunnerExecutor {
         }
     }
 
-    private showReportIsNeeded(finalResults: ITestResult[]): void {
+    private showReportIfNeeded(finalResults: ITestResult[]): void {
         const showSetting: string = getShowReportSetting();
         switch (showSetting) {
             case ReportShowSetting.Always:
@@ -213,4 +213,4 @@ class RunnerExecutor {
     }
 }
 
-export const runnerExecutor: RunnerExecutor = new RunnerExecutor();
+export const runnerScheduler: RunnerScheduler = new RunnerScheduler();

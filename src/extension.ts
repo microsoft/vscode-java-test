@@ -16,7 +16,7 @@ import { TestTreeNode } from './explorer/TestTreeNode';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
 import { ITestResult } from './runners/models';
-import { runnerExecutor } from './runners/runnerExecutor';
+import { runnerScheduler } from './runners/runnerScheduler';
 import { testFileWatcher } from './testFileWatcher';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
@@ -30,7 +30,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
 export async function deactivate(): Promise<void> {
     await disposeTelemetryWrapper();
-    await runnerExecutor.cleanUp(false  /* isCancel */);
+    await runnerScheduler.cleanUp(false  /* isCancel */);
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
@@ -41,7 +41,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
     testFileWatcher.registerListeners();
     testExplorer.initialize(context);
-    runnerExecutor.initialize(javaHome, context);
+    runnerScheduler.initialize(javaHome, context);
     testReportProvider.initialize(context);
 
     const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
@@ -59,14 +59,14 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testCodeLensController,
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerExecutor.run(tests, false /* isDebug */)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerExecutor.run(tests, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerScheduler.run(tests, false /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerScheduler.run(tests, true /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await runTestsFromExplorer(node)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: TestTreeNode) => await debugTestsFromExplorer(node)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestResult[]) => await testReportProvider.report(tests)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => showOutputChannel()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerExecutor.cleanUp(true /* isCancel */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
     );
 }
