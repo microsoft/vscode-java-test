@@ -111,10 +111,12 @@ export abstract class BaseRunner implements ITestRunner {
             if (this.socket) {
                 this.socket.destroy();
             }
-            this.server.removeAllListeners();
-            this.server.close(() => {
-                this.server.unref();
-            });
+            if (this.server) {
+                this.server.removeAllListeners();
+                this.server.close(() => {
+                    this.server.unref();
+                });
+            }
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
