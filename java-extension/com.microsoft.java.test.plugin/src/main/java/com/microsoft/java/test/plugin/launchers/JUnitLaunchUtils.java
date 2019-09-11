@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
-
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,8 +50,14 @@ public class JUnitLaunchUtils {
         // Only support JUnit 4 for now
         info.testKind = "org.eclipse.jdt.junit.loader.junit4";
 
+        final IJavaProject javaProject = ProjectUtils.getJavaProject(args.project);
+        if (javaProject == null || !javaProject.exists()) {
+            throw new RuntimeException("Failed to get the project with name: " + args.project);
+        }
+        info.project = javaProject.getProject();
+        
         if (args.runFromRoot) {
-            parseConfigurationInfoForContainer(info, args);
+            info.testContainer = StringEscapeUtils.escapeXml(javaProject.getHandleIdentifier());
         } else {
             final File file = Paths.get(new URI(args.uri)).toFile();
             if (file.isFile()) {
@@ -79,7 +85,6 @@ public class JUnitLaunchUtils {
                 info.mainType = args.classFullName;
                 // TODO: validate test name
                 info.testName = StringUtils.isEmpty(args.testName) ? "" : args.testName;
-                info.project = type.getJavaProject().getProject();
                 break;
             }
         }
@@ -125,6 +130,7 @@ public class JUnitLaunchUtils {
         public String uri;
         public String classFullName;
         public String testName;
+        public String project;
         public boolean runFromRoot;
     }
 }

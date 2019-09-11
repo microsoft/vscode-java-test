@@ -44,8 +44,10 @@ async function getJUnitLaunchArguments(test: ITestItem, node?: TestTreeNode): Pr
     let methodName: string = '';
     let runFromRoot: boolean = false;
     let uri: string = '';
+    let project: string = '';
     let fullName: string = '';
 
+    project = test.project;
     if (!node) {
         // From Code Lens
         uri = test.location.uri;
@@ -67,7 +69,7 @@ async function getJUnitLaunchArguments(test: ITestItem, node?: TestTreeNode): Pr
         methodName = nameArray[1];
     }
 
-    return await resolveJUnitLaunchArguments(uri, className, methodName, runFromRoot);
+    return await resolveJUnitLaunchArguments(uri, className, methodName, project, runFromRoot);
 }
 
 export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {

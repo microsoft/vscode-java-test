@@ -56,12 +56,13 @@ export async function shouldEnablePreviewFlag(className: string, projectName: st
     return await checkProjectSettings(className, projectName, true, expectedOptions);
 }
 
-export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, runFromRoot: boolean = false): Promise<IJUnitLaunchArguments> {
+export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string, runFromRoot: boolean = false): Promise<IJUnitLaunchArguments> {
     const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             uri,
             classFullName,
             testName,
+            project,
             runFromRoot,
         }));
 
