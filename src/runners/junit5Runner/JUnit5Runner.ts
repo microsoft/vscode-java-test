@@ -100,9 +100,9 @@ export class JUnit5Runner extends BaseRunner {
             logger.info(iconv.decode(buffer, launchConfiguration.encoding));
         });
 
-        this.process.on('close', (signal: number) => {
-            if (signal && signal !== 0) {
-                uiUtils.showError(new Error(`Runner exited with code ${signal}.`));
+        this.process.on('close', (code: number) => {
+            if (code !== 0) {
+                uiUtils.showError(new Error(`Runner exited with code ${code}.`));
             }
         });
 
