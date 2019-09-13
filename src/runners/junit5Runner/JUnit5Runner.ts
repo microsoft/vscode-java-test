@@ -102,7 +102,7 @@ export class JUnit5Runner extends BaseRunner {
 
         this.process.on('close', (code: number) => {
             if (code !== 0) {
-                uiUtils.showError(new Error(`Runner exited with code ${code}.`));
+                uiUtils.showError(new Error(`JUnit 5 Runner exited with code ${code}.`));
             }
         });
 
