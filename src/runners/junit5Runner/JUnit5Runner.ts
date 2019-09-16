@@ -12,6 +12,7 @@ import { TestLevel } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { killProcess } from '../../utils/cpUtils';
+import * as uiUtils from '../../utils/uiUtils';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
 import { JUnit5RunnerResultAnalyzer } from './JUnit5RunnerResultAnalyzer';
@@ -97,6 +98,12 @@ export class JUnit5Runner extends BaseRunner {
         });
         this.process.stdout.on('data', (buffer: Buffer) => {
             logger.info(iconv.decode(buffer, launchConfiguration.encoding));
+        });
+
+        this.process.on('close', (code: number) => {
+            if (code !== 0) {
+                uiUtils.showError(new Error(`JUnit 5 Runner exited with code ${code}.`));
+            }
         });
 
         if (!launchConfiguration.noDebug) {

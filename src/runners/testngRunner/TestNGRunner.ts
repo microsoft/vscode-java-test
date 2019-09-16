@@ -11,6 +11,7 @@ import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import * as classpathUtils from '../../utils/classpathUtils';
 import { killProcess } from '../../utils/cpUtils';
+import * as uiUtils from '../../utils/uiUtils';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
 import { TestNGRunnerResultAnalyzer } from './TestNGRunnerResultAnalyzer';
@@ -85,6 +86,12 @@ export class TestNGRunner extends BaseRunner {
         });
         this.process.stdout.on('data', (buffer: Buffer) => {
             logger.info(iconv.decode(buffer, launchConfiguration.encoding));
+        });
+
+        this.process.on('close', (code: number) => {
+            if (code !== 0) {
+                uiUtils.showError(new Error(`TestNG Runner exited with code ${code}.`));
+            }
         });
 
         if (!launchConfiguration.noDebug) {
