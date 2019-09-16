@@ -7,6 +7,7 @@ const tslint = require('gulp-tslint');
 const sass = require('gulp-sass');
 const decompress = require('gulp-decompress');
 const path = require('path');
+const fs = require('fs');
 const remoteSrc = require('gulp-remote-src');
 
 const serverDir = path.join(__dirname, 'java-extension');
@@ -19,8 +20,11 @@ gulp.task('build-plugin', (done) => {
         .pipe(gulp.dest('./server'));
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/*.jar'))
         .pipe(gulp.dest('./server'));
-        gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/lib/*.jar'))
+    gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/lib/*.jar'))
         .pipe(gulp.dest('./server/lib'));
+    gulp.src(path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.eclipse.jdt.junit4.runtime_*.jar'))
+        .pipe(gulp.dest('./server'))
+        .on('end', updateVersion);
     done();
 });
 
@@ -68,4 +72,35 @@ function isWin() {
 
 function mvnw() {
     return isWin() ? 'mvnw.cmd' : './mvnw';
+}
+
+function updateVersion() {
+    // Update the version
+    const packageJsonData = require('./package.json');
+    const javaExtensions = packageJsonData.contributes.javaExtensions;
+    if (Array.isArray(javaExtensions)) {
+        packageJsonData.contributes.javaExtensions  = javaExtensions.map((extensionString) => {
+            
+            const ind = extensionString.indexOf('_');
+            const fileName = findNewRequiredJar(extensionString.substring(extensionString.lastIndexOf('/') + 1, ind));
+            
+            if (ind >= 0) {
+                return extensionString.substring(0, extensionString.lastIndexOf('/') + 1) + fileName;
+            }
+            return extensionString;
+        });
+
+        fs.writeFileSync('./package.json', JSON.stringify(packageJsonData, null, 4));
+    }
+}
+
+// The plugin jar follows the name convention: <name>_<version>.jar
+function findNewRequiredJar(fileName) {
+    fileName = fileName + "_";
+    const destFolder = path.resolve('./server');
+    const files = fs.readdirSync(destFolder);
+    const f = files.find((file) => {
+        return file.indexOf(fileName) >= 0;
+    });
+    return f;
 }
