@@ -82,7 +82,7 @@ function updateVersion() {
         packageJsonData.contributes.javaExtensions  = javaExtensions.map((extensionString) => {
             
             const ind = extensionString.indexOf('_');
-            const fileName = findNewPDEPlugin(extensionString.substring(extensionString.lastIndexOf('/') + 1, ind));
+            const fileName = findNewRequiredJar(extensionString.substring(extensionString.lastIndexOf('/') + 1, ind));
             
             if (ind >= 0) {
                 return extensionString.substring(0, extensionString.lastIndexOf('/') + 1) + fileName;
@@ -94,7 +94,8 @@ function updateVersion() {
     }
 }
 
-function findNewPDEPlugin(fileName) {
+// The plugin jar follows the name convention: <name>_<version>.jar
+function findNewRequiredJar(fileName) {
     fileName = fileName + "_";
     const destFolder = path.resolve('./server');
     const files = fs.readdirSync(destFolder);
