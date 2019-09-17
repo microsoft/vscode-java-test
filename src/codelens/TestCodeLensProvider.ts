@@ -55,7 +55,7 @@ export class TestCodeLensProvider implements CodeLensProvider {
                     title: 'Run Test',
                     command: JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS,
                     tooltip: 'Run Test',
-                    arguments: [[test]],
+                    arguments: [test],
                 },
             ),
             new CodeLens(
@@ -64,7 +64,7 @@ export class TestCodeLensProvider implements CodeLensProvider {
                     title: 'Debug Test',
                     command: JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS,
                     tooltip: 'Debug Test',
-                    arguments: [[test]],
+                    arguments: [test],
                 },
             ),
         );

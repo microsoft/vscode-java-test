@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ILocation } from '../protocols';
+import { ILocation, TestLevel } from '../protocols';
 
 export interface ITestResult {
     details: ITestResultDetails;
@@ -40,3 +40,11 @@ export const defaultResult: ITestResult = {
     location: undefined,
     details: { status: TestStatus.Skip },
 };
+
+export interface IRunnerContext {
+    scope: TestLevel;
+    testUri: string;
+    fullName: string;
+    projectName: string;
+    isDebug: boolean;
+}
