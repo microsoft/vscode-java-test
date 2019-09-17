@@ -89,15 +89,12 @@ class RunnerScheduler {
                                     return resolve();
                                 });
                                 await runner.setup(tests);
-                                if (!launchConfiguration) {
-                                    launchConfiguration = await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)));
-                                }
                                 testStatusBarProvider.showRunningTest();
                                 progress.report({ message: 'Running tests...'});
                                 if (token.isCancellationRequested) {
                                     return resolve();
                                 }
-                                const results: ITestResult[] = await runner.run(launchConfiguration);
+                                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri))));
                                 await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
                                 finalResults.push(...results);
                                 return resolve();
