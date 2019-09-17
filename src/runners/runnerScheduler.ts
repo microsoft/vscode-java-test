@@ -82,7 +82,7 @@ class RunnerScheduler {
                 await window.withProgress(
                     { location: ProgressLocation.Notification, cancellable: true },
                     async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-                        return new Promise(async (resolve: () => void, reject: (reason: any) => void): Promise<void> => {
+                        return new Promise<void>(async (resolve: () => void, reject: (reason: any) => void): Promise<void> => {
                             try {
                                 token.onCancellationRequested(() => {
                                     this.cleanUp(true /* isCancel */);
