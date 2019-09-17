@@ -5,7 +5,6 @@ import { CancellationToken, commands, DebugConfiguration, ExtensionContext, Prog
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { JavaLanguageServerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
-import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
@@ -14,7 +13,7 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
-import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
+import { IRunnerContext, resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolveVariablesInConfig } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
@@ -34,7 +33,7 @@ class RunnerScheduler {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], isDebug: boolean, node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
+    public async run(testItems: ITestItem[], runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -88,7 +87,7 @@ class RunnerScheduler {
                         });
                         await runner.setup(tests);
                         if (!launchConfiguration) {
-                            launchConfiguration = await resolveLaunchConfigurationForRunner(runner, tests, isDebug, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)), node);
+                            launchConfiguration = await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)));
                         }
                         testStatusBarProvider.showRunningTest();
                         progress.report({ message: 'Running tests...'});

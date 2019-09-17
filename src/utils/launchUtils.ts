@@ -3,17 +3,16 @@
 
 import * as iconv from 'iconv-lite';
 import { DebugConfiguration, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
-import { ITestItem, TestKind, TestLevel } from '../protocols';
+import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
 import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
 
-export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], isDebug: boolean, config?: IExecutionConfig, node?: TestTreeNode): Promise<DebugConfiguration> {
+export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     if (tests[0].kind === TestKind.JUnit) {
-        return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, isDebug, config, node);
+        return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, runnerContext, config);
     } else {
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
         const classPaths: string[] = [...await resolveRuntimeClassPath(testPaths), await runner.runnerJarFilePath, await runner.runnerLibPath];
@@ -35,13 +34,13 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             vmArgs: runner.getVmArgs(config),
             encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
             env,
-            noDebug: !isDebug,
+            noDebug: !runnerContext.isDebug,
         };
     }
 }
 
-export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, isDebug: boolean, config?: IExecutionConfig, node?: TestTreeNode): Promise<DebugConfiguration> {
-    const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, node);
+export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
+    const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, runnerContext);
     junitLaunchArgs.programArguments.push('-port', `${socketPort}`);
     if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
@@ -65,41 +64,21 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, soc
         encoding: getJavaEncoding(Uri.parse(test.location.uri)),
         env,
         console: 'internalConsole',
-        noDebug: !isDebug ? true : false,
+        noDebug: !runnerContext.isDebug,
     };
 }
 
-async function getJUnitLaunchArguments(test: ITestItem, node?: TestTreeNode): Promise<IJUnitLaunchArguments> {
+async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerContext): Promise<IJUnitLaunchArguments> {
     let className: string = '';
     let methodName: string = '';
-    let runFromRoot: boolean = false;
-    let uri: string = '';
-    let project: string = '';
-    let fullName: string = '';
 
-    project = test.project;
-    if (!node) {
-        // From Code Lens
-        uri = test.location.uri;
-        fullName = test.fullName;
-    } else {
-        // From Test Explorer
-        if (node.level === TestLevel.Root) {
-            runFromRoot = true;
-            uri = workspace.getWorkspaceFolder(Uri.parse(test.location.uri))!.uri.toString();
-        } else {
-            uri = Uri.file(node.fsPath).toString();
-            fullName = node.fullName;
-        }
-    }
-
-    const nameArray: string[] = fullName.split('#');
+    const nameArray: string[] = runnerContext.fullName.split('#');
     className = nameArray[0];
     if (nameArray.length > 1) {
         methodName = nameArray[1];
     }
 
-    return await resolveJUnitLaunchArguments(uri, className, methodName, project, runFromRoot);
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.runFromRoot);
 }
 
 export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {
@@ -137,4 +116,12 @@ function getEncodingFromSetting(uri: Uri): string {
         javaEncoding = config.get<string>('files.encoding', 'UTF-8');
     }
     return javaEncoding;
+}
+
+export interface IRunnerContext {
+    runFromRoot: boolean;
+    testUri: string;
+    fullName: string;
+    projectName: string;
+    isDebug: boolean;
 }

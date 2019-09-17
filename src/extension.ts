@@ -9,6 +9,7 @@ import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentO
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
+import { runFromCodeLens } from './commands/runFromCodeLens';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
@@ -59,8 +60,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testCodeLensController,
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerScheduler.run(tests, false /* isDebug */)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (tests: ITestItem[]) => await runnerScheduler.run(tests, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (test: ITestItem) => await runFromCodeLens(test, false /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (test: ITestItem) => await runFromCodeLens(test, true /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EXPLORER, async (node?: TestTreeNode, launchConfiguration?: DebugConfiguration) => await runTestsFromExplorer(node, launchConfiguration)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: TestTreeNode, launchConfiguration?: DebugConfiguration) => await debugTestsFromExplorer(node, launchConfiguration)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestResult[]) => await testReportProvider.report(tests)),

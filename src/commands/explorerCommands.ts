@@ -7,6 +7,7 @@ import { logger } from '../logger/logger';
 import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
 import { runnerScheduler } from '../runners/runnerScheduler';
 import { searchTestItemsAll } from '../utils/commandUtils';
+import { IRunnerContext } from '../utils/launchUtils';
 import { constructSearchTestItemParams } from '../utils/protocolUtils';
 
 export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
@@ -23,8 +24,23 @@ export async function debugTestsFromExplorer(node?: TestTreeNode, launchConfigur
 }
 
 async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
+    const runnerContext: IRunnerContext = {
+        runFromRoot: false,
+        testUri: '',
+        fullName: '',
+        projectName: '',
+        isDebug,
+    };
+
     if (!node) {
         node = new TestTreeNode('', '', TestLevel.Root, '');
+    } else {
+        runnerContext.testUri = Uri.file(node.fsPath).toString();
+        runnerContext.fullName = node.fullName;
+    }
+
+    if (node.level === TestLevel.Root || node.level === TestLevel.Folder) {
+        runnerContext.runFromRoot = true;
     }
     const tests: ITestItem[] = await searchTestItems(node);
     if (tests.length <= 0) {
@@ -32,7 +48,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, l
         return;
     }
 
-    return runnerScheduler.run(tests, isDebug, node, launchConfiguration);
+    return runnerScheduler.run(tests, runnerContext, launchConfiguration);
 }
 
 async function searchTestItems(node: TestTreeNode): Promise<ITestItem[]> {
