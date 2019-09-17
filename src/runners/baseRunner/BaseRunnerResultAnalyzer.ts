@@ -3,7 +3,7 @@
 
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
-import { defaultResult, ITestOutputData, ITestResult, ITestResultDetails, TestOutputType } from '../models';
+import { defaultResult, ITestOutputData, ITestResult, ITestResultDetails } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
     protected testResults: Map<string, ITestResultDetails> = new Map<string, ITestResultDetails>();
