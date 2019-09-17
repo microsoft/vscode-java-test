@@ -13,13 +13,13 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
 import { loadRunConfig } from '../utils/configUtils';
-import { IRunnerContext, resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
+import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolveVariablesInConfig } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
 import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
-import { ITestResult, TestStatus } from './models';
+import { IRunnerContext, ITestResult, TestStatus } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
 class RunnerScheduler {

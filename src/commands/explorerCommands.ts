@@ -5,9 +5,9 @@ import { CancellationToken, DebugConfiguration, Progress, ProgressLocation, Rang
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
 import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
+import { IRunnerContext } from '../runners/models';
 import { runnerScheduler } from '../runners/runnerScheduler';
 import { searchTestItemsAll } from '../utils/commandUtils';
-import { IRunnerContext } from '../utils/launchUtils';
 import { constructSearchTestItemParams } from '../utils/protocolUtils';
 
 export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
@@ -24,23 +24,21 @@ export async function debugTestsFromExplorer(node?: TestTreeNode, launchConfigur
 }
 
 async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
+    if (!node) {
+        node = new TestTreeNode('', '', TestLevel.Root, '');
+    }
+
     const runnerContext: IRunnerContext = {
-        runFromRoot: false,
+        scope: node.level,
         testUri: '',
         fullName: '',
         projectName: '',
         isDebug,
     };
 
-    if (!node) {
-        node = new TestTreeNode('', '', TestLevel.Root, '');
-    } else {
+    if (node.level === TestLevel.Package || node.level === TestLevel.Class || node.level === TestLevel.Method) {
         runnerContext.testUri = Uri.file(node.fsPath).toString();
         runnerContext.fullName = node.fullName;
-    }
-
-    if (node.level === TestLevel.Root || node.level === TestLevel.Folder) {
-        runnerContext.runFromRoot = true;
     }
     const tests: ITestItem[] = await searchTestItems(node);
     if (tests.length <= 0) {

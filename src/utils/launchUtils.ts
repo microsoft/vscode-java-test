@@ -8,6 +8,7 @@ import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
+import { IRunnerContext } from '../runners/models';
 import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
@@ -78,7 +79,7 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
         methodName = nameArray[1];
     }
 
-    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.runFromRoot);
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope);
 }
 
 export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {
@@ -116,12 +117,4 @@ function getEncodingFromSetting(uri: Uri): string {
         javaEncoding = config.get<string>('files.encoding', 'UTF-8');
     }
     return javaEncoding;
-}
-
-export interface IRunnerContext {
-    runFromRoot: boolean;
-    testUri: string;
-    fullName: string;
-    projectName: string;
-    isDebug: boolean;
 }

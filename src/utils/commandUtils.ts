@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import { commands } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
-import { ILocation, ISearchTestItemParams, ITestItem } from '../protocols';
+import { ILocation, ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
@@ -56,14 +56,14 @@ export async function shouldEnablePreviewFlag(className: string, projectName: st
     return await checkProjectSettings(className, projectName, true, expectedOptions);
 }
 
-export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string, runFromRoot: boolean = false): Promise<IJUnitLaunchArguments> {
+export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string, scope: TestLevel): Promise<IJUnitLaunchArguments> {
     const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             uri,
             classFullName,
             testName,
             project,
-            runFromRoot,
+            scope,
         }));
 
     if (!argument) {
