@@ -45,7 +45,7 @@ export abstract class BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
         const outputData: ITestOutputData = JSON.parse(data) as ITestOutputData;
-        if (outputData.type === TestOutputType.Error) {
+        if (outputData.name.toLocaleLowerCase() === 'error') {
             logger.error(this.unescape(data));
         } else {
             // Append '\n' becuase the original line separator has been splitted
