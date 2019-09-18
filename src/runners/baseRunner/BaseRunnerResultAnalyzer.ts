@@ -3,7 +3,7 @@
 
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
-import { defaultResult, ITestOutputData, ITestResult, ITestResultDetails, TestOutputType } from '../models';
+import { defaultResult, ITestOutputData, ITestResult, ITestResultDetails } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
     protected testResults: Map<string, ITestResultDetails> = new Map<string, ITestResultDetails>();
@@ -45,7 +45,7 @@ export abstract class BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
         const outputData: ITestOutputData = JSON.parse(data) as ITestOutputData;
-        if (outputData.type === TestOutputType.Error) {
+        if (outputData.name.toLocaleLowerCase() === 'error') {
             logger.error(this.unescape(data));
         } else {
             // Append '\n' becuase the original line separator has been splitted
