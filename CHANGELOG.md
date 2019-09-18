@@ -4,6 +4,18 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.20.0 
+### Added
+- Add `java.test.saveAllBeforLaunchTest` setting to specify whether to automatically save the files before launching the tests. [#468](https://github.com/microsoft/vscode-java-test/issues/468)
+- Add `java.test.forceBuildBeforeLaunchTest` setting to specify whether to automatically build the workspace before launching the tests. [#781](https://github.com/microsoft/vscode-java-test/issues/781)
+
+### Changed
+- The runner for JUnit 4 is changed to Eclipse JUnit 4 Runner. [PR#795](https://github.com/microsoft/vscode-java-test/pull/795)
+- The title of the Test Explorer is changed to `Java`. [PR#796](https://github.com/microsoft/vscode-java-test/pull/796)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.20.0)
+
 ## 0.19.0 - 2019-08-12
 ### Added
 - Support JUnit 5 meta-annotations. [#737](https://github.com/microsoft/vscode-java-test/issues/737)

@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.19.0",
+    "version": "0.20.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -46,7 +46,7 @@
     "main": "./dist/extension",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.19.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.20.0.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1000.v20190510-0840.jar"
         ],
         "views": {
