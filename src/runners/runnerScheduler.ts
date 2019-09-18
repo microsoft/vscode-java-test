@@ -82,21 +82,30 @@ class RunnerScheduler {
                 await window.withProgress(
                     { location: ProgressLocation.Notification, cancellable: true },
                     async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-                        token.onCancellationRequested(() => {
-                            this.cleanUp(true /* isCancel */);
+                        return new Promise<void>(async (resolve: () => void, reject: (reason: any) => void): Promise<void> => {
+                            try {
+                                token.onCancellationRequested(() => {
+                                    this.cleanUp(true /* isCancel */);
+                                    return resolve();
+                                });
+                                await runner.setup(tests);
+                                if (!launchConfiguration) {
+                                    launchConfiguration = await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)));
+                                }
+                                testStatusBarProvider.showRunningTest();
+                                progress.report({ message: 'Running tests...'});
+                                if (token.isCancellationRequested) {
+                                    return resolve();
+                                }
+                                const results: ITestResult[] = await runner.run(launchConfiguration);
+                                await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
+                                finalResults.push(...results);
+                                return resolve();
+                            } catch (error) {
+                                logger.error(error.toString());
+                                return reject(error);
+                            }
                         });
-                        await runner.setup(tests);
-                        if (!launchConfiguration) {
-                            launchConfiguration = await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri)));
-                        }
-                        testStatusBarProvider.showRunningTest();
-                        progress.report({ message: 'Running tests...'});
-                        if (token.isCancellationRequested) {
-                            return;
-                        }
-                        const results: ITestResult[] = await runner.run(launchConfiguration);
-                        await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
-                        finalResults.push(...results);
                     },
                 );
             }
