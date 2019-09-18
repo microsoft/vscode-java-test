@@ -12,9 +12,9 @@ import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { shouldEnablePreviewFlag } from '../utils/commandUtils';
-import { loadRunConfig } from '../utils/configUtils';
+import { getResolvedRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
-import { getShowReportSetting, needBuildWorkspace, needSaveAll, resolveVariablesInConfig } from '../utils/settingUtils';
+import { getShowReportSetting, needBuildWorkspace, needSaveAll } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnit4Runner } from './junit4Runner/Junit4Runner';
@@ -64,7 +64,7 @@ class RunnerScheduler {
             for (const [runner, tests] of this._runnerMap.entries()) {
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
-                const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
+                const config: IExecutionConfig | undefined = await getResolvedRunConfig(workspaceFolder);
                 if (!config) {
                     logger.info('Test job is canceled.');
                     continue;
@@ -94,7 +94,7 @@ class RunnerScheduler {
                                 if (token.isCancellationRequested) {
                                     return resolve();
                                 }
-                                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, resolveVariablesInConfig(config, Uri.parse(tests[0].location.uri))));
+                                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, config));
                                 await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
                                 finalResults.push(...results);
                                 return resolve();

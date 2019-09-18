@@ -10,13 +10,21 @@ import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_C
 import { LEARN_MORE, NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
 import { getBuiltinConfig, IExecutionConfig, ITestConfig } from '../runConfigs';
+import { resolveVariablesInConfig } from './settingUtils';
 
-export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined): Promise<IExecutionConfig | undefined> {
+export async function getResolvedRunConfig(workspaceFolder: WorkspaceFolder | undefined): Promise<IExecutionConfig | undefined> {
     if (!workspaceFolder) {
         window.showErrorMessage('Failed to get workspace folder for the test items.');
         return undefined;
     }
+    const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
+    if (!config) {
+        return undefined;
+    }
+    return resolveVariablesInConfig(config, workspaceFolder.uri);
+}
 
+async function loadRunConfig(workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
     const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(CONFIG_SETTING_KEY, {});
     if (!_.isEmpty(configSetting)) {
         // Use the new config schema
