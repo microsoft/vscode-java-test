@@ -13,6 +13,7 @@ package com.microsoft.java.test.plugin.launchers;
 
 import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchConfigurationDelegate.JUnitLaunchArguments;
+import com.microsoft.java.test.plugin.model.TestLevel;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,14 +57,14 @@ public class JUnitLaunchUtils {
         }
         info.project = javaProject.getProject();
         
-        if (args.runFromRoot) {
+        if (args.scope == TestLevel.ROOT || args.scope == TestLevel.FOLDER) {
             info.testContainer = StringEscapeUtils.escapeXml(javaProject.getHandleIdentifier());
         } else {
             final File file = Paths.get(new URI(args.uri)).toFile();
-            if (file.isFile()) {
-                parseConfigurationInfoForClass(info, args);
-            } else if (file.isDirectory()) {
+            if (args.scope == TestLevel.PACKAGE && file.isDirectory()) {
                 parseConfigurationInfoForContainer(info, args);
+            } else if ((args.scope == TestLevel.CLASS || args.scope == TestLevel.METHOD) && file.isFile()) {
+                parseConfigurationInfoForClass(info, args);
             } else {
                 throw new RuntimeException("The resource: " + file.getPath() + " is not testable.");
             }
@@ -131,6 +132,6 @@ public class JUnitLaunchUtils {
         public String classFullName;
         public String testName;
         public String project;
-        public boolean runFromRoot;
+        public TestLevel scope;
     }
 }
