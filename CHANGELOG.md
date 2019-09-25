@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 0.20.0 
 ### Added
-- Add `java.test.saveAllBeforLaunchTest` setting to specify whether to automatically save the files before launching the tests. [#468](https://github.com/microsoft/vscode-java-test/issues/468)
+- Add `java.test.saveAllBeforeLaunchTest` setting to specify whether to automatically save the files before launching the tests. [#468](https://github.com/microsoft/vscode-java-test/issues/468)
 - Add `java.test.forceBuildBeforeLaunchTest` setting to specify whether to automatically build the workspace before launching the tests. [#781](https://github.com/microsoft/vscode-java-test/issues/781)
 
 ### Changed

@@ -186,10 +186,10 @@
                     "description": "%configuration.java.test.editor.enableShortcuts.description%",
                     "scope": "application"
                 },
-                "java.test.saveAllBeforLaunchTest": {
+                "java.test.saveAllBeforeLaunchTest": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%configuration.java.test.saveAllBeforLaunchTest.description%",
+                    "description": "%configuration.java.test.saveAllBeforeLaunchTest.description%",
                     "scope": "application"
                 },
                 "java.test.forceBuildBeforeLaunchTest": {
