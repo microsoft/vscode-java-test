@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { debug, DebugConfiguration, Uri, workspace } from 'vscode';
+import { logger } from '../../logger/logger';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
 import { JUnit4RunnerResultAnalyzer } from './JUnit4RunnerResultAnalyzer';
@@ -21,6 +22,7 @@ export class JUnit4Runner extends BaseRunner {
         }
 
         const uri: Uri = Uri.parse(this.tests[0].location.uri);
+        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration)}'\n`);
         debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration);
     }
 }
