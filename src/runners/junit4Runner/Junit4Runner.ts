@@ -22,7 +22,7 @@ export class JUnit4Runner extends BaseRunner {
         }
 
         const uri: Uri = Uri.parse(this.tests[0].location.uri);
-        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration)}'\n`);
+        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
         debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration);
     }
 }
