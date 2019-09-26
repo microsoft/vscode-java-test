@@ -3,7 +3,7 @@
 
 import { CancellationToken, commands, DebugConfiguration, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
-import { JavaLanguageServerCommands } from '../constants/commands';
+import { JavaLanguageServerCommands, JavaTestRunnerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -85,7 +85,7 @@ class RunnerScheduler {
                         return new Promise<void>(async (resolve: () => void, reject: (reason: any) => void): Promise<void> => {
                             try {
                                 token.onCancellationRequested(() => {
-                                    this.cleanUp(true /* isCancel */);
+                                    commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
                                     return resolve();
                                 });
                                 await runner.setup(tests);
