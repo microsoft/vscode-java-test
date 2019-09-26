@@ -10,6 +10,7 @@ import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
 import { IRunnerContext } from '../runners/models';
 import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
+import { randomSequence } from './configUtils';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     if (tests[0].kind === TestKind.JUnit) {
@@ -24,7 +25,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         }
 
         return {
-            name: 'Launch Java Tests',
+            name: `Launch Java Tests - ${randomSequence()}`,
             type: 'java',
             request: 'launch',
             mainClass: runner.runnerMainClassName,

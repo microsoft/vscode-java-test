@@ -187,6 +187,6 @@ async function migrate(configPath: string): Promise<void> {
     workspaceConfig.update(CONFIG_SETTING_KEY, configItems, ConfigurationTarget.WorkspaceFolder);
 }
 
-function randomSequence(): string {
+export function randomSequence(): string {
     return crypto.randomBytes(3).toString('hex');
 }
