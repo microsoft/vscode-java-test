@@ -13,7 +13,7 @@ import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandU
 import { randomSequence } from './configUtils';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
-    if (tests[0].kind === TestKind.JUnit) {
+    if (tests[0].kind !== TestKind.TestNG) {
         return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, runnerContext, config);
     } else {
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
@@ -80,7 +80,7 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
         methodName = nameArray[1];
     }
 
-    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope);
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope, test.kind);
 }
 
 export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {

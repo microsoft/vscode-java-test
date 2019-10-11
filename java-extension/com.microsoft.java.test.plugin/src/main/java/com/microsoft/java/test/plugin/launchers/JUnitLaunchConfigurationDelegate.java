@@ -13,45 +13,43 @@ package com.microsoft.java.test.plugin.launchers;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate {
     public JUnitLaunchArguments getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
             IProgressMonitor monitor) throws CoreException {
         final ILaunch launch = new Launch(configuration, mode, null);
-        showCommandLine(configuration, mode, launch, monitor);
-        final String mainTypeName = verifyMainTypeName(configuration);
 
-        final ArrayList<String> vmArguments = new ArrayList<>();
-        final ArrayList<String> programArguments = new ArrayList<>();
-        collectExecutionArguments(configuration, vmArguments, programArguments);
-        vmArguments.addAll(Arrays.asList(DebugPlugin.parseArguments(getVMArguments(configuration, mode))));
-        final IJavaProject javaProject = getJavaProject(configuration);
-        if (JavaRuntime.isModularProject(javaProject)) {
-            vmArguments.add("--add-modules=ALL-MODULE-PATH"); //$NON-NLS-1$
+        // TODO: Make the getVMRunnerConfiguration() in super class protected.
+        try {
+            final Method getVMRunnerConfiguration = getClass().getSuperclass().getDeclaredMethod(
+                    "getVMRunnerConfiguration", ILaunchConfiguration.class, ILaunch.class, String.class,
+                    IProgressMonitor.class);
+            getVMRunnerConfiguration.setAccessible(true);
+            final VMRunnerConfiguration config = (VMRunnerConfiguration) getVMRunnerConfiguration.invoke(this,
+                    configuration, launch, mode, new NullProgressMonitor());
+            final IJavaProject javaProject = getJavaProject(configuration);
+            final JUnitLaunchArguments launchArguments = new JUnitLaunchArguments();
+            launchArguments.mainClass = config.getClassToLaunch();
+            launchArguments.projectName = javaProject.getProject().getName();
+            launchArguments.classpath = config.getClassPath();
+            launchArguments.modulepath = config.getModulepath();
+            launchArguments.vmArguments = config.getVMArguments();
+            launchArguments.programArguments = config.getProgramArguments();
+
+            return launchArguments;
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException |
+                InvocationTargetException e) {
+            return null;
         }
-
-        final String[][] classpathAndModulepath = getClasspathAndModulepath(configuration);
-        final String[] classpath = classpathAndModulepath[0];
-        final String[] modulepath = classpathAndModulepath[1];
-        
-        final JUnitLaunchArguments launchArguments = new JUnitLaunchArguments();
-        launchArguments.mainClass = mainTypeName;
-        launchArguments.projectName = javaProject.getProject().getName();
-        launchArguments.classpath = classpath;
-        launchArguments.modulepath = modulepath;
-        launchArguments.vmArguments = vmArguments.toArray(new String[vmArguments.size()]);
-        launchArguments.programArguments = programArguments.toArray(new String[programArguments.size()]);
-
-        return launchArguments;
     }
 
     public static class JUnitLaunchArguments {

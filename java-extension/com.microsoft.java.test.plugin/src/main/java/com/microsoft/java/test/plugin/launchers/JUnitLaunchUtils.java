@@ -13,6 +13,7 @@ package com.microsoft.java.test.plugin.launchers;
 
 import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchConfigurationDelegate.JUnitLaunchArguments;
+import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -48,8 +49,8 @@ public class JUnitLaunchUtils {
         final Argument args = gson.fromJson((String) arguments.get(0), Argument.class);
 
         final TestInfo info = new TestInfo();
-        // Only support JUnit 4 for now
-        info.testKind = "org.eclipse.jdt.junit.loader.junit4";
+
+        info.testKind = getEclipseTestKind(args.testKind);
 
         final IJavaProject javaProject = ProjectUtils.getJavaProject(args.project);
         if (javaProject == null || !javaProject.exists()) {
@@ -127,11 +128,23 @@ public class JUnitLaunchUtils {
         info.testContainer = StringEscapeUtils.escapeXml(targetElement.getHandleIdentifier());
     }
 
+    private static String getEclipseTestKind(TestKind testKind) {
+        switch (testKind) {
+            case JUnit:
+                return "org.eclipse.jdt.junit.loader.junit4";
+            case JUnit5:
+                return "org.eclipse.jdt.junit.loader.junit5";
+            default:
+                throw new IllegalArgumentException("The test kind: " + testKind.name() + "si not supported yet.");
+        }
+    }
+
     class Argument {
         public String uri;
         public String classFullName;
         public String testName;
         public String project;
         public TestLevel scope;
+        public TestKind testKind;
     }
 }

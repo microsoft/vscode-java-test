@@ -39,7 +39,7 @@ export enum TestLevel {
 }
 
 export enum TestKind {
-    JUnit,
-    JUnit5,
-    TestNG,
+    JUnit = 0,
+    JUnit5 = 1,
+    TestNG = 2,
 }

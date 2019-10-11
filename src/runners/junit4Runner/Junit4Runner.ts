@@ -5,7 +5,7 @@ import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } f
 import { logger } from '../../logger/logger';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { JUnit4RunnerResultAnalyzer } from './JUnit4RunnerResultAnalyzer';
+import { JUnitRunnerResultAnalyzer } from '../baseRunner/JUnitRunnerResultAnalyzer';
 
 export class JUnit4Runner extends BaseRunner {
 
@@ -25,7 +25,7 @@ export class JUnit4Runner extends BaseRunner {
 
     protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
         if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new JUnit4RunnerResultAnalyzer(this.tests);
+            this.runnerResultAnalyzer = new JUnitRunnerResultAnalyzer(this.tests);
         }
         return this.runnerResultAnalyzer;
     }

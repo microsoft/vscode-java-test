@@ -22,7 +22,22 @@ gulp.task('build-plugin', (done) => {
         .pipe(gulp.dest('./server'));
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/lib/*.jar'))
         .pipe(gulp.dest('./server/lib'));
-    gulp.src(path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.eclipse.jdt.junit4.runtime_*.jar'))
+    gulp.src([
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.eclipse.jdt.junit4.runtime_*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.eclipse.jdt.junit5.runtime_*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.jupiter.api*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.jupiter.engine*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.jupiter.migrationsupport*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.jupiter.params*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.vintage.engine*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.opentest4j*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.platform.commons*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.platform.engine*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.platform.launcher*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.platform.runner*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.junit.platform.suite.api*.jar'),
+            path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins/org.apiguardian*.jar'),
+        ])
         .pipe(gulp.dest('./server'))
         .on('end', updateVersion);
     done();
