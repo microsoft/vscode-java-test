@@ -5,9 +5,9 @@ import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } f
 import { logger } from '../../logger/logger';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { JUnitRunnerResultAnalyzer } from '../baseRunner/JUnitRunnerResultAnalyzer';
+import { JUnitRunnerResultAnalyzer } from './JUnitRunnerResultAnalyzer';
 
-export class JUnit5Runner extends BaseRunner {
+export class JUnitRunner extends BaseRunner {
 
     private debugSession: DebugSession | undefined;
     private disposables: Disposable[] = [];
@@ -31,10 +31,6 @@ export class JUnit5Runner extends BaseRunner {
     }
 
     protected async launchTests(launchConfiguration: DebugConfiguration): Promise<void> {
-        if (launchConfiguration.args) {
-            (launchConfiguration.args as string[]).push('-port', `${this.server.address().port}`);
-        }
-
         const uri: Uri = Uri.parse(this.tests[0].location.uri);
         logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
         debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration);
@@ -44,4 +40,13 @@ export class JUnit5Runner extends BaseRunner {
             }
         }));
     }
+}
+
+export interface IJUnitLaunchArguments {
+    mainClass: string;
+    projectName: string;
+    classpath: string[];
+    modulepath: string[];
+    vmArguments: string[];
+    programArguments: string[];
 }

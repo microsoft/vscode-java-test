@@ -6,7 +6,7 @@ import { commands } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
-import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
+import { IJUnitLaunchArguments } from '../runners/junitRunner/JunitRunner';
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
     return await executeJavaLanguageServerCommand<string[]>(

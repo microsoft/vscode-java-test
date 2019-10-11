@@ -7,7 +7,7 @@ import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
-import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
+import { IJUnitLaunchArguments } from '../runners/junitRunner/JunitRunner';
 import { IRunnerContext } from '../runners/models';
 import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
 import { randomSequence } from './configUtils';
@@ -78,6 +78,13 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
     className = nameArray[0];
     if (nameArray.length > 1) {
         methodName = nameArray[1];
+        if (test.paramTypes.length > 0) {
+            methodName += `(${test.paramTypes[0]}`;
+            for (let i: number = 1; i < test.paramTypes.length; i++) {
+                methodName += `,${test.paramTypes[i]}`;
+            }
+            methodName += ')';
+        }
     }
 
     return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope, test.kind);

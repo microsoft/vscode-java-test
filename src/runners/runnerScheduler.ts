@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as _ from 'lodash';
 import { CancellationToken, commands, DebugConfiguration, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { JavaLanguageServerCommands, JavaTestRunnerCommands } from '../constants/commands';
@@ -17,8 +18,7 @@ import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { getShowReportSetting, needBuildWorkspace, needSaveAll } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
-import { JUnit4Runner } from './junit4Runner/Junit4Runner';
-import { JUnit5Runner } from './junit5Runner/JUnit5Runner';
+import { JUnitRunner } from './junitRunner/JunitRunner';
 import { IRunnerContext, ITestResult, TestStatus } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
@@ -40,7 +40,7 @@ class RunnerScheduler {
         }
 
         this._isRunning = true;
-        const finalResults: ITestResult[] = [];
+        let finalResults: ITestResult[] = [];
 
         await this.saveFilesIfNeeded();
 
@@ -71,7 +71,7 @@ class RunnerScheduler {
                 }
 
                 // Auto add '--enable-preview' vmArgs if the java project enables COMPILER_PB_ENABLE_PREVIEW_FEATURES flag.
-                if (!(runner instanceof JUnit4Runner) && await shouldEnablePreviewFlag('', tests[0].project)) {
+                if (runner instanceof TestNGRunner && await shouldEnablePreviewFlag('', tests[0].project)) {
                     if (config.vmargs) {
                         config.vmargs.push('--enable-preview');
                     } else {
@@ -106,6 +106,7 @@ class RunnerScheduler {
                     },
                 );
             }
+            finalResults = _.uniqBy(finalResults, 'fullName');
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);
@@ -182,9 +183,8 @@ class RunnerScheduler {
     private getRunnerByKind(kind: TestKind): BaseRunner | undefined {
         switch (kind) {
             case TestKind.JUnit:
-                return new JUnit4Runner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             case TestKind.JUnit5:
-                return new JUnit5Runner(this._javaHome, this._context.storagePath, this._context.extensionPath);
+                return new JUnitRunner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             case TestKind.TestNG:
                 return new TestNGRunner(this._javaHome, this._context.storagePath, this._context.extensionPath);
             default:
