@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as path from 'path';
 import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } from 'vscode';
 import { logger } from '../../logger/logger';
 import { BaseRunner } from '../baseRunner/BaseRunner';
@@ -34,11 +33,6 @@ export class JUnit5Runner extends BaseRunner {
     protected async launchTests(launchConfiguration: DebugConfiguration): Promise<void> {
         if (launchConfiguration.args) {
             (launchConfiguration.args as string[]).push('-port', `${this.server.address().port}`);
-        }
-
-        // TODO: why
-        if (launchConfiguration.classPaths) {
-            (launchConfiguration.classPaths as string[]).push(path.join(this.extensionPath, 'server', 'org.junit.platform.launcher_1.4.0.v20190212-2109.jar'));
         }
 
         const uri: Uri = Uri.parse(this.tests[0].location.uri);
