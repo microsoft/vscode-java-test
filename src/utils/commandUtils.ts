@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import { commands } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
-import { ILocation, ISearchTestItemParams, ITestItem, TestLevel, TestKind } from '../protocols';
+import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
 import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
