@@ -5,7 +5,7 @@ import { logger } from '../../logger/logger';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
 import { ITestResultDetails, TestStatus } from '../models';
 
-export class JUnit4RunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
+export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     private currentTestItem: string;
     private traces: string;

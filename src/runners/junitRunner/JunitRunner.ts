@@ -5,9 +5,9 @@ import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } f
 import { logger } from '../../logger/logger';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { JUnit4RunnerResultAnalyzer } from './JUnit4RunnerResultAnalyzer';
+import { JUnitRunnerResultAnalyzer } from './JUnitRunnerResultAnalyzer';
 
-export class JUnit4Runner extends BaseRunner {
+export class JUnitRunner extends BaseRunner {
 
     private debugSession: DebugSession | undefined;
     private disposables: Disposable[] = [];
@@ -25,16 +25,12 @@ export class JUnit4Runner extends BaseRunner {
 
     protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
         if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new JUnit4RunnerResultAnalyzer(this.tests);
+            this.runnerResultAnalyzer = new JUnitRunnerResultAnalyzer(this.tests);
         }
         return this.runnerResultAnalyzer;
     }
 
     protected async launchTests(launchConfiguration: DebugConfiguration): Promise<void> {
-        if (launchConfiguration.args) {
-            (launchConfiguration.args as string[]).push('-port', `${this.server.address().port}`);
-        }
-
         const uri: Uri = Uri.parse(this.tests[0].location.uri);
         logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
         debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration);

@@ -7,13 +7,13 @@ import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
-import { IJUnitLaunchArguments } from '../runners/junit4Runner/Junit4Runner';
+import { IJUnitLaunchArguments } from '../runners/junitRunner/JunitRunner';
 import { IRunnerContext } from '../runners/models';
 import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
 import { randomSequence } from './configUtils';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
-    if (tests[0].kind === TestKind.JUnit) {
+    if (tests[0].kind !== TestKind.TestNG) {
         return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, runnerContext, config);
     } else {
         const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
@@ -78,9 +78,12 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
     className = nameArray[0];
     if (nameArray.length > 1) {
         methodName = nameArray[1];
+        if (test.paramTypes.length > 0) {
+            methodName = `${methodName}(${test.paramTypes.join(',')})`;
+        }
     }
 
-    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope);
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope, test.kind);
 }
 
 export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {
