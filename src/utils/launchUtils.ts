@@ -43,7 +43,13 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
 
 export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, runnerContext);
-    junitLaunchArgs.programArguments.push('-port', `${socketPort}`);
+
+    // We need to replace the socket port number since the socket is established from the client side.
+    // The port number returned from the server side is a fake one.
+    const portIndex: number = junitLaunchArgs.programArguments.indexOf('-port');
+    if (portIndex > -1 && junitLaunchArgs.programArguments.length > portIndex + 1) {
+        junitLaunchArgs.programArguments[portIndex + 1] = `${socketPort}`;
+    }
     if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
     }
