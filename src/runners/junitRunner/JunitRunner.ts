@@ -15,7 +15,7 @@ export class JUnitRunner extends BaseRunner {
     public async tearDown(isCancel: boolean): Promise<void> {
         super.tearDown(isCancel);
         if (this.debugSession) {
-            this.debugSession.customRequest('disconnect');
+            this.debugSession.customRequest('disconnect', {restart: false });
             this.debugSession = undefined;
         }
         for (const disposable of this.disposables) {
