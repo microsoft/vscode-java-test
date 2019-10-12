@@ -79,11 +79,7 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
     if (nameArray.length > 1) {
         methodName = nameArray[1];
         if (test.paramTypes.length > 0) {
-            methodName += `(${test.paramTypes[0]}`;
-            for (let i: number = 1; i < test.paramTypes.length; i++) {
-                methodName += `,${test.paramTypes[i]}`;
-            }
-            methodName += ')';
+            methodName = `${methodName}(${test.paramTypes.join(',')})`;
         }
     }
 
