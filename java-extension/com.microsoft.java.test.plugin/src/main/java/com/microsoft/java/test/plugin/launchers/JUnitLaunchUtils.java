@@ -236,7 +236,7 @@ public class JUnitLaunchUtils {
             case TestNG:
                 return TESTNG_LOADER;
             default:
-                throw new IllegalArgumentException("The test kind: " + testKind.name() + "si not supported yet.");
+                throw new IllegalArgumentException("The test kind: " + testKind.name() + " is not supported yet.");
         }
     }
 
