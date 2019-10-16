@@ -4,24 +4,25 @@
 import * as iconv from 'iconv-lite';
 import { DebugConfiguration, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { logger } from '../logger/logger';
-import { ITestItem, TestKind } from '../protocols';
+import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
-import { IJUnitLaunchArguments } from '../runners/junitRunner/JunitRunner';
+import { IJUnitLaunchArguments } from '../runners/baseRunner/BaseRunner';
 import { IRunnerContext } from '../runners/models';
-import { resolveJUnitLaunchArguments, resolveRuntimeClassPath } from './commandUtils';
+import { resolveJUnitLaunchArguments } from './commandUtils';
 import { randomSequence } from './configUtils';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
-    if (tests[0].kind !== TestKind.TestNG) {
-        return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, runnerContext, config);
-    } else {
-        const testPaths: string[] = tests.map((item: ITestItem) => Uri.parse(item.location.uri).fsPath);
-        const classPaths: string[] = [...await resolveRuntimeClassPath(testPaths), await runner.runnerJarFilePath, await runner.runnerLibPath];
+    if (tests[0].kind === TestKind.TestNG) {
+        const testNGArguments: IJUnitLaunchArguments = await getTestNGLaunchArguments(tests[0]);
 
         let env: {} = process.env;
         if (config && config.env) {
             env = {...env, ...config.env};
+        }
+
+        if (config && config.vmargs) {
+            testNGArguments.vmArguments.push(...config.vmargs.filter(Boolean));
         }
 
         return {
@@ -31,14 +32,18 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             mainClass: runner.runnerMainClassName,
             projectName: tests[0].project,
             cwd: config ? config.workingDirectory : undefined,
-            classPaths,
+            classPaths: [...testNGArguments.classpath, await runner.runnerJarFilePath, await runner.runnerLibPath],
+            modulePaths: testNGArguments.modulepath,
             args: runner.getApplicationArgs(config),
-            vmArgs: runner.getVmArgs(config),
+            vmArgs: testNGArguments.vmArguments,
             encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
             env,
+            console: 'internalConsole',
             noDebug: !runnerContext.isDebug,
         };
     }
+
+    return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, runnerContext, config);
 }
 
 export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
@@ -90,6 +95,10 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
     }
 
     return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope, test.kind);
+}
+
+async function getTestNGLaunchArguments(test: ITestItem): Promise<IJUnitLaunchArguments> {
+    return await resolveJUnitLaunchArguments('', '', '', test.project, TestLevel.Root, test.kind);
 }
 
 export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {

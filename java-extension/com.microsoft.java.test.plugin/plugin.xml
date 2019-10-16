@@ -4,8 +4,6 @@
   <extension point="org.eclipse.jdt.ls.core.delegateCommandHandler">
     <delegateCommandHandler class="com.microsoft.java.test.plugin.handler.TestDelegateCommandHandler">
       <command id="vscode.java.test.get.testpath" />
-      <command id="vscode.java.test.runtime.classpath" />
-      <command id="vscode.java.test.project.info" />
       <command id="vscode.java.test.search.items" />
       <command id="vscode.java.test.search.items.all" />
       <command id="vscode.java.test.search.codelens" />

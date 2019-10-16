@@ -14,7 +14,6 @@ package com.microsoft.java.test.plugin.launchers;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
@@ -65,10 +64,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
         }
 
         final String dependencies = config.getOverrideDependencies();
-        if (dependencies != null && dependencies.length() > 0) {
-            final String[] parseArguments = DebugPlugin.parseArguments(dependencies);
-            vmArgs.addAll(Arrays.asList(parseArguments));
-        }
+        JUnitLaunchUtils.addOverrideDependencies(vmArgs, dependencies);
 
         return vmArgs.toArray(new String[vmArgs.size()]);
     }
