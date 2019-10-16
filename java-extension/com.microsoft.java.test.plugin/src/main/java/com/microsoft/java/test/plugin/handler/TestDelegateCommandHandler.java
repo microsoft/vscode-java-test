@@ -12,9 +12,7 @@
 package com.microsoft.java.test.plugin.handler;
 
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils;
-import com.microsoft.java.test.plugin.util.ProjectInfoFetcher;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
-import com.microsoft.java.test.plugin.util.RuntimeClassPathUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -26,8 +24,6 @@ import java.util.List;
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.get.testpath";
-    private static final String COMPUTE_RUNTIME_CLASSPATH = "vscode.java.test.runtime.classpath";
-    private static final String GET_PROJECT_INFO = "vscode.java.test.project.info";
     private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
     private static final String SEARCH_TEST_ALL_ITEMS = "vscode.java.test.search.items.all";
     private static final String SEARCH_TEST_CODE_LENS = "vscode.java.test.search.codelens";
@@ -40,10 +36,6 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
         switch (commandId) {
             case GET_TEST_SOURCE_PATH:
                 return ProjectTestUtils.listTestSourcePaths(arguments, monitor);
-            case COMPUTE_RUNTIME_CLASSPATH:
-                return RuntimeClassPathUtils.resolveRuntimeClassPath(arguments);
-            case GET_PROJECT_INFO:
-                return ProjectInfoFetcher.getProjectInfo(arguments);
             case SEARCH_TEST_ITEMS:
                 return TestSearchUtils.searchTestItems(arguments, monitor);
             case SEARCH_TEST_ALL_ITEMS:

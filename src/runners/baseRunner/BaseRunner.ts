@@ -7,7 +7,7 @@ import * as iconv from 'iconv-lite';
 import { createServer, Server, Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
-import { DebugConfiguration, Uri } from 'vscode';
+import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } from 'vscode';
 import { LOCAL_HOST } from '../../constants/configs';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
@@ -25,6 +25,9 @@ export abstract class BaseRunner implements ITestRunner {
     protected socket: Socket;
     protected isCanceled: boolean;
     protected runnerResultAnalyzer: BaseRunnerResultAnalyzer;
+
+    private debugSession: DebugSession | undefined;
+    private disposables: Disposable[] = [];
 
     constructor(
         protected javaHome: string,
@@ -93,6 +96,13 @@ export abstract class BaseRunner implements ITestRunner {
                     this.server.unref();
                 });
             }
+            if (this.debugSession) {
+                this.debugSession.customRequest('disconnect', {restart: false });
+                this.debugSession = undefined;
+            }
+            for (const disposable of this.disposables) {
+                disposable.dispose();
+            }
         } catch (error) {
             logger.error('Failed to clean up', error);
         }
@@ -119,17 +129,6 @@ export abstract class BaseRunner implements ITestRunner {
         throw new Error('The socket server is not started yet.');
     }
 
-    public getVmArgs(config?: IExecutionConfig): string[] {
-        const vmArgs: string[] = [];
-        vmArgs.push('-ea');
-
-        if (config && config.vmargs) {
-            vmArgs.push(...config.vmargs.filter(Boolean));
-        }
-
-        return vmArgs;
-    }
-
     public getApplicationArgs(config?: IExecutionConfig): string[] {
         const applicationArgs: string[] = [];
         applicationArgs.push(`${this.server.address().port}`);
@@ -149,7 +148,16 @@ export abstract class BaseRunner implements ITestRunner {
         return path.join(this.extensionPath, 'server');
     }
 
-    protected abstract async launchTests(launchConfiguration: DebugConfiguration): Promise<void>;
+    protected async launchTests(launchConfiguration: DebugConfiguration): Promise<void> {
+        const uri: Uri = Uri.parse(this.tests[0].location.uri);
+        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
+        debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration);
+        this.disposables.push(debug.onDidStartDebugSession((session: DebugSession) => {
+            if (launchConfiguration.name === session.name) {
+                this.debugSession = session;
+            }
+        }));
+    }
 
     protected getRunnerCommandParams(_config?: IExecutionConfig): string[] {
         return [];
@@ -180,4 +188,13 @@ export abstract class BaseRunner implements ITestRunner {
         }
         throw new Error(`Failed to find path: ${fullPath}`);
     }
+}
+
+export interface IJUnitLaunchArguments {
+    mainClass: string;
+    projectName: string;
+    classpath: string[];
+    modulepath: string[];
+    vmArguments: string[];
+    programArguments: string[];
 }
