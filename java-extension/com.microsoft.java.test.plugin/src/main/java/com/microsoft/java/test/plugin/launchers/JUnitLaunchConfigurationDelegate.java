@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.launchers;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
@@ -22,6 +23,9 @@ import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate {
     public JUnitLaunchArguments getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
@@ -42,7 +46,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             launchArguments.projectName = javaProject.getProject().getName();
             launchArguments.classpath = config.getClassPath();
             launchArguments.modulepath = config.getModulepath();
-            launchArguments.vmArguments = config.getVMArguments();
+            launchArguments.vmArguments = getVmArguments(config);
             launchArguments.programArguments = config.getProgramArguments();
 
             return launchArguments;
@@ -50,6 +54,23 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                 InvocationTargetException e) {
             return null;
         }
+    }
+
+    private String[] getVmArguments(VMRunnerConfiguration config) {
+        final List<String> vmArgs = new ArrayList<>();
+        vmArgs.addAll(Arrays.asList(config.getVMArguments()));
+        
+        if (config.isPreviewEnabled()) {
+            vmArgs.add("--enable-preview");
+        }
+
+        final String dependencies = config.getOverrideDependencies();
+        if (dependencies != null && dependencies.length() > 0) {
+            final String[] parseArguments = DebugPlugin.parseArguments(dependencies);
+            vmArgs.addAll(Arrays.asList(parseArguments));
+        }
+
+        return vmArgs.toArray(new String[vmArgs.size()]);
     }
 
     public static class JUnitLaunchArguments {
