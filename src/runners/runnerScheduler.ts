@@ -22,13 +22,11 @@ import { IRunnerContext, ITestResult, TestStatus } from './models';
 import { TestNGRunner } from './testngRunner/TestNGRunner';
 
 class RunnerScheduler {
-    private _javaHome: string;
     private _context: ExtensionContext;
     private _isRunning: boolean;
     private _runnerMap: Map<BaseRunner, ITestItem[]> | undefined;
 
-    public initialize(javaHome: string, context: ExtensionContext): void {
-        this._javaHome = javaHome;
+    public initialize(context: ExtensionContext): void {
         this._context = context;
     }
 
@@ -154,9 +152,9 @@ class RunnerScheduler {
         switch (kind) {
             case TestKind.JUnit:
             case TestKind.JUnit5:
-                return new JUnitRunner(this._javaHome, this._context.extensionPath);
+                return new JUnitRunner(this._context.extensionPath);
             case TestKind.TestNG:
-                return new TestNGRunner(this._javaHome, this._context.extensionPath);
+                return new TestNGRunner(this._context.extensionPath);
             default:
                 return undefined;
         }
