@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { CancellationToken, commands, DebugConfiguration, ExtensionContext, Progress, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { commands, DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
-import { JavaLanguageServerCommands, JavaTestRunnerCommands } from '../constants/commands';
+import { JavaLanguageServerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -69,38 +69,18 @@ class RunnerScheduler {
                     continue;
                 }
 
-                await window.withProgress(
-                    { location: ProgressLocation.Notification, cancellable: true },
-                    async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
-                        return new Promise<void>(async (resolve: () => void, reject: (reason: any) => void): Promise<void> => {
-                            try {
-                                token.onCancellationRequested(() => {
-                                    commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL);
-                                    return resolve();
-                                });
-                                await runner.setup(tests);
-                                testStatusBarProvider.showRunningTest();
-                                progress.report({ message: 'Running tests...'});
-                                if (token.isCancellationRequested) {
-                                    return resolve();
-                                }
-                                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, config));
-                                await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
-                                finalResults.push(...results);
-                                return resolve();
-                            } catch (error) {
-                                logger.error(error.toString());
-                                return reject(error);
-                            }
-                        });
-                    },
-                );
+                await runner.setup(tests);
+                testStatusBarProvider.showRunningTest();
+                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, config));
+                await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
+                finalResults.push(...results);
             }
             finalResults = _.uniqBy(finalResults, 'fullName');
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);
         } catch (error) {
+            logger.error(error.toString());
             uiUtils.showError(error);
         } finally {
             await this.cleanUp(false);
@@ -112,7 +92,7 @@ class RunnerScheduler {
             const promises: Array<Promise<void>> = [];
             if (this._runnerMap) {
                 for (const runner of this._runnerMap.keys()) {
-                    promises.push(runner.tearDown(isCancel));
+                    promises.push(runner.tearDown());
                 }
                 this._runnerMap.clear();
                 this._runnerMap = undefined;
@@ -174,9 +154,9 @@ class RunnerScheduler {
         switch (kind) {
             case TestKind.JUnit:
             case TestKind.JUnit5:
-                return new JUnitRunner(this._javaHome, this._context.storagePath, this._context.extensionPath);
+                return new JUnitRunner(this._javaHome, this._context.extensionPath);
             case TestKind.TestNG:
-                return new TestNGRunner(this._javaHome, this._context.storagePath, this._context.extensionPath);
+                return new TestNGRunner(this._javaHome, this._context.extensionPath);
             default:
                 return undefined;
         }

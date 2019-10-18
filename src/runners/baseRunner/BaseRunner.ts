@@ -20,18 +20,14 @@ import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
 
 export abstract class BaseRunner implements ITestRunner {
     protected tests: ITestItem[];
-    protected storagePathForCurrentSession: string | undefined;
     protected server: Server;
     protected socket: Socket;
-    protected isCanceled: boolean;
     protected runnerResultAnalyzer: BaseRunnerResultAnalyzer;
 
-    private debugSession: DebugSession | undefined;
     private disposables: Disposable[] = [];
 
     constructor(
         protected javaHome: string,
-        protected storagePath: string | undefined,
         protected extensionPath: string) {}
 
     public async setup(tests: ITestItem[]): Promise<void> {
@@ -42,52 +38,63 @@ export abstract class BaseRunner implements ITestRunner {
 
     public async run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]> {
         let data: string = '';
-        return new Promise<ITestResult[]>((resolve: (result: ITestResult[]) => void, reject: (error: Error) => void): void => {
-            this.server.on('connection', (socket: Socket) => {
-                this.socket = socket;
-                socket.on('error', (err: Error) => {
-                    return reject(err);
-                });
+        this.server.on('connection', (socket: Socket) => {
+            this.socket = socket;
+            socket.on('error', (err: Error) => {
+                throw err;
+            });
 
-                socket.on('data', (buffer: Buffer) => {
-                    data = data.concat(iconv.decode(buffer, launchConfiguration.encoding || 'utf8'));
-                    const index: number = data.lastIndexOf(os.EOL);
-                    if (index >= 0) {
-                        this.testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
-                        data = data.substring(index + os.EOL.length);
-                    }
-                });
+            socket.on('data', (buffer: Buffer) => {
+                data = data.concat(iconv.decode(buffer, launchConfiguration.encoding || 'utf8'));
+                const index: number = data.lastIndexOf(os.EOL);
+                if (index >= 0) {
+                    this.testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
+                    data = data.substring(index + os.EOL.length);
+                }
+            });
 
-                socket.on('close', (had_error: boolean) => {
-                    if (had_error) {
-                        return reject(new Error(`Launcher failed to run.`));
-                    }
-                    if (this.isCanceled) {
-                        return resolve([]);
-                    }
-                    if (data.length > 0) {
-                        this.testResultAnalyzer.analyzeData(data);
-                    }
-                    return resolve(this.testResultAnalyzer.feedBack());
-                });
+            socket.on('error', (err: Error) => {
+                throw err;
             });
 
             this.server.on('error', (err: Error) => {
-                return reject(err);
+                throw err;
             });
-
-            this.launchTests(launchConfiguration);
         });
+
+        const uri: Uri = Uri.parse(this.tests[0].location.uri);
+        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
+
+        return await debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration).then(async (success: boolean) => {
+            if (!success) {
+                this.tearDown();
+                return [];
+            }
+
+            return await new Promise<ITestResult[]>((resolve: (result: ITestResult[]) => void): void => {
+                this.disposables.push(
+                    debug.onDidTerminateDebugSession((session: DebugSession): void => {
+                        if (launchConfiguration.name === session.name) {
+                            this.tearDown();
+                            if (data.length > 0) {
+                                this.testResultAnalyzer.analyzeData(data);
+                            }
+                            return resolve(this.testResultAnalyzer.feedBack());
+                        }
+                    }),
+                );
+            });
+        }, ((reason: any): any => {
+            logger.error(`${reason}`);
+            this.tearDown();
+            return [];
+        }));
     }
 
-    public async tearDown(isCancel: boolean): Promise<void> {
-        this.isCanceled = isCancel;
+    public async tearDown(): Promise<void> {
         try {
-            if (this.storagePathForCurrentSession) {
-                await fse.remove(this.storagePathForCurrentSession);
-                this.storagePathForCurrentSession = undefined;
-            }
             if (this.socket) {
+                this.socket.removeAllListeners();
                 this.socket.destroy();
             }
             if (this.server) {
@@ -95,10 +102,6 @@ export abstract class BaseRunner implements ITestRunner {
                 this.server.close(() => {
                     this.server.unref();
                 });
-            }
-            if (this.debugSession) {
-                this.debugSession.customRequest('disconnect', {restart: false });
-                this.debugSession = undefined;
             }
             for (const disposable of this.disposables) {
                 disposable.dispose();
@@ -146,17 +149,6 @@ export abstract class BaseRunner implements ITestRunner {
 
     protected get runnerDir(): string {
         return path.join(this.extensionPath, 'server');
-    }
-
-    protected async launchTests(launchConfiguration: DebugConfiguration): Promise<void> {
-        const uri: Uri = Uri.parse(this.tests[0].location.uri);
-        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
-        debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration);
-        this.disposables.push(debug.onDidStartDebugSession((session: DebugSession) => {
-            if (launchConfiguration.name === session.name) {
-                this.debugSession = session;
-            }
-        }));
     }
 
     protected getRunnerCommandParams(_config?: IExecutionConfig): string[] {
