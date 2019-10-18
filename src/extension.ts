@@ -4,7 +4,7 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { DebugConfiguration, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
+import { DebugConfiguration, ExtensionContext, Range, Uri, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
@@ -35,14 +35,9 @@ export async function deactivate(): Promise<void> {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
-    const javaHome: string = await getJavaHome();
-    if (!javaHome) {
-        throw new Error('Could not find Java home.');
-    }
-
     testFileWatcher.registerListeners();
     testExplorer.initialize(context);
-    runnerScheduler.initialize(javaHome, context);
+    runnerScheduler.initialize(context);
     testReportProvider.initialize(context);
 
     const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
@@ -70,18 +65,4 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
     );
-}
-
-async function getJavaHome(): Promise<string> {
-    const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
-    try {
-        const extensionApi: any = await extension!.activate();
-        if (extensionApi && extensionApi.javaRequirement) {
-            return extensionApi.javaRequirement.java_home;
-        }
-    } catch (error) {
-        // Swallow the error
-    }
-
-    return '';
 }

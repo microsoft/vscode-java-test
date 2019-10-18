@@ -27,7 +27,6 @@ export abstract class BaseRunner implements ITestRunner {
     private disposables: Disposable[] = [];
 
     constructor(
-        protected javaHome: string,
         protected extensionPath: string) {}
 
     public async setup(tests: ITestItem[]): Promise<void> {
