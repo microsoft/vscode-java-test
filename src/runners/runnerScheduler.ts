@@ -20,7 +20,7 @@ import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnitRunner } from './junitRunner/JunitRunner';
 import { IRunnerContext, ITestResult, TestStatus } from './models';
-import { TestNGRunner } from './testngRunner/TestNGRunner';
+// import { TestNGRunner } from './testngRunner/TestNGRunner'; // due to pre-existing build issue.  Please assist.
 
 class RunnerScheduler {
     private _context: ExtensionContext;
