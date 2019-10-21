@@ -8,16 +8,16 @@ import { ExtensionContext } from 'vscode';
 
 
 export async function runFromCodeLens(context: ExtensionContext, test: ITestItem, isDebug: boolean): Promise<void> {
-  const runnerContext: IRunnerContext = {
-    scope: test.level,
-    testUri: test.location.uri,
-    fullName: test.fullName,
-    projectName: test.project,
-    isDebug,
-  };
+    const runnerContext: IRunnerContext = {
+        scope: test.level,
+        testUri: test.location.uri,
+        fullName: test.fullName,
+        projectName: test.project,
+        isDebug,
+    };
 
-  context.globalState.update("java.test.runner.last.call.context", runnerContext);
-  context.globalState.update("java.test.runner.last.call.test", test);
+    context.globalState.update("java.test.runner.last.call.context", runnerContext);
+    context.globalState.update("java.test.runner.last.call.test", test);
 
-  await runnerScheduler.run([test], runnerContext);
+    await runnerScheduler.run([test], runnerContext);
 }

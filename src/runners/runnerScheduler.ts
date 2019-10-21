@@ -156,16 +156,16 @@ class RunnerScheduler {
             case TestKind.JUnit5:
                 return new JUnitRunner(this._context.extensionPath);
 
-      // As of 22:40 on Oct 20 this line is not compiling on HEAD
-      // Uploading PR anyway, but I'll need a hand with they this doesn't work.
+            // As of 22:40 on Oct 20 this line is not compiling on HEAD
+            // Uploading PR anyway, but I'll need a hand with they this doesn't work.
 
-      // Type TensNGRunner is not assignable to type BaseRunner
-      // Types of property 'tearDown are incompatible
-      // isCancel:boolean is not assignable to Promise<void>
+            // Type TensNGRunner is not assignable to type BaseRunner
+            // Types of property 'tearDown are incompatible
+            // isCancel:boolean is not assignable to Promise<void>
 
-      //case TestKind.TestNG:
-      //  return new TestNGRunner(this._context.extensionPath);
-                  default:
+            //case TestKind.TestNG:
+            //  return new TestNGRunner(this._context.extensionPath);
+            default:
                 return undefined;
         }
     }
