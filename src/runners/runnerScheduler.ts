@@ -12,6 +12,7 @@ import { IExecutionConfig } from '../runConfigs';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
+import { testReRunBarProvider } from '../testReRunBarProvider';
 import { getResolvedRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { getShowReportSetting, needBuildWorkspace, needSaveAll } from '../utils/settingUtils';
@@ -75,6 +76,7 @@ class RunnerScheduler {
             }
             finalResults = _.uniqBy(finalResults, 'fullName');
             testStatusBarProvider.showTestResult(finalResults);
+            testReRunBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);
         } catch (error) {
@@ -153,9 +155,17 @@ class RunnerScheduler {
             case TestKind.JUnit:
             case TestKind.JUnit5:
                 return new JUnitRunner(this._context.extensionPath);
-            case TestKind.TestNG:
-                return new TestNGRunner(this._context.extensionPath);
-            default:
+
+      // As of 22:40 on Oct 20 this line is not compiling on HEAD
+      // Uploading PR anyway, but I'll need a hand with they this doesn't work.
+
+      // Type TensNGRunner is not assignable to type BaseRunner
+      // Types of property 'tearDown are incompatible
+      // isCancel:boolean is not assignable to Promise<void>
+
+      //case TestKind.TestNG:
+      //  return new TestNGRunner(this._context.extensionPath);
+                  default:
                 return undefined;
         }
     }
