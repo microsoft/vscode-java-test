@@ -45,7 +45,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     logger.initialize(storagePath, context.subscriptions);
 
     context.subscriptions.push(
-        window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
+        window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true }),
         explorerNodeManager,
         testStatusBarProvider,
         testResultManager,
