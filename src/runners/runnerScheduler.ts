@@ -51,6 +51,7 @@ class RunnerScheduler {
                     'Proceed',
                     'Abort');
                 if (ans !== 'Proceed') {
+                    this.cleanUp(false);
                     return;
                 }
             }
