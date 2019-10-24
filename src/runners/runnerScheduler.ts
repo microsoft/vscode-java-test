@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { commands, DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
-import { JavaLanguageServerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -14,7 +13,7 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { getResolvedRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
-import { getShowReportSetting, needBuildWorkspace, needSaveAll } from '../utils/settingUtils';
+import { getShowReportSetting, needSaveAll } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnitRunner } from './junitRunner/JunitRunner';
@@ -40,21 +39,6 @@ class RunnerScheduler {
         let finalResults: ITestResult[] = [];
 
         await this.saveFilesIfNeeded();
-
-        if (needBuildWorkspace()) {
-            try {
-                // Directly call this Language Server command since we hard depend on it.
-                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false /*incremental build*/);
-            } catch (err) {
-                const ans: string | undefined = await window.showErrorMessage(
-                    'Build failed, do you want to continue?',
-                    'Proceed',
-                    'Abort');
-                if (ans !== 'Proceed') {
-                    return;
-                }
-            }
-        }
 
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);

@@ -205,13 +205,6 @@
                     "description": "%configuration.java.test.saveAllBeforeLaunchTest.description%",
                     "scope": "application"
                 },
-                "java.test.forceBuildBeforeLaunchTest": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%configuration.java.test.forceBuildBeforeLaunchTest.description%",
-                    "scope": "application",
-                    "deprecationMessage": "%configuration.java.test.forceBuildBeforeLaunchTest.deprecationMessage%"
-                },
                 "java.test.log.level": {
                     "type": "string",
                     "enum": [
