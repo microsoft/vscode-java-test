@@ -207,9 +207,10 @@
                 },
                 "java.test.forceBuildBeforeLaunchTest": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "%configuration.java.test.forceBuildBeforeLaunchTest.description%",
-                    "scope": "application"
+                    "scope": "application",
+                    "deprecationMessage": "%configuration.java.test.forceBuildBeforeLaunchTest.deprecationMessage%"
                 },
                 "java.test.log.level": {
                     "type": "string",

@@ -14,6 +14,7 @@
     "configuration.java.test.editor.enableShortcuts.description": "Specify whether to show the Code Lenses in editor or not",
     "configuration.java.test.saveAllBeforeLaunchTest.description": "Specify whether to save all of the dirty files before lauching the test",
     "configuration.java.test.forceBuildBeforeLaunchTest.description": "Specify whether to force build the workspace before launching the test",
+    "configuration.java.test.forceBuildBeforeLaunchTest.deprecationMessage": "Please use `java.debug.settings.forceBuildBeforeLaunch` instead",
     "configuration.java.test.log.level.description": "Specify the level of the test logs",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "Specify whether the extension will show hint dialog when deprecated configuration file is used",
     "configuration.java.test.message.hintForSetingDefaultConfig.description": "Specify whether the extension will show hint to set default test configuration",

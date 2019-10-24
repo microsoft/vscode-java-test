@@ -14,6 +14,7 @@
     "configuration.java.test.editor.enableShortcuts.description": "设定是否在编辑器内显示 Code Lens 快捷方式",
     "configuration.java.test.saveAllBeforeLaunchTest.description": "设定在执行测试之前是否需要保存工作空间内的所有文件",
     "configuration.java.test.forceBuildBeforeLaunchTest.description": "设定在执行测试之前是否需要构建工作空间",
+    "configuration.java.test.forceBuildBeforeLaunchTest.deprecationMessage": "请使用 `java.debug.settings.forceBuildBeforeLaunch` 进行相关配置",
     "configuration.java.test.log.level.description": "设定日志级别",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "设定插件是否会对使用弃用的配置文件进行提示",
     "configuration.java.test.message.hintForSetingDefaultConfig.description": "设定插件是否会对设置默认测试配置项进行提示",
