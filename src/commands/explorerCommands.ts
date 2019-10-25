@@ -40,8 +40,11 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, l
         runnerContext.testUri = Uri.file(node.fsPath).toString();
         runnerContext.fullName = node.fullName;
     }
-    const tests: ITestItem[] = await searchTestItems(node);
-    if (tests.length <= 0) {
+    const tests: ITestItem[] | undefined = await searchTestItems(node);
+    if (!tests) {
+        logger.info('Test job is canceled.');
+        return;
+    } else if (tests.length <= 0) {
         logger.info('No test items found.');
         return;
     }
@@ -49,17 +52,17 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, l
     return runnerScheduler.run(tests, runnerContext, launchConfiguration);
 }
 
-async function searchTestItems(node: TestTreeNode): Promise<ITestItem[]> {
-    return new Promise<ITestItem[]>((resolve: (result: ITestItem[]) => void): void => {
+async function searchTestItems(node: TestTreeNode): Promise<ITestItem[] | undefined> {
+    return new Promise<ITestItem[] | undefined>((resolve: (result: ITestItem[] | undefined) => void): void => {
         const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
         window.withProgress(
             { location: ProgressLocation.Notification, cancellable: true },
             async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                 progress.report({ message: 'Searching test items...' });
+                token.onCancellationRequested(() => resolve(undefined));
                 const tests: ITestItem[] = await searchTestItemsAll(searchParam);
                 if (token.isCancellationRequested) {
-                    logger.info('Test job is canceled.');
-                    return resolve([]);
+                    return undefined;
                 }
                 return resolve(tests);
             },
