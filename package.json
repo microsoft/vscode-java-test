@@ -199,12 +199,6 @@
                     "description": "%configuration.java.test.editor.enableShortcuts.description%",
                     "scope": "application"
                 },
-                "java.test.saveAllBeforeLaunchTest": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%configuration.java.test.saveAllBeforeLaunchTest.description%",
-                    "scope": "application"
-                },
                 "java.test.log.level": {
                     "type": "string",
                     "enum": [
