@@ -29,8 +29,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 return;
             }
 
-            const result: ITestResultDetails | undefined = this.testResults.get(testFullName);
-            if (!result) {
+            if (!this.testResults.has(testFullName)) {
                 this.currentTestItem = testFullName;
                 const detail: ITestResultDetails = { status: undefined };
                 if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
