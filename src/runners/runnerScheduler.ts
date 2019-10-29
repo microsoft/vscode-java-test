@@ -13,7 +13,7 @@ import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { getResolvedRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
-import { getShowReportSetting, needSaveAll } from '../utils/settingUtils';
+import { getShowReportSetting } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnitRunner } from './junitRunner/JunitRunner';
@@ -37,8 +37,6 @@ class RunnerScheduler {
 
         this._isRunning = true;
         let finalResults: ITestResult[] = [];
-
-        await this.saveFilesIfNeeded();
 
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
@@ -88,12 +86,6 @@ class RunnerScheduler {
             logger.error('Failed to clean up', error);
         }
         this._isRunning = false;
-    }
-
-    private async saveFilesIfNeeded(): Promise<void> {
-        if (needSaveAll()) {
-            await workspace.saveAll();
-        }
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<BaseRunner, ITestItem[]> {
