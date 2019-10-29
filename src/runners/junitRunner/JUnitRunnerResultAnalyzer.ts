@@ -25,7 +25,11 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     protected processData(data: string): void {
         if (data.startsWith(MessageId.TestStart)) {
             const testFullName: string = getTestFullName(data);
-            if (testFullName) {
+            if (!testFullName) {
+                return;
+            }
+
+            if (!this.testResults.has(testFullName)) {
                 this.currentTestItem = testFullName;
                 const detail: ITestResultDetails = { status: undefined };
                 if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
