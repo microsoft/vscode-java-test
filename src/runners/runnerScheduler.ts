@@ -11,7 +11,7 @@ import { IExecutionConfig } from '../runConfigs';
 import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
-import { getResolvedRunConfig } from '../utils/configUtils';
+import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { getShowReportSetting } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
@@ -43,7 +43,7 @@ class RunnerScheduler {
             for (const [runner, tests] of this._runnerMap.entries()) {
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
-                const config: IExecutionConfig | undefined = await getResolvedRunConfig(workspaceFolder);
+                const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
                 if (!config) {
                     logger.info('Test job is canceled.');
                     continue;
