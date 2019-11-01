@@ -53,9 +53,9 @@
     </build>
     <repositories>
         <repository>
-            <id>201906</id>
+            <id>201912</id>
             <layout>p2</layout>
-            <url>http://download.eclipse.org/releases/2019-06/</url>
+            <url>http://download.eclipse.org/releases/2019-12/</url>
         </repository>
         <repository>
             <id>oss.sonatype.org</id>

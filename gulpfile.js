@@ -7,7 +7,7 @@ const tslint = require('gulp-tslint');
 const sass = require('gulp-sass');
 const decompress = require('gulp-decompress');
 const path = require('path');
-const fs = require('fs');
+const fse = require('fs-extra');
 const remoteSrc = require('gulp-remote-src');
 
 const serverDir = path.join(__dirname, 'java-extension');
@@ -15,6 +15,7 @@ const resourceDir = path.join(__dirname, 'resources');
 
 // Build required jar files.
 gulp.task('build-plugin', (done) => {
+    fse.removeSync('./server');
     cp.execSync(`${mvnw()} clean package`, { cwd: serverDir, stdio: [0, 1, 2] });
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.plugin/target/*.jar'))
         .pipe(gulp.dest('./server'));
@@ -108,7 +109,7 @@ function updateVersion() {
             return extensionString;
         });
 
-        fs.writeFileSync('./package.json', JSON.stringify(packageJsonData, null, 4));
+        fse.writeFileSync('./package.json', JSON.stringify(packageJsonData, null, 4));
     }
 }
 
@@ -116,7 +117,7 @@ function updateVersion() {
 function findNewRequiredJar(fileName) {
     fileName = fileName + "_";
     const destFolder = path.resolve('./server');
-    const files = fs.readdirSync(destFolder);
+    const files = fse.readdirSync(destFolder);
     const f = files.find((file) => {
         return file.indexOf(fileName) >= 0;
     });

@@ -47,20 +47,20 @@
     "contributes": {
         "javaExtensions": [
             "./server/com.microsoft.java.test.plugin-0.21.0.jar",
-            "./server/org.eclipse.jdt.junit4.runtime_1.1.1000.v20190510-0840.jar",
-            "./server/org.eclipse.jdt.junit5.runtime_1.0.500.v20190510-0840.jar",
-            "./server/org.junit.jupiter.api_5.4.0.v20190212-2109.jar",
-            "./server/org.junit.jupiter.engine_5.4.0.v20190212-2109.jar",
-            "./server/org.junit.jupiter.migrationsupport_5.4.0.v20190212-2109.jar",
-            "./server/org.junit.jupiter.params_5.4.0.v20190212-2109.jar",
-            "./server/org.junit.vintage.engine_5.4.0.v20190212-2109.jar",
-            "./server/org.opentest4j_1.1.1.v20190212-2109.jar",
-            "./server/org.junit.platform.commons_1.4.0.v20190212-2109.jar",
-            "./server/org.junit.platform.engine_1.4.0.v20190212-2109.jar",
-            "./server/org.junit.platform.launcher_1.4.0.v20190212-2109.jar",
-            "./server/org.junit.platform.runner_1.4.0.v20190212-2109.jar",
-            "./server/org.junit.platform.suite.api_1.4.0.v20190212-2109.jar",
-            "./server/org.apiguardian_1.0.0.v20190212-2109.jar"
+            "./server/org.eclipse.jdt.junit4.runtime_1.1.1100.v20191009-0503.jar",
+            "./server/org.eclipse.jdt.junit5.runtime_1.0.700.v20191009-0503.jar",
+            "./server/org.junit.jupiter.api_5.5.1.v20190826-0900.jar",
+            "./server/org.junit.jupiter.engine_5.5.1.v20190826-0900.jar",
+            "./server/org.junit.jupiter.migrationsupport_5.5.1.v20190826-0900.jar",
+            "./server/org.junit.jupiter.params_5.5.1.v20190826-0900.jar",
+            "./server/org.junit.vintage.engine_5.5.1.v20190826-0900.jar",
+            "./server/org.opentest4j_1.2.0.v20190826-0900.jar",
+            "./server/org.junit.platform.commons_1.5.1.v20190826-0900.jar",
+            "./server/org.junit.platform.engine_1.5.1.v20190826-0900.jar",
+            "./server/org.junit.platform.launcher_1.5.1.v20190826-0900.jar",
+            "./server/org.junit.platform.runner_1.5.1.v20190826-0900.jar",
+            "./server/org.junit.platform.suite.api_1.5.1.v20190826-0900.jar",
+            "./server/org.apiguardian_1.1.0.v20190826-0900.jar"
         ],
         "views": {
             "test": [
