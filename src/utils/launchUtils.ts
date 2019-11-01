@@ -16,9 +16,9 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
     if (tests[0].kind === TestKind.TestNG) {
         const testNGArguments: IJUnitLaunchArguments = await getTestNGLaunchArguments(tests[0]);
 
-        let env: {} = process.env;
+        let env: {} = {};
         if (config && config.env) {
-            env = {...env, ...config.env};
+            env = config.env;
         }
 
         if (config && config.vmargs) {
@@ -58,9 +58,9 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, soc
     if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
     }
-    let env: {} = process.env;
+    let env: {} = {};
     if (config && config.env) {
-        env = { ...process.env, ...config.env };
+        env = config.env;
     }
 
     return {
