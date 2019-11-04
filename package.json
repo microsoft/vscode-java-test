@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.20.0",
+    "version": "0.21.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -46,7 +46,7 @@
     "main": "./dist/extension",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.20.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.21.0.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1000.v20190510-0840.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.500.v20190510-0840.jar",
             "./server/org.junit.jupiter.api_5.4.0.v20190212-2109.jar",
@@ -197,18 +197,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "%configuration.java.test.editor.enableShortcuts.description%",
-                    "scope": "application"
-                },
-                "java.test.saveAllBeforeLaunchTest": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%configuration.java.test.saveAllBeforeLaunchTest.description%",
-                    "scope": "application"
-                },
-                "java.test.forceBuildBeforeLaunchTest": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%configuration.java.test.forceBuildBeforeLaunchTest.description%",
                     "scope": "application"
                 },
                 "java.test.log.level": {

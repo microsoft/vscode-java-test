@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { commands, DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
-import { JavaLanguageServerCommands } from '../constants/commands';
 import { ReportShowSetting } from '../constants/configs';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
@@ -13,9 +12,9 @@ import { testReportProvider } from '../testReportProvider';
 import { testResultManager } from '../testResultManager';
 import { testStatusBarProvider } from '../testStatusBarProvider';
 import { testReRunBarProvider } from '../testReRunBarProvider';
-import { getResolvedRunConfig } from '../utils/configUtils';
+import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
-import { getShowReportSetting, needBuildWorkspace, needSaveAll } from '../utils/settingUtils';
+import { getShowReportSetting } from '../utils/settingUtils';
 import * as uiUtils from '../utils/uiUtils';
 import { BaseRunner } from './baseRunner/BaseRunner';
 import { JUnitRunner } from './junitRunner/JunitRunner';
@@ -40,29 +39,12 @@ class RunnerScheduler {
         this._isRunning = true;
         let finalResults: ITestResult[] = [];
 
-        await this.saveFilesIfNeeded();
-
-        if (needBuildWorkspace()) {
-            try {
-                // Directly call this Language Server command since we hard depend on it.
-                await commands.executeCommand(JavaLanguageServerCommands.JAVA_BUILD_WORKSPACE, false /*incremental build*/);
-            } catch (err) {
-                const ans: string | undefined = await window.showErrorMessage(
-                    'Build failed, do you want to continue?',
-                    'Proceed',
-                    'Abort');
-                if (ans !== 'Proceed') {
-                    return;
-                }
-            }
-        }
-
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
             for (const [runner, tests] of this._runnerMap.entries()) {
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
-                const config: IExecutionConfig | undefined = await getResolvedRunConfig(workspaceFolder);
+                const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
                 if (!config) {
                     logger.info('Test job is canceled.');
                     continue;
@@ -106,12 +88,6 @@ class RunnerScheduler {
             logger.error('Failed to clean up', error);
         }
         this._isRunning = false;
-    }
-
-    private async saveFilesIfNeeded(): Promise<void> {
-        if (needSaveAll()) {
-            await workspace.saveAll();
-        }
     }
 
     private classifyTestsByKind(tests: ITestItem[]): Map<BaseRunner, ITestItem[]> {

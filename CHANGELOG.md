@@ -4,6 +4,18 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.21.0
+### Added
+- Support `Collapse All` button in Test Explorer. [PR#848](https://github.com/microsoft/vscode-java-test/pull/848)
+- Support modular test projects. [#807](https://github.com/microsoft/vscode-java-test/issues/807)
+
+### Removed
+- The setting `java.test.forceBuildBeforeLaunchTest` is removed, please use `java.debug.settings.forceBuildBeforeLaunch` instead. [PR#850](https://github.com/microsoft/vscode-java-test/pull/850)
+- The setting `java.test.saveAllBeforeLaunchTest` is removed, now the unsaved files will always be saved before launching the tests.[PR#861](https://github.com/microsoft/vscode-java-test/pull/861)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.21.0)
+
 ## 0.20.0 
 ### Added
 - Add `java.test.saveAllBeforeLaunchTest` setting to specify whether to automatically save the files before launching the tests. [#468](https://github.com/microsoft/vscode-java-test/issues/468)
