@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { CancellationToken, DebugConfiguration, Progress, ProgressLocation, Range, TextDocument, Uri, ViewColumn, window, workspace } from 'vscode';
+import { ExtensionContext } from 'vscode';
 import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
 import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
@@ -9,8 +10,6 @@ import { IRunnerContext } from '../runners/models';
 import { runnerScheduler } from '../runners/runnerScheduler';
 import { searchTestItemsAll } from '../utils/commandUtils';
 import { constructSearchTestItemParams } from '../utils/protocolUtils';
-import { ExtensionContext } from 'vscode';
-
 
 export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
     const document: TextDocument = await workspace.openTextDocument(uri);
@@ -42,32 +41,29 @@ async function executeTestsFromExplorer(context: ExtensionContext, isDebug: bool
         runnerContext.testUri = Uri.file(node.fsPath).toString();
         runnerContext.fullName = node.fullName;
     }
-    const tests: ITestItem[] | undefined = await searchTestItems(node);
-    if (!tests) {
-        logger.info('Test job is canceled.');
-        return;
-    } else if (tests.length <= 0) {
+    const tests: ITestItem[] = await searchTestItems(node);
+    if (tests.length <= 0) {
         logger.info('No test items found.');
         return;
     }
 
-    context.globalState.update("java.test.runner.last.call.context", runnerContext);
-    context.globalState.update("java.test.runner.last.call.test", tests[0]);
+    context.globalState.update('java.test.runner.last.call.context', runnerContext);
+    context.globalState.update('java.test.runner.last.call.test', tests[0]);
 
     return runnerScheduler.run(tests, runnerContext, launchConfiguration);
 }
 
-async function searchTestItems(node: TestTreeNode): Promise<ITestItem[] | undefined> {
-    return new Promise<ITestItem[] | undefined>((resolve: (result: ITestItem[] | undefined) => void): void => {
+async function searchTestItems(node: TestTreeNode): Promise<ITestItem[]> {
+    return new Promise<ITestItem[]>((resolve: (result: ITestItem[]) => void): void => {
         const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
         window.withProgress(
             { location: ProgressLocation.Notification, cancellable: true },
             async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                 progress.report({ message: 'Searching test items...' });
-                token.onCancellationRequested(() => resolve(undefined));
                 const tests: ITestItem[] = await searchTestItemsAll(searchParam);
                 if (token.isCancellationRequested) {
-                    return undefined;
+                    logger.info('Test job is canceled.');
+                    return resolve([]);
                 }
                 return resolve(tests);
             },

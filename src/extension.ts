@@ -23,7 +23,7 @@ import { testFileWatcher } from './testFileWatcher';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
-import { testReRunBarProvider } from './testReRunBarProvider';
+// import { testReRunBarProvider } from './testReRunBarProvider'; // uncomment to add re-run status bar
 import { migrateTestConfig } from './utils/configUtils';
 
 export async function activate(context: ExtensionContext): Promise<void> {
@@ -47,10 +47,10 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     logger.initialize(storagePath, context.subscriptions);
 
     context.subscriptions.push(
-        window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true }),
+        window.registerTreeDataProvider(testExplorer.testExplorerViewId, testExplorer),
         explorerNodeManager,
         testStatusBarProvider,
-        testReRunBarProvider,
+        // testReRunBarProvider, // Uncomment to add ReRunStatusBar
         testResultManager,
         testReportProvider,
         testFileWatcher,
@@ -60,7 +60,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: TestTreeNode) => testExplorer.refresh(node)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (test: ITestItem) => await runFromCodeLens(context, test, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_CODELENS, async (test: ITestItem) => await runFromCodeLens(context, test, true /* isDebug */)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_STATUS, async () => await runFromReTryStatusBar(context)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_LAST_TEST_AGAIN, async () => await runFromReTryStatusBar(context)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EXPLORER, async (node?: TestTreeNode, launchConfiguration?: DebugConfiguration) => await runTestsFromExplorer(context, node, launchConfiguration)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: TestTreeNode, launchConfiguration?: DebugConfiguration) => await debugTestsFromExplorer(context, node, launchConfiguration)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests: ITestResult[]) => await testReportProvider.report(tests)),

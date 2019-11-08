@@ -23,12 +23,12 @@ class TestReRunBarProvider implements Disposable {
     }
 
     public showFailure(): void {
-      this.update('$(issue-opened) Re-Run Test', 'Re-Run the Test', JavaTestRunnerCommands.RUN_TEST_FROM_STATUS);
+      this.update('$(issue-opened) Re-Run Test', 'Re-Run the Test', JavaTestRunnerCommands.RUN_LAST_TEST_AGAIN);
     }
 
     public showTestResult(results: ITestResult[]): void {
 
-      this.update(`$(check) $(issue-opened) Re-Run Test`, 'Re-Run the Test', this.getCommandWithArgs(JavaTestRunnerCommands.RUN_TEST_FROM_STATUS, [results]));
+      this.update(`$(check) $(issue-opened) Re-Run Test`, 'Re-Run the Test', this.getCommandWithArgs(JavaTestRunnerCommands.RUN_LAST_TEST_AGAIN, [results]));
     }
 
     public update(text: string, tooltip?: string, command?: string, args?: any[]): void {

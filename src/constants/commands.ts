@@ -3,6 +3,7 @@
 
 export namespace JavaLanguageServerCommands {
     export const EXECUTE_WORKSPACE_COMMAND: string = 'java.execute.workspaceCommand';
+    export const JAVA_BUILD_WORKSPACE: string = 'java.workspace.compile';
 }
 
 export namespace JavaTestRunnerDelegateCommands {
@@ -21,10 +22,12 @@ export namespace JavaTestRunnerCommands {
     export const DEBUG_TEST_FROM_CODELENS: string = 'java.test.debug';
     export const RUN_TEST_FROM_EXPLORER: string = 'java.test.explorer.run';
     export const DEBUG_TEST_FROM_EXPLORER: string = 'java.test.explorer.debug';
+    export const RUN_TEST_WITH_CONFIG_FROM_EXPLORER: string = 'java.test.explorer.run.config';
+    export const DEBUG_TEST_WITH_CONFIG_FROM_EXPLORER: string = 'java.test.explorer.debug.config';
     export const SHOW_TEST_REPORT: string = 'java.test.show.report';
     export const SHOW_TEST_OUTPUT: string = 'java.test.show.output';
     export const OPEN_TEST_LOG: string = 'java.test.open.log';
     export const JAVA_TEST_CANCEL: string = 'java.test.cancel';
     export const JAVA_CONFIG_MIGRATE: string = 'java.test.config.migrate';
-    export const RUN_TEST_FROM_STATUS: string = 'java.test.run.retry';
+    export const RUN_LAST_TEST_AGAIN: string = 'java.test.run.retry';
 }

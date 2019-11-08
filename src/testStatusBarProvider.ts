@@ -42,7 +42,7 @@ class TestStatusBarProvider implements Disposable {
             }
         }
 
-        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'View test report', this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]));
+        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'Click: View Report.  Alt-T: Re-Run', this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]));
     }
 
     public update(text: string, tooltip?: string, command?: string, args?: any[]): void {
