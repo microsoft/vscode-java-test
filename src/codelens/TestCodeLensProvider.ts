@@ -8,7 +8,6 @@ import { ITestItem, TestLevel } from '../protocols';
 import { ITestResult, ITestResultDetails, TestStatus } from '../runners/models';
 import { testResultManager } from '../testResultManager';
 import { searchTestCodeLens } from '../utils/commandUtils';
-import { isDarwin } from '../utils/platformUtils';
 
 export class TestCodeLensProvider implements CodeLensProvider {
     private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
@@ -129,7 +128,7 @@ export class TestCodeLensProvider implements CodeLensProvider {
         for (const result of testResults) {
             const details: ITestResultDetails = result.details;
             if (details.status === TestStatus.Fail) {
-                return '❌';
+                return '$(x)';
             } else if (details.status === TestStatus.Pass) {
                 passedCount++;
             }
@@ -139,7 +138,7 @@ export class TestCodeLensProvider implements CodeLensProvider {
             return '?';
         }
 
-        return isDarwin() ? '✅' : '✔️';
+        return '$(check)';
     }
 
     private getTotalMethodNumber(item: ITestItem): number {
