@@ -62,7 +62,7 @@ export abstract class BaseRunner implements ITestRunner {
         });
 
         // Run from integrated terminal will terminate the debug session immediately after launching,
-        // So we force to use internal console here to make sure the seesion is still under debugger's control.
+        // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
 
         const uri: Uri = Uri.parse(this.tests[0].location.uri);
