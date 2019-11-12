@@ -38,23 +38,16 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             vmArgs: testNGArguments.vmArguments,
             encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
             env,
-            console: 'internalConsole',
             noDebug: !runnerContext.isDebug,
         };
     }
 
-    return await getDebugConfigurationForEclispeRunner(tests[0], runner.serverPort, runnerContext, config);
+    return await getDebugConfigurationForEclispeRunner(tests[0], runnerContext, config);
 }
 
-export async function getDebugConfigurationForEclispeRunner(test: ITestItem, socketPort: number, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
+export async function getDebugConfigurationForEclispeRunner(test: ITestItem, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, runnerContext);
 
-    // We need to replace the socket port number since the socket is established from the client side.
-    // The port number returned from the server side is a fake one.
-    const portIndex: number = junitLaunchArgs.programArguments.indexOf('-port');
-    if (portIndex > -1 && junitLaunchArgs.programArguments.length > portIndex + 1) {
-        junitLaunchArgs.programArguments[portIndex + 1] = `${socketPort}`;
-    }
     if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
     }
@@ -64,7 +57,7 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, soc
     }
 
     return {
-        name: 'Launch Java Tests',
+        name: `Launch Java Tests - ${randomSequence()}`,
         type: 'java',
         request: 'launch',
         mainClass: junitLaunchArgs.mainClass,
@@ -76,7 +69,6 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, soc
         vmArgs: junitLaunchArgs.vmArguments,
         encoding: getJavaEncoding(Uri.parse(test.location.uri)),
         env,
-        console: 'internalConsole',
         noDebug: !runnerContext.isDebug,
     };
 }
