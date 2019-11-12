@@ -12,12 +12,14 @@ package-lock.json
 java-extension/**
 gulpfile.js
 resources/templates/scss/**
-dist/**/*.map
+dist/**/test
 webpack.*.js
 node_modules
 *.log
 demo
 CONTRIBUTING.md
+extension.bundle.ts
+javaConfig.json
 .github/**
 
 # Ignore output of code sign

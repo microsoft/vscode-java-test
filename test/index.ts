@@ -29,7 +29,14 @@ async function main(): Promise<void> {
         });
 
         // Download VS Code, unzip it and run the integration test
-        await runTests({ vscodeExecutablePath, extensionDevelopmentPath, extensionTestsPath });
+        await runTests({
+            vscodeExecutablePath,
+            extensionDevelopmentPath,
+            extensionTestsPath,
+            launchArgs: [
+                path.join(__dirname, '..', '..', 'test', 'test-projects'),
+            ],
+        });
     } catch (err) {
         // tslint:disable-next-line: no-console
         console.error('Failed to run tests');
