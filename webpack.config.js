@@ -3,6 +3,7 @@
 
 //@ts-check
 const path = require('path');
+const FileManagerPlugin = require('filemanager-webpack-plugin');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -11,10 +12,12 @@ const config = {
         __dirname: false,
         __filename: false,
     },
-    entry: './src/extension.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+    entry: {
+        "extension.bundle": './extension.bundle.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+    },
     output: { // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
         path: path.resolve(__dirname, 'dist'),
-        filename: 'extension.js',
+        filename: '[name].js',
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "../[resource-path]",
     },
@@ -34,5 +37,19 @@ const config = {
             }]
         }]
     },
+    plugins: [
+        // Copy files to dist folder where the runtime can find them
+        // @ts-ignore
+        new FileManagerPlugin({
+            onEnd: {
+                copy: [
+                    {
+                        source: path.join(__dirname, 'out', 'test'),
+                        destination: path.join(__dirname, 'dist', 'test')
+                    },
+                ]
+            }
+        }),
+    ],
 }
 module.exports = config;

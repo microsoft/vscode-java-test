@@ -44,7 +44,7 @@
         "onCommand:java.test.open.log",
         "onCommand:java.test.config.migrate"
     ],
-    "main": "./dist/extension",
+    "main": "./main.js",
     "contributes": {
         "javaExtensions": [
             "./server/com.microsoft.java.test.plugin-0.20.0.jar",
@@ -356,7 +356,7 @@
     "scripts": {
         "compile": "tsc -p ./ && npm run vscode:prepublish",
         "watch": "webpack --mode development --watch --info-verbosity verbose",
-        "test": "npm run compile && node ./out/test/index.js",
+        "test": "npm run compile && node ./dist/test/index.js",
         "lint": "gulp lint",
         "build-plugin": "gulp build-plugin",
         "build-resources": "gulp build-resources",
@@ -374,6 +374,7 @@
         "@types/pug": "^2.0.4",
         "@types/vscode": "1.40.0",
         "bootstrap": "^4.3.1",
+        "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",
         "gulp-decompress": "^2.0.2",
         "gulp-remote-src": "^0.4.4",

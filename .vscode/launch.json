@@ -22,13 +22,13 @@
             "projectName": "com.microsoft.java.test.plugin",
         },
         {
-            "name": "Launch Tests",
+            "name": "Launch Tests (webpack)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/out/test/suite/index" ],
+            "args": ["${workspaceFolder}/test/test-projects/", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/dist/test/suite/index" ],
             "sourceMaps": true,
-            "outFiles": [ "${workspaceFolder}/out/test/**/*.js" ],
+            "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
             "preLaunchTask": "npm: compile"
         }
     ]
