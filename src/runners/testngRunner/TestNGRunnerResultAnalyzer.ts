@@ -36,7 +36,7 @@ export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 if (!finishedResult.status) {
                     finishedResult.status = TestStatus.Pass;
                 }
-                finishedResult.duration = outputData.attributes.duration;
+                finishedResult.duration = Number.parseInt(outputData.attributes.duration, 10) ;
                 break;
         }
     }
