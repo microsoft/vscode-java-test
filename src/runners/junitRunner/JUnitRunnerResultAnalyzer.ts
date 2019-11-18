@@ -30,19 +30,19 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
             }
 
             let detail: ITestResultDetails | undefined = this.testResults.get(testFullName);
+            const start: number = Date.now();
             if (!detail) {
                 this.currentTestItem = testFullName;
                 detail = { status: undefined };
                 if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
                     detail.status = TestStatus.Skip;
                 } else {
-                    detail.duration = - Date.now();
+                    detail.duration = -start;
                 }
                 this.testResults.set(testFullName, detail);
             } else if (detail.duration !== undefined) {
-                // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution,
-                // so here plus is used.
-                detail.duration += - Date.now();
+                // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
+                detail.duration -= start;
             }
         } else if (data.startsWith(MessageId.TestEnd)) {
             const testFullName: string = getTestFullName(data);
@@ -89,7 +89,8 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
 function getElapsedTime(detail: ITestResultDetails): void {
     if (detail.duration && detail.duration < 0) {
-        detail.duration += Date.now();
+        const end: number = Date.now();
+        detail.duration += end;
     }
 }
 
