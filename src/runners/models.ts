@@ -14,7 +14,7 @@ export interface ITestResultDetails {
     status?: TestStatus;
     trace?: string;
     message?: string;
-    duration?: string;
+    duration?: number;
     summary?: string;
 }
 

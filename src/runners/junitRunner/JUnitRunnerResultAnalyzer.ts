@@ -29,13 +29,20 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 return;
             }
 
-            if (!this.testResults.has(testFullName)) {
+            let detail: ITestResultDetails | undefined = this.testResults.get(testFullName);
+            const start: number = Date.now();
+            if (!detail) {
                 this.currentTestItem = testFullName;
-                const detail: ITestResultDetails = { status: undefined };
+                detail = { status: undefined };
                 if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
                     detail.status = TestStatus.Skip;
+                } else {
+                    detail.duration = -start;
                 }
                 this.testResults.set(testFullName, detail);
+            } else if (detail.duration !== undefined) {
+                // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
+                detail.duration -= start;
             }
         } else if (data.startsWith(MessageId.TestEnd)) {
             const testFullName: string = getTestFullName(data);
@@ -47,6 +54,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 if (!finishedResult.status) {
                     finishedResult.status = TestStatus.Pass;
                 }
+                getElapsedTime(finishedResult);
             }
         } else if (data.startsWith(MessageId.TestFailed) || data.startsWith(MessageId.TestError)) {
             const testFullName: string = getTestFullName(data);
@@ -61,6 +69,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                     return;
                 }
                 failedResult.status = TestStatus.Fail;
+                getElapsedTime(failedResult);
             }
         } else if (data.startsWith(MessageId.TraceStart)) {
             this.traces = '';
@@ -75,6 +84,13 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         } else if (this.isRecordingTraces) {
             this.traces += data + '\n';
         }
+    }
+}
+
+function getElapsedTime(detail: ITestResultDetails): void {
+    if (detail.duration && detail.duration < 0) {
+        const end: number = Date.now();
+        detail.duration += end;
     }
 }
 
