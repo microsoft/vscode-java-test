@@ -21,7 +21,7 @@ mixin collapseMethodTable(children, type)
                                 span.badge.badge-danger Failed
                             else
                                 span.badge.badge-secondary Skipped
-                        div.col-2.text-right #{method.details && method.details.duration ? method.details.duration + "ms" : "N/A"}
+                        div.col-2.text-right #{method.details && method.details.duration >= 0 ? method.details.duration + "ms" : "N/A"}
                         div.col-1.text-right
                             a(href="#", title="Navigate to Source", uri=`${method.location && method.location.uri ? method.location.uri : ''}`, range=`${method.location && method.location.range ? JSON.stringify(method.location.range) : ''}`, fullname=`${method.fullName}`)
                                 i.fa.fa-external-link

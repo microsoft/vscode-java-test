@@ -32,8 +32,14 @@ suite('Code Lens Tests', () => {
 
         result = result as Map<string, ITestResultDetails>;
         assert.equal(result.size, 2, 'Should have right number of execution result');
-        assert.equal(result.get('junit4.TestAnnotation#shouldFail')!.status, TestStatus.Fail, 'Should have failed case');
-        assert.equal(result.get('junit4.TestAnnotation#shouldPass')!.status, TestStatus.Pass, 'Should have passed case');
+
+        const failedDetail: ITestResultDetails| undefined = result.get('junit4.TestAnnotation#shouldFail');
+        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
+
+        const passedDetail: ITestResultDetails| undefined = result.get('junit4.TestAnnotation#shouldPass');
+        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
 
         await commands.executeCommand('workbench.action.closeActiveEditor');
     }).timeout(60 * 1000 /* ms */);
@@ -62,8 +68,14 @@ suite('Code Lens Tests', () => {
 
         result = result as Map<string, ITestResultDetails>;
         assert.equal(result.size, 2, 'Should have right number of execution result');
-        assert.equal(result.get('junit4.TheoryAnnotation#shouldFail')!.status, TestStatus.Fail, 'Should have failed case');
-        assert.equal(result.get('junit4.TheoryAnnotation#shouldPass')!.status, TestStatus.Pass, 'Should have passed case');
+
+        const failedDetail: ITestResultDetails| undefined = result.get('junit4.TheoryAnnotation#shouldFail');
+        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
+
+        const passedDetail: ITestResultDetails| undefined = result.get('junit4.TheoryAnnotation#shouldPass');
+        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
 
         await commands.executeCommand('workbench.action.closeActiveEditor');
     }).timeout(60 * 1000 /* ms */);
@@ -95,8 +107,14 @@ suite('Code Lens Tests', () => {
 
         result = result as Map<string, ITestResultDetails>;
         assert.equal(result.size, 2, 'Should have right number of execution result');
-        assert.equal(result.get('junit4.TestAnnotation#shouldFail')!.status, TestStatus.Fail, 'Should have failed case');
-        assert.equal(result.get('junit4.TestAnnotation#shouldPass')!.status, TestStatus.Pass, 'Should have passed case');
+
+        const failedDetail: ITestResultDetails| undefined = result.get('junit4.TestAnnotation#shouldFail');
+        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
+
+        const passedDetail: ITestResultDetails| undefined = result.get('junit4.TestAnnotation#shouldPass');
+        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
 
         await commands.executeCommand('workbench.action.closeActiveEditor');
     }).timeout(60 * 1000 /* ms */);
