@@ -48,7 +48,7 @@ public class JUnitLaunchConfiguration extends LaunchConfiguration {
             classpathProvider = "org.eclipse.m2e.launchconfig.classpathProvider";
             sourcepathProvider = "org.eclipse.m2e.launchconfig.sourcepathProvider";
         } else if (ProjectUtils.isGradleProject(testInfo.project)) {
-            classpathProvider = "org.eclipse.buildship.core.classpathprovider";
+            // Use StandardClasspathProvider for Gradle project
         }
         this.testInfo = testInfo;
     }
