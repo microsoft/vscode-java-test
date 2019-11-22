@@ -5,12 +5,17 @@ matrix:
   - os: linux
     dist: trusty
     jdk: openjdk8
+  - os: linux
+    dist: trusty
+    jdk: openjdk11
+    env:
+      - JDK_HOME=~/openjdk11 # force launching JLS using JDK11
   - os: osx
     osx_image: xcode9.3
     jdk: oraclejdk8
-
-env:
-  - NODE_VERSION=12
+  - os: osx
+    osx_image: xcode10.1
+    jdk: oraclejdk11
 
 branches:
   only:
@@ -24,13 +29,13 @@ before_install:
       /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
       sleep 3
     fi
+  - nvm install 12
+  - nvm use 12
 
 install:
-- nvm install $NODE_VERSION
 - npm install
 
 script:
-- nvm use $NODE_VERSION
 - npm run lint
 - npm run build-plugin
 - npm test

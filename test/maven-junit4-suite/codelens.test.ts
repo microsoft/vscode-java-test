@@ -2,13 +2,17 @@
 // Licensed under the MIT license.
 
 import * as assert from 'assert';
-import { CodeLens, Command, commands, TextDocument, window, workspace } from 'vscode';
-import { ITestResultDetails, TestCodeLensProvider, testResultManager, TestStatus } from '../extension.bundle';
-import { Token, Uris } from './shared';
+import { CodeLens, Command, commands, TextDocument, window, workspace, extensions } from 'vscode';
+import { ITestResultDetails, TestCodeLensProvider, testResultManager, TestStatus } from '../../extension.bundle';
+import { Token, Uris } from '../shared';
 
-suite('Code Lens Tests', () => {
+suite('Code Lens Tests', function() {
 
-    test("Code Lens should work for JUnit 4's @Test annotation", async () => {
+    suiteSetup(async function() {
+        await extensions.getExtension('vscjava.vscode-java-test')!.activate();
+    });
+
+    test("Code Lens should work for JUnit 4's @Test annotation", async function() {
         const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT4_TEST);
         await window.showTextDocument(document);
 
@@ -40,11 +44,9 @@ suite('Code Lens Tests', () => {
         const passedDetail: ITestResultDetails| undefined = result.get('junit4.TestAnnotation#shouldPass');
         assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
+    });
 
-        await commands.executeCommand('workbench.action.closeActiveEditor');
-    }).timeout(60 * 1000 /* ms */);
-
-    test("Code Lens should be present for JUnit 4's @Theory annotation", async () => {
+    test("Code Lens should be present for JUnit 4's @Theory annotation", async function() {
         const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT4_THEROY);
         await window.showTextDocument(document);
 
@@ -76,11 +78,9 @@ suite('Code Lens Tests', () => {
         const passedDetail: ITestResultDetails| undefined = result.get('junit4.TheoryAnnotation#shouldPass');
         assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
+    });
 
-        await commands.executeCommand('workbench.action.closeActiveEditor');
-    }).timeout(60 * 1000 /* ms */);
-
-    test("Code Lens should be present for JUnit 4's @RunWith annotation", async () => {
+    test("Code Lens should be present for JUnit 4's @RunWith annotation", async function() {
         const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT4_RUNWITH);
         await window.showTextDocument(document);
 
@@ -115,7 +115,9 @@ suite('Code Lens Tests', () => {
         const passedDetail: ITestResultDetails| undefined = result.get('junit4.TestAnnotation#shouldPass');
         assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
+    });
 
+    teardown(async function() {
         await commands.executeCommand('workbench.action.closeActiveEditor');
-    }).timeout(60 * 1000 /* ms */);
+    });
 });

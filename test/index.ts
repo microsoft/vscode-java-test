@@ -11,10 +11,6 @@ async function main(): Promise<void> {
         // Passed to `--extensionDevelopmentPath`
         const extensionDevelopmentPath: string = path.resolve(__dirname, '../../');
 
-        // The path to the extension test script
-        // Passed to --extensionTestsPath
-        const extensionTestsPath: string = path.resolve(__dirname, './suite/index');
-
         const vscodeExecutablePath: string = await downloadAndUnzipVSCode('stable');
         const cliPath: string = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
 
@@ -28,17 +24,27 @@ async function main(): Promise<void> {
             stdio: 'inherit',
         });
 
-        // Download VS Code, unzip it and run the integration test
+        // Run Maven JUnit 4 Code Lens tests
         await runTests({
             vscodeExecutablePath,
             extensionDevelopmentPath,
-            extensionTestsPath,
+            extensionTestsPath: path.resolve(__dirname, './maven-junit4-suite'),
             launchArgs: [
-                path.join(__dirname, '..', '..', 'test', 'test-projects'),
+                path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit4'),
             ],
         });
+
+        // Run Gradle modular project tests
+        await runTests({
+            vscodeExecutablePath,
+            extensionDevelopmentPath,
+            extensionTestsPath: path.resolve(__dirname, './gradle-modular-suite'),
+            launchArgs: [
+                path.join(__dirname, '..', '..', 'test', 'test-projects', 'modular-gradle'),
+            ],
+        });
+
     } catch (err) {
-        // tslint:disable-next-line: no-console
         console.error('Failed to run tests');
         process.exit(1);
     }

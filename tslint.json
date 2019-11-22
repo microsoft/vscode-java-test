@@ -3,6 +3,11 @@
     "extends": [
         "tslint:recommended"
     ],
+    "linterOptions": {
+        "exclude": [
+            "test/**/*.ts"
+        ]
+    },
     "jsRules": {},
     "rules": {
         "object-literal-sort-keys": false,
