@@ -2,10 +2,9 @@
 // Licensed under the MIT license.
 
 import { Disposable, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
-import { explorerNodeManager } from './explorer/explorerNodeManager';
 import { testExplorer } from './explorer/testExplorer';
-import { TestTreeNode } from './explorer/TestTreeNode';
 import { logger } from './logger/logger';
+import { ITestItem } from './protocols';
 import { getTestSourcePaths } from './utils/commandUtils';
 
 class TestFileWatcher implements Disposable {
@@ -45,12 +44,11 @@ class TestFileWatcher implements Disposable {
     private registerWatcherListeners(watcher: FileSystemWatcher): void {
         this.disposables.push(
             watcher.onDidChange((uri: Uri) => {
-                const node: TestTreeNode | undefined = explorerNodeManager.getNode(uri.fsPath);
+                const node: ITestItem | undefined = testExplorer.getNodeByFsPath(uri.fsPath);
                 testExplorer.refresh(node);
             }),
 
-            watcher.onDidDelete((uri: Uri) => {
-                explorerNodeManager.removeNode(uri.fsPath);
+            watcher.onDidDelete(() => {
                 testExplorer.refresh();
             }),
         );
