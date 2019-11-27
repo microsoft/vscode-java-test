@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { CancellationToken, DebugConfiguration, Progress, ProgressLocation, Range, TextDocument, Uri, ViewColumn, window, workspace } from 'vscode';
-import { TestTreeNode } from '../explorer/TestTreeNode';
 import { logger } from '../logger/logger';
-import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
+import { ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
 import { IRunnerContext } from '../runners/models';
 import { runnerScheduler } from '../runners/runnerScheduler';
 import { searchTestItemsAll } from '../utils/commandUtils';
@@ -15,17 +14,30 @@ export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
     await window.showTextDocument(document, {preserveFocus: true, selection: range, viewColumn: ViewColumn.One});
 }
 
-export async function runTestsFromExplorer(node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
+export async function runTestsFromExplorer(node?: ITestItem, launchConfiguration?: DebugConfiguration): Promise<void> {
     return executeTestsFromExplorer(false /* isDebug */, node, launchConfiguration);
 }
 
-export async function debugTestsFromExplorer(node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
+export async function debugTestsFromExplorer(node?: ITestItem, launchConfiguration?: DebugConfiguration): Promise<void> {
     return executeTestsFromExplorer(true /* isDebug */, node, launchConfiguration);
 }
 
-async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, launchConfiguration?: DebugConfiguration): Promise<void> {
+async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, launchConfiguration?: DebugConfiguration): Promise<void> {
     if (!node) {
-        node = new TestTreeNode('', '', TestLevel.Root, '');
+        // TODO: Should save necessary information in runnerContext instead of passing the complicated node instance!
+        node = {
+            displayName: '',
+            fullName: '',
+            children: undefined,
+            kind: TestKind.None,
+            project: '',
+            level: TestLevel.Root,
+            paramTypes: [],
+            location: {
+                uri: '',
+                range: new Range(0, 0, 0, 0),
+            },
+        };
     }
 
     const runnerContext: IRunnerContext = {
@@ -37,7 +49,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, l
     };
 
     if (node.level === TestLevel.Package || node.level === TestLevel.Class || node.level === TestLevel.Method) {
-        runnerContext.testUri = Uri.file(node.fsPath).toString();
+        runnerContext.testUri = Uri.parse(node.location.uri).toString();
         runnerContext.fullName = node.fullName;
     }
     const tests: ITestItem[] | undefined = await searchTestItems(node);
@@ -52,7 +64,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: TestTreeNode, l
     return runnerScheduler.run(tests, runnerContext, launchConfiguration);
 }
 
-async function searchTestItems(node: TestTreeNode): Promise<ITestItem[] | undefined> {
+async function searchTestItems(node: ITestItem): Promise<ITestItem[] | undefined> {
     return new Promise<ITestItem[] | undefined>((resolve: (result: ITestItem[] | undefined) => void): void => {
         const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
         window.withProgress(

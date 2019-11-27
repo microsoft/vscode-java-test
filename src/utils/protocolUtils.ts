@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Uri } from 'vscode';
-import { TestTreeNode } from '../explorer/TestTreeNode';
-import { ISearchTestItemParams, TestLevel } from '../protocols';
+import { ISearchTestItemParams, ITestItem, TestLevel } from '../protocols';
 
-export function constructSearchTestItemParams(node: TestTreeNode): ISearchTestItemParams {
+export function constructSearchTestItemParams(node: ITestItem): ISearchTestItemParams {
     if (node.level === TestLevel.Root) {
         return {
             uri: '',
@@ -15,7 +13,7 @@ export function constructSearchTestItemParams(node: TestTreeNode): ISearchTestIt
     }
 
     return {
-        uri: Uri.file(node.fsPath).toString(),
+        uri: node.location.uri,
         level: node.level,
         fullName: node.fullName,
     };
