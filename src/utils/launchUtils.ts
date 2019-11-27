@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as iconv from 'iconv-lite';
-import { DebugConfiguration, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { logger } from '../logger/logger';
+import { DebugConfiguration } from 'vscode';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
@@ -36,7 +34,6 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             modulePaths: testNGArguments.modulepath,
             args: runner.getApplicationArgs(config),
             vmArgs: testNGArguments.vmArguments,
-            encoding: getJavaEncoding(Uri.parse(tests[0].location.uri), config),
             env,
             noDebug: !runnerContext.isDebug,
         };
@@ -67,7 +64,6 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, run
         modulePaths: junitLaunchArgs.modulepath,
         args: junitLaunchArgs.programArguments,
         vmArgs: junitLaunchArgs.vmArguments,
-        encoding: getJavaEncoding(Uri.parse(test.location.uri)),
         env,
         noDebug: !runnerContext.isDebug,
     };
@@ -91,41 +87,4 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
 
 async function getTestNGLaunchArguments(test: ITestItem): Promise<IJUnitLaunchArguments> {
     return await resolveJUnitLaunchArguments('', '', '', test.project, TestLevel.Root, test.kind);
-}
-
-export function getJavaEncoding(uri: Uri, config?: IExecutionConfig): string {
-    const encoding: string = getEncodingFromTestConfig(config) || getEncodingFromSetting(uri);
-    if (!iconv.encodingExists(encoding)) {
-        logger.error(`Unsupported encoding: ${encoding}, fallback to UTF-8.`);
-        return 'utf8';
-    }
-    return encoding;
-}
-
-function getEncodingFromTestConfig(config?: IExecutionConfig): string | undefined {
-    if (config && config.vmargs) {
-        const vmArgsString: string = config.vmargs.join(' ');
-        const encodingKey: string = '-Dfile.encoding=';
-        const index: number = vmArgsString.lastIndexOf(encodingKey);
-        if (index > -1) {
-            // loop backwards since the latter vmarg will override the previous one
-            return vmArgsString.slice(index + encodingKey.length).split(' ')[0];
-        }
-    }
-    return undefined;
-}
-
-function getEncodingFromSetting(uri: Uri): string {
-    let javaEncoding: string | null = null;
-    // One runner will contain all tests in one workspace with the same test framework.
-    const config: WorkspaceConfiguration = workspace.getConfiguration(undefined, uri);
-    const languageConfig: {} | undefined = config.get('[java]');
-    if (languageConfig != null) {
-        javaEncoding = languageConfig['files.encoding'];
-    }
-
-    if (javaEncoding == null) {
-        javaEncoding = config.get<string>('files.encoding', 'UTF-8');
-    }
-    return javaEncoding;
 }
