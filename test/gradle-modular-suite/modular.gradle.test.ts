@@ -3,7 +3,7 @@
 
 import * as assert from 'assert';
 import { CodeLens, Command, commands, TextDocument, window, workspace } from 'vscode';
-import { ITestResultDetails, TestCodeLensProvider, testResultManager } from '../../extension.bundle';
+import { ITestResult, TestCodeLensProvider, testResultManager, ITestItem } from '../../extension.bundle';
 import { getJavaVersion, Token, Uris } from '../shared';
 
 suite('Modular Porject Tests', function() {
@@ -25,10 +25,10 @@ suite('Modular Porject Tests', function() {
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
 
         const command: Command | undefined = codeLens[0].command;
-        const testItem: any = command!.arguments;
-        await commands.executeCommand(command!.command, testItem[0]);
+        const testItem: ITestItem[] | undefined = command!.arguments;
+        await commands.executeCommand(command!.command, testItem![0]);
 
-        const result: Map<string, ITestResultDetails> | undefined = testResultManager.getResults(Uris.MODULAR_GRADLE_TEST.fsPath);
+        const result: ITestResult | undefined = testResultManager.getResultById(testItem![0].id);
         assert.notEqual(result, undefined, 'Test Result for @Test should not be undefined');
     });
 

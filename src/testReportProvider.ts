@@ -85,22 +85,32 @@ class TestReportProvider implements Disposable {
     }
 
     public async provideHtmlContent(testResults: ITestResult[]): Promise<string> {
-        const allResultsMap: Map<string, ITestResult[]> = new Map();
-        const passedResultMap: Map<string, ITestResult[]> = new Map();
-        const failedResultMap: Map<string, ITestResult[]> = new Map();
+        const allResultsMap: Map<string, ITestReportItem[]> = new Map();
+        const passedResultMap: Map<string, ITestReportItem[]> = new Map();
+        const failedResultMap: Map<string, ITestReportItem[]> = new Map();
         let passedCount: number = 0;
         let failedCount: number = 0;
         let skippedCount: number = 0;
         for (const result of testResults) {
             if (result) {
-                this.putMethodResultIntoMap(allResultsMap, result);
-                switch (result.details.status) {
+                const reportItem: ITestReportItem = Object.assign({},
+                    result,
+                    {
+                        // TODO: join with ITestItem in store
+                        fullName: result.id.slice(result.id.indexOf('@') + 1),
+                        location:  undefined,
+                        displayName: result.id.slice(result.id.indexOf('#') + 1),
+                    },
+                );
+                const classFullName: string = result.id.slice(result.id.indexOf('@') + 1, result.id.indexOf('#'));
+                this.putMethodResultIntoMap(allResultsMap, reportItem, classFullName);
+                switch (result.status) {
                     case TestStatus.Pass:
-                        this.putMethodResultIntoMap(passedResultMap, result);
+                        this.putMethodResultIntoMap(passedResultMap, reportItem, classFullName);
                         passedCount++;
                         break;
                     case TestStatus.Fail:
-                        this.putMethodResultIntoMap(failedResultMap, result);
+                        this.putMethodResultIntoMap(failedResultMap, reportItem, classFullName);
                         failedCount++;
                         break;
                     case TestStatus.Skip:
@@ -131,19 +141,24 @@ class TestReportProvider implements Disposable {
         }
     }
 
-    private putMethodResultIntoMap(map: Map<string, ITestResult[]>, result: ITestResult): void {
-        const classFullName: string = result.fullName.substr(0, result.fullName.indexOf('#'));
-        const methods: ITestResult[] | undefined = map.get(classFullName);
+    private putMethodResultIntoMap(map: Map<string, ITestReportItem[]>, reportItem: ITestReportItem, classFullName: string): void {
+        const methods: ITestReportItem[] | undefined = map.get(classFullName);
         if (methods) {
-            methods.push(result);
+            methods.push(reportItem);
         } else {
-            map.set(classFullName, [result]);
+            map.set(classFullName, [reportItem]);
         }
     }
 }
 
 interface ILocationQuickPick extends QuickPickItem {
     location: ILocation;
+}
+
+interface ITestReportItem extends ITestResult {
+    fullName: string;
+    location: ILocation | undefined;
+    displayName: string;
 }
 
 export const testReportProvider: TestReportProvider = new TestReportProvider();

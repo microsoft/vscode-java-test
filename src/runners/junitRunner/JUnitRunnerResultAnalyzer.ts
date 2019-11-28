@@ -3,7 +3,7 @@
 
 import { logger } from '../../logger/logger';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestResultDetails, TestStatus } from '../models';
+import { ITestResult, TestStatus } from '../models';
 
 export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
@@ -24,30 +24,33 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     protected processData(data: string): void {
         if (data.startsWith(MessageId.TestStart)) {
-            const testFullName: string = getTestFullName(data);
-            if (!testFullName) {
+            const testId: string = this.getTestId(data);
+            if (!testId) {
                 return;
             }
 
-            let detail: ITestResultDetails | undefined = this.testResults.get(testFullName);
+            let result: ITestResult | undefined = this.testResults.get(testId);
             const start: number = Date.now();
-            if (!detail) {
-                this.currentTestItem = testFullName;
-                detail = { status: undefined };
+            if (!result) {
+                this.currentTestItem = testId;
+                result = {
+                    id: testId,
+                    status: undefined,
+                };
                 if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
-                    detail.status = TestStatus.Skip;
+                    result.status = TestStatus.Skip;
                 } else {
-                    detail.duration = -start;
+                    result.duration = -start;
                 }
-                this.testResults.set(testFullName, detail);
-            } else if (detail.duration !== undefined) {
+                this.testResults.set(testId, result);
+            } else if (result.duration !== undefined) {
                 // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
-                detail.duration -= start;
+                result.duration -= start;
             }
         } else if (data.startsWith(MessageId.TestEnd)) {
-            const testFullName: string = getTestFullName(data);
-            if (testFullName) {
-                const finishedResult: ITestResultDetails | undefined = this.testResults.get(testFullName);
+            const testId: string = this.getTestId(data);
+            if (testId) {
+                const finishedResult: ITestResult | undefined = this.testResults.get(testId);
                 if (!finishedResult) {
                     return;
                 }
@@ -57,10 +60,10 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 getElapsedTime(finishedResult);
             }
         } else if (data.startsWith(MessageId.TestFailed) || data.startsWith(MessageId.TestError)) {
-            const testFullName: string = getTestFullName(data);
-            if (testFullName) {
-                this.currentTestItem = testFullName;
-                const failedResult: ITestResultDetails | undefined = this.testResults.get(testFullName);
+            const testId: string = this.getTestId(data);
+            if (testId) {
+                this.currentTestItem = testId;
+                const failedResult: ITestResult | undefined = this.testResults.get(testId);
                 if (!failedResult) {
                     return;
                 }
@@ -75,33 +78,33 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
             this.traces = '';
             this.isRecordingTraces = true;
         } else if (data.startsWith(MessageId.TraceEnd)) {
-            const failedResult: ITestResultDetails | undefined = this.testResults.get(this.currentTestItem);
+            const failedResult: ITestResult | undefined = this.testResults.get(this.currentTestItem);
             if (!failedResult) {
-                    return;
-                }
+                return;
+            }
             failedResult.trace = this.traces;
             this.isRecordingTraces = false;
         } else if (this.isRecordingTraces) {
             this.traces += data + '\n';
         }
     }
-}
 
-function getElapsedTime(detail: ITestResultDetails): void {
-    if (detail.duration && detail.duration < 0) {
-        const end: number = Date.now();
-        detail.duration += end;
+    protected getTestId(message: string): string {
+        const regexp: RegExp = /\d+,(@AssumptionFailure: |@Ignore: )?(.*?)\((.*?)\)/;
+        const matchResults: RegExpExecArray | null = regexp.exec(message); {
+            if (!matchResults || matchResults.length < 4) {
+                logger.error(`Failed to parse the message: ${message}`);
+                return '';
+            }
+            return `${this.projectName}@${matchResults[3]}#${matchResults[2]}`;
+        }
     }
 }
 
-function getTestFullName(message: string): string {
-    const regexp: RegExp = /\d+,(@AssumptionFailure: |@Ignore: )?(.*?)\((.*?)\)/;
-    const matchResults: RegExpExecArray | null = regexp.exec(message); {
-        if (!matchResults || matchResults.length < 4) {
-            logger.error(`Failed to parse the message: ${message}`);
-            return '';
-        }
-        return `${matchResults[3]}#${matchResults[2]}`;
+function getElapsedTime(result: ITestResult): void {
+    if (result.duration && result.duration < 0) {
+        const end: number = Date.now();
+        result.duration += end;
     }
 }
 

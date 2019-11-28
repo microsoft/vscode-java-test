@@ -9,9 +9,10 @@ export interface ILocation {
 }
 
 export interface ITestItem {
+    id: string;
     displayName: string;
     fullName: string;
-    children: ITestItem[] | undefined;
+    children: string[] | undefined;
     kind: TestKind;
     project: string;
     level: TestLevel;

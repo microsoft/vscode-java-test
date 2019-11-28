@@ -2,14 +2,13 @@
 // Licensed under the MIT license.
 
 import { logger } from '../../logger/logger';
-import { ITestItem, TestLevel } from '../../protocols';
-import { defaultResult, ITestOutputData, ITestResult, ITestResultDetails } from '../models';
+import { ITestOutputData, ITestResult } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
-    protected testResults: Map<string, ITestResultDetails> = new Map<string, ITestResultDetails>();
+    protected testResults: Map<string, ITestResult> = new Map<string, ITestResult>();
     private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/;
 
-    constructor(protected tests: ITestItem[]) {
+    constructor(protected projectName: string) {
     }
 
     public analyzeData(data: string): void {
@@ -34,13 +33,7 @@ export abstract class BaseRunnerResultAnalyzer {
     }
 
     public feedBack(): ITestResult[] {
-        const result: ITestResult[] = [];
-        const itemMap: Map<string, ITestItem> = new Map<string, ITestItem>();
-        for (const test of this.tests) {
-            this.flatTestItems(test, itemMap);
-        }
-        this.parseResults(result, itemMap);
-        return result;
+        return Array.from(this.testResults.values());
     }
 
     protected processData(data: string): void {
@@ -50,40 +43,6 @@ export abstract class BaseRunnerResultAnalyzer {
         } else {
             // Append '\n' becuase the original line separator has been splitted
             logger.verbose(this.unescape(data) + '\n');
-        }
-    }
-
-    protected flatTestItems(item: ITestItem, map: Map<string, ITestItem>): void {
-        if (item.level === TestLevel.Method) {
-            map.set(item.fullName, item);
-        } else if (item.children) {
-            item.children.forEach((child: ITestItem) => this.flatTestItems(child, map));
-        }
-    }
-
-    protected parseResults(resultArray: ITestResult[], itemMap: Map<string, ITestItem>): void {
-        for (const [key, value] of this.testResults.entries()) {
-            let result: ITestResult = Object.assign({}, defaultResult, {
-                fullName: key,
-                details: value,
-            });
-
-            const item: ITestItem | undefined = itemMap.get(key);
-            if (item) {
-                result =  {
-                    displayName: item.displayName,
-                    location: item.location,
-                    fullName: key,
-                    details: value,
-                };
-            } else {
-                result = Object.assign(result, {
-                    displayName: key.slice(key.indexOf('#') + 1),
-                });
-            }
-
-            resultArray.push(result);
-            itemMap.delete(key);
         }
     }
 

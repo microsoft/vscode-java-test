@@ -49,6 +49,7 @@ class TestFileWatcher implements Disposable {
             }),
 
             watcher.onDidDelete(() => {
+                // TODO: delete entries in test item cache and test result cache
                 testExplorer.refresh();
             }),
         );
