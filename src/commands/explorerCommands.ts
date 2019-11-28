@@ -3,11 +3,10 @@
 
 import { CancellationToken, DebugConfiguration, Progress, ProgressLocation, Range, TextDocument, Uri, ViewColumn, window, workspace } from 'vscode';
 import { logger } from '../logger/logger';
-import { ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
+import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { IRunnerContext } from '../runners/models';
 import { runnerScheduler } from '../runners/runnerScheduler';
-import { searchTestItemsAll } from '../utils/commandUtils';
-import { constructSearchTestItemParams } from '../utils/protocolUtils';
+import { testItemModel } from '../testItemModel';
 
 export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
     const document: TextDocument = await workspace.openTextDocument(uri);
@@ -67,13 +66,12 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
 
 async function searchTestItems(node: ITestItem): Promise<ITestItem[] | undefined> {
     return new Promise<ITestItem[] | undefined>((resolve: (result: ITestItem[] | undefined) => void): void => {
-        const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
         window.withProgress(
             { location: ProgressLocation.Notification, cancellable: true },
             async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                 progress.report({ message: 'Searching test items...' });
                 token.onCancellationRequested(() => resolve(undefined));
-                const tests: ITestItem[] = await searchTestItemsAll(searchParam);
+                const tests: ITestItem[] = await testItemModel.getAllNodes(node);
                 if (token.isCancellationRequested) {
                     return resolve(undefined);
                 }

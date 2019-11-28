@@ -7,10 +7,11 @@ import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, We
 import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
-import { ILocation } from './protocols';
+import { ILocation, ITestItem } from './protocols';
 import { ITestResult, TestStatus } from './runners/models';
 import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
+import { testItemModel } from './testItemModel';
 
 class TestReportProvider implements Disposable {
 
@@ -93,13 +94,13 @@ class TestReportProvider implements Disposable {
         let skippedCount: number = 0;
         for (const result of testResults) {
             if (result) {
+                const testItem: ITestItem | undefined = testItemModel.getItemById(result.id);
                 const reportItem: ITestReportItem = Object.assign({},
                     result,
                     {
-                        // TODO: join with ITestItem in store
                         fullName: result.id.slice(result.id.indexOf('@') + 1),
-                        location:  undefined,
-                        displayName: result.id.slice(result.id.indexOf('#') + 1),
+                        location: testItem ? testItem.location : undefined,
+                        displayName: testItem ? testItem.displayName : result.id.slice(result.id.indexOf('#') + 1),
                     },
                 );
                 const classFullName: string = result.id.slice(result.id.indexOf('@') + 1, result.id.indexOf('#'));

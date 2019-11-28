@@ -27,6 +27,7 @@ class TestCodeLensController implements Disposable {
     }
 
     public dispose(): void {
+        this.internalProvider.dispose();
         if (this.registeredProvider) {
             this.registeredProvider.dispose();
         }

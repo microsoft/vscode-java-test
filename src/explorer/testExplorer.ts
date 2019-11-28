@@ -4,9 +4,8 @@
 import * as path from 'path';
 import { Command, Disposable, Event, EventEmitter, ExtensionContext, Range, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
-import { ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
-import { searchTestItems } from '../utils/commandUtils';
-import { constructSearchTestItemParams } from '../utils/protocolUtils';
+import { ITestItem, TestKind, TestLevel } from '../protocols';
+import { testItemModel } from '../testItemModel';
 
 export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     public readonly testExplorerViewId: string = 'testExplorer';
@@ -33,29 +32,26 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     }
 
     public async getChildren(element?: ITestItem): Promise<ITestItem[]> {
-        let children: ITestItem[] = [];
+        let nodes: ITestItem[] = [];
         if (!element) {
-            children = this.getWorkspaceFolders();
+            nodes = this.getWorkspaceFolders();
         } else {
-            if (!element.children) {
-                children = await this.getChildrenOfTreeNode(element);
-                element.children = children.map((child: ITestItem) => child.id);
-            }
+            nodes = await testItemModel.getNodeChildren(element);
         }
         if (element && element.level === TestLevel.Package) {
             // Only save the first level classes since method and inner classes will have the same uri
-            for (const child of children) {
+            for (const child of nodes) {
                 if (child.level === TestLevel.Class) {
                     this.fsPathToNodeMapping.set(Uri.parse(child.location.uri).fsPath, child);
                 }
             }
         }
-        return children.sort((a: ITestItem, b: ITestItem) => a.displayName.localeCompare(b.displayName));
+        return nodes.sort((a: ITestItem, b: ITestItem) => a.displayName.localeCompare(b.displayName));
     }
 
     public refresh(element?: ITestItem): void {
-        if (element) {
-            element.children = undefined;
+        if (!element) {
+            this.fsPathToNodeMapping.clear();
         }
         this.onDidChangeTreeDataEventEmitter.fire(element);
     }
@@ -91,11 +87,6 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
             });
         }
         return results;
-    }
-
-    private async getChildrenOfTreeNode(element: ITestItem): Promise<ITestItem[]> {
-        const searchParams: ISearchTestItemParams = constructSearchTestItemParams(element);
-        return await searchTestItems(searchParams);
     }
 
     private resolveCollapsibleState(element: ITestItem): TreeItemCollapsibleState {
