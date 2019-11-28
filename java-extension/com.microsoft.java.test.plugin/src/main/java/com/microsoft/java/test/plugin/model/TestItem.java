@@ -18,11 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestItem {
+    private String id;
+
     private String displayName;
 
     private String fullName;
 
-    private List<TestItem> children;
+    private List<String> children;
 
     private TestLevel level;
 
@@ -43,6 +45,15 @@ public class TestItem {
         this.project = project;
         this.paramTypes = paramTypes;
         this.location = new Location(uri, range);
+        this.id = String.format("%s@%s", project, fullName);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getDisplayName() {
@@ -61,11 +72,11 @@ public class TestItem {
         this.fullName = fullName;
     }
 
-    public List<TestItem> getChildren() {
+    public List<String> getChildren() {
         return children;
     }
 
-    public void setChildren(List<TestItem> children) {
+    public void setChildren(List<String> children) {
         this.children = children;
     }
 
@@ -93,7 +104,7 @@ public class TestItem {
         this.project = project;
     }
 
-    public void addChild(TestItem child) {
+    public void addChild(String child) {
         if (this.children == null) {
             this.children = new ArrayList<>();
         }

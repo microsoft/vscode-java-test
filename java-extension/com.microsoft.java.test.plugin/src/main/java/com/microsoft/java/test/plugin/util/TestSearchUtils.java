@@ -104,7 +104,10 @@ public class TestSearchUtils {
             }).filter(Objects::nonNull).collect(Collectors.toList());
             if (testMethodList.size() > 0) {
                 final TestItem parent = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
-                parent.setChildren(testMethodList);
+                for (TestItem method : testMethodList) {
+                    resultList.add(method);
+                    parent.addChild(method.getId());
+                }
                 // Assume the kinds of all methods are the same.
                 parent.setKind(testMethodList.get(0).getKind());
                 resultList.add(parent);
@@ -201,14 +204,16 @@ public class TestSearchUtils {
                     if (methodItem == null) {
                         return;
                     }
+                    searchResult.add(methodItem);
                     final IType type = (IType) method.getParent();
                     final TestItem classItem = classMap.get(type.getFullyQualifiedName());
                     if (classItem != null) {
-                        classItem.addChild(methodItem);
+                        classItem.addChild(methodItem.getId());
                     } else {
                         final TestItem newClassItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
-                        newClassItem.addChild(methodItem);
+                        newClassItem.addChild(methodItem.getId());
                         classMap.put(type.getFullyQualifiedName(), newClassItem);
+                        searchResult.add(newClassItem);
                     }
                 } else if (element instanceof IType) {
                     final IType type = (IType) element;
@@ -220,6 +225,7 @@ public class TestSearchUtils {
                         return;
                     }
                     classMap.put(type.getFullyQualifiedName(), item);
+                    searchResult.add((item));
                 }
             }
 
@@ -228,18 +234,6 @@ public class TestSearchUtils {
         new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 scope, requestor, monitor);
 
-        for (final TestItem testClass : classMap.values()) {
-            if (testClass.getChildren() == null || testClass.getChildren().size() <= 0) {
-                searchResult.add(testClass);
-            } else if (testClass.getChildren().size() == 1 && params.getLevel() == TestLevel.METHOD) {
-                // If test level is method, only add the method into the result instead of the class
-                searchResult.add(testClass.getChildren().get(0));
-            } else {
-                // Assume the kinds of all methods are the same.
-                testClass.setKind(testClass.getChildren().get(0).getKind());
-                searchResult.add(testClass);
-            }
-        }
         return searchResult;
     }
 

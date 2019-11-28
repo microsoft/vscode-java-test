@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestOutputData, ITestResultDetails, TestStatus } from '../models';
+import { ITestOutputData, ITestResult, TestStatus } from '../models';
 
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';
@@ -13,14 +13,16 @@ export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     protected processData(data: string): void {
         super.processData(data);
         const outputData: ITestNGOutputData = JSON.parse(data) as ITestNGOutputData;
+        const id: string = `${this.projectName}@${outputData.attributes.name}`;
         switch (outputData.name) {
             case TEST_START:
-                this.testResults.set(outputData.attributes.name, {
+                this.testResults.set(id, {
+                    id,
                     status: undefined,
                 });
                 break;
             case TEST_FAIL:
-                const failedResult: ITestResultDetails | undefined = this.testResults.get(outputData.attributes.name);
+                const failedResult: ITestResult | undefined = this.testResults.get(id);
                 if (!failedResult) {
                     return;
                 }
@@ -29,7 +31,7 @@ export class TestNGRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 failedResult.trace = outputData.attributes.trace;
                 break;
             case TEST_FINISH:
-                const finishedResult: ITestResultDetails | undefined = this.testResults.get(outputData.attributes.name);
+                const finishedResult: ITestResult | undefined = this.testResults.get(id);
                 if (!finishedResult) {
                     return;
                 }

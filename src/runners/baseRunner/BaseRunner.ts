@@ -12,8 +12,6 @@ import { LOCAL_HOST } from '../../constants/configs';
 import { logger } from '../../logger/logger';
 import { ITestItem } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
-import { testResultManager } from '../../testResultManager';
-import { isTestMethodName } from '../../utils/protocolUtils';
 import { ITestRunner } from '../ITestRunner';
 import { ITestResult } from '../models';
 import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
@@ -31,7 +29,6 @@ export abstract class BaseRunner implements ITestRunner {
 
     public async setup(tests: ITestItem[]): Promise<void> {
         await this.startSocketServer();
-        this.clearTestResults(tests);
         this.tests = tests;
     }
 
@@ -156,16 +153,6 @@ export abstract class BaseRunner implements ITestRunner {
 
     protected getRunnerCommandParams(_config?: IExecutionConfig): string[] {
         return [];
-    }
-
-    protected clearTestResults(items: ITestItem[]): void {
-        for (const item of items) {
-            if (isTestMethodName(item.fullName)) {
-                testResultManager.removeResultDetails(Uri.parse(item.location.uri).fsPath, item.fullName);
-            } else {
-                testResultManager.removeResultDetailsUnderTheClass(Uri.parse(item.location.uri).fsPath, item.fullName);
-            }
-        }
     }
 
     protected async startSocketServer(): Promise<void> {

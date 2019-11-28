@@ -38,9 +38,9 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
             children = this.getWorkspaceFolders();
         } else {
             if (!element.children) {
-                element.children = await this.getChildrenOfTreeNode(element);
+                children = await this.getChildrenOfTreeNode(element);
+                element.children = children.map((child: ITestItem) => child.id);
             }
-            children = element.children;
         }
         if (element && element.level === TestLevel.Package) {
             // Only save the first level classes since method and inner classes will have the same uri

@@ -14,7 +14,7 @@ export class TestNGRunner extends BaseRunner {
 
     protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
         if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new TestNGRunnerResultAnalyzer(this.tests);
+            this.runnerResultAnalyzer = new TestNGRunnerResultAnalyzer(this.tests[0].project);
         }
         return this.runnerResultAnalyzer;
     }

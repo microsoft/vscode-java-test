@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as _ from 'lodash';
 import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
@@ -36,7 +35,7 @@ class RunnerScheduler {
         }
 
         this._isRunning = true;
-        let finalResults: ITestResult[] = [];
+        const finalResults: ITestResult[] = [];
 
         try {
             this._runnerMap = this.classifyTestsByKind(testItems);
@@ -52,10 +51,9 @@ class RunnerScheduler {
                 await runner.setup(tests);
                 testStatusBarProvider.showRunningTest();
                 const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, config));
-                await testResultManager.storeResult(workspaceFolder as WorkspaceFolder, ...results);
+                await testResultManager.storeResult(...results);
                 finalResults.push(...results);
             }
-            finalResults = _.uniqBy(finalResults, 'fullName');
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);
@@ -95,7 +93,12 @@ class RunnerScheduler {
 
     private mapTestsByProjectAndKind(tests: ITestItem[]): Map<string, ITestItem[]> {
         const map: Map<string, ITestItem[]> = new Map<string, ITestItem[]>();
+        // Store all the covered test items, e.g. if a class will be run, all the child method will be added into it
+        const coveredSet: Set<string> = new Set<string>();
         for (const test of tests) {
+            if (coveredSet.has(test.id)) {
+                continue;
+            }
             if (!(test.kind in TestKind)) {
                 logger.error(`Unkonwn kind of test item: ${test.fullName}`);
                 continue;
@@ -106,6 +109,12 @@ class RunnerScheduler {
                 testArray.push(test);
             } else {
                 map.set(key, [test]);
+            }
+            coveredSet.add(test.id);
+            if (test.children) {
+                for (const childId of test.children) {
+                    coveredSet.add(childId);
+                }
             }
         }
         return map;
@@ -144,7 +153,7 @@ class RunnerScheduler {
                 break;
             case ReportShowSetting.OnFail:
                 const hasFailedTests: boolean = finalResults.some((result: ITestResult) => {
-                    return result.details.status === TestStatus.Fail;
+                    return result.status === TestStatus.Fail;
                 });
                 if (hasFailedTests) {
                     testReportProvider.report(finalResults);

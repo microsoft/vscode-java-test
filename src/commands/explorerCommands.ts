@@ -26,6 +26,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
     if (!node) {
         // TODO: Should save necessary information in runnerContext instead of passing the complicated node instance!
         node = {
+            id: '',
             displayName: '',
             fullName: '',
             children: undefined,
@@ -74,7 +75,7 @@ async function searchTestItems(node: ITestItem): Promise<ITestItem[] | undefined
                 token.onCancellationRequested(() => resolve(undefined));
                 const tests: ITestItem[] = await searchTestItemsAll(searchParam);
                 if (token.isCancellationRequested) {
-                    return undefined;
+                    return resolve(undefined);
                 }
                 return resolve(tests);
             },

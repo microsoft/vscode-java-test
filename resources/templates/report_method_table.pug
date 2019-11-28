@@ -13,15 +13,15 @@ mixin collapseMethodTable(children, type)
                     div.row.accordion-toggle
                         div.col-8.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details") #{method.displayName}
                         div.col-1.text-right
-                            if !method.details
+                            if !method.status
                                 span.badge.badge-warning Not run
-                            else if method.details.status === 'Pass'
+                            else if method.status === 'Pass'
                                 span.badge.badge-success Passed
-                            else if method.details.status === 'Fail'
+                            else if method.status === 'Fail'
                                 span.badge.badge-danger Failed
                             else
                                 span.badge.badge-secondary Skipped
-                        div.col-2.text-right #{method.details && method.details.duration >= 0 ? method.details.duration + "ms" : "N/A"}
+                        div.col-2.text-right #{method.duration >= 0 ? method.duration + "ms" : "N/A"}
                         div.col-1.text-right
                             a(href="#", title="Navigate to Source", uri=`${method.location && method.location.uri ? method.location.uri : ''}`, range=`${method.location && method.location.range ? JSON.stringify(method.location.range) : ''}`, fullname=`${method.fullName}`)
                                 i.fa.fa-external-link
@@ -30,14 +30,14 @@ mixin collapseMethodTable(children, type)
                             div.col
                                 h6 Message:
                         div.row
-                            div.col.mb-1 #{method.details && method.details.message ? method.details.message : "N/A"}
+                            div.col.mb-1 #{method.message ? method.message : "N/A"}
                         div.row
                             div.col
                                 h6 Stack trace:
                         div.row
                             div.col
-                                if method.details && method.details.trace
+                                if method.trace
                                     pre
-                                        code #{method.details.trace}
+                                        code #{method.trace}
                                 else
                                     span N/A
