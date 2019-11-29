@@ -21,13 +21,13 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
+import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -61,9 +61,8 @@ public final class ProjectTestUtils {
             final Set<IJavaProject> projectSet = parseProjects(uri);
             for (final IJavaProject project : projectSet) {
                 for (final IPath path : getTestPath(project)) {
-                    final IPath projectBasePath = project.getProject().getLocation();
                     final IPath relativePath = path.makeRelativeTo(project.getPath());
-                    resultList.add(projectBasePath.append(relativePath).toOSString());
+                    resultList.add(project.getProject().getFolder(relativePath).getLocation().toOSString());
                 }
             }
         }
@@ -83,26 +82,9 @@ public final class ProjectTestUtils {
     public static List<IPath> getTestPath(IJavaProject project) throws JavaModelException {
         final IClasspathEntry[] entries = project.getRawClasspath();
         return Arrays.stream(entries)
-                .filter(entry -> isTest(entry))
+                .filter(entry -> isTest(project, entry))
                 .map(entry -> entry.getPath())
                 .collect(Collectors.toList());
-    }
-
-    public static Set<IPath> getTestOutputPath(IJavaProject project) throws JavaModelException {
-        final IClasspathEntry[] entries = project.getRawClasspath();
-        final IPath projectLocation = project.getProject().getLocation();
-        return Arrays.stream(entries)
-                .filter(entry -> isTest(entry))
-                .map(entry -> {
-                    final IPath outputLocation = entry.getOutputLocation();
-                    if (outputLocation == null) {
-                        return null;
-                    }
-                    final IPath relativePath = outputLocation.makeRelativeTo(project.getPath());
-                    return projectLocation.append(relativePath);
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
     }
 
     public static boolean isTest(IJavaProject project, IPath path) {
@@ -111,15 +93,25 @@ public final class ProjectTestUtils {
             if (entry == null) {
                 return false;
             }
-            return isTest(entry);
+            return isTest(project, entry);
         } catch (final JavaModelException e) {
             return false;
         }
     }
 
-    public static boolean isTest(IClasspathEntry entry) {
+    public static boolean isTest(IJavaProject project, IClasspathEntry entry) {
+        // Ignore default project
+        if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+            return false;
+        }
+        
         if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
             return false;
+        }
+
+        // Always return true Eclipse & invisible project
+        if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
+            return true;
         }
 
         if (entry.isTest()) {
@@ -138,7 +130,7 @@ public final class ProjectTestUtils {
     }
 
     public static boolean isProjectBelongToPath(IProject project, IPath path) {
-     // Check for visible project
+        // Check for visible project
         if (project.getLocation() != null && path.isPrefixOf(project.getLocation())) {
             return true;
         }
@@ -147,22 +139,6 @@ public final class ProjectTestUtils {
         // Check for invisible project
         final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
         if (linkedLocation != null && path.isPrefixOf(linkedLocation)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public static boolean isPathBelongToProject(IPath testPath, IProject project) {
-        // Check if the path belongs to visible project
-        if (project.getLocation() != null && project.getLocation().isPrefixOf(testPath)) {
-            return true;
-        }
-
-
-        // Check if the path belongs to invisible project
-        final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
-        if (linkedLocation != null && linkedLocation.isPrefixOf(testPath)) {
             return true;
         }
 

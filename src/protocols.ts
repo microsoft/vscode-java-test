@@ -26,11 +26,6 @@ export interface ISearchTestItemParams {
     uri: string;
 }
 
-export interface IProjectInfo {
-    path: string;
-    name: string;
-}
-
 export enum TestLevel {
     Root = 0,
     Folder = 1,

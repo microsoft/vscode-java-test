@@ -267,15 +267,6 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
-        // Ignore default project
-        if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
-            return false;
-        }
-        // Always return true Eclipse & invisible project
-        if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
-            return true;
-        }
-        // For Maven & Gradle project, only search in test source paths
         for (final IPath sourcePath  : ProjectUtils.listSourcePaths(project)) {
             if (!ProjectTestUtils.isTest(project, sourcePath)) {
                 continue;
