@@ -70,9 +70,6 @@ gulp.task('sass', (done) => {
 });
 
 gulp.task('download-resources', (done) => {
-    remoteSrc(['font-awesome-4.7.0.zip'], { base: 'https://fontawesome.com/v4.7.0/assets/' })
-        .pipe(decompress({strip: 1, filter: file => path.basename(file.path) === 'font-awesome.min.css' || path.dirname(file.path) === 'fonts'}))
-        .pipe(gulp.dest(path.join(resourceDir, 'templates')));
     remoteSrc(['jquery-3.3.1.slim.min.js'], { base: 'https://code.jquery.com/' })
         .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
     remoteSrc(['popper.min.js'], { base: 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/' })
