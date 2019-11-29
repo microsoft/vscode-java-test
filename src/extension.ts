@@ -17,6 +17,7 @@ import { ITestItem } from './protocols';
 import { ITestResult } from './runners/models';
 import { runnerScheduler } from './runners/runnerScheduler';
 import { testFileWatcher } from './testFileWatcher';
+import { testItemModel } from './testItemModel';
 import { testReportProvider } from './testReportProvider';
 import { testResultManager } from './testResultManager';
 import { testStatusBarProvider } from './testStatusBarProvider';
@@ -51,6 +52,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testFileWatcher,
         logger,
         testCodeLensController,
+        testItemModel,
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, async (uri: Uri, range?: Range) => await openTextDocument(uri, range)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_EXPLORER, (node: ITestItem) => testExplorer.refresh(node)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_CODELENS, async (test: ITestItem) => await runFromCodeLens(test, false /* isDebug */)),

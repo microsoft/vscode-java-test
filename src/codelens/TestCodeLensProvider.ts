@@ -6,8 +6,8 @@ import { JavaTestRunnerCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ITestItem, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
+import { testItemModel } from '../testItemModel';
 import { testResultManager } from '../testResultManager';
-import { searchTestCodeLens } from '../utils/commandUtils';
 
 export class TestCodeLensProvider implements CodeLensProvider, Disposable {
     private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
@@ -22,7 +22,7 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
 
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
         try {
-            const items: ITestItem[] = await searchTestCodeLens(document.uri.toString());
+            const items: ITestItem[] = await testItemModel.getItemsForCodeLens(document.uri);
             return this.getCodeLenses(items);
         } catch (error) {
             logger.error('Failed to provide Code Lens', error);
