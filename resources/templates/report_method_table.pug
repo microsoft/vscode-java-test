@@ -11,7 +11,9 @@ mixin collapseMethodTable(children, type)
                 - methodIdx++
                 li.list-group-item.list-group-item-action
                     div.row.accordion-toggle
-                        div.col-8.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details") #{method.displayName}
+                        div.col-8.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
+                            include /images/chevron-right.svg
+                            span.ml-1 #{method.displayName}
                         div.col-1.text-right
                             if !method.status
                                 span.badge.badge-warning Not run
@@ -24,7 +26,7 @@ mixin collapseMethodTable(children, type)
                         div.col-2.text-right #{method.duration >= 0 ? method.duration + "ms" : "N/A"}
                         div.col-1.text-right
                             a(href="#", title="Navigate to Source", uri=`${method.location && method.location.uri ? method.location.uri : ''}`, range=`${method.location && method.location.range ? JSON.stringify(method.location.range) : ''}`, fullname=`${method.fullName}`)
-                                i.fa.fa-external-link
+                                include /images/go-to-file.svg
                     div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
                         div.row
                             div.col
