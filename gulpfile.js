@@ -15,7 +15,7 @@ const resourceDir = path.join(__dirname, 'resources');
 
 // Build required jar files.
 gulp.task('build-plugin', (done) => {
-    cp.execSync(`${mvnw()} clean package`, { cwd: serverDir, stdio: [0, 1, 2] });
+    cp.execSync(`${mvnw()} clean verify`, { cwd: serverDir, stdio: [0, 1, 2] });
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.plugin/target/*.jar'))
         .pipe(gulp.dest('./server'));
     gulp.src(path.join(serverDir, 'com.microsoft.java.test.runner/target/*.jar'))
@@ -46,12 +46,6 @@ gulp.task('build-plugin', (done) => {
     done();
 });
 
-// Lint
-gulp.task('checkstyle', (done) => {
-    cp.execSync(`${mvnw()} verify`, { cwd: serverDir, stdio: [0, 1, 2] });
-    done();
-});
-
 gulp.task('tslint', (done) => {
     gulp.src(['**/*.ts', '!**/*.d.ts', '!node_modules/**', '!./src/views/node_modules/**'])
         .pipe(tslint())
@@ -59,7 +53,7 @@ gulp.task('tslint', (done) => {
     done()
 });
 
-gulp.task('lint', gulp.series('checkstyle', 'tslint'));
+gulp.task('lint', gulp.series('tslint'));
 
 // Test report resources
 gulp.task('sass', (done) => {
