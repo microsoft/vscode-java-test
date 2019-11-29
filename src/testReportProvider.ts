@@ -9,9 +9,9 @@ import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
 import { ILocation, ITestItem } from './protocols';
 import { ITestResult, TestStatus } from './runners/models';
+import { testItemModel } from './testItemModel';
 import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
-import { testItemModel } from './testItemModel';
 
 class TestReportProvider implements Disposable {
 
@@ -129,10 +129,7 @@ class TestReportProvider implements Disposable {
             passedCount,
             failedCount,
             skippedCount,
-            jqueryUri: Uri.file(path.join(this.resourceBasePath, 'js', 'jquery-3.3.1.slim.min.js')).with({ scheme: 'vscode-resource' }),
-            popperUri: Uri.file(path.join(this.resourceBasePath, 'js', 'popper.min.js')).with({ scheme: 'vscode-resource' }),
-            bootstrapUri: Uri.file(path.join(this.resourceBasePath, 'js', 'bootstrap.min.js')).with({ scheme: 'vscode-resource' }),
-            fontawesomeUri: Uri.file(path.join(this.resourceBasePath, 'css', 'font-awesome.min.css')).with({ scheme: 'vscode-resource' }),
+            resourceBaseUri: Uri.file(path.join(this.resourceBasePath)).with({ scheme: 'vscode-resource' }),
         });
     }
 

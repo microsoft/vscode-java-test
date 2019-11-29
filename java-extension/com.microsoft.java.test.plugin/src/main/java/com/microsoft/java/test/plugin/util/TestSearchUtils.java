@@ -104,7 +104,7 @@ public class TestSearchUtils {
             }).filter(Objects::nonNull).collect(Collectors.toList());
             if (testMethodList.size() > 0) {
                 final TestItem parent = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
-                for (TestItem method : testMethodList) {
+                for (final TestItem method : testMethodList) {
                     resultList.add(method);
                     parent.addChild(method.getId());
                 }
