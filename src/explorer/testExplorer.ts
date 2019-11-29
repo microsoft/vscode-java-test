@@ -5,7 +5,9 @@ import * as path from 'path';
 import { Command, Disposable, Event, EventEmitter, ExtensionContext, Range, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
+import { ITestResult, TestStatus } from '../runners/models';
 import { testItemModel } from '../testItemModel';
+import { testResultManager } from '../testResultManager';
 
 export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     public readonly testExplorerViewId: string = 'testExplorer';
@@ -99,6 +101,21 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     private resolveIconPath(element: ITestItem): undefined | { dark: string | Uri, light: string | Uri } {
         switch (element.level) {
             case TestLevel.Method:
+                const result: ITestResult | undefined = testResultManager.getResultById(element.id);
+                if (result) {
+                    if (result.status === TestStatus.Pass) {
+                        return {
+                            dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'pass.svg')),
+                            light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'pass.svg')),
+                        };
+                    } else if (result.status === TestStatus.Fail) {
+                        return {
+                            dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'error.svg')),
+                            light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'error.svg')),
+                        };
+                    }
+                }
+
                 return {
                     dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'method.svg')),
                     light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'method.svg')),
