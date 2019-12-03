@@ -6,8 +6,8 @@
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/resources/logo.png" width="150" height="150" alt="">
 </p>
 <p align="center">
-  <a href="https://dev.azure.com/mseng/VSJava/_build/latest?definitionId=8790">
-    <img src="https://img.shields.io/azure-devops/build/mseng/a4d27ce2-a42d-4b71-8eef-78cee9a9728e/8790.svg?style=flat-square" alt="">
+  <a href="https://travis-ci.org/microsoft/vscode-java-test/">
+    <img src="https://img.shields.io/travis/microsoft/vscode-java-test?style=flat-square" alt="">
   </a>
   <a href="https://lgtm.com/projects/g/microsoft/vscode-java-test/alerts/?mode=list">
     <img src="https://img.shields.io/lgtm/alerts/g/microsoft/vscode-java-test.svg?style=flat-square" alt="">
@@ -27,6 +27,8 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 - JUnit 4 (v4.8.0+)
 - JUnit 5 (v5.1.0+)
 - TestNG (v6.8.0+)
+
+> Note: JUnit 3 styled tests are not supported in this extension (i.e. extends `junit.framework.TestCase`).
 
 The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test) works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
 
@@ -110,7 +112,6 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 | `java.test.report.position` | Specify where to show the test report. Supported values are: `sideView`, `currentView`. | `sideView` |
 | `java.test.report.showAfterExecution` | Specify if the test report will automatically be shown after execution. Supported values are: `always`, `onFailure`, `never`. | `onFailure` |
 | `java.test.editor.enableShortcuts` | Specify whether to show the Code Lenses in editor or not. | `true` |
-| `java.test.forceBuildBeforeLaunchTest` | Specify whether to force build the workspace before launching the test | `true` |
 | `java.test.log.level` | Specify the level of the test logs. Supported values are: `error`, `info`, `verbose`. | `info` |
 | `java.test.config` | Specify the configuration for the test cases to run with. [More details](https://aka.ms/java-test-config). | `{}` |
 | `java.test.defaultConfig` | Specify the name of the default test configuration. | `""` |
