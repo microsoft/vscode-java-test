@@ -102,7 +102,7 @@ class RunnerScheduler {
                 continue;
             }
             if (!(test.kind in TestKind)) {
-                logger.error(`Unkonwn kind of test item: ${test.fullName}`);
+                logger.error(`Unknown kind of test item: ${test.fullName}`);
                 continue;
             }
             const key: string = `${test.project}/${test.kind}`;
