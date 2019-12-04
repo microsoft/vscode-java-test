@@ -51,7 +51,9 @@ import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 import org.eclipse.lsp4j.Location;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -171,10 +173,8 @@ public class TestSearchUtils {
      */
     public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
             throws CoreException, OperationCanceledException, InterruptedException, URISyntaxException {
-        final List<TestItem> searchResult = new LinkedList<>();
-
         if (arguments == null || arguments.size() == 0) {
-            return searchResult;
+            return Collections.emptyList();
         }
 
         final Gson gson = new Gson();
@@ -204,16 +204,15 @@ public class TestSearchUtils {
                     if (methodItem == null) {
                         return;
                     }
-                    searchResult.add(methodItem);
                     final IType type = (IType) method.getParent();
                     final TestItem classItem = classMap.get(type.getFullyQualifiedName());
                     if (classItem != null) {
                         classItem.addChild(methodItem.getId());
                     } else {
-                        final TestItem newClassItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
+                        final TestItem newClassItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS,
+                                methodItem.getKind());
                         newClassItem.addChild(methodItem.getId());
                         classMap.put(type.getFullyQualifiedName(), newClassItem);
-                        searchResult.add(newClassItem);
                     }
                 } else if (element instanceof IType) {
                     final IType type = (IType) element;
@@ -225,7 +224,6 @@ public class TestSearchUtils {
                         return;
                     }
                     classMap.put(type.getFullyQualifiedName(), item);
-                    searchResult.add((item));
                 }
             }
 
@@ -234,7 +232,7 @@ public class TestSearchUtils {
         new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 scope, requestor, monitor);
 
-        return searchResult;
+        return new ArrayList<TestItem>(classMap.values());
     }
 
     public static List<Location> searchLocation(List<Object> arguments, IProgressMonitor monitor) throws CoreException {
