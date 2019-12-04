@@ -24,6 +24,8 @@ export const DEFAULT_REPORT_SHOW: string = 'onFailure';
 export const HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY: string = 'java.test.message.hintForDeprecatedConfig';
 export const CONFIG_DOCUMENT_URL: string = 'https://aka.ms/java-test-config';
 export const HINT_FOR_DEFAULT_CONFIG_SETTING_KEY: string = 'java.test.message.hintForSetingDefaultConfig';
+export const HINT_FOR_UNSUPPORTED_USAGE_KEY: string = 'java.test.message.hintForUnsupportedUsage';
+export const GETTING_STARTED_URL: string = 'https://aka.ms/test-runner-getting-started';
 
 export enum ReportShowSetting {
     Always = 'always',

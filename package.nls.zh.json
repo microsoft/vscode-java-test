@@ -15,6 +15,7 @@
     "configuration.java.test.log.level.description": "设定日志级别",
     "configuration.java.test.message.hintForDeprecatedConfig.description": "设定插件是否会对使用弃用的配置文件进行提示",
     "configuration.java.test.message.hintForSetingDefaultConfig.description": "设定插件是否会对设置默认测试配置项进行提示",
+    "configuration.java.test.message.hintForUnsupportedUsage.description": "设定插件是否会对不支持的测试用例用法进行提示",
     "configuration.java.test.defaultConfig.description": "设定默认测试配置项的名称",
     "configuration.java.test.config.description": "设定运行测试的配置信息",
     "configuration.java.test.config.item.description": "设定运行测试时所用的配置项",

@@ -6,6 +6,7 @@ import * as fse from 'fs-extra';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { commands, ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { VSCodeCommands } from '../constants/commands';
 import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
 import { LEARN_MORE, NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
@@ -89,7 +90,7 @@ export async function migrateTestConfig(): Promise<void> {
             await window.showTextDocument(document, { preview: false });
         }
     } else if (choice === LEARN_MORE) {
-        commands.executeCommand('vscode.open', Uri.parse(CONFIG_DOCUMENT_URL));
+        commands.executeCommand(VSCodeCommands.OPEN, Uri.parse(CONFIG_DOCUMENT_URL));
     }
 }
 

@@ -2,10 +2,15 @@
 // Licensed under the MIT license.
 
 import { commands } from 'vscode';
+import { IRequirementViolation } from '../commands/checkRequirement';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
 import { IJUnitLaunchArguments } from '../runners/baseRunner/BaseRunner';
+
+export async function checkRequirement(): Promise<IRequirementViolation[]> {
+    return await executeJavaLanguageServerCommand<IRequirementViolation[]>(JavaTestRunnerDelegateCommands.CHECK_REQUIREMENT) || [];
+}
 
 export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
     return await executeJavaLanguageServerCommand<string[]>(

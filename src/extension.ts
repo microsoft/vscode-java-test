@@ -5,8 +5,9 @@ import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { DebugConfiguration, ExtensionContext, Range, Uri, window } from 'vscode';
-import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
+import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperationAsVsCodeCommand, instrumentSimpleOperation } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
+import { checkRequirement } from './commands/checkRequirement';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
@@ -24,8 +25,8 @@ import { testStatusBarProvider } from './testStatusBarProvider';
 import { migrateTestConfig } from './utils/configUtils';
 
 export async function activate(context: ExtensionContext): Promise<void> {
-    await initializeFromJsonFile(context.asAbsolutePath('./package.json'));
-    await instrumentOperation('activation', doActivate)(context);
+    await initializeFromJsonFile(context.asAbsolutePath('./package.json'), true);
+    await instrumentSimpleOperation('activation', doActivate)(context);
 }
 
 export async function deactivate(): Promise<void> {
@@ -33,7 +34,7 @@ export async function deactivate(): Promise<void> {
     await runnerScheduler.cleanUp(false  /* isCancel */);
 }
 
-async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
+async function doActivate(context: ExtensionContext): Promise<void> {
     testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
@@ -65,4 +66,5 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
     );
+    checkRequirement();
 }

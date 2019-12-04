@@ -222,6 +222,12 @@
                     "description": "%configuration.java.test.message.hintForSetingDefaultConfig.description%",
                     "scope": "application"
                 },
+                "java.test.message.hintForUnsupportedUsage": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%configuration.java.test.message.hintForUnsupportedUsage.description%",
+                    "scope": "application"
+                },
                 "java.test.defaultConfig": {
                     "type": "string",
                     "description": "%configuration.java.test.defaultConfig.description%",
@@ -352,7 +358,7 @@
         "iconv-lite": "^0.4.24",
         "lodash": "^4.17.15",
         "pug": "^2.0.4",
-        "vscode-extension-telemetry-wrapper": "^0.3.9",
+        "vscode-extension-telemetry-wrapper": "^0.5.0",
         "winston": "^3.2.1",
         "winston-transport": "^4.3.0"
     }

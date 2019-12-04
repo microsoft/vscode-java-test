@@ -23,6 +23,7 @@ import java.util.List;
 @SuppressWarnings("restriction")
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
+    private static final String CHECK_REQUIREMENT = "vscode.java.test.requirement";
     private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.get.testpath";
     private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
     private static final String SEARCH_TEST_ALL_ITEMS = "vscode.java.test.search.items.all";
@@ -34,6 +35,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
 
         switch (commandId) {
+            case CHECK_REQUIREMENT:
+                return ProjectTestUtils.checkRequirement(monitor);
             case GET_TEST_SOURCE_PATH:
                 return ProjectTestUtils.listTestSourcePaths(arguments, monitor);
             case SEARCH_TEST_ITEMS:

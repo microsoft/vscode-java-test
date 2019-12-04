@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
@@ -36,6 +37,8 @@ import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
 @SuppressWarnings("restriction")
 public final class ProjectTestUtils {
 
+    private static final String NOT_SUPPORT_JUNIT3 = "JUnit 3 styled tests(\"junit.framework.TestCase\") " +
+            "are not supported.";
     private static final String TEST_SCOPE = "test";
     private static final String MAVEN_SCOPE_ATTRIBUTE = "maven.scope";
     private static final String GRADLE_SCOPE_ATTRIBUTE = "gradle_scope";
@@ -143,5 +146,29 @@ public final class ProjectTestUtils {
         }
 
         return false;
+    }
+
+    /**
+     * Check the if there is any project which does not meet the extension's requirment.
+     * So far, we only check if there's any JUnit 3 styled tests.
+     * @param monitor
+     * @return
+     */
+    public static List<RequirementViolation> checkRequirement(IProgressMonitor monitor) {
+        final List<RequirementViolation> violations = new ArrayList<>();
+        for (final IJavaProject jp : ProjectUtils.getJavaProjects()) {
+            if (CoreTestSearchEngine.hasTestCaseType(jp)) {
+                final RequirementViolation violation = new RequirementViolation();
+                violation.projectName = jp.getElementName();
+                violation.violation = NOT_SUPPORT_JUNIT3;
+                violations.add(violation);
+            }
+        }
+        return violations;
+    }
+
+    static class RequirementViolation {
+        public String projectName;
+        public String violation;
     }
 }
