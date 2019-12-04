@@ -25,7 +25,7 @@ import { testStatusBarProvider } from './testStatusBarProvider';
 import { migrateTestConfig } from './utils/configUtils';
 
 export async function activate(context: ExtensionContext): Promise<void> {
-    await initializeFromJsonFile(context.asAbsolutePath('./package.json'), true);
+    await initializeFromJsonFile(context.asAbsolutePath('./package.json'));
     await instrumentSimpleOperation('activation', doActivate)(context);
 }
 
