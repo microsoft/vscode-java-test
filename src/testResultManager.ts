@@ -13,8 +13,8 @@ class TestResultManager implements Disposable {
     public async storeResult(...results: ITestResult[]): Promise<void> {
         for (const result of results) {
             this.testResultMap.set(result.id, result);
-            this.notifyExplorer(result);
         }
+        this.notifyExplorer(...results);
     }
 
     public getResultById(testId: string): ITestResult | undefined {
@@ -29,13 +29,19 @@ class TestResultManager implements Disposable {
         this.testResultMap.clear();
     }
 
-    private notifyExplorer(result: ITestResult): void {
-        const item: ITestItem | undefined = testItemModel.getItemById(result.id);
-        if (item) {
-            const node: ITestItem | undefined = testExplorer.getNodeByFsPath(Uri.parse(item.location.uri).fsPath);
-            if (node) {
-                testExplorer.refresh(node);
+    private notifyExplorer(...results: ITestResult[]): void {
+        const nodeSet: Set<ITestItem> = new Set<ITestItem>();
+        for (const result of results) {
+            const item: ITestItem | undefined = testItemModel.getItemById(result.id);
+            if (item) {
+                const node: ITestItem | undefined = testExplorer.getNodeByFsPath(Uri.parse(item.location.uri).fsPath);
+                if (node) {
+                    nodeSet.add(node);
+                }
             }
+        }
+        for (const node of nodeSet) {
+            testExplorer.refresh(node);
         }
     }
 }
