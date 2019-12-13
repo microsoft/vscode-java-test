@@ -50,6 +50,19 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ![Run/debug JUnit test](demo/demo.gif)
 
+### Getting Started for JUnit 5
+
+Please refer to [Getting Started](https://junit.org/junit5/docs/current/user-guide/#overview-getting-started) from the JUnit 5's official document for getting started guide.
+
+> Note: You can use [junit-platform-console-standalone.jar](https://search.maven.org/search?q=g:org.junit.platform%20AND%20a:junit-platform-console-standalone) in projects that manually manage their dependencies similar to the [plain-old JAR known from JUnit 4](https://github.com/junit-team/junit4/wiki/Download-and-Install#plain-old-jar).
+
+### Getting Started for JUnit 4
+Please refer to [Download and Install](https://github.com/junit-team/junit4/wiki/Download-and-Install) from the JUnit 4's official document for the getting started guide.
+
+### Getting Started for TestNG
+
+Please refer to [TestNG Docs](https://testng.org/doc/) from the TestNG's official document for getting started guide.
+
 ## Features
 
 ### Run/Debug Test Cases

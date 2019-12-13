@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.22.0
+### Added
+- Show test status on test method nodes in Test Explorer. [#890](https://github.com/microsoft/vscode-java-test/pull/890)
+
+### Changed
+- Use Octicon to replace the Emoji for Code Lens. [#845](https://github.com/microsoft/vscode-java-test/issues/845)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.22.0)
+
 ## 0.21.0
 ### Added
 - Support `Collapse All` button in Test Explorer. [PR#848](https://github.com/microsoft/vscode-java-test/pull/848)
