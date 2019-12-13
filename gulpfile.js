@@ -5,7 +5,6 @@ const gulp = require('gulp');
 const cp = require('child_process');
 const tslint = require('gulp-tslint');
 const sass = require('gulp-sass');
-const decompress = require('gulp-decompress');
 const path = require('path');
 const fs = require('fs');
 const remoteSrc = require('gulp-remote-src');

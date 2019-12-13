@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.21.0",
+    "version": "0.22.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -22,7 +22,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.40.0"
+        "vscode": "^1.41.0"
     },
     "categories": [
         "Other"
@@ -46,7 +46,7 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.21.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.22.0.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1000.v20190510-0840.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.500.v20190510-0840.jar",
             "./server/org.junit.jupiter.api_5.4.0.v20190212-2109.jar",
@@ -329,11 +329,10 @@
         "@types/mocha": "^2.2.48",
         "@types/node": "^6.14.7",
         "@types/pug": "^2.0.4",
-        "@types/vscode": "1.40.0",
+        "@types/vscode": "1.41.0",
         "bootstrap": "^4.3.1",
         "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",
-        "gulp-decompress": "^2.0.2",
         "gulp-remote-src": "^0.4.4",
         "gulp-sass": "^4.0.2",
         "gulp-tslint": "^8.1.4",

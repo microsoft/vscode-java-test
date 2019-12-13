@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <bundle id="com.microsoft.java.test.plugin" version="0.21.0"/>
+   <bundle id="com.microsoft.java.test.plugin" version="0.22.0"/>
 </site>
