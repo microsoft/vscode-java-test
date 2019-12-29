@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { DebugConfiguration } from 'vscode';
-import { ITestItem, TestKind, TestLevel } from '../protocols';
+import { TestKind, TestLevel } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { IJUnitLaunchArguments } from '../runners/baseRunner/BaseRunner';
@@ -10,9 +10,9 @@ import { IRunnerContext } from '../runners/models';
 import { resolveJUnitLaunchArguments } from './commandUtils';
 import { randomSequence } from './configUtils';
 
-export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, tests: ITestItem[], runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
-    if (tests[0].kind === TestKind.TestNG) {
-        const testNGArguments: IJUnitLaunchArguments = await getTestNGLaunchArguments(tests[0]);
+export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
+    if (runnerContext.kind === TestKind.TestNG) {
+        const testNGArguments: IJUnitLaunchArguments = await getTestNGLaunchArguments(runnerContext.projectName);
 
         let env: {} = {};
         if (config && config.env) {
@@ -28,7 +28,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             type: 'java',
             request: 'launch',
             mainClass: runner.runnerMainClassName,
-            projectName: tests[0].project,
+            projectName: runnerContext.projectName,
             cwd: config ? config.workingDirectory : undefined,
             classPaths: [...testNGArguments.classpath, await runner.runnerJarFilePath, await runner.runnerLibPath],
             modulePaths: testNGArguments.modulepath,
@@ -39,11 +39,11 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         };
     }
 
-    return await getDebugConfigurationForEclispeRunner(tests[0], runnerContext, config);
+    return await getDebugConfigurationForEclispeRunner(runnerContext, config);
 }
 
-export async function getDebugConfigurationForEclispeRunner(test: ITestItem, runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
-    const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(test, runnerContext);
+export async function getDebugConfigurationForEclispeRunner(runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
+    const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(runnerContext);
 
     if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
@@ -69,7 +69,7 @@ export async function getDebugConfigurationForEclispeRunner(test: ITestItem, run
     };
 }
 
-async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerContext): Promise<IJUnitLaunchArguments> {
+async function getJUnitLaunchArguments(runnerContext: IRunnerContext): Promise<IJUnitLaunchArguments> {
     let className: string = '';
     let methodName: string = '';
 
@@ -77,14 +77,14 @@ async function getJUnitLaunchArguments(test: ITestItem, runnerContext: IRunnerCo
     className = nameArray[0];
     if (nameArray.length > 1) {
         methodName = nameArray[1];
-        if (test.paramTypes.length > 0) {
-            methodName = `${methodName}(${test.paramTypes.join(',')})`;
+        if (runnerContext.paramTypes.length > 0) {
+            methodName = `${methodName}(${runnerContext.paramTypes.join(',')})`;
         }
     }
 
-    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName || test.project, runnerContext.scope, test.kind);
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName, runnerContext.scope, runnerContext.kind);
 }
 
-async function getTestNGLaunchArguments(test: ITestItem): Promise<IJUnitLaunchArguments> {
-    return await resolveJUnitLaunchArguments('', '', '', test.project, TestLevel.Root, test.kind);
+async function getTestNGLaunchArguments(projectName: string): Promise<IJUnitLaunchArguments> {
+    return await resolveJUnitLaunchArguments('', '', '', projectName, TestLevel.Root, TestKind.TestNG);
 }

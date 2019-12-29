@@ -29,7 +29,7 @@ class RunnerScheduler {
         this._context = context;
     }
 
-    public async run(testItems: ITestItem[], runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
+    public async run(runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
             return;
@@ -39,8 +39,10 @@ class RunnerScheduler {
         let finalResults: ITestResult[] = [];
 
         try {
-            this._runnerMap = this.classifyTestsByKind(testItems);
+            this._runnerMap = this.classifyTestsByKind(runnerContext.tests!);
             for (const [runner, tests] of this._runnerMap.entries()) {
+                runnerContext.kind = tests[0].kind;
+                runnerContext.projectName = tests[0].project;
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
                 const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
@@ -51,7 +53,7 @@ class RunnerScheduler {
 
                 await runner.setup(tests);
                 testStatusBarProvider.showRunningTest();
-                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, tests, runnerContext, config));
+                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
                 await testResultManager.storeResult(...results);
                 finalResults.push(...results);
             }

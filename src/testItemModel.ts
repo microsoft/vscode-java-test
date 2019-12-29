@@ -26,15 +26,15 @@ class TestItemModel implements Disposable {
     }
 
     public async getNodeChildren(parent: ITestItem): Promise<ITestItem[]> {
-        const searchParams: ISearchTestItemParams = constructSearchTestItemParams(parent);
+        const searchParams: ISearchTestItemParams = constructSearchTestItemParams(parent.level, parent.fullName, parent.location.uri);
         const responses: ITestItem[] = await searchTestItems(searchParams);
         parent.children = responses.map((child: ITestItem) => child.id);
         this.save([...responses, parent]);
         return responses;
     }
 
-    public async getAllNodes(node: ITestItem): Promise<ITestItem[]> {
-        const searchParam: ISearchTestItemParams = constructSearchTestItemParams(node);
+    public async getAllNodes(level: TestLevel, fullName: string, uri: string): Promise<ITestItem[]> {
+        const searchParam: ISearchTestItemParams = constructSearchTestItemParams(level, fullName, uri);
         const tests: ITestItem[] = await searchTestItemsAll(searchParam);
         this.save(tests);
         return tests;
