@@ -16,7 +16,6 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     // tslint:disable-next-line:member-ordering
     public readonly onDidChangeTreeData: Event<ITestItem | null | undefined> = this.onDidChangeTreeDataEventEmitter.event;
 
-    private fsPathToNodeMapping: Map<string, ITestItem> = new Map<string, ITestItem>();
     private _context: ExtensionContext;
 
     public initialize(context: ExtensionContext): void {
@@ -40,30 +39,14 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
         } else {
             nodes = await testItemModel.getNodeChildren(element);
         }
-        if (element && element.level === TestLevel.Package) {
-            // Only save the first level classes since method and inner classes will have the same uri
-            for (const child of nodes) {
-                if (child.level === TestLevel.Class) {
-                    this.fsPathToNodeMapping.set(Uri.parse(child.location.uri).fsPath, child);
-                }
-            }
-        }
         return nodes.sort((a: ITestItem, b: ITestItem) => a.displayName.localeCompare(b.displayName));
     }
 
     public refresh(element?: ITestItem): void {
-        if (!element) {
-            this.fsPathToNodeMapping.clear();
-        }
         this.onDidChangeTreeDataEventEmitter.fire(element);
     }
 
-    public getNodeByFsPath(fsPath: string): ITestItem | undefined {
-        return this.fsPathToNodeMapping.get(fsPath);
-    }
-
     public dispose(): void {
-        this.fsPathToNodeMapping.clear();
         this.onDidChangeTreeDataEventEmitter.dispose();
     }
 

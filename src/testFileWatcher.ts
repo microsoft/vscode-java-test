@@ -4,7 +4,9 @@
 import { Disposable, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
-import { ITestItem } from './protocols';
+import { ITestItem, TestLevel } from './protocols';
+import { testItemModel } from './testItemModel';
+import { testResultManager } from './testResultManager';
 import { getTestSourcePaths } from './utils/commandUtils';
 
 class TestFileWatcher implements Disposable {
@@ -44,12 +46,21 @@ class TestFileWatcher implements Disposable {
     private registerWatcherListeners(watcher: FileSystemWatcher): void {
         this.disposables.push(
             watcher.onDidChange((uri: Uri) => {
-                const node: ITestItem | undefined = testExplorer.getNodeByFsPath(uri.fsPath);
-                testExplorer.refresh(node);
+                const nodes: ITestItem[] = testItemModel.getItemsByFsPath(uri.fsPath);
+                for (const node of nodes) {
+                    if (node.level === TestLevel.Class) {
+                        testExplorer.refresh(node);
+                    }
+                }
             }),
 
-            watcher.onDidDelete(() => {
-                // TODO: delete entries in test item cache and test result cache
+            watcher.onDidDelete((uri: Uri) => {
+                const nodes: ITestItem[] = testItemModel.getItemsByFsPath(uri.fsPath);
+                for (const node of nodes) {
+                    testItemModel.removeTestItemById(node.id);
+                    testResultManager.removeResultById(node.id);
+                }
+                testItemModel.removeIdMappingByFsPath(uri.fsPath);
                 testExplorer.refresh();
             }),
         );
