@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Disposable, Uri } from 'vscode';
+import { Disposable } from 'vscode';
 import { testExplorer } from './explorer/testExplorer';
-import { ITestItem } from './protocols';
+import { ITestItem, TestLevel } from './protocols';
 import { ITestResult } from './runners/models';
 import { testItemModel } from './testItemModel';
 
@@ -13,35 +13,28 @@ class TestResultManager implements Disposable {
     public async storeResult(...results: ITestResult[]): Promise<void> {
         for (const result of results) {
             this.testResultMap.set(result.id, result);
+            this.notifyExplorer(result.id);
         }
-        this.notifyExplorer(...results);
     }
 
     public getResultById(testId: string): ITestResult | undefined {
         return this.testResultMap.get(testId);
     }
 
-    public removeResultById(testId: string): boolean {
-        return this.testResultMap.delete(testId);
+    public removeResultById(testId: string): void {
+        if (this.testResultMap.delete(testId)) {
+            this.notifyExplorer(testId);
+        }
     }
 
     public dispose(): void {
         this.testResultMap.clear();
     }
 
-    private notifyExplorer(...results: ITestResult[]): void {
-        const nodeSet: Set<ITestItem> = new Set<ITestItem>();
-        for (const result of results) {
-            const item: ITestItem | undefined = testItemModel.getItemById(result.id);
-            if (item) {
-                const node: ITestItem | undefined = testExplorer.getNodeByFsPath(Uri.parse(item.location.uri).fsPath);
-                if (node) {
-                    nodeSet.add(node);
-                }
-            }
-        }
-        for (const node of nodeSet) {
-            testExplorer.refresh(node);
+    private notifyExplorer(id: string): void {
+        const item: ITestItem | undefined = testItemModel.getItemById(id);
+        if (item && item.level === TestLevel.Method) {
+            testExplorer.refresh(item);
         }
     }
 }
