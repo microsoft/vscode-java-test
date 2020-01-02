@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { TestLevel } from '../protocols';
+import { ITestItem, TestKind, TestLevel } from '../protocols';
 
 export interface ITestResult {
     id: string;
@@ -32,6 +32,9 @@ export interface IRunnerContext {
     scope: TestLevel;
     testUri: string;
     fullName: string;
+    paramTypes: string[];
     projectName: string;
     isDebug: boolean;
+    kind: TestKind;
+    tests?: ITestItem[];
 }

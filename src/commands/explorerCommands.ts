@@ -22,60 +22,51 @@ export async function debugTestsFromExplorer(node?: ITestItem, launchConfigurati
 }
 
 async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, launchConfiguration?: DebugConfiguration): Promise<void> {
-    if (!node) {
-        // TODO: Should save necessary information in runnerContext instead of passing the complicated node instance!
-        node = {
-            id: '',
-            displayName: '',
-            fullName: '',
-            children: undefined,
-            kind: TestKind.None,
-            project: '',
-            level: TestLevel.Root,
-            paramTypes: [],
-            location: {
-                uri: '',
-                range: new Range(0, 0, 0, 0),
-            },
-        };
-    }
-
     const runnerContext: IRunnerContext = {
-        scope: node.level,
+        scope: TestLevel.Root,
         testUri: '',
         fullName: '',
+        paramTypes: [],
         projectName: '',
+        kind: TestKind.None,
         isDebug,
     };
-
-    if (node.level === TestLevel.Package || node.level === TestLevel.Class || node.level === TestLevel.Method) {
+    if (node) {
+        runnerContext.scope = node.level;
+        runnerContext.projectName = node.project;
         runnerContext.testUri = Uri.parse(node.location.uri).toString();
-        runnerContext.fullName = node.fullName;
+        if (node.level >= TestLevel.Package) {
+            runnerContext.fullName = node.fullName;
+        }
+        if (node.level === TestLevel.Method) {
+            runnerContext.paramTypes = node.paramTypes;
+        }
     }
-    const tests: ITestItem[] | undefined = await searchTestItems(node);
-    if (!tests) {
+
+    await searchTestItems(runnerContext);
+    if (!runnerContext.tests) {
         logger.info('Test job is canceled.');
         return;
-    } else if (tests.length <= 0) {
+    } else if (runnerContext.tests.length <= 0) {
         logger.info('No test items found.');
         return;
     }
 
-    return runnerScheduler.run(tests, runnerContext, launchConfiguration);
+    return runnerScheduler.run(runnerContext, launchConfiguration);
 }
 
-async function searchTestItems(node: ITestItem): Promise<ITestItem[] | undefined> {
-    return new Promise<ITestItem[] | undefined>((resolve: (result: ITestItem[] | undefined) => void): void => {
+async function searchTestItems(runnerContext: IRunnerContext): Promise<void> {
+    return new Promise<void>((resolve: () => void): void => {
         window.withProgress(
             { location: ProgressLocation.Notification, cancellable: true },
             async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                 progress.report({ message: 'Searching test items...' });
-                token.onCancellationRequested(() => resolve(undefined));
-                const tests: ITestItem[] = await testItemModel.getAllNodes(node);
+                token.onCancellationRequested(resolve);
+                runnerContext.tests = await testItemModel.getAllNodes(runnerContext.scope, runnerContext.fullName, runnerContext.testUri);
                 if (token.isCancellationRequested) {
-                    return resolve(undefined);
+                    return resolve();
                 }
-                return resolve(tests);
+                return resolve();
             },
         );
     });
