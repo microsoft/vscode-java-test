@@ -10,10 +10,12 @@ import * as path from 'path';
 import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } from 'vscode';
 import { LOCAL_HOST } from '../../constants/configs';
 import { logger } from '../../logger/logger';
-import { ITestItem } from '../../protocols';
+import { ITestItem, TestLevel } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
+import { testItemModel } from '../../testItemModel';
+import { testResultManager } from '../../testResultManager';
 import { ITestRunner } from '../ITestRunner';
-import { ITestResult } from '../models';
+import { ITestResult, TestStatus } from '../models';
 import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
 
 export abstract class BaseRunner implements ITestRunner {
@@ -30,9 +32,10 @@ export abstract class BaseRunner implements ITestRunner {
     public async setup(tests: ITestItem[]): Promise<void> {
         await this.startSocketServer();
         this.tests = tests;
+        this.updateTestResultsToRunning(tests);
     }
 
-    public async run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]> {
+    public async run(launchConfiguration: DebugConfiguration): Promise<Set<string>> {
         let data: string = '';
         this.server.on('connection', (socket: Socket) => {
             this.socket = socket;
@@ -68,10 +71,10 @@ export abstract class BaseRunner implements ITestRunner {
         return await debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration).then(async (success: boolean) => {
             if (!success) {
                 this.tearDown();
-                return [];
+                return new Set<string>();
             }
 
-            return await new Promise<ITestResult[]>((resolve: (result: ITestResult[]) => void): void => {
+            return await new Promise<Set<string>>((resolve: (ids: Set<string>) => void): void => {
                 this.disposables.push(
                     debug.onDidTerminateDebugSession((session: DebugSession): void => {
                         if (launchConfiguration.name === session.name) {
@@ -79,7 +82,7 @@ export abstract class BaseRunner implements ITestRunner {
                             if (data.length > 0) {
                                 this.testResultAnalyzer.analyzeData(data);
                             }
-                            return resolve(this.testResultAnalyzer.feedBack());
+                            return resolve(this.testResultAnalyzer.tearDown());
                         }
                     }),
                 );
@@ -87,7 +90,7 @@ export abstract class BaseRunner implements ITestRunner {
         }, ((reason: any): any => {
             logger.error(`${reason}`);
             this.tearDown();
-            return [];
+            return new Set<string>();
         }));
     }
 
@@ -169,6 +172,34 @@ export abstract class BaseRunner implements ITestRunner {
             return fullPath;
         }
         throw new Error(`Failed to find path: ${fullPath}`);
+    }
+
+    private updateTestResultsToRunning(tests: ITestItem[]): void {
+        const ids: string[] = [];
+        for (const test of tests) {
+            this.getTestIds(test, ids);
+        }
+        const runningResults: ITestResult[] = [];
+        for (const id of ids) {
+            runningResults.push({
+                id,
+                status: TestStatus.Running,
+            });
+            testResultManager.storeResult(...runningResults);
+        }
+    }
+
+    private getTestIds(test: ITestItem, ids: string[]): void {
+        if (test.level === TestLevel.Method) {
+            ids.push(test.id);
+        } else if (test.level === TestLevel.Class && test.children) {
+            for (const child of test.children) {
+                const childTest: ITestItem | undefined = testItemModel.getItemById(child);
+                if (childTest) {
+                    this.getTestIds(childTest, ids);
+                }
+            }
+        }
     }
 }
 

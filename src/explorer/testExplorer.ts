@@ -86,16 +86,24 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
             case TestLevel.Method:
                 const result: ITestResult | undefined = testResultManager.getResultById(element.id);
                 if (result) {
-                    if (result.status === TestStatus.Pass) {
-                        return {
-                            dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'pass.svg')),
-                            light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'pass.svg')),
-                        };
-                    } else if (result.status === TestStatus.Fail) {
-                        return {
-                            dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'error.svg')),
-                            light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'error.svg')),
-                        };
+                    switch (result.status) {
+                        case TestStatus.Pass:
+                            return {
+                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'pass.svg')),
+                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'pass.svg')),
+                            };
+                        case TestStatus.Fail:
+                            return {
+                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'error.svg')),
+                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'error.svg')),
+                            };
+                        case TestStatus.Running:
+                            return {
+                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'running.svg')),
+                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'running.svg')),
+                            };
+                        default:
+                            break;
                     }
                 }
 

@@ -2,10 +2,11 @@
 // Licensed under the MIT license.
 
 import { logger } from '../../logger/logger';
-import { ITestOutputData, ITestResult } from '../models';
+import { testResultManager } from '../../testResultManager';
+import { ITestOutputData, ITestResult, TestStatus } from '../models';
 
 export abstract class BaseRunnerResultAnalyzer {
-    protected testResults: Map<string, ITestResult> = new Map<string, ITestResult>();
+    protected testIds: Set<string> = new Set<string>();
     private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/;
 
     constructor(protected projectName: string) {
@@ -32,8 +33,16 @@ export abstract class BaseRunnerResultAnalyzer {
         }
     }
 
-    public feedBack(): ITestResult[] {
-        return Array.from(this.testResults.values());
+    public tearDown(): Set<string> {
+        for (const id of this.testIds) {
+            const result: ITestResult | undefined = testResultManager.getResultById(id);
+            // In case that unexpected errors terminate the execution
+            if (result && result.status === TestStatus.Running) {
+                result.status = undefined;
+                testResultManager.storeResult(result);
+            }
+        }
+        return this.testIds;
     }
 
     protected processData(data: string): void {
