@@ -73,12 +73,12 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "java.test.explorer.run",
+                    "command": "java.test.explorer.runAll",
                     "when": "view == testExplorer",
                     "group": "navigation@0"
                 },
                 {
-                    "command": "java.test.explorer.debug",
+                    "command": "java.test.explorer.debugAll",
                     "when": "view == testExplorer",
                     "group": "navigation@1"
                 },
@@ -103,6 +103,16 @@
                     "command": "java.test.explorer.refresh",
                     "when": "view == testExplorer",
                     "group": "testExplorer@4"
+                },
+                {
+                    "command": "java.test.explorer.run",
+                    "when": "view == testExplorer",
+                    "group": "inline@0"
+                },
+                {
+                    "command": "java.test.explorer.debug",
+                    "when": "view == testExplorer",
+                    "group": "inline@1"
                 }
             ],
             "commandPalette": [
@@ -143,6 +153,24 @@
             {
                 "command": "java.test.explorer.debug",
                 "title": "%contributes.commands.java.test.explorer.debug.title%",
+                "icon": {
+                    "light": "resources/media/light/debug.svg",
+                    "dark": "resources/media/dark/debug.svg"
+                },
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.runAll",
+                "title": "%contributes.commands.java.test.explorer.runAll.title%",
+                "icon": {
+                    "light": "resources/media/light/run-all.svg",
+                    "dark": "resources/media/dark/run-all.svg"
+                },
+                "category": "Java"
+            },
+            {
+                "command": "java.test.explorer.debugAll",
+                "title": "%contributes.commands.java.test.explorer.debugAll.title%",
                 "icon": {
                     "light": "resources/media/light/debug.svg",
                     "dark": "resources/media/dark/debug.svg"
