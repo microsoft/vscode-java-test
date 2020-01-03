@@ -119,10 +119,10 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
         const failNum: number = results.filter((result: ITestResult | undefined) => result && result.status === TestStatus.Fail).length;
         if (failNum > 0) {
             return '$(x)';
-        } else if (passNum === results.length) {
-            return '$(check)';
         } else if (passNum === 0) {
             return '';
+        } else if (passNum === results.length) {
+            return '$(check)';
         }
 
         return '?';

@@ -3,10 +3,9 @@
 
 import { DebugConfiguration } from 'vscode';
 import { ITestItem } from '../protocols';
-import { ITestResult } from './models';
 
 export interface ITestRunner {
     setup(tests: ITestItem[]): Promise<void>;
-    run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]>;
+    run(launchConfiguration: DebugConfiguration): Promise<Set<string>>;
     tearDown(isCancel: boolean): Promise<void>;
 }

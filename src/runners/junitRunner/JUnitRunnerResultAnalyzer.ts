@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { logger } from '../../logger/logger';
+import { testResultManager } from '../../testResultManager';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
 import { ITestResult, TestStatus } from '../models';
 
@@ -28,42 +29,44 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
             if (!testId) {
                 return;
             }
+            this.currentTestItem = testId;
+            this.testIds.add(testId);
 
-            let result: ITestResult | undefined = this.testResults.get(testId);
-            const start: number = Date.now();
+            let result: ITestResult | undefined = testResultManager.getResultById(testId);
             if (!result) {
-                this.currentTestItem = testId;
                 result = {
                     id: testId,
-                    status: undefined,
+                    status: TestStatus.Running,
                 };
-                if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
-                    result.status = TestStatus.Skip;
-                } else {
-                    result.duration = -start;
-                }
-                this.testResults.set(testId, result);
-            } else if (result.duration !== undefined) {
+            }
+            const start: number = Date.now();
+            if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
+                result.status = TestStatus.Skip;
+            } else if (result.duration === undefined) {
+                result.duration = -start;
+            } else if (result.duration >= 0) {
                 // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
                 result.duration -= start;
             }
+            testResultManager.storeResult(result);
         } else if (data.startsWith(MessageId.TestEnd)) {
             const testId: string = this.getTestId(data);
             if (testId) {
-                const finishedResult: ITestResult | undefined = this.testResults.get(testId);
+                const finishedResult: ITestResult | undefined = testResultManager.getResultById(testId);
                 if (!finishedResult) {
                     return;
                 }
-                if (!finishedResult.status) {
+                if (finishedResult.status === TestStatus.Running) {
                     finishedResult.status = TestStatus.Pass;
                 }
-                getElapsedTime(finishedResult);
+                updateElapsedTime(finishedResult);
+                testResultManager.storeResult(finishedResult);
             }
         } else if (data.startsWith(MessageId.TestFailed) || data.startsWith(MessageId.TestError)) {
             const testId: string = this.getTestId(data);
             if (testId) {
                 this.currentTestItem = testId;
-                const failedResult: ITestResult | undefined = this.testResults.get(testId);
+                const failedResult: ITestResult | undefined = testResultManager.getResultById(testId);
                 if (!failedResult) {
                     return;
                 }
@@ -72,18 +75,20 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                     return;
                 }
                 failedResult.status = TestStatus.Fail;
-                getElapsedTime(failedResult);
+                updateElapsedTime(failedResult);
+                testResultManager.storeResult(failedResult);
             }
         } else if (data.startsWith(MessageId.TraceStart)) {
             this.traces = '';
             this.isRecordingTraces = true;
         } else if (data.startsWith(MessageId.TraceEnd)) {
-            const failedResult: ITestResult | undefined = this.testResults.get(this.currentTestItem);
+            const failedResult: ITestResult | undefined = testResultManager.getResultById(this.currentTestItem);
             if (!failedResult) {
                 return;
             }
             failedResult.trace = this.traces;
             this.isRecordingTraces = false;
+            testResultManager.storeResult(failedResult);
         } else if (this.isRecordingTraces) {
             this.traces += data + '\n';
         }
@@ -101,7 +106,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     }
 }
 
-function getElapsedTime(result: ITestResult): void {
+function updateElapsedTime(result: ITestResult): void {
     if (result.duration && result.duration < 0) {
         const end: number = Date.now();
         result.duration += end;

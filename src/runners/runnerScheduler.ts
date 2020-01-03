@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as _ from 'lodash';
 import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
@@ -36,7 +35,7 @@ class RunnerScheduler {
         }
 
         this._isRunning = true;
-        let finalResults: ITestResult[] = [];
+        let allIds: Set<string> = new Set<string>();
 
         try {
             this._runnerMap = this.classifyTestsByKind(runnerContext.tests!);
@@ -53,11 +52,10 @@ class RunnerScheduler {
 
                 await runner.setup(tests);
                 testStatusBarProvider.showRunningTest();
-                const results: ITestResult[] = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
-                await testResultManager.storeResult(...results);
-                finalResults.push(...results);
+                const ids: Set<string> = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
+                allIds = new Set([...allIds, ...ids]);
             }
-            finalResults = _.uniqBy(finalResults, 'id');
+            const finalResults: ITestResult[] = testResultManager.getResultsByIds(Array.from(allIds));
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);

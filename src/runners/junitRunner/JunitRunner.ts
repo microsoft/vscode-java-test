@@ -4,12 +4,11 @@
 import { DebugConfiguration } from 'vscode';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestResult } from '../models';
 import { JUnitRunnerResultAnalyzer } from './JUnitRunnerResultAnalyzer';
 
 export class JUnitRunner extends BaseRunner {
 
-    public async run(launchConfiguration: DebugConfiguration): Promise<ITestResult[]> {
+    public async run(launchConfiguration: DebugConfiguration): Promise<Set<string>> {
         if (launchConfiguration.args) {
             // We need to replace the socket port number since the socket is established from the client side.
             // The port number returned from the server side is a fake one.

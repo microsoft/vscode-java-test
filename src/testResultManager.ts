@@ -21,6 +21,17 @@ class TestResultManager implements Disposable {
         return this.testResultMap.get(testId);
     }
 
+    public getResultsByIds(testIds: string[]): ITestResult[] {
+        const results: ITestResult[] = [];
+        for (const id of testIds) {
+            const storedResult: ITestResult | undefined = this.testResultMap.get(id);
+            if (storedResult) {
+                results.push(storedResult);
+            }
+        }
+        return results;
+    }
+
     public removeResultById(testId: string): void {
         if (this.testResultMap.delete(testId)) {
             this.notifyExplorer(testId);
