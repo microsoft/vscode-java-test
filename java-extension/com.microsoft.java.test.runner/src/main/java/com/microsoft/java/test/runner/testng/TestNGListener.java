@@ -17,11 +17,12 @@ import org.testng.ISuite;
 import org.testng.ISuiteListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
+import org.testng.ITestNGListener;
 import org.testng.ITestResult;
 
 import java.util.Collection;
 
-public class TestNGListener implements ISuiteListener, ITestListener {
+public class TestNGListener implements ISuiteListener, ITestListener, ITestNGListener {
 
     @Override
     public void onTestStart(ITestResult result) {
