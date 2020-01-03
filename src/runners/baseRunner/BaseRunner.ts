@@ -31,8 +31,12 @@ export abstract class BaseRunner implements ITestRunner {
 
     public async setup(tests: ITestItem[]): Promise<void> {
         await this.startSocketServer();
-        this.tests = tests;
-        this.updateTestResultsToRunning(tests);
+        const flattenedTests: ITestItem[] = [];
+        for (const test of tests) {
+            this.flattenTestItems(test, flattenedTests);
+        }
+        this.tests = flattenedTests;
+        this.updateTestResultsToRunning();
     }
 
     public async run(launchConfiguration: DebugConfiguration): Promise<Set<string>> {
@@ -71,7 +75,7 @@ export abstract class BaseRunner implements ITestRunner {
         return await debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration).then(async (success: boolean) => {
             if (!success) {
                 this.tearDown();
-                return new Set<string>();
+                return this.testResultAnalyzer.tearDown();
             }
 
             return await new Promise<Set<string>>((resolve: (ids: Set<string>) => void): void => {
@@ -90,11 +94,19 @@ export abstract class BaseRunner implements ITestRunner {
         }, ((reason: any): any => {
             logger.error(`${reason}`);
             this.tearDown();
-            return new Set<string>();
+            return this.testResultAnalyzer.tearDown();
         }));
     }
 
     public async tearDown(): Promise<void> {
+        for (const test of this.tests) {
+            const result: ITestResult | undefined = testResultManager.getResultById(test.id);
+            // In case that unexpected errors terminate the execution
+            if (result && result.status === TestStatus.Running) {
+                result.status = undefined;
+                testResultManager.storeResult(result);
+            }
+        }
         try {
             if (this.socket) {
                 this.socket.removeAllListeners();
@@ -174,29 +186,25 @@ export abstract class BaseRunner implements ITestRunner {
         throw new Error(`Failed to find path: ${fullPath}`);
     }
 
-    private updateTestResultsToRunning(tests: ITestItem[]): void {
-        const ids: string[] = [];
-        for (const test of tests) {
-            this.getTestIds(test, ids);
-        }
+    private updateTestResultsToRunning(): void {
         const runningResults: ITestResult[] = [];
-        for (const id of ids) {
+        for (const test of this.tests) {
             runningResults.push({
-                id,
+                id: test.id,
                 status: TestStatus.Running,
             });
-            testResultManager.storeResult(...runningResults);
         }
+        testResultManager.storeResult(...runningResults);
     }
 
-    private getTestIds(test: ITestItem, ids: string[]): void {
+    private flattenTestItems(test: ITestItem, flattenedItems: ITestItem[]): void {
         if (test.level === TestLevel.Method) {
-            ids.push(test.id);
+            flattenedItems.push(test);
         } else if (test.level === TestLevel.Class && test.children) {
             for (const child of test.children) {
-                const childTest: ITestItem | undefined = testItemModel.getItemById(child);
-                if (childTest) {
-                    this.getTestIds(childTest, ids);
+                const childItem: ITestItem | undefined = testItemModel.getItemById(child);
+                if (childItem) {
+                    this.flattenTestItems(childItem, flattenedItems);
                 }
             }
         }

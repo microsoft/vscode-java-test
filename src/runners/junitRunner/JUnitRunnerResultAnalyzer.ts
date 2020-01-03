@@ -29,26 +29,26 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
             if (!testId) {
                 return;
             }
+            this.currentTestItem = testId;
             this.testIds.add(testId);
 
             let result: ITestResult | undefined = testResultManager.getResultById(testId);
-            const start: number = Date.now();
             if (!result) {
-                this.currentTestItem = testId;
                 result = {
                     id: testId,
                     status: TestStatus.Running,
                 };
-                if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
-                    result.status = TestStatus.Skip;
-                } else {
-                    result.duration = -start;
-                }
-                testResultManager.storeResult(result);
-            } else if (result.duration !== undefined) {
+            }
+            const start: number = Date.now();
+            if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
+                result.status = TestStatus.Skip;
+            } else if (result.duration === undefined) {
+                result.duration = -start;
+            } else if (result.duration >= 0) {
                 // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
                 result.duration -= start;
             }
+            testResultManager.storeResult(result);
         } else if (data.startsWith(MessageId.TestEnd)) {
             const testId: string = this.getTestId(data);
             if (testId) {
