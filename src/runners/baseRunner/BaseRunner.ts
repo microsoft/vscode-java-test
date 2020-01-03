@@ -35,7 +35,8 @@ export abstract class BaseRunner implements ITestRunner {
         for (const test of tests) {
             this.flattenTestItems(test, flattenedTests);
         }
-        this.tests = flattenedTests;
+        // length of flattenedTests might be 0 when its running @Suite.SuiteClasses
+        this.tests = flattenedTests.length === 0 ? tests : flattenedTests;
         this.updateTestResultsToRunning();
     }
 
