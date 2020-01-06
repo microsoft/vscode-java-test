@@ -12,6 +12,7 @@
 package com.microsoft.java.test.runner.testng;
 
 import org.testng.ITestListener;
+import org.testng.ITestNGListener;
 import org.testng.TestNG;
 import org.testng.xml.XmlClass;
 import org.testng.xml.XmlInclude;
@@ -32,8 +33,14 @@ public class TestNGRunner {
 
         final TestNG testNG = new TestNG();
         testNG.setUseDefaultListeners(false);
-        final ITestListener listener = new TestNGListener();
-        testNG.addListener(listener);
+        final ITestNGListener listener = new TestNGListener();
+        try {
+            testNG.addListener(listener);
+        } catch (NoSuchMethodError e) {
+            // backward compatibility
+            testNG.addListener((ITestListener) listener);
+        }
+        
         testNG.setXmlSuites(Collections.singletonList(suite));
         testNG.run();
     }
