@@ -6,6 +6,7 @@ import * as fse from 'fs-extra';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { commands, ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
 import { LEARN_MORE, NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
 import { logger } from '../logger/logger';
@@ -18,36 +19,36 @@ export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined
     }
 
     const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(CONFIG_SETTING_KEY, {});
+    const configItems: IExecutionConfig[] = [];
     if (!_.isEmpty(configSetting)) {
-        // Use the new config schema
-        const configItems: IExecutionConfig[] = [];
         if (_.isArray(configSetting)) {
             configItems.push(...configSetting);
         } else if (_.isPlainObject(configSetting)) {
             configItems.push(configSetting);
         }
-
-        const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
-        if (defaultConfigName) {
-            if (defaultConfigName === BUILTIN_CONFIG_NAME) {
-                return getBuiltinConfig();
-            }
-            const defaultConfigs: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
-                return config.name === defaultConfigName;
-            });
-            if (defaultConfigs.length === 0) {
-                window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, use the built-in configuration instead.`);
-                return getBuiltinConfig();
-            } else if (defaultConfigs.length > 1) {
-                window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, use the built-in configuration instead.`);
-                return getBuiltinConfig();
-            } else {
-                return defaultConfigs[0];
-            }
-        }
-        return await selectQuickPick(configItems, workspaceFolder);
     }
-    return getBuiltinConfig();
+
+    const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
+    if (defaultConfigName) {
+        if (defaultConfigName === BUILTIN_CONFIG_NAME) {
+            sendInfo('', { usingDefaultConfig: 1 });
+            return getBuiltinConfig();
+        }
+
+        const defaultConfigs: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
+            return config.name === defaultConfigName;
+        });
+        if (defaultConfigs.length === 0) {
+            window.showWarningMessage(`Failed to find the default configuration item: ${defaultConfigName}, use the empty configuration instead.`);
+            return {};
+        } else if (defaultConfigs.length > 1) {
+            window.showWarningMessage(`More than one configuration item found with name: ${defaultConfigName}, use the empty configuration instead.`);
+            return {};
+        } else {
+            return defaultConfigs[0];
+        }
+    }
+    return await selectQuickPick(configItems, workspaceFolder);
 }
 
 export async function migrateTestConfig(): Promise<void> {
@@ -81,7 +82,7 @@ export async function migrateTestConfig(): Promise<void> {
     } else if (choice === OPEN_SETTING) {
         for (const config of selectedConfig) {
             const settingUri: Uri = Uri.file(path.join(config, '..', 'settings.json'));
-            if (await !fse.existsSync(settingUri.fsPath)) {
+            if (!await fse.pathExists(settingUri.fsPath)) {
                 logger.error(`workspace setting not found: ${settingUri.fsPath}`);
                 continue;
             }
@@ -94,17 +95,15 @@ export async function migrateTestConfig(): Promise<void> {
 }
 
 async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
+    if (configs.length === 0) {
+        return {};
+    }
+
     interface IRunConfigQuickPick extends QuickPickItem {
         item: IExecutionConfig;
     }
 
     const choices: IRunConfigQuickPick[] = [];
-    const newBuiltinConfig: IExecutionConfig = getBuiltinConfig();
-    choices.push({
-        label: 'Built-in Configuration',
-        detail: JSON.stringify(newBuiltinConfig),
-        item: newBuiltinConfig,
-    });
     for (let i: number = 0; i < configs.length; i++) {
         const label: string = configs[i].name ? configs[i].name! : `Configuration #${i + 1}`;
         choices.push({

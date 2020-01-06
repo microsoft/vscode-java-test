@@ -41,13 +41,13 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     configuration, launch, mode, new NullProgressMonitor());
             final IJavaProject javaProject = getJavaProject(configuration);
             final JUnitLaunchArguments launchArguments = new JUnitLaunchArguments();
+            launchArguments.workingDirectory = config.getWorkingDirectory();
             launchArguments.mainClass = config.getClassToLaunch();
             launchArguments.projectName = javaProject.getProject().getName();
             launchArguments.classpath = config.getClassPath();
             launchArguments.modulepath = config.getModulepath();
             launchArguments.vmArguments = getVmArguments(config);
             launchArguments.programArguments = config.getProgramArguments();
-
             return launchArguments;
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException |
                 InvocationTargetException e) {
@@ -70,6 +70,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     }
 
     public static class JUnitLaunchArguments {
+        String workingDirectory;
         String mainClass;
         String projectName;
         String[] classpath;
