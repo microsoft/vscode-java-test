@@ -100,14 +100,17 @@ export abstract class BaseRunner implements ITestRunner {
     }
 
     public async tearDown(): Promise<void> {
-        for (const test of this.tests) {
-            const result: ITestResult | undefined = testResultManager.getResultById(test.id);
-            // In case that unexpected errors terminate the execution
-            if (result && result.status === TestStatus.Running) {
-                result.status = undefined;
-                testResultManager.storeResult(result);
+        if (this.tests) {
+            for (const test of this.tests) {
+                const result: ITestResult | undefined = testResultManager.getResultById(test.id);
+                // In case that unexpected errors terminate the execution
+                if (result && result.status === TestStatus.Running) {
+                    result.status = undefined;
+                    testResultManager.storeResult(result);
+                }
             }
         }
+
         try {
             if (this.socket) {
                 this.socket.removeAllListeners();
@@ -213,6 +216,7 @@ export abstract class BaseRunner implements ITestRunner {
 }
 
 export interface IJUnitLaunchArguments {
+    workingDirectory: string;
     mainClass: string;
     projectName: string;
     classpath: string[];
