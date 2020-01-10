@@ -37,5 +37,5 @@ export interface IRunnerContext {
     projectName: string;
     isDebug: boolean;
     kind: TestKind;
-    tests?: ITestItem[];
+    tests: ITestItem[];
 }

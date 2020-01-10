@@ -38,7 +38,7 @@ class RunnerScheduler {
         let allIds: Set<string> = new Set<string>();
 
         try {
-            this._runnerMap = this.classifyTestsByKind(runnerContext.tests!);
+            this._runnerMap = this.classifyTestsByKind(runnerContext.tests);
             for (const [runner, tests] of this._runnerMap.entries()) {
                 runnerContext.kind = tests[0].kind;
                 runnerContext.projectName = tests[0].project;
@@ -50,7 +50,7 @@ class RunnerScheduler {
                     continue;
                 }
 
-                await runner.setup(tests);
+                await runner.setup(runnerContext);
                 testStatusBarProvider.showRunningTest();
                 const ids: Set<string> = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
                 allIds = new Set([...allIds, ...ids]);

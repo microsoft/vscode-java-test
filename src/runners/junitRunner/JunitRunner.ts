@@ -25,7 +25,7 @@ export class JUnitRunner extends BaseRunner {
 
     protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
         if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new JUnitRunnerResultAnalyzer(this.tests[0].project);
+            this.runnerResultAnalyzer = new JUnitRunnerResultAnalyzer(this.context.projectName);
         }
         return this.runnerResultAnalyzer;
     }

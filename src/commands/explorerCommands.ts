@@ -30,6 +30,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
         projectName: '',
         kind: TestKind.None,
         isDebug,
+        tests: [],
     };
     if (node) {
         runnerContext.scope = node.level;
