@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { DebugConfiguration } from 'vscode';
-import { ITestItem } from '../protocols';
+import { IRunnerContext } from './models';
 
 export interface ITestRunner {
-    setup(tests: ITestItem[]): Promise<void>;
+    setup(context: IRunnerContext): Promise<void>;
     run(launchConfiguration: DebugConfiguration): Promise<Set<string>>;
     tearDown(isCancel: boolean): Promise<void>;
 }

@@ -12,14 +12,14 @@ import { LOCAL_HOST } from '../../constants/configs';
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
-import { testItemModel } from '../../testItemModel';
 import { testResultManager } from '../../testResultManager';
 import { ITestRunner } from '../ITestRunner';
-import { ITestResult, TestStatus } from '../models';
+import { IRunnerContext, ITestResult, TestStatus } from '../models';
 import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
 
 export abstract class BaseRunner implements ITestRunner {
-    protected tests: ITestItem[];
+    protected testIds: string[];
+    protected context: IRunnerContext;
     protected server: Server;
     protected socket: Socket;
     protected runnerResultAnalyzer: BaseRunnerResultAnalyzer;
@@ -29,14 +29,14 @@ export abstract class BaseRunner implements ITestRunner {
     constructor(
         protected extensionPath: string) {}
 
-    public async setup(tests: ITestItem[]): Promise<void> {
+    public async setup(context: IRunnerContext): Promise<void> {
+        this.context = context;
         await this.startSocketServer();
-        const flattenedTests: ITestItem[] = [];
-        for (const test of tests) {
-            this.flattenTestItems(test, flattenedTests);
+        const flattenedTestIds: string[] = [];
+        for (const test of context.tests) {
+            this.flattenTestIds(test, flattenedTestIds);
         }
-        // length of flattenedTests might be 0 when its running @Suite.SuiteClasses
-        this.tests = flattenedTests.length === 0 ? tests : flattenedTests;
+        this.testIds = flattenedTestIds;
         this.updateTestResultsToRunning();
     }
 
@@ -70,7 +70,7 @@ export abstract class BaseRunner implements ITestRunner {
         // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
 
-        const uri: Uri = Uri.parse(this.tests[0].location.uri);
+        const uri: Uri = Uri.parse(this.context.tests[0].location.uri);
         logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
 
         return await debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration).then(async (success: boolean) => {
@@ -100,14 +100,12 @@ export abstract class BaseRunner implements ITestRunner {
     }
 
     public async tearDown(): Promise<void> {
-        if (this.tests) {
-            for (const test of this.tests) {
-                const result: ITestResult | undefined = testResultManager.getResultById(test.id);
-                // In case that unexpected errors terminate the execution
-                if (result && result.status === TestStatus.Running) {
-                    result.status = undefined;
-                    testResultManager.storeResult(result);
-                }
+        for (const id of this.testIds) {
+            const result: ITestResult | undefined = testResultManager.getResultById(id);
+            // In case that unexpected errors terminate the execution
+            if (result && result.status === TestStatus.Running) {
+                result.status = undefined;
+                testResultManager.storeResult(result);
             }
         }
 
@@ -192,24 +190,28 @@ export abstract class BaseRunner implements ITestRunner {
 
     private updateTestResultsToRunning(): void {
         const runningResults: ITestResult[] = [];
-        for (const test of this.tests) {
+        for (const id of this.testIds) {
             runningResults.push({
-                id: test.id,
+                id,
                 status: TestStatus.Running,
             });
         }
         testResultManager.storeResult(...runningResults);
     }
 
-    private flattenTestItems(test: ITestItem, flattenedItems: ITestItem[]): void {
+    /**
+     * Add all of the method IDs into `flattenedItemIds`. No need to recursively call this method,
+     * since the input `test` is not tree-like
+     */
+    private flattenTestIds(test: ITestItem, flattenedItemIds: string[]): void {
         if (test.level === TestLevel.Method) {
-            flattenedItems.push(test);
-        } else if (test.level === TestLevel.Class && test.children) {
-            for (const child of test.children) {
-                const childItem: ITestItem | undefined = testItemModel.getItemById(child);
-                if (childItem) {
-                    this.flattenTestItems(childItem, flattenedItems);
-                }
+            flattenedItemIds.push(test.id);
+        } else if (test.level === TestLevel.Class) {
+            if (test.children) {
+                flattenedItemIds.push(...test.children);
+            } else {
+                // for JUnit 4's @Suite.SuiteClasses
+                flattenedItemIds.push(test.id);
             }
         }
     }
