@@ -42,6 +42,7 @@ class RunnerScheduler {
             for (const [runner, tests] of this._runnerMap.entries()) {
                 runnerContext.kind = tests[0].kind;
                 runnerContext.projectName = tests[0].project;
+                runnerContext.tests = tests;
                 // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
                 const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
