@@ -102,6 +102,11 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
                                 dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'running.svg')),
                                 light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'running.svg')),
                             };
+                        case TestStatus.Pending:
+                            return {
+                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'pending.svg')),
+                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'pending.svg')),
+                            };
                         default:
                             break;
                     }
