@@ -38,6 +38,8 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                     id: testId,
                     status: TestStatus.Running,
                 };
+            } else if (result.status === TestStatus.Pending) {
+                result.status = TestStatus.Running;
             }
             const start: number = Date.now();
             if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {

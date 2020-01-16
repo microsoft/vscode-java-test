@@ -13,6 +13,7 @@ export interface ITestResult {
 }
 
 export enum TestStatus {
+    Pending = 'Pending',
     Running = 'Running',
     Pass = 'Pass',
     Fail = 'Fail',

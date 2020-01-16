@@ -37,7 +37,7 @@ export abstract class BaseRunner implements ITestRunner {
             this.flattenTestIds(test, flattenedTestIds);
         }
         this.testIds = flattenedTestIds;
-        this.updateTestResultsToRunning();
+        this.updateTestResultsToPending();
     }
 
     public async run(launchConfiguration: DebugConfiguration): Promise<Set<string>> {
@@ -103,7 +103,7 @@ export abstract class BaseRunner implements ITestRunner {
         for (const id of this.testIds) {
             const result: ITestResult | undefined = testResultManager.getResultById(id);
             // In case that unexpected errors terminate the execution
-            if (result && result.status === TestStatus.Running) {
+            if (result && (result.status === TestStatus.Pending || result.status === TestStatus.Running)) {
                 result.status = undefined;
                 testResultManager.storeResult(result);
             }
@@ -188,12 +188,12 @@ export abstract class BaseRunner implements ITestRunner {
         throw new Error(`Failed to find path: ${fullPath}`);
     }
 
-    private updateTestResultsToRunning(): void {
+    private updateTestResultsToPending(): void {
         const runningResults: ITestResult[] = [];
         for (const id of this.testIds) {
             runningResults.push({
                 id,
-                status: TestStatus.Running,
+                status: TestStatus.Pending,
             });
         }
         testResultManager.storeResult(...runningResults);
