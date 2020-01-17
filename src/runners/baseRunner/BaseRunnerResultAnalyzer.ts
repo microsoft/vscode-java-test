@@ -37,7 +37,7 @@ export abstract class BaseRunnerResultAnalyzer {
         for (const id of this.testIds) {
             const result: ITestResult | undefined = testResultManager.getResultById(id);
             // In case that unexpected errors terminate the execution
-            if (result && (!result.status || result.status === TestStatus.Running)) {
+            if (result && (!result.status || result.status === TestStatus.Pending || result.status === TestStatus.Running)) {
                 testResultManager.removeResultById(id);
                 this.testIds.delete(id);
             }
