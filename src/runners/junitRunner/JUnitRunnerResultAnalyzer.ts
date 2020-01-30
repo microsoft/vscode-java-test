@@ -64,7 +64,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 updateElapsedTime(finishedResult);
                 testResultManager.storeResult(finishedResult);
             }
-        } else if (data.startsWith(MessageId.TestFailed) || data.startsWith(MessageId.TestError)) {
+        } else if (data.startsWith(MessageId.TestFailed)) {
             const testId: string = this.getTestId(data);
             if (testId) {
                 this.currentTestItem = testId;
@@ -79,6 +79,17 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 failedResult.status = TestStatus.Fail;
                 updateElapsedTime(failedResult);
                 testResultManager.storeResult(failedResult);
+            }
+        } else if (data.startsWith(MessageId.TestError)) {
+            const testId: string = this.getTestId(data);
+            if (testId) {
+                this.currentTestItem = testId;
+                const errorResult: ITestResult = {
+                    id: testId,
+                    status: TestStatus.Fail,
+                };
+                testResultManager.storeResult(errorResult);
+                this.testIds.add(testId);
             }
         } else if (data.startsWith(MessageId.TraceStart)) {
             this.traces = '';
@@ -98,13 +109,19 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
 
     protected getTestId(message: string): string {
         const regexp: RegExp = /\d+,(@AssumptionFailure: |@Ignore: )?(.*?)\((.*?)\)/;
-        const matchResults: RegExpExecArray | null = regexp.exec(message); {
-            if (!matchResults || matchResults.length < 4) {
-                logger.error(`Failed to parse the message: ${message}`);
-                return '';
-            }
+        const matchResults: RegExpExecArray | null = regexp.exec(message);
+        if (matchResults && matchResults.length === 4) {
             return `${this.projectName}@${matchResults[3]}#${matchResults[2]}`;
         }
+
+        // `%ERROR` case
+        const indexOfSpliter: number = message.lastIndexOf(',');
+        if (indexOfSpliter > -1) {
+            return `${this.projectName}@${message.slice(indexOfSpliter + 1)}#TestError`;
+        }
+
+        logger.error(`Failed to parse the message: ${message}`);
+        return '';
     }
 }
 
