@@ -64,31 +64,20 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 updateElapsedTime(finishedResult);
                 testResultManager.storeResult(finishedResult);
             }
-        } else if (data.startsWith(MessageId.TestFailed)) {
+        } else if (data.startsWith(MessageId.TestFailed) || data.startsWith(MessageId.TestError)) {
             const testId: string = this.getTestId(data);
             if (testId) {
                 this.currentTestItem = testId;
-                const failedResult: ITestResult | undefined = testResultManager.getResultById(testId);
-                if (!failedResult) {
-                    return;
-                }
+                const failedResult: ITestResult = Object.assign({}, testResultManager.getResultById(testId), {
+                    id: testId,
+                    status: TestStatus.Fail,
+                });
                 if (data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1) {
                     failedResult.status = TestStatus.Skip;
                     return;
                 }
-                failedResult.status = TestStatus.Fail;
                 updateElapsedTime(failedResult);
                 testResultManager.storeResult(failedResult);
-            }
-        } else if (data.startsWith(MessageId.TestError)) {
-            const testId: string = this.getTestId(data);
-            if (testId) {
-                this.currentTestItem = testId;
-                const errorResult: ITestResult = {
-                    id: testId,
-                    status: TestStatus.Fail,
-                };
-                testResultManager.storeResult(errorResult);
                 this.testIds.add(testId);
             }
         } else if (data.startsWith(MessageId.TraceStart)) {
@@ -114,7 +103,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
             return `${this.projectName}@${matchResults[3]}#${matchResults[2]}`;
         }
 
-        // `%ERROR` case
+        // In case the output is class level, i.e.: `%ERROR 2,a.class.FullyQualifiedName`
         const indexOfSpliter: number = message.lastIndexOf(',');
         if (indexOfSpliter > -1) {
             return `${this.projectName}@${message.slice(indexOfSpliter + 1)}#TestError`;
