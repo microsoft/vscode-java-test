@@ -100,6 +100,31 @@ suite('Code Lens Tests', function() {
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
     });
 
+    test("Handle exception thrown in methods annotated with @Before", async function() {
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT4_EXCEPTION_BEFORE);
+        await window.showTextDocument(document);
+
+        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+        const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+        assert.equal(codeLens.length, 4, 'Code Lens should appear.');
+
+        const command: Command | undefined = codeLens[0].command;
+        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+
+        const testItem: any = command!.arguments;
+        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+
+        await await commands.executeCommand(command!.command, testItem[0]);
+
+        const projectName: string = testItem[0].project;
+        const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ExceptionInBefore#TestError`);
+        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.ok(failedDetail!.trace !== undefined, 'Should have error trace');
+    });
+
     teardown(async function() {
         // Clear the result cache
         testResultManager.dispose();
