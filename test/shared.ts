@@ -27,6 +27,7 @@ export namespace Uris {
     export const JUNIT4_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'TestAnnotation.java'));
     export const JUNIT4_THEROY: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'TheoryAnnotation.java'));
     export const JUNIT4_RUNWITH: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'RunWithAnnotation.java'));
+    export const JUNIT4_EXCEPTION_BEFORE: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'ExceptionInBefore.java'));
 
     const MODULAR_GRADLE: string = path.join('modular-gradle', 'src', 'test', 'java', 'com', 'example', 'project');
     export const MODULAR_GRADLE_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, MODULAR_GRADLE, 'GradleModularTest.java'));
