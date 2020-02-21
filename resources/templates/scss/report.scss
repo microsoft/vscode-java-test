@@ -18,7 +18,6 @@ $code-color: var(--vscode-foreground);
 
 @import "../../../node_modules/bootstrap/scss/bootstrap";
 
-
 .text-truncate-left {
     @extend .text-truncate;
     @extend .text-left;
