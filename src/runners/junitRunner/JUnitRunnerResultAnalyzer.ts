@@ -97,10 +97,18 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
     }
 
     protected getTestId(message: string): string {
-        const regexp: RegExp = /\d+,(@AssumptionFailure: |@Ignore: )?(.*?)\((.*?)\)/;
+        /**
+         * The following regex expression is used to parse the test runner's output, which match the following components:
+         * '\d+,'                                - index from the test runner
+         * '(?:@AssumptionFailure: |@Ignore: )?' - indicate if the case is ignored due to assumption failure or disabled
+         * '(.*?)'                               - test method name
+         * '(?:\[\d+\])?'                        - execution index, it will appear for the JUnit4's parameterized test
+         * '\((.*?)\)'                           - class fully qualified name
+         */
+        const regexp: RegExp = /\d+,(?:@AssumptionFailure: |@Ignore: )?(.*?)(?:\[\d+\])?\((.*?)\)/;
         const matchResults: RegExpExecArray | null = regexp.exec(message);
-        if (matchResults && matchResults.length === 4) {
-            return `${this.projectName}@${matchResults[3]}#${matchResults[2]}`;
+        if (matchResults && matchResults.length === 3) {
+            return `${this.projectName}@${matchResults[2]}#${matchResults[1]}`;
         }
 
         // In case the output is class level, i.e.: `%ERROR 2,a.class.FullyQualifiedName`
