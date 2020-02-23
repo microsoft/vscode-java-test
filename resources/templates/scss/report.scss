@@ -17,3 +17,17 @@ $pre-color: var(--vscode-foreground);
 $code-color: var(--vscode-foreground);
 
 @import "../../../node_modules/bootstrap/scss/bootstrap";
+
+.text-truncate-left {
+    @extend .text-truncate;
+    @extend .text-left;
+    direction: rtl;
+}
+
+code.word-break-all {
+    word-break: break-all;
+}
+
+pre.pre-wrap {
+    white-space: pre-wrap;
+}
