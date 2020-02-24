@@ -70,12 +70,8 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 this.currentTestItem = testId;
                 const failedResult: ITestResult = Object.assign({}, testResultManager.getResultById(testId), {
                     id: testId,
-                    status: TestStatus.Fail,
+                    status: data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1 ? TestStatus.Skip : TestStatus.Fail,
                 });
-                if (data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1) {
-                    failedResult.status = TestStatus.Skip;
-                    return;
-                }
                 updateElapsedTime(failedResult);
                 testResultManager.storeResult(failedResult);
                 this.testIds.add(testId);
