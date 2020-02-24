@@ -150,6 +150,22 @@ suite('Code Lens Tests', function() {
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
     });
 
+    test("Assume failure should mark as skipped", async function() {
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT4_ASSUME_TEST);
+        await window.showTextDocument(document);
+
+        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+        const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+        const command: Command | undefined = codeLens[0].command;
+        const testItem: ITestItem[] = command!.arguments as ITestItem[];
+        await commands.executeCommand(command!.command, testItem[0]);
+
+        const projectName: string = testItem[0].project;
+        const skippedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.AssumeTest#shouldSkip`);
+        assert.equal(skippedDetail!.status, TestStatus.Skip, 'Should have skipped case');
+        assert.ok(skippedDetail!.duration !== undefined, 'Should have execution time');
+    });
+
     teardown(async function() {
         // Clear the result cache
         testResultManager.dispose();
