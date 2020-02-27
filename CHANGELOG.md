@@ -4,6 +4,10 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.22.2
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.22.2)
+
 ## 0.22.1
 ### Added
 - Show running status in the Test Explorer during the execution. [#790](https://github.com/microsoft/vscode-java-test/issues/790)
