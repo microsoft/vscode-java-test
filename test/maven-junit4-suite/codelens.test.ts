@@ -120,7 +120,7 @@ suite('Code Lens Tests', function() {
         await await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
-        const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ExceptionInBefore#TestError`);
+        const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ExceptionInBefore#<TestError>`);
         assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.trace !== undefined, 'Should have error trace');
     });
