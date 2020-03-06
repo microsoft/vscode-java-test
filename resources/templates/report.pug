@@ -23,6 +23,13 @@ html(lang="en")
                     });
                     return false;
                 });
+
+                //- rotate the arrow icon in accordion
+                $(".collapse").on('show.bs.collapse', function(){
+                    $(this).parent().find("svg").first().addClass("rotate");
+                }).on('hide.bs.collapse', function(){
+                    $(this).parent().find("svg").first().removeClass("rotate");
+                });
             });
 
     body.container-fluid
