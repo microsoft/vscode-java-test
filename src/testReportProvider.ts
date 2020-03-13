@@ -89,6 +89,7 @@ class TestReportProvider implements Disposable {
         const allResultsMap: Map<string, ITestReportItem[]> = new Map();
         const passedResultMap: Map<string, ITestReportItem[]> = new Map();
         const failedResultMap: Map<string, ITestReportItem[]> = new Map();
+        const skippedResultMap: Map<string, ITestReportItem[]> = new Map();
         let passedCount: number = 0;
         let failedCount: number = 0;
         let skippedCount: number = 0;
@@ -115,6 +116,7 @@ class TestReportProvider implements Disposable {
                         failedCount++;
                         break;
                     case TestStatus.Skip:
+                        this.putMethodResultIntoMap(skippedResultMap, reportItem, classFullName);
                         skippedCount++;
                         break;
                 }
@@ -125,6 +127,7 @@ class TestReportProvider implements Disposable {
             tests: allResultsMap,
             passedTests: passedResultMap,
             failedTests: failedResultMap,
+            skippedTests: skippedResultMap,
             allCount: testResults.length,
             passedCount,
             failedCount,
