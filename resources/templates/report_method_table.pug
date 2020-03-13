@@ -11,10 +11,10 @@ mixin collapseMethodTable(children, type)
                 - methodIdx++
                 li.list-group-item.list-group-item-action
                     div.row.accordion-toggle
-                        div.col-8.text-truncate.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
+                        div.col-7.text-truncate.px-1.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
                             include /images/chevron-right.svg
                             span.ml-1 #{method.displayName}
-                        div.col-1.text-right.p-0
+                        div.col-2.text-right.p-0
                             if !method.status
                                 span.badge.badge-warning Not run
                             else if method.status === 'Pass'
@@ -23,8 +23,8 @@ mixin collapseMethodTable(children, type)
                                 span.badge.badge-danger Failed
                             else
                                 span.badge.badge-secondary Skipped
-                        div.col-2.text-right #{method.duration >= 0 ? parseFloat((method.duration/1000).toFixed(2)) + "s" : "N/A"}
-                        div.col-1.text-right.pl-0
+                        div.col-2.text-right.p-0 #{method.duration >= 0 ? parseFloat((method.duration/1000).toFixed(2)) + "s" : "N/A"}
+                        div.col-1.text-right.px-1
                             a(href="#", title="Navigate to Source", uri=`${method.location && method.location.uri ? method.location.uri : ''}`, range=`${method.location && method.location.range ? JSON.stringify(method.location.range) : ''}`, fullname=`${method.fullName}`)
                                 include /images/go-to-file.svg
                     div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
