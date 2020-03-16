@@ -240,9 +240,13 @@ public class TestSearchUtils {
         if (arguments == null || arguments.size() == 0) {
             throw new IllegalArgumentException("Invalid aruguments to search the location.");
         }
-        // For now, input will only be a method.
-        final String methodFullName = ((String) arguments.get(0)).replaceAll("[$#]", ".");
-        final SearchPattern pattern = SearchPattern.createPattern(methodFullName, IJavaSearchConstants.METHOD,
+        String searchString = ((String) arguments.get(0)).replaceAll("[$#]", ".");
+        int searchFor = IJavaSearchConstants.METHOD;
+        if (searchString.endsWith("<TestError>")) {
+            searchString = searchString.substring(0, searchString.indexOf("<TestError>") - 1);
+            searchFor = IJavaSearchConstants.CLASS;
+        }
+        final SearchPattern pattern = SearchPattern.createPattern(searchString, searchFor,
                 IJavaSearchConstants.DECLARATIONS, SearchPattern.R_PATTERN_MATCH);
         final IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot())
                 .getJavaProjects();
@@ -251,10 +255,10 @@ public class TestSearchUtils {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 final Object element = match.getElement();
-                if (element instanceof IMethod) {
-                    final IMethod method = (IMethod) element;
-                    searchResult.add(new Location(JDTUtils.getFileURI(method.getResource()),
-                            TestItemUtils.parseTestItemRange(method)));
+                if (element instanceof IMethod || element instanceof IType) {
+                    final IJavaElement javaElement = (IJavaElement) element;
+                    searchResult.add(new Location(JDTUtils.getFileURI(javaElement.getResource()),
+                            TestItemUtils.parseTestItemRange(javaElement)));
                 }
             }
         };

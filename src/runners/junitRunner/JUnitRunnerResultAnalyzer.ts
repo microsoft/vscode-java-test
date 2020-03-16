@@ -110,7 +110,7 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         // In case the output is class level, i.e.: `%ERROR 2,a.class.FullyQualifiedName`
         const indexOfSpliter: number = message.lastIndexOf(',');
         if (indexOfSpliter > -1) {
-            return `${this.projectName}@${message.slice(indexOfSpliter + 1)}#TestError`;
+            return `${this.projectName}@${message.slice(indexOfSpliter + 1)}#<TestError>`;
         }
 
         logger.error(`Failed to parse the message: ${message}`);
