@@ -22,7 +22,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.41.0"
+        "vscode": "^1.43.0"
     },
     "categories": [
         "Other"
@@ -144,19 +144,13 @@
             {
                 "command": "java.test.explorer.run",
                 "title": "%contributes.commands.java.test.explorer.run.title%",
-                "icon": {
-                    "light": "resources/media/light/run.svg",
-                    "dark": "resources/media/dark/run.svg"
-                },
+                "icon": "$(debug-start)",
                 "category": "Java"
             },
             {
                 "command": "java.test.explorer.debug",
                 "title": "%contributes.commands.java.test.explorer.debug.title%",
-                "icon": {
-                    "light": "resources/media/light/debug.svg",
-                    "dark": "resources/media/dark/debug.svg"
-                },
+                "icon": "$(debug)",
                 "category": "Java"
             },
             {
@@ -171,10 +165,7 @@
             {
                 "command": "java.test.explorer.debugAll",
                 "title": "%contributes.commands.java.test.explorer.debugAll.title%",
-                "icon": {
-                    "light": "resources/media/light/debug.svg",
-                    "dark": "resources/media/dark/debug.svg"
-                },
+                "icon": "$(debug)",
                 "category": "Java"
             },
             {
@@ -185,10 +176,7 @@
             {
                 "command": "java.test.explorer.refresh",
                 "title": "%contributes.commands.java.test.explorer.refresh.title%",
-                "icon": {
-                    "light": "resources/media/light/refresh.svg",
-                    "dark": "resources/media/dark/refresh.svg"
-                },
+                "icon": "$(refresh)",
                 "category": "Java"
             },
             {
@@ -357,7 +345,7 @@
         "@types/mocha": "^2.2.48",
         "@types/node": "^6.14.7",
         "@types/pug": "^2.0.4",
-        "@types/vscode": "1.41.0",
+        "@types/vscode": "1.43.0",
         "bootstrap": "^4.3.1",
         "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",

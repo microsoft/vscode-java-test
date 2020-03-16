@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Command, Disposable, Event, EventEmitter, ExtensionContext, Range, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { Command, Disposable, Event, EventEmitter, ExtensionContext, Range, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
@@ -52,9 +52,8 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
 
     private getWorkspaceFolders(): ITestItem[] {
         let results: ITestItem[] = [];
-        const folders: WorkspaceFolder[] | undefined = workspace.workspaceFolders;
-        if (folders) {
-            results = folders.map((folder: WorkspaceFolder) => {
+        if (workspace.workspaceFolders) {
+            results = workspace.workspaceFolders.map((folder: WorkspaceFolder) => {
                 return {
                     id: folder.uri.fsPath,
                     displayName: folder.name,
@@ -81,7 +80,7 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
         return TreeItemCollapsibleState.Collapsed;
     }
 
-    private resolveIconPath(element: ITestItem): undefined | { dark: string | Uri, light: string | Uri } {
+    private resolveIconPath(element: ITestItem): undefined | { dark: string | Uri, light: string | Uri } | ThemeIcon {
         switch (element.level) {
             case TestLevel.Method:
                 const result: ITestResult | undefined = testResultManager.getResultById(element.id);
@@ -103,29 +102,17 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
                                 light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'running.svg')),
                             };
                         case TestStatus.Pending:
-                            return {
-                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'pending.svg')),
-                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'pending.svg')),
-                            };
+                            return new ThemeIcon('history');
                         default:
                             break;
                     }
                 }
 
-                return {
-                    dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'method.svg')),
-                    light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'method.svg')),
-                };
+                return new ThemeIcon('symbol-method');
             case TestLevel.Class:
-                return {
-                    dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'class.svg')),
-                    light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'class.svg')),
-                };
+                return new ThemeIcon('symbol-class');
             case TestLevel.Package:
-                return {
-                    dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'package.svg')),
-                    light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'package.svg')),
-                };
+                return new ThemeIcon('symbol-namespace');
             default:
                 return undefined;
         }

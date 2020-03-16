@@ -35,18 +35,22 @@ html(lang="en")
     body.container-fluid
         ul.nav.nav-pills.mt-3(role='tablist')
             li.nav-item
-                button.btn.btn-sm.btn-info.active(id='all-tab', data-toggle='pill', href='#all', role='tab', aria-controls='all') All
+                button.btn.btn-sm.btn-info.active.mr-2.mb-2(id='all-tab', data-toggle='pill', href='#all', role='tab', aria-controls='all') All
                     span.badge.badge-light.ml-2 #{allCount}
             if failedCount
                 li.nav-item
-                    button.btn.btn-sm.btn-danger.ml-3(id='fail-tab', data-toggle='pill', href='#fail', role='tab', aria-controls='fail') Failed
+                    button.btn.btn-sm.btn-danger.mr-2.mb-2(id='fail-tab', data-toggle='pill', href='#fail', role='tab', aria-controls='fail') Failed
                         span.badge.badge-light.ml-2 #{failedCount}
             if passedCount
                 li.nav-item
-                    button.btn.btn-sm.btn-success.ml-3(id='pass-tab', data-toggle='pill', href='#pass', role='tab', aria-controls='pass') Passed
+                    button.btn.btn-sm.btn-success.mr-2.mb-2(id='pass-tab', data-toggle='pill', href='#pass', role='tab', aria-controls='pass') Passed
                         span.badge.badge-light.ml-2 #{passedCount}
+            if skippedCount
+                li.nav-item
+                    button.btn.btn-sm.btn-secondary.mb-2(id='skip-tab', data-toggle='pill', href='#skip', role='tab', aria-controls='skip') Skipped
+                        span.badge.badge-light.ml-2 #{skippedCount}
 
-        div.tab-content.mt-3
+        div.tab-content
             div.tab-pane.fade.show.active(id='all', role='tabpanel', aria-labelledby='all-tab')
                 +collapseMethodTable(tests, 'detail-all')
             if failedCount
@@ -55,3 +59,6 @@ html(lang="en")
             if passedCount
                 div.tab-pane.fade(id='pass', role='tabpanel', aria-labelledby='pass-tab')
                     +collapseMethodTable(passedTests, 'detail-pass')
+            if skippedCount
+                div.tab-pane.fade(id='skip', role='tabpanel', aria-labelledby='skip-tab')
+                    +collapseMethodTable(skippedTests, 'detail-skip')
