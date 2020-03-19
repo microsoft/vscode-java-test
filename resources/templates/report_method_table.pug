@@ -11,7 +11,7 @@ mixin collapseMethodTable(children, type)
                 - methodIdx++
                 li.list-group-item.list-group-item-action
                     div.row.accordion-toggle
-                        div.col-7.text-truncate.px-1.collapsed(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, style="cursor:pointer", title="View details")
+                        div.col-7.text-truncate.px-1.collapsed.cursor-pointer(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, title="View details")
                             include /images/chevron-right.svg
                             span.ml-1 #{method.displayName}
                         div.col-2.text-right.p-0
