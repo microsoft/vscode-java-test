@@ -28,6 +28,10 @@ code.word-break-all {
     word-break: break-all;
 }
 
+code.text-warning {
+    color: var(--vscode-editorWarning-foreground);
+}
+
 pre.pre-wrap {
     white-space: pre-wrap;
 }

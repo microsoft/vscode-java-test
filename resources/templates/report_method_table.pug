@@ -40,6 +40,12 @@ mixin collapseMethodTable(children, type)
                             div.col
                                 if method.trace
                                     pre.pre-wrap
-                                        code.word-break-all  #{method.trace}
+                                        - var traces = method.trace.split(/^Caused by:/gm)
+                                        code.word-break-all
+                                            each val, idx in traces
+                                                if idx > 0
+                                                    br
+                                                    span.text-warning Caused by:
+                                                span #{traces[idx]}
                                 else
                                     span N/A
