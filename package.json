@@ -156,10 +156,7 @@
             {
                 "command": "java.test.explorer.runAll",
                 "title": "%contributes.commands.java.test.explorer.runAll.title%",
-                "icon": {
-                    "light": "resources/media/light/run-all.svg",
-                    "dark": "resources/media/dark/run-all.svg"
-                },
+                "icon": "$(run-all)",
                 "category": "Java"
             },
             {

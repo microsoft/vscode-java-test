@@ -112,7 +112,7 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
             case TestLevel.Class:
                 return new ThemeIcon('symbol-class');
             case TestLevel.Package:
-                return new ThemeIcon('symbol-namespace');
+                return new ThemeIcon('symbol-package');
             default:
                 return undefined;
         }
