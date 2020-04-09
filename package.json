@@ -22,7 +22,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.43.0"
+        "vscode": "^1.44.0"
     },
     "categories": [
         "Other"
@@ -342,7 +342,7 @@
         "@types/mocha": "^2.2.48",
         "@types/node": "^6.14.7",
         "@types/pug": "^2.0.4",
-        "@types/vscode": "1.43.0",
+        "@types/vscode": "1.44.0",
         "bootstrap": "^4.3.1",
         "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",
