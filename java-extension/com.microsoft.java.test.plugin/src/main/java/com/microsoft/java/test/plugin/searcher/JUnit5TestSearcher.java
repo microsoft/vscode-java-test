@@ -33,16 +33,15 @@ import java.util.Optional;
 
 public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
-    public static final String NESTED = "org.junit.jupiter.api.Nested";
+    public static final String JUPITER_NESTED = "org.junit.jupiter.api.Nested";
+    public static final String JUNIT_PLATFORM_TESTABLE = "org.junit.platform.commons.annotation.Testable";
 
     protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
 
     public JUnit5TestSearcher() {
         super();
-        this.testMethodAnnotations = new String[] { "org.junit.jupiter.api.Test",
-            "org.junit.jupiter.params.ParameterizedTest", "org.junit.jupiter.api.RepeatedTest",
-            "org.junit.jupiter.api.TestFactory", "org.junit.jupiter.api.TestTemplate" };
-        this.testClassAnnotations = new String[] { NESTED };
+        this.testMethodAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE };
+        this.testClassAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE, JUPITER_NESTED };
     }
 
     @Override
@@ -62,12 +61,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
             }
             for (final String annotation : this.testMethodAnnotations) {
                 if (TestFrameworkUtils.hasAnnotation(method, annotation, true /*checkHierarchy*/)) {
-                    if ("org.junit.jupiter.api.TestFactory".equals(annotation)) {
-                        return true;
-                    } else if ("V".equals(method.getReturnType())) {
-                        // Other annotations need the return type to be void
-                        return true;
-                    }
+                    return true;
                 }
             }
             return false;

@@ -115,6 +115,11 @@ public class TestSearchUtils {
                 resultList.add(parent);
                 continue;
             }
+            // JUnit 5 supports nested test classes
+            if (isJunit5TestableClass(type)) {
+                resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit));
+            }
+
             // Class annotated by @RunWith should be considered as a Suite even it has no test method children
             if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH, false /*checkHierarchy*/)) {
                 resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit));
@@ -412,9 +417,36 @@ public class TestSearchUtils {
             return false;
         }
 
-        if (TestFrameworkUtils.hasAnnotation(type, JUnit5TestSearcher.NESTED, false /*checkHierarchy*/) ||
+        if (isJunit5TestableClass(type)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean isJunit5TestableClass(IType type) throws JavaModelException {
+        final int flags = type.getFlags();
+
+        // Classes with Testable annotation are testable
+        if (TestFrameworkUtils.hasAnnotation(
+                type,
+                JUnit5TestSearcher.JUNIT_PLATFORM_TESTABLE,
+                true /*checkHierarchy*/
+        )) {
+            return true;
+        }
+
+        // Jupiter's Nested annotation does not have Testable as meta annotation
+        if (TestFrameworkUtils.hasAnnotation(type, JUnit5TestSearcher.JUPITER_NESTED, true /*checkHierarchy*/) ||
                 (Flags.isStatic(flags) && Flags.isPublic(flags))) {
             return true;
+        }
+
+        // Classes whose inner classes are testable should also be testable
+        for (final IJavaElement child : type.getChildren())  {
+            if (child instanceof IType && isJunit5TestableClass((IType) child)) {
+                return true;
+            }
         }
 
         return false;
