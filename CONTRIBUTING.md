@@ -54,8 +54,14 @@ The extension has three major modules, which are listed as follow:
     > This will open a new VS Code window as a debug session. Open a Java project folder and let the extension be activated, then you can debug it.
 2. If you want to debug the Java Test Plugin, run [Debug Test Runner Java Plugin (Attach)](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) in the debug viewlet.
 
-> Note: If the Java code is changed by you, please run `npm run build-plugin` before you start debugging.
+> Note: If the Java code is changed by you, please run `npm run build-plugin` before you start debugging, the output jars will be generated in the folder `server/`.
 
 ### Debugging the Java Test Runner
 - The Java Test Runner is a normal Maven project, you can open it with whatever the development tools you prefer, for example, VS Code
 - The Java Test Runner is an executable jar, the main class is `com.microsoft.java.test.runner.Launcher`
+
+### Build Your Own Private Build
+If you want to build your own private build, run `npx vsce@latest package` after `npm run build-plugin`.
+
+### Check Linting Errors:
+Run `npm run linting` to check linting errors.
