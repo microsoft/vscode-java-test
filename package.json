@@ -277,6 +277,14 @@
                             "type": "object",
                             "description": "%configuration.java.test.config.env.description%",
                             "default": {}
+                        },
+                        "sourcePaths": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "%configuration.java.test.config.sourcePaths.description%",
+                            "default": []
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -315,6 +323,14 @@
                                 "type": "object",
                                 "description": "%configuration.java.test.config.env.description%",
                                 "default": {}
+                            },
+                            "sourcePaths": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "%configuration.java.test.config.sourcePaths.description%",
+                                "default": []
                             }
                         }
                     },
