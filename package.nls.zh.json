@@ -24,5 +24,6 @@
     "configuration.java.test.config.workingDirectory.description": "设定执行测试时的工作目录",
     "configuration.java.test.config.vmargs.description": "设定启动 JVM 的额外选项和系统属性",
     "configuration.java.test.config.args.description": "设定启动 Test Runner 时的命令行参数",
-    "configuration.java.test.config.env.description": "启动应用程序时自定义的环境变量"
+    "configuration.java.test.config.env.description": "启动应用程序时自定义的环境变量",
+    "configuration.java.test.config.sourcePaths.description": "设定调试测试用例时的源代码路径"
 }
