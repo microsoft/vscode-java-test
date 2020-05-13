@@ -4,12 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.22.4
+### Added
+- Add `sourcePaths` key in `java.test.config` to specify source paths. [#982](https://github.com/microsoft/vscode-java-test/issues/982)
+
 ## 0.22.3
 ### Added
-Skipped tests can be toggled out in the test report. [#754](https://github.com/microsoft/vscode-java-test/issues/754)
+- Skipped tests can be toggled out in the test report. [#754](https://github.com/microsoft/vscode-java-test/issues/754)
 
 ### Changed
-Migrate the icons in test explorer to [VS Code Icons](https://github.com/microsoft/vscode-codicons). [PR#961](https://github.com/microsoft/vscode-java-test/pull/961)
+- Migrate the icons in test explorer to [VS Code Icons](https://github.com/microsoft/vscode-codicons). [PR#961](https://github.com/microsoft/vscode-java-test/pull/961)
 
 ### Fixed
 - [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.22.3)
