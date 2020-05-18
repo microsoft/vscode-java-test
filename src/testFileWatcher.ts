@@ -11,6 +11,7 @@ import { getTestSourcePaths } from './utils/commandUtils';
 
 class TestFileWatcher implements Disposable {
 
+    private testSourcePaths: string[] = [];
     private disposables: Disposable[] = [];
 
     public async registerListeners(): Promise<void> {
@@ -19,7 +20,9 @@ class TestFileWatcher implements Disposable {
             try {
                 const sourcePaths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
                 for (const sourcePath of sourcePaths) {
-                    const pattern: RelativePattern = new RelativePattern(Uri.file(sourcePath).fsPath, '**/*.{[jJ][aA][vV][aA]}');
+                    const normalizedPath: string = Uri.file(sourcePath).fsPath;
+                    this.testSourcePaths.push(normalizedPath);
+                    const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.{[jJ][aA][vV][aA]}');
                     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
                     this.registerWatcherListeners(watcher);
                     this.disposables.push(watcher);
@@ -34,6 +37,16 @@ class TestFileWatcher implements Disposable {
 
     }
 
+    public isOnTestSourcePath(documentPath: string): boolean {
+        for (const sourcePath of this.testSourcePaths) {
+            if (documentPath.startsWith(sourcePath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public dispose(): void {
         for (const disposable of this.disposables) {
             if (disposable) {
@@ -41,6 +54,7 @@ class TestFileWatcher implements Disposable {
             }
         }
         this.disposables = [];
+        this.testSourcePaths = [];
     }
 
     private registerWatcherListeners(watcher: FileSystemWatcher): void {

@@ -6,6 +6,7 @@ import { JavaTestRunnerCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ITestItem, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
+import { testFileWatcher } from '../testFileWatcher';
 import { testItemModel } from '../testItemModel';
 import { testResultManager } from '../testResultManager';
 
@@ -21,6 +22,10 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
     }
 
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
+        if (!testFileWatcher.isOnTestSourcePath(document.uri.fsPath)) {
+            return [];
+        }
+
         try {
             const items: ITestItem[] = await testItemModel.getItemsForCodeLens(document.uri);
             return this.getCodeLenses(items);

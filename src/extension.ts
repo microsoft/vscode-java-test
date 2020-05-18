@@ -34,7 +34,7 @@ export async function deactivate(): Promise<void> {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
-    testFileWatcher.registerListeners();
+    await testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context);
