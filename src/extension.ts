@@ -4,7 +4,7 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { DebugConfiguration, ExtensionContext, Range, Uri, window } from 'vscode';
+import { DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
@@ -34,7 +34,7 @@ export async function deactivate(): Promise<void> {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
-    await testFileWatcher.registerListeners();
+    await testFileWatcher.registerListeners(false /*execute immediately*/);
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context);
@@ -67,4 +67,16 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
     );
+
+    // refetch the test source path on projectss classpath updated.
+    const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
+    if (extension && extension.isActive) {
+        const extensionApi: any = extension.exports;
+        if (extensionApi && extensionApi.onDidClasspathUpdate) {
+            const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
+            context.subscriptions.push(onDidClasspathUpdate(async () => {
+                await testFileWatcher.registerListeners();
+            }));
+        }
+    }
 }

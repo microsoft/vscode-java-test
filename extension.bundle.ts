@@ -7,3 +7,4 @@ export * from './src/runners/models';
 export * from './src/testResultManager';
 export * from './src/protocols';
 export * from './src/utils/commandUtils';
+export * from './src/testFileWatcher';

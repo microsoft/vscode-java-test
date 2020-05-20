@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as _ from 'lodash';
 import { Disposable, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { testCodeLensController } from './codelens/TestCodeLensController';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem, TestLevel } from './protocols';
@@ -13,28 +15,15 @@ class TestFileWatcher implements Disposable {
 
     private testSourcePaths: string[] = [];
     private disposables: Disposable[] = [];
+    private registerListenersDebounce: (() => Promise<void>) & _.Cancelable = _.debounce(this.registerListenersInternal, 2 * 1000 /*ms*/);
 
-    public async registerListeners(): Promise<void> {
-        this.dispose();
-        if (workspace.workspaceFolders) {
-            try {
-                const sourcePaths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
-                for (const sourcePath of sourcePaths) {
-                    const normalizedPath: string = Uri.file(sourcePath).fsPath;
-                    this.testSourcePaths.push(normalizedPath);
-                    const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.{[jJ][aA][vV][aA]}');
-                    const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
-                    this.registerWatcherListeners(watcher);
-                    this.disposables.push(watcher);
-                }
-            } catch (error) {
-                logger.error('Failed to get the test paths', error);
-                const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
-                this.registerWatcherListeners(watcher);
-                this.disposables.push(watcher);
-            }
+    public async registerListeners(debounce: boolean = true): Promise<void> {
+        if (debounce) {
+            await this.registerListenersDebounce();
+        } else {
+            await this.registerListenersInternal();
         }
-
+        testCodeLensController.refresh();
     }
 
     public isOnTestSourcePath(documentPath: string): boolean {
@@ -54,7 +43,28 @@ class TestFileWatcher implements Disposable {
             }
         }
         this.disposables = [];
-        this.testSourcePaths = [];
+    }
+
+    protected async registerListenersInternal(): Promise<void> {
+        this.dispose();
+        if (workspace.workspaceFolders) {
+            try {
+                const sourcePaths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
+                for (const sourcePath of sourcePaths) {
+                    const normalizedPath: string = Uri.file(sourcePath).fsPath;
+                    this.testSourcePaths.push(normalizedPath);
+                    const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.{[jJ][aA][vV][aA]}');
+                    const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
+                    this.registerWatcherListeners(watcher);
+                    this.disposables.push(watcher);
+                }
+            } catch (error) {
+                logger.error('Failed to get the test paths', error);
+                const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
+                this.registerWatcherListeners(watcher);
+                this.disposables.push(watcher);
+            }
+        }
     }
 
     private registerWatcherListeners(watcher: FileSystemWatcher): void {
