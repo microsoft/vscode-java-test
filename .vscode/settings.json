@@ -6,5 +6,12 @@
         "**/target",
         "**/bin",
         "**/test/test-projects"
+    ],
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/archetype-resources/**",
+        "**/META-INF/maven/**",
+        "**/test/test-projects/**"
     ]
 }
