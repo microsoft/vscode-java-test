@@ -13,7 +13,7 @@ import { getTestSourcePaths } from './utils/commandUtils';
 
 class TestFileWatcher implements Disposable {
 
-    private testSourcePaths: string[] = [];
+    private patterns: RelativePattern[] = [];
     private disposables: Disposable[] = [];
     private registerListenersDebounce: (() => Promise<void>) & _.Cancelable = _.debounce(this.registerListenersInternal, 2 * 1000 /*ms*/);
 
@@ -23,17 +23,6 @@ class TestFileWatcher implements Disposable {
         } else {
             await this.registerListenersInternal();
         }
-        testCodeLensController.refresh();
-    }
-
-    public isOnTestSourcePath(documentPath: string): boolean {
-        for (const sourcePath of this.testSourcePaths) {
-            if (documentPath.startsWith(sourcePath)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public dispose(): void {
@@ -43,6 +32,7 @@ class TestFileWatcher implements Disposable {
             }
         }
         this.disposables = [];
+        this.patterns = [];
     }
 
     protected async registerListenersInternal(): Promise<void> {
@@ -52,8 +42,8 @@ class TestFileWatcher implements Disposable {
                 const sourcePaths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
                 for (const sourcePath of sourcePaths) {
                     const normalizedPath: string = Uri.file(sourcePath).fsPath;
-                    this.testSourcePaths.push(normalizedPath);
                     const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.{[jJ][aA][vV][aA]}');
+                    this.patterns.push(pattern);
                     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
                     this.registerWatcherListeners(watcher);
                     this.disposables.push(watcher);
@@ -64,6 +54,8 @@ class TestFileWatcher implements Disposable {
                 this.registerWatcherListeners(watcher);
                 this.disposables.push(watcher);
             }
+            testCodeLensController.registerCodeLensProvider(this.patterns);
+        } else {
         }
     }
 

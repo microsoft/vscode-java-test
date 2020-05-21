@@ -3,6 +3,7 @@
 
 export { activate, deactivate } from './src/extension';
 export * from './src/codelens/TestCodeLensProvider';
+export * from './src/codelens/TestCodeLensController';
 export * from './src/runners/models';
 export * from './src/testResultManager';
 export * from './src/protocols';
