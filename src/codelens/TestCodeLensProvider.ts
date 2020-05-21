@@ -11,9 +11,15 @@ import { testResultManager } from '../testResultManager';
 
 export class TestCodeLensProvider implements CodeLensProvider, Disposable {
     private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private isActivated: boolean = true;
 
     get onDidChangeCodeLenses(): Event<void> {
         return this.onDidChangeCodeLensesEmitter.event;
+    }
+
+    public setIsActivated(isActivated: boolean): void {
+        this.isActivated = isActivated;
+        this.refresh();
     }
 
     public refresh(): void {
@@ -21,6 +27,10 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
     }
 
     public async provideCodeLenses(document: TextDocument, _token: CancellationToken): Promise<CodeLens[]> {
+        if (!this.isActivated) {
+            return [];
+        }
+
         try {
             const items: ITestItem[] = await testItemModel.getItemsForCodeLens(document.uri);
             return this.getCodeLenses(items);
