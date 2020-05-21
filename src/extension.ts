@@ -34,7 +34,7 @@ export async function deactivate(): Promise<void> {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
-    await testFileWatcher.registerListeners(false /*execute immediately*/);
+    await testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context);
@@ -75,7 +75,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         if (extensionApi && extensionApi.onDidClasspathUpdate) {
             const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
             context.subscriptions.push(onDidClasspathUpdate(async () => {
-                await testFileWatcher.registerListeners();
+                await testFileWatcher.registerListeners(true /*enableDebounce*/);
             }));
         }
     }

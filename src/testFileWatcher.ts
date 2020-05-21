@@ -17,7 +17,7 @@ class TestFileWatcher implements Disposable {
     private disposables: Disposable[] = [];
     private registerListenersDebounce: (() => Promise<void>) & _.Cancelable = _.debounce(this.registerListenersInternal, 2 * 1000 /*ms*/);
 
-    public async registerListeners(debounce: boolean = true): Promise<void> {
+    public async registerListeners(debounce: boolean = false): Promise<void> {
         if (debounce) {
             await this.registerListenersDebounce();
         } else {
