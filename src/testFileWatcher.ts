@@ -55,7 +55,6 @@ class TestFileWatcher implements Disposable {
                 this.disposables.push(watcher);
             }
             testCodeLensController.registerCodeLensProvider(this.patterns);
-        } else {
         }
     }
 
