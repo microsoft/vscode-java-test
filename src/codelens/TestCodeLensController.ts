@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ConfigurationChangeEvent, Disposable, languages, workspace, RelativePattern, DocumentSelector } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, DocumentSelector, languages, RelativePattern, workspace } from 'vscode';
 import { ENABLE_EDITOR_SHORTCUTS_KEY } from '../constants/configs';
 import { TestCodeLensProvider } from './TestCodeLensProvider';
 
