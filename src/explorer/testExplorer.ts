@@ -6,6 +6,7 @@ import { Command, Disposable, Event, EventEmitter, ExtensionContext, Range, Them
 import { JavaTestRunnerCommands } from '../constants/commands';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
+import { testFileWatcher } from '../testFileWatcher';
 import { testItemModel } from '../testItemModel';
 import { testResultManager } from '../testResultManager';
 
@@ -44,6 +45,9 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
 
     public refresh(element?: ITestItem): void {
         this.onDidChangeTreeDataEventEmitter.fire(element);
+        if (!element) {
+            testFileWatcher.registerListeners();
+        }
     }
 
     public dispose(): void {

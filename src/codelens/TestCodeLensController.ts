@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ConfigurationChangeEvent, Disposable, languages, workspace } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, DocumentSelector, languages, RelativePattern, workspace } from 'vscode';
 import { ENABLE_EDITOR_SHORTCUTS_KEY } from '../constants/configs';
 import { TestCodeLensProvider } from './TestCodeLensProvider';
 
@@ -22,6 +22,22 @@ class TestCodeLensController implements Disposable {
         this.setCodeLensVisibility();
     }
 
+    public registerCodeLensProvider(patterns: RelativePattern[]): void {
+        if (this.registeredProvider) {
+            this.registeredProvider.dispose();
+        }
+
+        const documentSelector: DocumentSelector = patterns.map((p: RelativePattern) => {
+            return {
+                language: 'java',
+                scheme: 'file',
+                pattern: p,
+            };
+        });
+
+        this.registeredProvider = languages.registerCodeLensProvider(documentSelector, this.internalProvider);
+    }
+
     public refresh(): void {
         this.internalProvider.refresh();
     }
@@ -35,12 +51,7 @@ class TestCodeLensController implements Disposable {
     }
 
     private setCodeLensVisibility(): void {
-        if (this.isCodeLensEnabled() && !this.registeredProvider) {
-            this.registeredProvider = languages.registerCodeLensProvider({ scheme: 'file', language: 'java' }, this.internalProvider);
-        } else if (!this.isCodeLensEnabled() && this.registeredProvider) {
-            this.registeredProvider.dispose();
-            this.registeredProvider = undefined;
-        }
+        this.internalProvider.setIsActivated(this.isCodeLensEnabled());
     }
 
     private isCodeLensEnabled(): boolean {
