@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
+import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
 import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
@@ -74,18 +74,18 @@ class TestReportProvider implements Disposable {
             }, null, this.context.subscriptions);
         }
 
-        this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
+        this.panel.webview.html = await testReportProvider.provideHtmlContent(tests, this.panel.webview);
 
         this.panel.reveal(this.panel.viewColumn || position);
     }
 
     public async update(tests: ITestResult[]): Promise<void> {
         if (this.panel) {
-            this.panel.webview.html = await testReportProvider.provideHtmlContent(tests);
+            this.panel.webview.html = await testReportProvider.provideHtmlContent(tests, this.panel.webview);
         }
     }
 
-    public async provideHtmlContent(testResults: ITestResult[]): Promise<string> {
+    public async provideHtmlContent(testResults: ITestResult[], webview: Webview): Promise<string> {
         const allResultsMap: Map<string, ITestReportItem[]> = new Map();
         const passedResultMap: Map<string, ITestReportItem[]> = new Map();
         const failedResultMap: Map<string, ITestReportItem[]> = new Map();
@@ -132,7 +132,7 @@ class TestReportProvider implements Disposable {
             passedCount,
             failedCount,
             skippedCount,
-            resourceBaseUri: Uri.file(path.join(this.resourceBasePath)).with({ scheme: 'vscode-resource' }),
+            resourceBaseUri: webview.asWebviewUri(Uri.file(path.join(this.resourceBasePath))),
             nonce: this.getNonce(),
         });
     }
