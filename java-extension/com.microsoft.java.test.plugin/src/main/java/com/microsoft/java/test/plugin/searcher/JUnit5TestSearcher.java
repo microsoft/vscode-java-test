@@ -37,11 +37,20 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
     public static final String JUPITER_NESTED = "org.junit.jupiter.api.Nested";
     public static final String JUNIT_PLATFORM_TESTABLE = "org.junit.platform.commons.annotation.Testable";
 
+    // TODO: Remove the following annotations once we can find tests without the search engine
+    //       - The search engine cannot find the meta-annotation and testable annotated ones.
+    public static final String JUPITER_TEST = "org.junit.jupiter.api.Test";
+    public static final String JUPITER_PARAMETERIZED_TEST = "org.junit.jupiter.params.ParameterizedTest";
+    public static final String JUPITER_REPEATED_TEST = "org.junit.jupiter.api.RepeatedTest";
+    public static final String JUPITER_TEST_FACTORY = "org.junit.jupiter.api.TestFactory";
+    public static final String JUPITER_TEST_TEMPLATE = "org.junit.jupiter.api.TestTemplate";
+
     protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
 
     public JUnit5TestSearcher() {
         super();
-        this.testMethodAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE };
+        this.testMethodAnnotations = new String[] { JUPITER_TEST, JUPITER_PARAMETERIZED_TEST,
+            JUPITER_REPEATED_TEST, JUPITER_TEST_FACTORY, JUPITER_TEST_TEMPLATE, JUNIT_PLATFORM_TESTABLE };
         this.testClassAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE, JUPITER_NESTED };
     }
 

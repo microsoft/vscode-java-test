@@ -39,6 +39,7 @@ bin/
 **/lib/
 out/
 server/
+.jqwik-database
 
 jdtls/
 
