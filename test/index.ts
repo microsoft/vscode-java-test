@@ -44,6 +44,16 @@ async function main(): Promise<void> {
             ],
         });
 
+        // Run Gradle JUnit 5 project tests
+        await runTests({
+            vscodeExecutablePath,
+            extensionDevelopmentPath,
+            extensionTestsPath: path.resolve(__dirname, './gradle-junit5-suite'),
+            launchArgs: [
+                path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit5'),
+            ],
+        });
+
     } catch (err) {
         console.error('Failed to run tests');
         process.exit(1);
