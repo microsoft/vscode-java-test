@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
+import { Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { ITestResult, TestStatus } from './runners/models';
 
 class TestStatusBarProvider implements Disposable {
     private readonly statusBarItem: StatusBarItem;
-    private readonly commandCache: Map<string, Disposable>;
 
     constructor() {
         this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, Number.MIN_VALUE);
-        this.commandCache = new Map<string, Disposable>();
     }
 
     public show(): void {
@@ -42,39 +40,24 @@ class TestStatusBarProvider implements Disposable {
             }
         }
 
-        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'View test report', this.getCommandWithArgs(JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]));
+        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'View test report', JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]);
     }
 
     public update(text: string, tooltip?: string, command?: string, args?: any[]): void {
         this.statusBarItem.text = text;
         this.statusBarItem.tooltip = tooltip;
-        this.statusBarItem.command = this.getCommandWithArgs(command, args);
+        if (command) {
+            this.statusBarItem.command = {
+                title: text,
+                command,
+                arguments: args,
+            };
+        }
         this.statusBarItem.show();
     }
 
     public dispose(): void {
         this.statusBarItem.dispose();
-        for (const disposable of this.commandCache.values()) {
-            disposable.dispose();
-        }
-        this.commandCache.clear();
-    }
-
-    private getCommandWithArgs(command?: string, args?: any[]): string | undefined {
-        if (!args) {
-            return command;
-        }
-        const commandWithArgs: string = `${command}-args`;
-        const registeredCommand: Disposable | undefined = this.commandCache.get(commandWithArgs);
-        if (registeredCommand) {
-            registeredCommand.dispose();
-        }
-
-        this.commandCache.set(commandWithArgs, commands.registerCommand(commandWithArgs, () => {
-            commands.executeCommand(command as string, ...args);
-        }));
-
-        return commandWithArgs;
     }
 }
 

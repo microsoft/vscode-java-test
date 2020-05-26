@@ -23,7 +23,7 @@ export namespace Token {
 export namespace Uris {
     // JUnit 4
     const TEST_PROJECT_BASE_PATH: string = path.join(__dirname, '..', '..', 'test', 'test-projects');
-    const JUNIT4_TEST_PACKAGE: string = path.join('junit4', 'src', 'test', 'java', 'junit4');
+    export const JUNIT4_TEST_PACKAGE: string = path.join('junit4', 'src', 'test', 'java', 'junit4');
     export const JUNIT4_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'TestAnnotation.java'));
     export const JUNIT4_THEROY: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'TheoryAnnotation.java'));
     export const JUNIT4_RUNWITH: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'RunWithAnnotation.java'));
@@ -31,8 +31,13 @@ export namespace Uris {
     export const JUNIT4_PARAMETERIZED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'ParameterizedTest.java'));
     export const JUNIT4_ASSUME_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'AssumeTest.java'));
 
+    // Gradle modular
     const MODULAR_GRADLE: string = path.join('modular-gradle', 'src', 'test', 'java', 'com', 'example', 'project');
     export const MODULAR_GRADLE_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, MODULAR_GRADLE, 'GradleModularTest.java'));
+
+    // Gradle JUnit5
+    const GRADLE_JUNIT5_TEST_PACKAGE: string = path.join('junit5', 'src', 'test', 'java', 'junit5');
+    export const GRADLE_JUNIT5_PARAMETERIZED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'ParameterizedAnnotationTest.java'));
 }
 
 export async function getJavaVersion(): Promise<number> {

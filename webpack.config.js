@@ -22,6 +22,8 @@ const config = {
         devtoolModuleFilenameTemplate: "../[resource-path]",
     },
     externals: {
+        'applicationinsights-native-metrics': 'commonjs applicationinsights-native-metrics', // ignored because we don't ship native module
+        'diagnostic-channel-publishers': 'commonjs diagnostic-channel-publishers',
         vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
     },
     devtool: 'source-map',

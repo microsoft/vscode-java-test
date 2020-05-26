@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.22.3",
+    "version": "0.22.4",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -46,7 +46,7 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.22.3.jar",
+            "./server/com.microsoft.java.test.plugin-0.22.4.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1200.v20200214-0716.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.800.v20200214-0716.jar",
             "./server/org.junit.jupiter.api_5.6.0.v20200203-2009.jar",
@@ -358,6 +358,7 @@
         "@types/mocha": "^2.2.48",
         "@types/node": "^6.14.10",
         "@types/pug": "^2.0.4",
+        "@types/sinon": "^9.0.3",
         "@types/vscode": "1.44.0",
         "bootstrap": "^4.4.1",
         "filemanager-webpack-plugin": "^2.0.5",
@@ -367,6 +368,7 @@
         "gulp-tslint": "^8.1.4",
         "mocha": "^7.1.2",
         "pug-loader": "^2.4.0",
+        "sinon": "^9.0.2",
         "ts-loader": "^5.4.5",
         "tslint": "^5.20.1",
         "typescript": "^2.8.3",
@@ -380,7 +382,7 @@
         "iconv-lite": "^0.4.24",
         "lodash": "^4.17.15",
         "pug": "^2.0.4",
-        "vscode-extension-telemetry-wrapper": "^0.7.1",
+        "vscode-extension-telemetry-wrapper": "^0.8.0",
         "winston": "^3.2.1",
         "winston-transport": "^4.3.0"
     }
