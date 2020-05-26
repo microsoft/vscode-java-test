@@ -23,6 +23,11 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, ru
             testNGArguments.vmArguments.push(...config.vmargs.filter(Boolean));
         }
 
+        const moreEntries: object = {};
+        if (config && config.sourcePaths) {
+            moreEntries['sourcePaths'] = config.sourcePaths;
+        }
+
         return {
             name: `Launch Java Tests - ${randomSequence()}`,
             type: 'java',
@@ -36,6 +41,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, ru
             vmArgs: testNGArguments.vmArguments,
             env,
             noDebug: !runnerContext.isDebug,
+            ...moreEntries,
         };
     }
 
@@ -53,6 +59,11 @@ export async function getDebugConfigurationForEclispeRunner(runnerContext: IRunn
         env = config.env;
     }
 
+    const moreEntries: object = {};
+    if (config && config.sourcePaths) {
+        moreEntries['sourcePaths'] = config.sourcePaths;
+    }
+
     return {
         name: `Launch Java Tests - ${randomSequence()}`,
         type: 'java',
@@ -66,6 +77,7 @@ export async function getDebugConfigurationForEclispeRunner(runnerContext: IRunn
         vmArgs: junitLaunchArgs.vmArguments,
         env,
         noDebug: !runnerContext.isDebug,
+        ...moreEntries,
     };
 }
 

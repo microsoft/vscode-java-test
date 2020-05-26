@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -86,7 +87,9 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
         final List<String> result = new LinkedList<>();
         final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(
                 method.getDeclaringType().getCompilationUnit(), CoreASTProvider.WAIT_YES, new NullProgressMonitor());
-        final ASTNode name = NodeFinder.perform(astRoot, method.getSourceRange());
+        final ISourceRange sourceRange = method.getSourceRange();
+        final ASTNode name = NodeFinder.perform(astRoot, sourceRange.getOffset(), sourceRange.getLength(),
+                method.getCompilationUnit());
         if (name instanceof MethodDeclaration) {
             final List parameterList = ((MethodDeclaration) name).parameters();
             for (final Object obj : parameterList) {

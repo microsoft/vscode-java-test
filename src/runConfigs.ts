@@ -9,6 +9,7 @@ export interface IExecutionConfig {
     args?: any[];
     vmargs?: any[];
     env?: { [key: string]: string; };
+    sourcePaths?: string[];
 }
 
 export interface IExecutionConfigGroup {

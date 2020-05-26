@@ -40,6 +40,16 @@
             "sourceMaps": true,
             "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
             "preLaunchTask": "npm: compile"
+        },
+        {
+            "name": "Launch Tests (webpack) - Gradle JUnit5",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": ["${workspaceFolder}/test/test-projects/junit5", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/dist/test/gradle-junit5-suite" ],
+            "sourceMaps": true,
+            "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
+            "preLaunchTask": "npm: compile"
         }
     ]
 }
