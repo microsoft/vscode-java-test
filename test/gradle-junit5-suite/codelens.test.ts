@@ -38,6 +38,31 @@ suite('Code Lens Tests', function() {
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
     });
 
+    test("Can run test method annotated with @Testable", async function() {
+        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_PROPERTY_TEST);
+        await window.showTextDocument(document);
+
+        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+        const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+        assert.equal(codeLens.length, 4, 'Code Lens should appear for @ParameterizedTest annotation');
+
+        const command: Command | undefined = codeLens[0].command;
+        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+
+        const testItem: ITestItem[] = command!.arguments as ITestItem[];
+        assert.equal(testItem.length, 1);
+        assert.equal(testItem[0].paramTypes[0], 'int');
+
+        await commands.executeCommand(command!.command, testItem[0]);
+
+        const projectName: string = testItem[0].project;
+
+        const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.PropertyTest#absoluteValueOfIntegerAlwaysPositive`);
+        assert.equal(failedDetail!.status, TestStatus.Fail);
+        assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
+    });
+
     teardown(async function() {
         // Clear the result cache
         testResultManager.dispose();
