@@ -90,13 +90,8 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
                 );
             }
         } else if (item.level === TestLevel.Class) {
-            if (!item.children) {
-                return undefined;
-            }
             const childResults: Array<ITestResult | undefined> = [];
-            for (const childId of item.children) {
-                childResults.push(testResultManager.getResultById(childId));
-            }
+            this.getAllMethodResults(childResults, item);
             const title: string = this.getResultIcons(childResults);
             if (title) {
                 return new CodeLens(
@@ -111,6 +106,23 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
             }
         }
         return undefined;
+    }
+
+    private getAllMethodResults(childResults: Array<ITestResult | undefined>, item: ITestItem): void {
+        if (!item.children) {
+            return undefined;
+        }
+        for (const childId of item.children) {
+            const child: ITestItem | undefined = testItemModel.getItemById(childId);
+            if (!child) {
+                continue;
+            }
+            if (child.level === TestLevel.Class) {
+                this.getAllMethodResults(childResults, child);
+            } else if (child.level === TestLevel.Method) {
+                childResults.push(testResultManager.getResultById(childId));
+            }
+        }
     }
 
     private getResultIcon(result: ITestResult): string {

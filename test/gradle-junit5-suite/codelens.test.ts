@@ -3,7 +3,7 @@
 
 import * as assert from 'assert';
 import { CodeLens, Command, commands, TextDocument, window, workspace, extensions } from 'vscode';
-import { ITestResult, TestCodeLensProvider, testResultManager, TestStatus, ITestItem } from '../../extension.bundle';
+import { TestCodeLensProvider, testResultManager, ITestItem, ITestResult, TestStatus } from '../../extension.bundle';
 import { Token, Uris } from '../shared';
 
 suite('Code Lens Tests', function() {
@@ -44,7 +44,7 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4, 'Code Lens should appear for @ParameterizedTest annotation');
+        assert.equal(codeLens.length, 4, 'Code Lens should appear for @Property annotation');
 
         const command: Command | undefined = codeLens[0].command;
         assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
@@ -61,6 +61,31 @@ suite('Code Lens Tests', function() {
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.PropertyTest#absoluteValueOfIntegerAlwaysPositive`);
         assert.equal(failedDetail!.status, TestStatus.Fail);
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
+    });
+
+    test("Can run test method annotated with @Nested", async function() {
+        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_NESTED_TEST);
+        await window.showTextDocument(document);
+
+        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+        let codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+        assert.equal(codeLens.length, 14, 'Code Lens should appear for @Nested annotation');
+
+        const command: Command | undefined = codeLens[0].command;
+        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+
+        const testItem: ITestItem[] = command!.arguments as ITestItem[];
+        assert.equal(testItem.length, 1);
+
+        await commands.executeCommand(command!.command, testItem[0]);
+
+        codeLens = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+
+        assert.equal(codeLens.length, 21);
+
+        assert.equal(codeLens[2].command!.title, '$(x)');
+        assert.equal(codeLens[5].command!.title, '$(check)');
     });
 
     teardown(async function() {

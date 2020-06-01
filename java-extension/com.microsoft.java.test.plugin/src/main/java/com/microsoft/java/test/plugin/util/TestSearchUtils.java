@@ -94,6 +94,7 @@ public class TestSearchUtils {
         }
 
         final IType[] childrenTypes = unit.getAllTypes();
+        final Map<String, TestItem> classMapping = new HashMap<>();
         for (final IType type : childrenTypes) {
             if (!isTestableClass(type)) {
                 continue;
@@ -105,26 +106,41 @@ public class TestSearchUtils {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList());
+            TestItem classItem = null;
             if (testMethodList.size() > 0) {
-                final TestItem parent = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
+                classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
                 for (final TestItem method : testMethodList) {
                     resultList.add(method);
-                    parent.addChild(method.getId());
+                    classItem.addChild(method.getId());
                 }
                 // Assume the kinds of all methods are the same.
-                parent.setKind(testMethodList.get(0).getKind());
-                resultList.add(parent);
+                classItem.setKind(testMethodList.get(0).getKind());
+                resultList.add(classItem);
+            } else {
+                // JUnit 5 supports nested test classes
+                if (isJunit5TestableClass(type)) {
+                    classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit5);
+                    resultList.add(classItem);
+                }
+
+                // Class annotated by @RunWith should be considered as a Suite even it has no test method children
+                if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH, false /*checkHierarchy*/)) {
+                    classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit);
+                    resultList.add(classItem);
+                }
+            }
+            if (classItem == null) {
                 continue;
             }
-            // JUnit 5 supports nested test classes
-            if (isJunit5TestableClass(type)) {
-                resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit));
+            classMapping.put(type.getFullyQualifiedName(), classItem);
+            final IType declarationType = type.getDeclaringType();
+            if (declarationType != null) {
+                final TestItem declarationTypeItem = classMapping.get(declarationType.getFullyQualifiedName());
+                if (declarationTypeItem != null) {
+                    declarationTypeItem.addChild(classItem.getId());
+                }
             }
-
-            // Class annotated by @RunWith should be considered as a Suite even it has no test method children
-            if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH, false /*checkHierarchy*/)) {
-                resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit));
-            }
+            
         }
 
         return resultList;
