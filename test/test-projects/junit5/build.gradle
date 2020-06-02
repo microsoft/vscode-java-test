@@ -8,7 +8,9 @@ repositories {
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.6.0'
-    testImplementation "net.jqwik:jqwik:1.2.7"
+    testImplementation 'net.jqwik:jqwik:1.2.7'
+	testImplementation 'io.cucumber:cucumber-java:5.6.0'
+	testImplementation 'io.cucumber:cucumber-junit:5.6.0'
 }
 
 test {
