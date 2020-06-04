@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.23.0
+### Added
+- Support JUnit 5's @Testable in Code Lenses. [PR#980](https://github.com/microsoft/vscode-java-test/pull/980)
+
+### Changed
+- Resolve the Code Lenses only when the current source file is on test source paths. [PR#997](https://github.com/microsoft/vscode-java-test/pull/997)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.23.0)
+
 ## 0.22.4
 ### Added
 - Add `sourcePaths` key in `java.test.config` to specify source paths. [#982](https://github.com/microsoft/vscode-java-test/issues/982)
