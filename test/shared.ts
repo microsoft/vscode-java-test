@@ -40,6 +40,8 @@ export namespace Uris {
     export const GRADLE_JUNIT5_PARAMETERIZED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'ParameterizedAnnotationTest.java'));
     export const GRADLE_JUNIT5_NESTED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'NestedTest.java'));
     export const GRADLE_JUNIT5_PROPERTY_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'PropertyTest.java'));
+    export const GRADLE_CUCUMBER_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'cucumber', 'CucumberTest.java'));
+    export const GRADLE_CUCUMBER_STEP: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'cucumber', 'CucumberSteps.java'));
 }
 
 export async function getJavaVersion(): Promise<number> {

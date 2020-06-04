@@ -30,17 +30,23 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 return;
             }
             this.currentTestItem = testId;
-            this.testIds.add(testId);
 
-            let result: ITestResult | undefined = testResultManager.getResultById(testId);
-            if (!result) {
+            let result: ITestResult;
+            if (this.testIds.has(testId)) {
+                result = Object.assign({}, testResultManager.getResultById(testId), {
+                    id: testId,
+                    status: TestStatus.Running,
+                });
+            } else {
+                // the test has not been executed in current test session.
+                // create a new result object
                 result = {
                     id: testId,
                     status: TestStatus.Running,
                 };
-            } else if (result.status === TestStatus.Pending) {
-                result.status = TestStatus.Running;
+                this.testIds.add(testId);
             }
+
             const start: number = Date.now();
             if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
                 result.status = TestStatus.Skip;
