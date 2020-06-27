@@ -31,7 +31,7 @@ class TestCodeLensController implements Disposable {
             return {
                 language: 'java',
                 scheme: 'file',
-                pattern: p,
+                pattern: p.pattern,
             };
         });
 
