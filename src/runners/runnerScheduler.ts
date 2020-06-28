@@ -149,6 +149,10 @@ class RunnerScheduler {
     }
 
     private showReportIfNeeded(finalResults: ITestResult[]): void {
+        if (finalResults.length === 0) {
+            return;
+        }
+
         const showSetting: string = getShowReportSetting();
         switch (showSetting) {
             case ReportShowSetting.Always:
