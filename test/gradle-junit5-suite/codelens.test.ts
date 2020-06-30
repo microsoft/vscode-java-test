@@ -19,7 +19,7 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4, 'Code Lens should appear for @ParameterizedTest annotation');
+        assert.equal(codeLens.length, 6, 'Code Lens should appear for @ParameterizedTest annotation');
 
         const command: Command | undefined = codeLens[0].command;
         assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
@@ -37,6 +37,26 @@ suite('Code Lens Tests', function() {
         const passedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.ParameterizedAnnotationTest#canRunWithComment`);
         assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
+    });
+
+    test("Can get correct result", async function() {
+        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_PARAMETERIZED_TEST);
+        await window.showTextDocument(document);
+
+        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+        const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+
+        const command: Command | undefined = codeLens[2].command;
+
+        const testItem: ITestItem[] = command!.arguments as ITestItem[];
+
+        await commands.executeCommand(command!.command, testItem[0]);
+
+        const projectName: string = testItem[0].project;
+
+        const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.ParameterizedAnnotationTest#equal`);
+        assert.equal(failedDetail!.status, TestStatus.Fail);
+        assert.ok(failedDetail!.trace !== undefined, 'Should have error trace');
     });
 
     test("Can run test method annotated with @Testable", async function() {
