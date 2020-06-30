@@ -17,4 +17,13 @@ public class ParameterizedAnnotationTest {
         App classUnderTest = new App();
         assertEquals(classUnderTest.getGreeting().equals(str), bool);
     }
+
+    @ParameterizedTest
+    @CsvSource({
+        "1, 2",
+        "1, 1"
+    })
+    public void equal(int first, int second) throws Exception {
+        assertEquals(first, second);
+    }
 }

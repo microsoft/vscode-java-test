@@ -65,7 +65,11 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                     return;
                 }
                 if (finishedResult.status === TestStatus.Running) {
-                    finishedResult.status = TestStatus.Pass;
+                    if (finishedResult.trace) {
+                        finishedResult.status = TestStatus.Fail;
+                    } else {
+                        finishedResult.status = TestStatus.Pass;
+                    }
                 }
                 updateElapsedTime(finishedResult);
                 testResultManager.storeResult(finishedResult);
