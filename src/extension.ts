@@ -4,13 +4,13 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
-import { JavaTestRunnerCommands } from './constants/commands';
+import { JavaLanguageServerCommands, JavaTestRunnerCommands } from './constants/commands';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
@@ -34,6 +34,39 @@ export async function deactivate(): Promise<void> {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
+    const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
+    if (extension && extension.isActive) {
+        const extensionApi: any = extension.exports;
+        if (!extensionApi) {
+            return;
+        }
+
+        serverMode = extensionApi.serverMode;
+
+        if (extensionApi.onDidClasspathUpdate) {
+            const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
+            context.subscriptions.push(onDidClasspathUpdate(async () => {
+                await testFileWatcher.registerListeners(true /*enableDebounce*/);
+            }));
+        }
+
+        if (extensionApi.onDidServerModeChange) {
+            const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
+            context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
+                serverMode = mode;
+                testExplorer.refresh();
+                await testFileWatcher.registerListeners();
+            }));
+        }
+
+        if (extensionApi.onDidProjectsImport) {
+            const onDidProjectsImport: Event<Uri[]> = extensionApi.onDidProjectsImport;
+            context.subscriptions.push(onDidProjectsImport(async () => {
+                await testFileWatcher.registerListeners(true /*enableDebounce*/);
+            }));
+        }
+    }
+
     await testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
@@ -66,17 +99,30 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_SWITCH_SERVER_MODE, async () => {
+            if (isSwitchingServer()) {
+                return;
+            }
+            await commands.executeCommand(JavaLanguageServerCommands.SWITCH_SERVER_MODE);
+        }),
     );
-
-    // refetch the test source path on projectss classpath updated.
-    const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
-    if (extension && extension.isActive) {
-        const extensionApi: any = extension.exports;
-        if (extensionApi && extensionApi.onDidClasspathUpdate) {
-            const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
-            context.subscriptions.push(onDidClasspathUpdate(async () => {
-                await testFileWatcher.registerListeners(true /*enableDebounce*/);
-            }));
-        }
-    }
 }
+
+export function isStandardServerReady(): boolean {
+    // undefined serverMode indicates an older version language server
+    if (serverMode === undefined) {
+        return true;
+    }
+
+    if (serverMode !== 'Standard') {
+        return false;
+    }
+
+    return true;
+}
+
+export function isSwitchingServer(): boolean {
+    return serverMode === 'Hybrid';
+}
+
+let serverMode: string | undefined;

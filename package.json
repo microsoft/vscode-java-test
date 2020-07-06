@@ -74,44 +74,44 @@
             "view/title": [
                 {
                     "command": "java.test.explorer.runAll",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && java:serverMode != LightWeight",
                     "group": "navigation@0"
                 },
                 {
                     "command": "java.test.explorer.debugAll",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && java:serverMode != LightWeight",
                     "group": "navigation@1"
                 },
                 {
                     "command": "java.test.explorer.refresh",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && java:serverMode != LightWeight",
                     "group": "navigation@2"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "java.test.explorer.run",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
                     "group": "testExplorer@0"
                 },
                 {
                     "command": "java.test.explorer.debug",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
                     "group": "testExplorer@1"
                 },
                 {
                     "command": "java.test.explorer.refresh",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
                     "group": "testExplorer@4"
                 },
                 {
                     "command": "java.test.explorer.run",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
                     "group": "inline@0"
                 },
                 {
                     "command": "java.test.explorer.debug",
-                    "when": "view == testExplorer",
+                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
                     "group": "inline@1"
                 }
             ],
@@ -127,6 +127,18 @@
                 {
                     "command": "java.test.explorer.refresh",
                     "when": "never"
+                },
+                {
+                    "command": "java.test.explorer.runAll",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
+                    "command": "java.test.explorer.debugAll",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
+                    "command": "java.test.cancel",
+                    "when": "java:serverMode != LightWeight"
                 }
             ]
         },
