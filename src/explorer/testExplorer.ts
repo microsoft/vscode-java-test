@@ -2,14 +2,16 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Command, Disposable, Event, EventEmitter, ExtensionContext, Range, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { Command, Disposable, Event, EventEmitter, ExtensionContext, extensions, Range, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
+import { isStandardServerReady, isSwitchingServer } from '../extension';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
 import { testFileWatcher } from '../testFileWatcher';
 import { testItemModel } from '../testItemModel';
 import { testResultManager } from '../testResultManager';
 
+const LIGHTWEIGHT_NODE_ID: string = ':LIGHTWEIGHT_MODE:';
 export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     public readonly testExplorerViewId: string = 'testExplorer';
 
@@ -24,6 +26,20 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     }
 
     public getTreeItem(element: ITestItem): TreeItem | Thenable<TreeItem> {
+        if (element.id === LIGHTWEIGHT_NODE_ID) {
+            return {
+                label: element.displayName,
+                collapsibleState: TreeItemCollapsibleState.None,
+                command: {
+                    command: JavaTestRunnerCommands.JAVA_TEST_SWITCH_SERVER_MODE,
+                    title: 'Switch to Standard mode',
+                },
+                contextValue: 'UNTESTABLE_NODE',
+                tooltip: 'Switch the Java Language Server to Standard mode to show all the test cases',
+                iconPath: new ThemeIcon('info'),
+            };
+        }
+
         return {
             label: element.displayName,
             collapsibleState: this.resolveCollapsibleState(element),
@@ -34,6 +50,29 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     }
 
     public async getChildren(element?: ITestItem): Promise<ITestItem[]> {
+        if (isSwitchingServer()) {
+            await new Promise<void>((resolve: () => void): void => {
+                extensions.getExtension('redhat.java')!.exports.onDidServerModeChange(resolve);
+            });
+        }
+        if (!isStandardServerReady()) {
+            return [
+                {
+                    id: LIGHTWEIGHT_NODE_ID,
+                    displayName: 'Click to load test cases...',
+                    fullName: LIGHTWEIGHT_NODE_ID,
+                    kind: TestKind.None,
+                    project: '',
+                    level: TestLevel.Folder,
+                    paramTypes: [],
+                    location: {
+                        uri: '',
+                        range: new Range(0, 0, 0, 0),
+                    },
+                    children: undefined,
+                },
+            ];
+        }
         let nodes: ITestItem[] = [];
         if (!element) {
             nodes = this.getWorkspaceFolders();
