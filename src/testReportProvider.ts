@@ -9,6 +9,7 @@ import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
 import { ILocation, ITestItem } from './protocols';
 import { ITestResult, TestStatus } from './runners/models';
+import { IExecutionCache, runnerScheduler } from './runners/runnerScheduler';
 import { testItemModel } from './testItemModel';
 import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
@@ -26,7 +27,15 @@ class TestReportProvider implements Disposable {
         this.resourceBasePath = path.join(this.context.extensionPath, 'resources', 'templates');
     }
 
-    public async report(tests: ITestResult[]): Promise<void> {
+    public async report(tests?: ITestResult[]): Promise<void> {
+        const executionCache: IExecutionCache = runnerScheduler.getExecutionCache();
+        if (executionCache.results) {
+            tests = executionCache.results;
+        }
+        if (!tests || tests.length === 0) {
+            return;
+        }
+
         const position: ViewColumn = getReportPosition();
         if (!this.panel) {
             this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', position, {

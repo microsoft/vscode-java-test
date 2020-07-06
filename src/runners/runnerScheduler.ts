@@ -23,6 +23,7 @@ class RunnerScheduler {
     private _context: ExtensionContext;
     private _isRunning: boolean;
     private _runnerMap: Map<BaseRunner, ITestItem[]> | undefined;
+    private _executionCache: IExecutionCache;
 
     public initialize(context: ExtensionContext): void {
         this._context = context;
@@ -35,6 +36,7 @@ class RunnerScheduler {
         }
 
         this._isRunning = true;
+        this._executionCache = Object.assign({}, {context: runnerContext});
         let allIds: Set<string> = new Set<string>();
 
         try {
@@ -60,12 +62,17 @@ class RunnerScheduler {
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);
+            this._executionCache.results = finalResults;
         } catch (error) {
             logger.error(error.toString());
             uiUtils.showError(error);
         } finally {
             await this.cleanUp(false);
         }
+    }
+
+    public getExecutionCache(): IExecutionCache {
+        return this._executionCache;
     }
 
     public async cleanUp(isCancel: boolean): Promise<void> {
@@ -175,6 +182,11 @@ class RunnerScheduler {
                 break;
         }
     }
+}
+
+export interface IExecutionCache {
+    context: IRunnerContext;
+    results?: ITestResult[];
 }
 
 export const runnerScheduler: RunnerScheduler = new RunnerScheduler();

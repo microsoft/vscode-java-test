@@ -9,3 +9,4 @@ export * from './src/testResultManager';
 export * from './src/protocols';
 export * from './src/utils/commandUtils';
 export * from './src/testFileWatcher';
+export * from './src/runners/runnerScheduler';
