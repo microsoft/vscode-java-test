@@ -131,6 +131,9 @@ suite('Code Lens Tests', function() {
         await fse.writeFile(Uris.GRADLE_CUCUMBER_STEP.fsPath,
             fileContent.replace('assertEquals(value + 1, 6);', 'assertEquals(value, 6);'), {encoding: 'utf-8'});
 
+        // trigger build
+        await commands.executeCommand('java.workspace.compile', false);
+
         await commands.executeCommand(command!.command, testItem[0]);
         result = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
         assert.equal(result!.status, TestStatus.Pass);
