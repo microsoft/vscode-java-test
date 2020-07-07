@@ -139,6 +139,10 @@
                 {
                     "command": "java.test.cancel",
                     "when": "java:serverMode != LightWeight"
+                },
+                {
+                    "command": "java.test.show.report",
+                    "when": "java:serverMode != LightWeight"
                 }
             ]
         },
@@ -180,6 +184,11 @@
             {
                 "command": "java.test.cancel",
                 "title": "%contributes.commands.java.test.cancel.title%",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.show.report",
+                "title": "%contributes.commands.java.test.show.report.title%",
                 "category": "Java"
             },
             {

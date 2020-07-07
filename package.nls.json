@@ -8,6 +8,7 @@
     "contributes.commands.java.test.explorer.debugAll.title": "Debug All Tests",
     "contributes.commands.java.test.explorer.run.config.title": "Run With Configuration",
     "contributes.commands.java.test.explorer.debug.config.title": "Debug With Configuration",
+    "contributes.commands.java.test.show.report.title": "Show Test Report",
     "contributes.commands.java.test.cancel.title": "Cancel Test Job",
     "contributes.commands.java.test.explorer.refresh.title": "Refresh",
     "contributes.commands.java.test.config.migrate.title": "Migrate Deprecated 'launch.test.json'",

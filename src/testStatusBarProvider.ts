@@ -17,11 +17,11 @@ class TestStatusBarProvider implements Disposable {
     }
 
     public showRunningTest(): void {
-        this.update('$(sync~spin) Running tests...', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
+        this.update('$(sync~spin) Running tests...', 'Show test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
     }
 
     public showFailure(): void {
-        this.update('$(issue-opened) Failed to run tests', 'View test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
+        this.update('$(issue-opened) Failed to run tests', 'Show test output', JavaTestRunnerCommands.SHOW_TEST_OUTPUT);
     }
 
     public showTestResult(results: ITestResult[]): void {
@@ -40,7 +40,7 @@ class TestStatusBarProvider implements Disposable {
             }
         }
 
-        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'View test report', JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]);
+        this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'Show test report', JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]);
     }
 
     public update(text: string, tooltip?: string, command?: string, args?: any[]): void {

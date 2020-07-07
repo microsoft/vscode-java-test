@@ -8,6 +8,7 @@
     "contributes.commands.java.test.explorer.debugAll.title": "调试所有测试用例",
     "contributes.commands.java.test.explorer.run.config.title": "根据配置文件运行",
     "contributes.commands.java.test.explorer.debug.config.title": "根据配置文件调试",
+    "contributes.commands.java.test.show.report.title": "显示测试报告",
     "contributes.commands.java.test.cancel.title": "取消测试任务",
     "contributes.commands.java.test.explorer.refresh.title": "刷新",
     "contributes.commands.java.test.config.migrate.title": "迁移已弃用的 'launch.test.json' 文件",
