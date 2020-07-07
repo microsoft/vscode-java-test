@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import { Disposable, FileSystemWatcher, RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { testExplorer } from './explorer/testExplorer';
+import { isStandardServerReady } from './extension';
 import { logger } from './logger/logger';
 import { ITestItem, TestLevel } from './protocols';
 import { testItemModel } from './testItemModel';
@@ -36,6 +37,9 @@ class TestFileWatcher implements Disposable {
     }
 
     protected async registerListenersInternal(): Promise<void> {
+        if (!isStandardServerReady()) {
+            return;
+        }
         this.dispose();
         if (workspace.workspaceFolders) {
             try {
