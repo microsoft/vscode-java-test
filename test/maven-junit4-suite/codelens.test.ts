@@ -37,13 +37,13 @@ suite('Code Lens Tests', function() {
         assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
 
-        const passedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.TestAnnotation#shouldPass`);
+        const passedDetail: ITestResult | undefined = testResultManager.getResultById(`${projectName}@junit4.TestAnnotation#shouldPass`);
         assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
 
-        const executionCache: IExecutionCache = runnerScheduler.getExecutionCache();
-        assert.ok(executionCache.context != undefined);
-        assert.equal(executionCache.results!.length, 2);
+        const executionCache: IExecutionCache | undefined = runnerScheduler.getExecutionCache();
+        assert.ok(executionCache!.context != undefined);
+        assert.equal(executionCache!.results!.length, 2);
     });
 
     test("Code Lens should be present for JUnit 4's @Theory annotation", async function() {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as _ from 'lodash';
 import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
@@ -23,23 +24,35 @@ class RunnerScheduler {
     private _context: ExtensionContext;
     private _isRunning: boolean;
     private _runnerMap: Map<BaseRunner, ITestItem[]> | undefined;
-    private _executionCache: IExecutionCache;
+    private _executionCache: IExecutionCache | undefined;
 
     public initialize(context: ExtensionContext): void {
         this._context = context;
     }
 
+    public async relaunch(): Promise<void> {
+        if (!this._executionCache || !this._executionCache.context) {
+            logger.error('No test history available, please run some test cases first to relaunch the tests.\n');
+            return;
+        }
+
+        await this.run(this._executionCache.context);
+    }
+
     public async run(runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
         if (this._isRunning) {
-            window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
+            window.showInformationMessage('A test session is currently running. Please wait until it finishes.\n');
             return;
         }
 
         this._isRunning = true;
-        this._executionCache = Object.assign({}, {context: runnerContext});
-        let allIds: Set<string> = new Set<string>();
+        this._executionCache = {
+            context: _.cloneDeep(runnerContext),
+        };
 
+        let allIds: Set<string> = new Set<string>();
         try {
+            testStatusBarProvider.showRunningTest();
             this._runnerMap = this.classifyTestsByKind(runnerContext.tests);
             for (const [runner, tests] of this._runnerMap.entries()) {
                 runnerContext.kind = tests[0].kind;
@@ -54,7 +67,6 @@ class RunnerScheduler {
                 }
 
                 await runner.setup(runnerContext);
-                testStatusBarProvider.showRunningTest();
                 const ids: Set<string> = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
                 allIds = new Set([...allIds, ...ids]);
             }
@@ -71,7 +83,7 @@ class RunnerScheduler {
         }
     }
 
-    public getExecutionCache(): IExecutionCache {
+    public getExecutionCache(): IExecutionCache | undefined {
         return this._executionCache;
     }
 
