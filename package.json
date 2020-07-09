@@ -73,19 +73,24 @@
         "menus": {
             "view/title": [
                 {
+                    "command": "java.test.relaunch",
+                    "when": "view == testExplorer && java:serverMode != LightWeight",
+                    "group": "navigation@10"
+                },
+                {
                     "command": "java.test.explorer.runAll",
                     "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@0"
+                    "group": "navigation@20"
                 },
                 {
                     "command": "java.test.explorer.debugAll",
                     "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@1"
+                    "group": "navigation@30"
                 },
                 {
                     "command": "java.test.explorer.refresh",
                     "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@2"
+                    "group": "navigation@40"
                 }
             ],
             "view/item/context": [
@@ -137,6 +142,10 @@
                     "when": "java:serverMode != LightWeight"
                 },
                 {
+                    "command": "java.test.relaunch",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
                     "command": "java.test.cancel",
                     "when": "java:serverMode != LightWeight"
                 },
@@ -179,6 +188,12 @@
                 "command": "java.test.explorer.debugAll",
                 "title": "%contributes.commands.java.test.explorer.debugAll.title%",
                 "icon": "$(debug)",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.relaunch",
+                "title": "%contributes.commands.java.test.relaunch.title%",
+                "icon": "$(debug-restart)",
                 "category": "Java"
             },
             {
@@ -381,7 +396,7 @@
         "@types/pug": "^2.0.4",
         "@types/sinon": "^9.0.3",
         "@types/vscode": "1.44.0",
-        "bootstrap": "^4.4.1",
+        "bootstrap": "^4.5.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",
         "gulp-remote-src": "^0.4.4",

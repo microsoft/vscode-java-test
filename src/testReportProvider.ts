@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
+import { commands, Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
 import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
@@ -28,8 +28,8 @@ class TestReportProvider implements Disposable {
     }
 
     public async report(tests?: ITestResult[]): Promise<void> {
-        const executionCache: IExecutionCache = runnerScheduler.getExecutionCache();
-        if (executionCache.results) {
+        const executionCache: IExecutionCache | undefined = runnerScheduler.getExecutionCache();
+        if (executionCache && executionCache.results) {
             tests = executionCache.results;
         }
         if (!tests || tests.length === 0) {
@@ -77,6 +77,8 @@ class TestReportProvider implements Disposable {
                             logger.error('Could not open the document, Neither the Uri nor full name is null.');
                         }
                         break;
+                    case JavaTestRunnerCommands.RELAUNCH_TESTS:
+                        commands.executeCommand(JavaTestRunnerCommands.RELAUNCH_TESTS);
                     default:
                         return;
                 }

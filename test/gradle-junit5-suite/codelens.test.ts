@@ -133,7 +133,7 @@ suite('Code Lens Tests', function() {
 
         await commands.executeCommand('java.workspace.compile', false);
 
-        await commands.executeCommand(command!.command, testItem[0]);
+        await commands.executeCommand('java.test.relaunch');
         result = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
         assert.equal(result!.status, TestStatus.Pass);
 
