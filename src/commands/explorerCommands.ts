@@ -41,10 +41,14 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
         }
         if (node.level === TestLevel.Method) {
             runnerContext.paramTypes = node.paramTypes;
+            runnerContext.tests = [node];
         }
     }
 
-    await searchTestItems(runnerContext);
+    if (!runnerContext.tests) {
+        await searchTestItems(runnerContext);
+    }
+
     if (!runnerContext.tests) {
         logger.info('Test job is canceled.');
         return;
