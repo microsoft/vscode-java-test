@@ -4,6 +4,19 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.24.0
+### Added
+- Add relaunch tests command. [#1030](https://github.com/microsoft/vscode-java-test/issues/1030)
+- Add the panel icon for the test report. [#PR1032](https://github.com/microsoft/vscode-java-test/pull/1032)
+- Show test report via keyboard shortcut and command palette. [#1002](https://github.com/microsoft/vscode-java-test/issues/1002)
+- Adopt the new APIs for the LightWeight mode. [PR#1019](https://github.com/microsoft/vscode-java-test/pull/1019)
+
+### Changed
+- Run directly if the test is triggered from a method node in explorer. [PR#1033](https://github.com/microsoft/vscode-java-test/pull/1033)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.24.0)
+
 ## 0.23.0
 ### Added
 - Support JUnit 5's @Testable in Code Lenses. [PR#980](https://github.com/microsoft/vscode-java-test/pull/980)
