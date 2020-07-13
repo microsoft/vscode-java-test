@@ -45,15 +45,18 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
         }
     }
 
-    if (!runnerContext.tests) {
-        await searchTestItems(runnerContext);
+    if (runnerContext.tests.length === 0) {
+        try {
+            await searchTestItems(runnerContext);
+        } catch (e) {
+            // so far the promise is only rejected on cancellation
+            logger.info('Test job is canceled.\n');
+            return;
+        }
     }
 
-    if (!runnerContext.tests) {
-        logger.info('Test job is canceled.');
-        return;
-    } else if (runnerContext.tests.length <= 0) {
-        logger.info('No test items found.');
+    if (runnerContext.tests.length === 0) {
+        logger.info('No test items found.\n');
         return;
     }
 
@@ -61,15 +64,15 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
 }
 
 async function searchTestItems(runnerContext: IRunnerContext): Promise<void> {
-    return new Promise<void>((resolve: () => void): void => {
+    return new Promise<void>((resolve: () => void, reject: () => void): void => {
         window.withProgress(
             { location: ProgressLocation.Notification, cancellable: true },
             async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                 progress.report({ message: 'Searching test items...' });
-                token.onCancellationRequested(resolve);
+                token.onCancellationRequested(reject);
                 runnerContext.tests = await testItemModel.getAllNodes(runnerContext.scope, runnerContext.fullName, runnerContext.testUri);
                 if (token.isCancellationRequested) {
-                    return resolve();
+                    return reject();
                 }
                 return resolve();
             },
