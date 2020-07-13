@@ -32,7 +32,7 @@ class RunnerScheduler {
 
     public async relaunch(): Promise<void> {
         if (!this._executionCache || !this._executionCache.context) {
-            logger.error('No test history available, please run some test cases first to relaunch the tests.\n');
+            logger.info('No test history available, please run some test cases first to relaunch the tests.\n');
             return;
         }
 
@@ -62,7 +62,7 @@ class RunnerScheduler {
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
                 const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
                 if (!config) {
-                    logger.info('Test job is canceled.');
+                    logger.info('Test job is canceled.\n');
                     continue;
                 }
 
@@ -100,7 +100,7 @@ class RunnerScheduler {
             await Promise.all(promises);
 
             if (isCancel) {
-                logger.info('Test job is canceled.');
+                logger.info('Test job is canceled.\n');
             }
         } catch (error) {
             logger.error('Failed to clean up', error);
