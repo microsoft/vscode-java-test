@@ -35,6 +35,7 @@
         "onCommand:java.test.explorer.refresh",
         "onCommand:java.test.explorer.run",
         "onCommand:java.test.explorer.debug",
+        "onCommand:java.test.activeEditor.run",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
         "onCommand:java.test.cancel",
@@ -195,6 +196,11 @@
                 "command": "java.test.explorer.debugAll",
                 "title": "%contributes.commands.java.test.explorer.debugAll.title%",
                 "icon": "$(debug)",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.activeEditor.run",
+                "title": "%contributes.commands.java.test.activeEditor.run.title%",
                 "category": "Java"
             },
             {

@@ -7,6 +7,7 @@ import * as path from 'path';
 import { DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
+import { runTestsInActiveEditor } from './commands/editorCommands';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
@@ -94,6 +95,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_ALL_TEST_FROM_EXPLORER, async () => await debugTestsFromExplorer()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EXPLORER, async (node?: ITestItem, launchConfiguration?: DebugConfiguration) => await runTestsFromExplorer(node, launchConfiguration)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EXPLORER, async (node?: ITestItem, launchConfiguration?: DebugConfiguration) => await debugTestsFromExplorer(node, launchConfiguration)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TESTS_FROM_ACTIVE_EDITOR, async () => await runTestsInActiveEditor()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RELAUNCH_TESTS, async () => await runnerScheduler.relaunch()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_REPORT, async (tests?: ITestResult[]) => await testReportProvider.report(tests)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.SHOW_TEST_OUTPUT, () => showOutputChannel()),

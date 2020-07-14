@@ -61,7 +61,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
     return runnerScheduler.run(runnerContext, launchConfiguration);
 }
 
-async function searchTestItems(runnerContext: IRunnerContext): Promise<void> {
+export async function searchTestItems(runnerContext: IRunnerContext): Promise<void> {
     return new Promise<void>((resolve: () => void, reject: () => void): void => {
         window.withProgress(
             { location: ProgressLocation.Notification, cancellable: true },
