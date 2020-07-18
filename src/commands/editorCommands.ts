@@ -21,7 +21,7 @@ async function executeTestsInActiveEditor(isDebug: boolean): Promise<void> {
     const fileName: string = parts[parts.length - 1];
     const className: string = fileName.split('.')[0];
     const classFileContent: string = readFileSync(path, 'utf8');
-    const packageLine = classFileContent.match(/^package .*;$/gm);
+    const packageLine: RegExpMatchArray | null  = classFileContent.match(/^package .*;$/gm);
     let packageLineParts: string[];
     let packageName: string;
     if (packageLine) {
