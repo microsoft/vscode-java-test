@@ -4,15 +4,9 @@ matrix:
   include:
   - os: linux
     dist: trusty
-    jdk: openjdk8
-  - os: linux
-    dist: trusty
     jdk: openjdk11
     env:
       - JDK_HOME=~/openjdk11 # force launching JLS using JDK11
-  - os: osx
-    osx_image: xcode9.3
-    jdk: oraclejdk8
   - os: osx
     osx_image: xcode10.1
     jdk: oraclejdk11
