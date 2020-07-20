@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as _ from 'lodash';
 import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
@@ -23,21 +24,35 @@ class RunnerScheduler {
     private _context: ExtensionContext;
     private _isRunning: boolean;
     private _runnerMap: Map<BaseRunner, ITestItem[]> | undefined;
+    private _executionCache: IExecutionCache | undefined;
 
     public initialize(context: ExtensionContext): void {
         this._context = context;
     }
 
+    public async relaunch(): Promise<void> {
+        if (!this._executionCache || !this._executionCache.context) {
+            logger.info('No test history available, please run some test cases first to relaunch the tests.\n');
+            return;
+        }
+
+        await this.run(this._executionCache.context);
+    }
+
     public async run(runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
         if (this._isRunning) {
-            window.showInformationMessage('A test session is currently running. Please wait until it finishes.');
+            window.showInformationMessage('A test session is currently running. Please wait until it finishes.\n');
             return;
         }
 
         this._isRunning = true;
-        let allIds: Set<string> = new Set<string>();
+        this._executionCache = {
+            context: _.cloneDeep(runnerContext),
+        };
 
+        let allIds: Set<string> = new Set<string>();
         try {
+            testStatusBarProvider.showRunningTest();
             this._runnerMap = this.classifyTestsByKind(runnerContext.tests);
             for (const [runner, tests] of this._runnerMap.entries()) {
                 runnerContext.kind = tests[0].kind;
@@ -47,12 +62,11 @@ class RunnerScheduler {
                 const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
                 const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
                 if (!config) {
-                    logger.info('Test job is canceled.');
+                    logger.info('Test job is canceled.\n');
                     continue;
                 }
 
                 await runner.setup(runnerContext);
-                testStatusBarProvider.showRunningTest();
                 const ids: Set<string> = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
                 allIds = new Set([...allIds, ...ids]);
             }
@@ -60,12 +74,17 @@ class RunnerScheduler {
             testStatusBarProvider.showTestResult(finalResults);
             testCodeLensController.refresh();
             this.showReportIfNeeded(finalResults);
+            this._executionCache.results = finalResults;
         } catch (error) {
             logger.error(error.toString());
             uiUtils.showError(error);
         } finally {
             await this.cleanUp(false);
         }
+    }
+
+    public getExecutionCache(): IExecutionCache | undefined {
+        return this._executionCache;
     }
 
     public async cleanUp(isCancel: boolean): Promise<void> {
@@ -81,7 +100,7 @@ class RunnerScheduler {
             await Promise.all(promises);
 
             if (isCancel) {
-                logger.info('Test job is canceled.');
+                logger.info('Test job is canceled.\n');
             }
         } catch (error) {
             logger.error('Failed to clean up', error);
@@ -175,6 +194,11 @@ class RunnerScheduler {
                 break;
         }
     }
+}
+
+export interface IExecutionCache {
+    context: IRunnerContext;
+    results?: ITestResult[];
 }
 
 export const runnerScheduler: RunnerScheduler = new RunnerScheduler();

@@ -45,10 +45,10 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, ru
         };
     }
 
-    return await getDebugConfigurationForEclispeRunner(runnerContext, config);
+    return await getDebugConfigurationForEclipseRunner(runnerContext, config);
 }
 
-export async function getDebugConfigurationForEclispeRunner(runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
+export async function getDebugConfigurationForEclipseRunner(runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(runnerContext);
 
     if (config && config.vmargs) {

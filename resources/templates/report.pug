@@ -2,7 +2,7 @@ include /report_method_table.pug
 doctype html
 html(lang="en")
     head
-        meta(http-equiv="Content-Security-Policy" content=`default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';`)
+        meta(http-equiv="Content-Security-Policy" content=`default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src ${cspSource}`)
         meta(charset="utf-8")
         meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
         style(nonce=`${nonce}`)
@@ -24,6 +24,13 @@ html(lang="en")
                     return false;
                 });
 
+                $('#relaunch-tab').click((e) => {
+                    vscode.postMessage({
+                        command: 'java.test.relaunch',
+                    });
+                    return false;
+                });
+
                 //- rotate the arrow icon in accordion
                 $(".collapse").on('show.bs.collapse', function(){
                     $(this).parent().find("svg").first().addClass("rotate");
@@ -34,21 +41,24 @@ html(lang="en")
 
     body.container-fluid
         ul.nav.nav-pills.mt-3(role='tablist')
-            li.nav-item
+            li.nav-item.d-inline-flex
                 button.btn.btn-sm.btn-info.active.mr-2.mb-2(id='all-tab', data-toggle='pill', href='#all', role='tab', aria-controls='all') All
                     span.badge.badge-light.ml-2 #{allCount}
             if failedCount
-                li.nav-item
+                li.nav-item.d-inline-flex
                     button.btn.btn-sm.btn-danger.mr-2.mb-2(id='fail-tab', data-toggle='pill', href='#fail', role='tab', aria-controls='fail') Failed
                         span.badge.badge-light.ml-2 #{failedCount}
             if passedCount
-                li.nav-item
+                li.nav-item.d-inline-flex
                     button.btn.btn-sm.btn-success.mr-2.mb-2(id='pass-tab', data-toggle='pill', href='#pass', role='tab', aria-controls='pass') Passed
                         span.badge.badge-light.ml-2 #{passedCount}
             if skippedCount
-                li.nav-item
-                    button.btn.btn-sm.btn-secondary.mb-2(id='skip-tab', data-toggle='pill', href='#skip', role='tab', aria-controls='skip') Skipped
+                li.nav-item.d-inline-flex
+                    button.btn.btn-sm.btn-secondary.mr-2.mb-2(id='skip-tab', data-toggle='pill', href='#skip', role='tab', aria-controls='skip') Skipped
                         span.badge.badge-light.ml-2 #{skippedCount}
+            li.nav-item.d-inline-flex
+                button.btn.btn-sm.btn-dark.mb-2(id='relaunch-tab', data-toggle='tooltip' data-placement='bottom' title='Relaunch the tests')
+                    include /images/debug-restart.svg
 
         div.tab-content
             div.tab-pane.fade.show.active(id='all', role='tabpanel', aria-labelledby='all-tab')

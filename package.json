@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.23.0",
+    "version": "0.24.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -46,7 +46,7 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.23.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.24.0.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1200.v20200214-0716.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.800.v20200214-0716.jar",
             "./server/org.junit.jupiter.api_5.6.0.v20200203-2009.jar",
@@ -73,19 +73,24 @@
         "menus": {
             "view/title": [
                 {
+                    "command": "java.test.relaunch",
+                    "when": "view == testExplorer && java:serverMode != LightWeight",
+                    "group": "navigation@10"
+                },
+                {
                     "command": "java.test.explorer.runAll",
                     "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@0"
+                    "group": "navigation@20"
                 },
                 {
                     "command": "java.test.explorer.debugAll",
                     "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@1"
+                    "group": "navigation@30"
                 },
                 {
                     "command": "java.test.explorer.refresh",
                     "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@2"
+                    "group": "navigation@40"
                 }
             ],
             "view/item/context": [
@@ -137,7 +142,15 @@
                     "when": "java:serverMode != LightWeight"
                 },
                 {
+                    "command": "java.test.relaunch",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
                     "command": "java.test.cancel",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
+                    "command": "java.test.show.report",
                     "when": "java:serverMode != LightWeight"
                 }
             ]
@@ -178,8 +191,19 @@
                 "category": "Java"
             },
             {
+                "command": "java.test.relaunch",
+                "title": "%contributes.commands.java.test.relaunch.title%",
+                "icon": "$(debug-restart)",
+                "category": "Java"
+            },
+            {
                 "command": "java.test.cancel",
                 "title": "%contributes.commands.java.test.cancel.title%",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.show.report",
+                "title": "%contributes.commands.java.test.show.report.title%",
                 "category": "Java"
             },
             {
@@ -372,7 +396,7 @@
         "@types/pug": "^2.0.4",
         "@types/sinon": "^9.0.3",
         "@types/vscode": "1.44.0",
-        "bootstrap": "^4.4.1",
+        "bootstrap": "^4.5.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",
         "gulp-remote-src": "^0.4.4",
@@ -392,7 +416,7 @@
         "fs-extra": "^7.0.1",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.4.24",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.19",
         "pug": "^2.0.4",
         "vscode-extension-telemetry-wrapper": "^0.8.0",
         "winston": "^3.2.1",

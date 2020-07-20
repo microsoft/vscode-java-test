@@ -3,12 +3,13 @@
 
 import * as path from 'path';
 import * as pug from 'pug';
-import { Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
+import { commands, Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
 import { openTextDocument } from './commands/explorerCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { logger } from './logger/logger';
 import { ILocation, ITestItem } from './protocols';
 import { ITestResult, TestStatus } from './runners/models';
+import { IExecutionCache, runnerScheduler } from './runners/runnerScheduler';
 import { testItemModel } from './testItemModel';
 import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
@@ -26,7 +27,15 @@ class TestReportProvider implements Disposable {
         this.resourceBasePath = path.join(this.context.extensionPath, 'resources', 'templates');
     }
 
-    public async report(tests: ITestResult[]): Promise<void> {
+    public async report(tests?: ITestResult[]): Promise<void> {
+        const executionCache: IExecutionCache | undefined = runnerScheduler.getExecutionCache();
+        if (executionCache && executionCache.results) {
+            tests = executionCache.results;
+        }
+        if (!tests || tests.length === 0) {
+            return;
+        }
+
         const position: ViewColumn = getReportPosition();
         if (!this.panel) {
             this.panel = window.createWebviewPanel('testRunnerReport', 'Java Test Report', position, {
@@ -68,6 +77,8 @@ class TestReportProvider implements Disposable {
                             logger.error('Could not open the document, Neither the Uri nor full name is null.');
                         }
                         break;
+                    case JavaTestRunnerCommands.RELAUNCH_TESTS:
+                        commands.executeCommand(JavaTestRunnerCommands.RELAUNCH_TESTS);
                     default:
                         return;
                 }
@@ -75,6 +86,7 @@ class TestReportProvider implements Disposable {
         }
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests, this.panel.webview);
+        this.panel.iconPath = Uri.file(path.join(this.resourceBasePath, '..', 'logo.lowers.png'));
 
         this.panel.reveal(this.panel.viewColumn || position);
     }

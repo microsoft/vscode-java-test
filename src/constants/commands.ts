@@ -27,6 +27,7 @@ export namespace JavaTestRunnerCommands {
     export const SHOW_TEST_REPORT: string = 'java.test.show.report';
     export const SHOW_TEST_OUTPUT: string = 'java.test.show.output';
     export const OPEN_TEST_LOG: string = 'java.test.open.log';
+    export const RELAUNCH_TESTS: string = 'java.test.relaunch';
     export const JAVA_TEST_CANCEL: string = 'java.test.cancel';
     export const JAVA_CONFIG_MIGRATE: string = 'java.test.config.migrate';
     export const JAVA_TEST_SWITCH_SERVER_MODE: string = 'java.test.switch.server.mode';
