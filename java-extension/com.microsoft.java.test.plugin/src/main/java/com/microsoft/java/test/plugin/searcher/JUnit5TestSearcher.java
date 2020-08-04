@@ -23,14 +23,21 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.manipulation.CoreASTProvider;
+import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
@@ -60,6 +67,11 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
     }
 
     @Override
+    public String getJdtTestKind() {
+        return TestKindRegistry.JUNIT5_TEST_KIND_ID;
+    }
+
+    @Override
     public boolean isTestMethod(IMethod method) {
         try {
             final int flags = method.getFlags();
@@ -79,6 +91,24 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
             // ignore
             return false;
         }
+    }
+
+    @Override
+    public boolean isTestMethod(IMethodBinding methodBinding) {
+        final int modifiers = methodBinding.getModifiers();
+        if (Modifier.isAbstract(modifiers) || Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers)) {
+            return false;
+        }
+
+        if (methodBinding.isConstructor()) {
+            return false;
+        }
+        for (final String annotationName : this.getTestMethodAnnotations()) {
+            if (this.annotates(methodBinding.getAnnotations(), annotationName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SuppressWarnings("rawtypes")
@@ -109,5 +139,86 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
         }
         item.setParamTypes(result);
         return item;
+    }
+
+    @Override
+    public TestItem parseTestItem(IMethodBinding methodBinding) throws JavaModelException {
+        final TestItem item = super.parseTestItem(methodBinding);
+
+        // deal with @DisplayName
+        for (final IAnnotationBinding annotation : methodBinding.getAnnotations()) {
+            if (annotation == null) {
+                continue;
+            }
+            if (matchesName(annotation.getAnnotationType(), DISPLAY_NAME_ANNOTATION_JUNIT5)) {
+                item.setDisplayName((String) annotation.getAllMemberValuePairs()[0].getValue());
+                break;
+            }
+        }
+
+        // parse the parameters
+        final ITypeBinding[] parameters = methodBinding.getParameterTypes();
+        if (parameters.length > 0) {
+            final List<String> result = new LinkedList<>();
+            for (final ITypeBinding parameter : parameters) {
+                result.add(parameter.getQualifiedName());
+            }
+            item.setParamTypes(result);
+        }
+
+        return item;
+    }
+
+    @Override
+    public boolean annotates(IAnnotationBinding[] annotations, String annotationName) {
+        for (final IAnnotationBinding annotation : annotations) {
+            if (annotation == null) {
+                continue;
+            }
+            if (matchesName(annotation.getAnnotationType(), annotationName)) {
+                return true;
+            }
+
+            if (JUPITER_NESTED.equals(annotationName) || JUNIT_PLATFORM_TESTABLE.equals(annotationName)) {
+                final Set<ITypeBinding> hierarchy = new HashSet<>();
+                if (matchesNameInAnnotationHierarchy(annotation, annotationName, hierarchy)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesName(ITypeBinding annotationType, String annotationName) {
+        if (annotationType != null) {
+            if (annotationType.getQualifiedName().equals(annotationName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean matchesNameInAnnotationHierarchy(IAnnotationBinding annotation, String annotationName,
+            Set<ITypeBinding> hierarchy) {
+        final ITypeBinding type = annotation.getAnnotationType();
+        if (type == null) {
+            return false;
+        }
+
+        for (final IAnnotationBinding annotationBinding : type.getAnnotations()) {
+            if (annotationBinding == null) {
+                continue;
+            }
+            final ITypeBinding annotationType = annotationBinding.getAnnotationType();
+            if (annotationType != null && hierarchy.add(annotationType)) {
+                if (matchesName(annotationType, annotationName) ||
+                        matchesNameInAnnotationHierarchy(annotation, annotationName, hierarchy)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

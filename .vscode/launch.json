@@ -11,7 +11,10 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [ "${workspaceRoot}/dist/**/*.js" ],
-            "preLaunchTask": "npm: watch"
+            "preLaunchTask": "npm: watch",
+            "env": {
+                "DEBUG_VSCODE_JAVA":"true"
+            }
         },
         {
             "type": "java",

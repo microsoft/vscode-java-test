@@ -14,9 +14,7 @@ package com.microsoft.java.test.plugin.util;
 import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
-import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
-import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 
 import org.eclipse.core.resources.IFolder;
@@ -37,6 +35,12 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -52,15 +56,12 @@ import org.eclipse.lsp4j.Location;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("restriction")
@@ -88,60 +89,28 @@ public class TestSearchUtils {
         Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
 
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uri);
-        // whether the file is on test path or not is guarded at client side cache
-        if (!isJavaElementExist(unit) || monitor.isCanceled()) {
+        final IType primaryType = unit.findPrimaryType();
+        if (!isJavaElementExist(unit) || primaryType == null || monitor.isCanceled()) {
             return resultList;
         }
 
-        final IType[] childrenTypes = unit.getAllTypes();
-        final Map<String, TestItem> classMapping = new HashMap<>();
-        for (final IType type : childrenTypes) {
-            if (!isTestableClass(type)) {
-                continue;
-            }
-            final List<TestItem> testMethodList = Arrays.stream(type.getMethods()).map(method -> {
-                try {
-                    return TestFrameworkUtils.resoveTestItemForMethod(method);
-                } catch (final JavaModelException e) {
-                    return null;
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toList());
-            TestItem classItem = null;
-            if (testMethodList.size() > 0) {
-                classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS);
-                for (final TestItem method : testMethodList) {
-                    resultList.add(method);
-                    classItem.addChild(method.getId());
-                }
-                // Assume the kinds of all methods are the same.
-                classItem.setKind(testMethodList.get(0).getKind());
-                resultList.add(classItem);
-            } else {
-                // JUnit 5 supports nested test classes
-                if (isJunit5TestableClass(type)) {
-                    classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit5);
-                    resultList.add(classItem);
-                }
-
-                // Class annotated by @RunWith should be considered as a Suite even it has no test method children
-                if (TestFrameworkUtils.hasAnnotation(type, JUnit4TestSearcher.RUN_WITH, false /*checkHierarchy*/)) {
-                    classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit);
-                    resultList.add(classItem);
-                }
-            }
-            if (classItem == null) {
-                continue;
-            }
-            classMapping.put(type.getFullyQualifiedName(), classItem);
-            final IType declarationType = type.getDeclaringType();
-            if (declarationType != null) {
-                final TestItem declarationTypeItem = classMapping.get(declarationType.getFullyQualifiedName());
-                if (declarationTypeItem != null) {
-                    declarationTypeItem.addChild(classItem.getId());
-                }
-            }
-            
+        final ASTParser parser = ASTParser.newParser(AST.JLS14);
+        parser.setSource(unit);
+        parser.setFocalPosition(0);
+        parser.setResolveBindings(true);
+        final CompilationUnit root = (CompilationUnit) parser.createAST(monitor);
+        final ASTNode node = root.findDeclaringNode(primaryType.getKey());
+        if (!(node instanceof TypeDeclaration)) {
+            return resultList;
         }
+
+        final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+        if (binding == null) {
+            return resultList;
+        }
+
+        final Map<String, TestItem> classMapping = new HashMap<>();
+        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, classMapping);
 
         return resultList;
     }
@@ -222,7 +191,7 @@ public class TestSearchUtils {
                     if (!scope.encloses(method)) {
                         return;
                     }
-                    final TestItem methodItem = TestFrameworkUtils.resoveTestItemForMethod(method);
+                    final TestItem methodItem = TestFrameworkUtils.resolveTestItemForMethod(method);
                     if (methodItem == null) {
                         return;
                     }
@@ -409,7 +378,7 @@ public class TestSearchUtils {
                     continue;
                 }
                 for (final IMethod method : type.getMethods()) {
-                    final TestItem item = TestFrameworkUtils.resoveTestItemForMethod(method);
+                    final TestItem item = TestFrameworkUtils.resolveTestItemForMethod(method);
                     if (item != null) {
                         resultList.add(item);
                     }

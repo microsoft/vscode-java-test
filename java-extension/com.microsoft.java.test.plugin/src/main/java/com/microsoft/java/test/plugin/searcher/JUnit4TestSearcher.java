@@ -17,6 +17,9 @@ import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
 
 public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
@@ -31,6 +34,11 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
     @Override
     public TestKind getTestKind() {
         return TestKind.JUnit;
+    }
+
+    @Override
+    public String getJdtTestKind() {
+        return TestKindRegistry.JUNIT4_TEST_KIND_ID;
     }
 
     @Override
@@ -54,5 +62,24 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
             // ignore
             return false;
         }
+    }
+
+    @Override
+    public boolean isTestMethod(IMethodBinding methodBinding) {
+        final int modifiers = methodBinding.getModifiers();
+        if (Modifier.isAbstract(modifiers) || Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
+            return false;
+        }
+
+        if (methodBinding.isConstructor() || !"void".equals(methodBinding.getReturnType().getName())) {
+            return false;
+        }
+
+        for (final String annotationName : this.getTestMethodAnnotations()) {
+            if (this.annotates(methodBinding.getAnnotations(), annotationName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

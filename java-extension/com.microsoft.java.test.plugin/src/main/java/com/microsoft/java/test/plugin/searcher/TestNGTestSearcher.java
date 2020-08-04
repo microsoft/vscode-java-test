@@ -17,6 +17,8 @@ import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.Modifier;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
@@ -29,6 +31,11 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
     @Override
     public TestKind getTestKind() {
         return TestKind.TestNG;
+    }
+
+    @Override
+    public String getJdtTestKind() {
+        return "";
     }
 
     @Override
@@ -52,5 +59,23 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
             // ignore
             return false;
         }
+    }
+
+    @Override
+    public boolean isTestMethod(IMethodBinding methodBinding) {
+        final int modifiers = methodBinding.getModifiers();
+        if (Modifier.isAbstract(modifiers) || Modifier.isStatic(modifiers)) {
+            return false;
+        }
+
+        if (methodBinding.isConstructor() || !"void".equals(methodBinding.getReturnType().getName())) {
+            return false;
+        }
+        for (final String annotationName : this.getTestMethodAnnotations()) {
+            if (this.annotates(methodBinding.getAnnotations(), annotationName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
