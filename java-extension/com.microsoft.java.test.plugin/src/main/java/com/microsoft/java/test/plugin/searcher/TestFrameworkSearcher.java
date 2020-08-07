@@ -40,7 +40,7 @@ public interface TestFrameworkSearcher {
 
     SearchPattern getSearchPattern();
 
-    boolean annotates(IAnnotationBinding[] annotations, String annotationName);
+    boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames);
 
     @Deprecated
     TestItem parseTestItem(IMethod method) throws JavaModelException;

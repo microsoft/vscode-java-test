@@ -98,6 +98,7 @@ public class TestSearchUtils {
         parser.setSource(unit);
         parser.setFocalPosition(0);
         parser.setResolveBindings(true);
+        parser.setIgnoreMethodBodies(true);
         final CompilationUnit root = (CompilationUnit) parser.createAST(monitor);
         final ASTNode node = root.findDeclaringNode(primaryType.getKey());
         if (!(node instanceof TypeDeclaration)) {
@@ -109,8 +110,7 @@ public class TestSearchUtils {
             return resultList;
         }
 
-        final Map<String, TestItem> classMapping = new HashMap<>();
-        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, classMapping);
+        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /*parentClassItem*/);
 
         return resultList;
     }

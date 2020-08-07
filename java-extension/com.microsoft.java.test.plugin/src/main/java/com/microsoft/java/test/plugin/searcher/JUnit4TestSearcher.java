@@ -75,11 +75,6 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
             return false;
         }
 
-        for (final String annotationName : this.getTestMethodAnnotations()) {
-            if (this.annotates(methodBinding.getAnnotations(), annotationName)) {
-                return true;
-            }
-        }
-        return false;
+        return this.findAnnotation(methodBinding.getAnnotations(), this.getTestMethodAnnotations());
     }
 }

@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,7 +49,7 @@ public class TestFrameworkUtils {
     private static final JUnit5TestFinder JUNIT5_TEST_FINDER = new JUnit5TestFinder();
 
     public static void findTestItemsInTypeBinding(ITypeBinding typeBinding, List<TestItem> result,
-            Map<String, TestItem> classMapping) throws JavaModelException {
+            TestItem parentClassTestItem) throws JavaModelException {
         final List<TestFrameworkSearcher> searchers = new ArrayList<>();
         final IType type = (IType) typeBinding.getJavaElement();
         for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
@@ -95,20 +95,17 @@ public class TestFrameworkUtils {
         }
 
         // set the class item as the child of its declaring type
-        if (classItem != null) {
-            classMapping.put(typeBinding.getQualifiedName(), classItem);
-            final ITypeBinding declarationType = typeBinding.getDeclaringClass();
-            if (declarationType != null) {
-                final TestItem declarationTypeItem = classMapping.get(declarationType.getQualifiedName());
-                if (declarationTypeItem != null) {
-                    declarationTypeItem.addChild(classItem.getId());
-                }
-            }
+        if (classItem != null && parentClassTestItem != null) {
+            parentClassTestItem.addChild(classItem.getId());
         }
 
         for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
-            findTestItemsInTypeBinding(childTypeBinding, result, classMapping);
+            findTestItemsInTypeBinding(childTypeBinding, result, classItem);
         }
+    }
+
+    public static boolean isEquivalentAnnotationType(ITypeBinding annotationType, String annotationName) {
+        return annotationType != null && Objects.equals(annotationType.getQualifiedName(), annotationName);
     }
 
     public static TestItem resolveTestItemForMethod(IMethod method) throws JavaModelException {

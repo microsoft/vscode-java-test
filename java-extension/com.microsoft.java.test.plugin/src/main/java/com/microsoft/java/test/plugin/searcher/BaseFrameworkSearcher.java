@@ -78,11 +78,13 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
     }
 
     @Override
-    public boolean annotates(IAnnotationBinding[] annotations, String annotationName) {
+    public boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames) {
         for (final IAnnotationBinding annotation : annotations) {
             final ITypeBinding annotationType = annotation.getAnnotationType();
-            if (annotationType != null && (annotationType.getQualifiedName().equals(annotationName))) {
-                return true;
+            for (final String annotationName : annotationNames) {
+                if (TestFrameworkUtils.isEquivalentAnnotationType(annotationType, annotationName)) {
+                    return true;
+                }
             }
         }
         return false;

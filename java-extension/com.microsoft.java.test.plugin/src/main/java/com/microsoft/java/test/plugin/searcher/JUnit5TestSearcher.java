@@ -103,12 +103,8 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
         if (methodBinding.isConstructor()) {
             return false;
         }
-        for (final String annotationName : this.getTestMethodAnnotations()) {
-            if (this.annotates(methodBinding.getAnnotations(), annotationName)) {
-                return true;
-            }
-        }
-        return false;
+
+        return this.findAnnotation(methodBinding.getAnnotations(), this.getTestMethodAnnotations());
     }
 
     @SuppressWarnings("rawtypes")
@@ -170,19 +166,21 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
     }
 
     @Override
-    public boolean annotates(IAnnotationBinding[] annotations, String annotationName) {
+    public boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames) {
         for (final IAnnotationBinding annotation : annotations) {
             if (annotation == null) {
                 continue;
             }
-            if (matchesName(annotation.getAnnotationType(), annotationName)) {
-                return true;
-            }
-
-            if (JUPITER_NESTED.equals(annotationName) || JUNIT_PLATFORM_TESTABLE.equals(annotationName)) {
-                final Set<ITypeBinding> hierarchy = new HashSet<>();
-                if (matchesNameInAnnotationHierarchy(annotation, annotationName, hierarchy)) {
+            for (final String annotationName : annotationNames) {
+                if (matchesName(annotation.getAnnotationType(), annotationName)) {
                     return true;
+                }
+    
+                if (JUPITER_NESTED.equals(annotationName) || JUNIT_PLATFORM_TESTABLE.equals(annotationName)) {
+                    final Set<ITypeBinding> hierarchy = new HashSet<>();
+                    if (matchesNameInAnnotationHierarchy(annotation, annotationName, hierarchy)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -190,13 +188,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
     }
 
     private boolean matchesName(ITypeBinding annotationType, String annotationName) {
-        if (annotationType != null) {
-            if (annotationType.getQualifiedName().equals(annotationName)) {
-                return true;
-            }
-        }
-
-        return false;
+        return TestFrameworkUtils.isEquivalentAnnotationType(annotationType, annotationName);
     }
 
     private boolean matchesNameInAnnotationHierarchy(IAnnotationBinding annotation, String annotationName,

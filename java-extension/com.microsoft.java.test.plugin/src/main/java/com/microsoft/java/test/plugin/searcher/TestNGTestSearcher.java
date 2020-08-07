@@ -71,11 +71,6 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
         if (methodBinding.isConstructor() || !"void".equals(methodBinding.getReturnType().getName())) {
             return false;
         }
-        for (final String annotationName : this.getTestMethodAnnotations()) {
-            if (this.annotates(methodBinding.getAnnotations(), annotationName)) {
-                return true;
-            }
-        }
-        return false;
+        return this.findAnnotation(methodBinding.getAnnotations(), this.getTestMethodAnnotations());
     }
 }
