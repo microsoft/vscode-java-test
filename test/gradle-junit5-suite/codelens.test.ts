@@ -84,6 +84,15 @@ suite('Code Lens Tests', function() {
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
     });
 
+    test("Can show Code Lens for methods annotated with meta-annotation", async function() {
+        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_META_ANNOTATION_TEST);
+        await window.showTextDocument(document);
+
+        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+        let codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+        assert.equal(codeLens.length, 4);
+    });
+
     test("Can run test method annotated with @Nested", async function() {
         const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_NESTED_TEST);
         await window.showTextDocument(document);

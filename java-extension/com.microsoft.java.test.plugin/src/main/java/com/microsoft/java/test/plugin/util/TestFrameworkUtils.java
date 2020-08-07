@@ -12,6 +12,8 @@
 package com.microsoft.java.test.plugin.util;
 
 import com.microsoft.java.test.plugin.model.TestItem;
+import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
@@ -24,8 +26,17 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder;
+import org.eclipse.jdt.internal.junit.launcher.JUnit5TestFinder;
+import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,7 +45,70 @@ public class TestFrameworkUtils {
     public static final TestFrameworkSearcher[] FRAMEWORK_SEARCHERS = new TestFrameworkSearcher[] {
         new JUnit4TestSearcher(), new JUnit5TestSearcher(), new TestNGTestSearcher() };
 
-    public static TestItem resoveTestItemForMethod(IMethod method) throws JavaModelException {
+    private static final JUnit4TestFinder JUNIT4_TEST_FINDER = new JUnit4TestFinder();
+    private static final JUnit5TestFinder JUNIT5_TEST_FINDER = new JUnit5TestFinder();
+
+    public static void findTestItemsInTypeBinding(ITypeBinding typeBinding, List<TestItem> result,
+            TestItem parentClassTestItem) throws JavaModelException {
+        final List<TestFrameworkSearcher> searchers = new ArrayList<>();
+        final IType type = (IType) typeBinding.getJavaElement();
+        for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
+            if (CoreTestSearchEngine.isAccessibleClass(type, searcher.getJdtTestKind())) {
+                searchers.add(searcher);
+            }
+        }
+
+        if (searchers.size() == 0) {
+            return;
+        }
+
+        final List<TestItem> testMethods = new LinkedList<>();
+        final List<String> testMethodIds = new LinkedList<>();
+        for (final IMethodBinding methodBinding : typeBinding.getDeclaredMethods()) {
+            for (final TestFrameworkSearcher searcher : searchers) {
+                if (searcher.isTestMethod(methodBinding)) {
+                    final TestItem methodItem = searcher.parseTestItem(methodBinding);
+                    testMethods.add(methodItem);
+                    testMethodIds.add(methodItem.getId());
+                    break;
+                }
+            }
+        }
+        TestItem classItem = null;
+        if (testMethods.size() > 0) {
+            result.addAll(testMethods);
+            classItem = TestItemUtils.constructTestItem((IType) typeBinding.getJavaElement(),
+                    TestLevel.CLASS);
+            classItem.setChildren(testMethodIds);
+            classItem.setKind(testMethods.get(0).getKind());
+            result.add(classItem);
+        } else {
+            if (JUNIT4_TEST_FINDER.isTest(type)) {
+                // Leverage JUnit4TestFinder to handle @RunWithclasses
+                classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit);
+                result.add(classItem);
+            } else if (JUNIT5_TEST_FINDER.isTest(type)) {
+                // Leverage JUnit5TestFinder to handle @Nested and @Testable classes
+                classItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit5);
+                result.add(classItem);
+            }
+        }
+
+        // set the class item as the child of its declaring type
+        if (classItem != null && parentClassTestItem != null) {
+            parentClassTestItem.addChild(classItem.getId());
+        }
+
+        for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
+            findTestItemsInTypeBinding(childTypeBinding, result, classItem);
+        }
+    }
+
+    public static boolean isEquivalentAnnotationType(ITypeBinding annotationType, String annotationName) {
+        return annotationType != null && Objects.equals(annotationType.getQualifiedName(), annotationName);
+    }
+
+    public static TestItem resolveTestItemForMethod(IMethod method) throws JavaModelException {
         for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
             if (searcher.isTestMethod(method)) {
                 return searcher.parseTestItem(method);
@@ -59,6 +133,7 @@ public class TestFrameworkUtils {
      * @param annotationToSearch The annotation string.
      * @param checkHierarchy Specify whether to search the whole annotation hierarchy.
      */
+    @Deprecated
     public static Optional<IAnnotation> getAnnotation(IMember member, String annotationToSearch,
             boolean checkHierarchy) {
         if (!IAnnotatable.class.isInstance(member)) {
@@ -110,6 +185,7 @@ public class TestFrameworkUtils {
      * @param annotationToSearch The annotation string.
      * @param checkHierarchy Specify whether to search the whole annotation hierarchy.
      */
+    @Deprecated
     public static boolean hasAnnotation(IMember member, String annotationToSearch, boolean checkHierarchy) {
         return getAnnotation(member, annotationToSearch, checkHierarchy).isPresent();
     }

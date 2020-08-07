@@ -17,13 +17,20 @@ import com.microsoft.java.test.plugin.model.TestKind;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.search.SearchPattern;
 
 public interface TestFrameworkSearcher {
 
     TestKind getTestKind();
 
+    String getJdtTestKind();
+
+    @Deprecated
     boolean isTestMethod(IMethod method);
+
+    boolean isTestMethod(IMethodBinding methodBinding);
 
     boolean isTestClass(IType type);
 
@@ -33,7 +40,12 @@ public interface TestFrameworkSearcher {
 
     SearchPattern getSearchPattern();
 
+    boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames);
+
+    @Deprecated
     TestItem parseTestItem(IMethod method) throws JavaModelException;
+
+    TestItem parseTestItem(IMethodBinding methodBinding) throws JavaModelException;
 
     TestItem parseTestItem(IType type) throws JavaModelException;
 }

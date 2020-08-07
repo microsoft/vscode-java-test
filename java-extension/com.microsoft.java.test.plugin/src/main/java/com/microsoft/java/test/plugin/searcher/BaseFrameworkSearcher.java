@@ -20,6 +20,9 @@ import com.microsoft.java.test.plugin.util.TestItemUtils;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchPattern;
 
@@ -75,6 +78,19 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
     }
 
     @Override
+    public boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames) {
+        for (final IAnnotationBinding annotation : annotations) {
+            final ITypeBinding annotationType = annotation.getAnnotationType();
+            for (final String annotationName : annotationNames) {
+                if (TestFrameworkUtils.isEquivalentAnnotationType(annotationType, annotationName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public TestItem parseTestItem(IMethod method) throws JavaModelException {
         return TestItemUtils.constructTestItem(method, TestLevel.METHOD, this.getTestKind());
     }
@@ -82,5 +98,11 @@ public abstract class BaseFrameworkSearcher implements TestFrameworkSearcher {
     @Override
     public TestItem parseTestItem(IType type) throws JavaModelException {
         return TestItemUtils.constructTestItem(type, TestLevel.CLASS, this.getTestKind());
+    }
+
+    @Override
+    public TestItem parseTestItem(IMethodBinding methodBinding) throws JavaModelException {
+        return TestItemUtils.constructTestItem((IMethod) methodBinding.getJavaElement(),
+            TestLevel.METHOD, this.getTestKind());
     }
 }

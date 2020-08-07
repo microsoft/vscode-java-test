@@ -4,7 +4,7 @@ Bundle-Name: com.microsoft.java.test.plugin
 Bundle-SymbolicName: com.microsoft.java.test.plugin;singleton:=true
 Bundle-Version: 0.24.0
 Bundle-Activator: com.microsoft.java.test.plugin.util.JUnitPlugin
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Import-Package: org.eclipse.jdt.core,
  org.eclipse.jdt.launching,
  org.osgi.framework;version="1.3.0"
