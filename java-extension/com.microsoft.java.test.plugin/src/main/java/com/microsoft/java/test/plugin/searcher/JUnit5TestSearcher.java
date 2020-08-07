@@ -205,7 +205,7 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
             final ITypeBinding annotationType = annotationBinding.getAnnotationType();
             if (annotationType != null && hierarchy.add(annotationType)) {
                 if (matchesName(annotationType, annotationName) ||
-                        matchesNameInAnnotationHierarchy(annotation, annotationName, hierarchy)) {
+                        matchesNameInAnnotationHierarchy(annotationBinding, annotationName, hierarchy)) {
                     return true;
                 }
             }
