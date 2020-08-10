@@ -27,8 +27,6 @@ suite('Code Lens Tests', function() {
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
         assert.equal(testItem.length, 1);
-        assert.equal(testItem[0].paramTypes[0], 'java.lang.String');
-        assert.equal(testItem[0].paramTypes[1], 'java.lang.Boolean');
 
         await commands.executeCommand(command!.command, testItem[0]);
 
@@ -73,7 +71,6 @@ suite('Code Lens Tests', function() {
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
         assert.equal(testItem.length, 1);
-        assert.equal(testItem[0].paramTypes[0], 'int');
 
         await commands.executeCommand(command!.command, testItem[0]);
 

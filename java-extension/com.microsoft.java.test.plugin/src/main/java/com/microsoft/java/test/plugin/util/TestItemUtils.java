@@ -25,8 +25,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Range;
 
-import java.util.Collections;
-
 @SuppressWarnings("restriction")
 public class TestItemUtils {
 
@@ -51,11 +49,13 @@ public class TestItemUtils {
         final Range range = parseTestItemRange(element);
         final String projectName = element.getJavaProject().getProject().getName();
 
-        return new TestItem(displayName, fullName, uri, projectName, Collections.emptyList(), range, level, kind);
+        return new TestItem(displayName, fullName, uri, projectName, range, level, kind);
     }
 
     public static Range parseTestItemRange(IJavaElement element) throws JavaModelException {
         if (element instanceof ISourceReference) {
+            // getSourceRange() is not used here because we want the Code Lens appear above the
+            // method name, not above the annotation.
             final ISourceRange range = ((ISourceReference) element).getNameRange();
             return JDTUtils.toRange(element.getOpenable(), range.getOffset(), range.getLength());
         }

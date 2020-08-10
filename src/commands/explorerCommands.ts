@@ -26,7 +26,6 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
         scope: TestLevel.Root,
         testUri: '',
         fullName: '',
-        paramTypes: [],
         projectName: '',
         kind: TestKind.None,
         isDebug,
@@ -40,7 +39,6 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
             runnerContext.fullName = node.fullName;
         }
         if (node.level === TestLevel.Method) {
-            runnerContext.paramTypes = node.paramTypes;
             runnerContext.tests = [node];
         }
     }

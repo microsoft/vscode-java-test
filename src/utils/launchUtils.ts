@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { DebugConfiguration } from 'vscode';
+import { DebugConfiguration, Position } from 'vscode';
 import { TestKind, TestLevel } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
@@ -89,12 +89,16 @@ async function getJUnitLaunchArguments(runnerContext: IRunnerContext): Promise<I
     className = nameArray[0];
     if (nameArray.length > 1) {
         methodName = nameArray[1];
-        if (runnerContext.paramTypes.length > 0) {
-            methodName = `${methodName}(${runnerContext.paramTypes.join(',')})`;
-        }
     }
 
-    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName, runnerContext.scope, runnerContext.kind);
+    let start: Position | undefined;
+    let end: Position | undefined;
+    if (runnerContext.kind === TestKind.JUnit5 && runnerContext.scope === TestLevel.Method) {
+        start = runnerContext.tests[0].location.range.start;
+        end = runnerContext.tests[0].location.range.end;
+    }
+
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName, runnerContext.scope, runnerContext.kind, start, end);
 }
 
 async function getTestNGLaunchArguments(projectName: string): Promise<IJUnitLaunchArguments> {

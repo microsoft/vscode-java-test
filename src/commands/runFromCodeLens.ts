@@ -10,7 +10,6 @@ export async function runFromCodeLens(test: ITestItem, isDebug: boolean): Promis
         scope: test.level,
         testUri: test.location.uri,
         fullName: test.fullName,
-        paramTypes: test.paramTypes,
         kind: test.kind,
         projectName: test.project,
         tests: [test],

@@ -32,18 +32,15 @@ public class TestItem {
 
     private String project;
 
-    private List<String> paramTypes;
-
     private Location location;
 
-    public TestItem(String displayName, String fullName, String uri, String project, List<String> paramTypes,
+    public TestItem(String displayName, String fullName, String uri, String project,
             Range range, TestLevel level, TestKind kind) {
         this.displayName = displayName;
         this.fullName = fullName;
         this.level = level;
         this.kind = kind;
         this.project = project;
-        this.paramTypes = paramTypes;
         this.location = new Location(uri, range);
         this.id = String.format("%s@%s", project, fullName);
     }
@@ -109,14 +106,6 @@ public class TestItem {
             this.children = new ArrayList<>();
         }
         this.children.add(child);
-    }
-
-    public List<String> getParamTypes() {
-        return paramTypes;
-    }
-
-    public void setParamTypes(List<String> paramTypes) {
-        this.paramTypes = paramTypes;
     }
 
     public Location getLocation() {

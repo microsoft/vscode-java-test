@@ -64,7 +64,6 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
                     kind: TestKind.None,
                     project: '',
                     level: TestLevel.Folder,
-                    paramTypes: [],
                     location: {
                         uri: '',
                         range: new Range(0, 0, 0, 0),
@@ -104,7 +103,6 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
                     kind: TestKind.None,
                     project: '',
                     level: TestLevel.Folder,
-                    paramTypes: [],
                     location: {
                         uri: folder.uri.toString(),
                         range: new Range(0, 0, 0, 0),
