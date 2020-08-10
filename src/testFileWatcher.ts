@@ -46,7 +46,7 @@ class TestFileWatcher implements Disposable {
                 const sourcePaths: string[] = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
                 for (const sourcePath of sourcePaths) {
                     const normalizedPath: string = Uri.file(sourcePath).fsPath;
-                    const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.{[jJ][aA][vV][aA]}');
+                    const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.java');
                     this.patterns.push(pattern);
                     const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern, true /* ignoreCreateEvents */);
                     this.registerWatcherListeners(watcher);
@@ -54,7 +54,7 @@ class TestFileWatcher implements Disposable {
                 }
             } catch (error) {
                 logger.error('Failed to get the test paths', error);
-                const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.{[jJ][aA][vV][aA]}');
+                const watcher: FileSystemWatcher = workspace.createFileSystemWatcher('**/*.java');
                 this.registerWatcherListeners(watcher);
                 this.disposables.push(watcher);
             }
