@@ -34,7 +34,6 @@ export interface IRunnerContext {
     scope: TestLevel;
     testUri: string;
     fullName: string;
-    paramTypes: string[];
     projectName: string;
     isDebug: boolean;
     kind: TestKind;

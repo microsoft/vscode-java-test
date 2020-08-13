@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands } from 'vscode';
+import { commands, Position } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
@@ -32,7 +32,8 @@ export async function searchTestLocation(fullName: string): Promise<ILocation[]>
         JavaTestRunnerDelegateCommands.SEARCH_TEST_LOCATION, fullName) || [];
 }
 
-export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string, scope: TestLevel, testKind: TestKind): Promise<IJUnitLaunchArguments> {
+export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string,
+                                                  scope: TestLevel, testKind: TestKind, start?: Position, end?: Position): Promise<IJUnitLaunchArguments> {
     const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             uri,
@@ -41,6 +42,8 @@ export async function resolveJUnitLaunchArguments(uri: string, classFullName: st
             project,
             scope,
             testKind,
+            start,
+            end,
         }));
 
     if (!argument) {

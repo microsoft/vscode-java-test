@@ -15,27 +15,17 @@ import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.NodeFinder;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.manipulation.CoreASTProvider;
 import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
 
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -118,22 +108,6 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
             item.setDisplayName((String) annotation.get().getMemberValuePairs()[0].getValue());
         }
 
-        // Get the parameter type information
-        final List<String> result = new LinkedList<>();
-        final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(
-                method.getDeclaringType().getCompilationUnit(), CoreASTProvider.WAIT_YES, new NullProgressMonitor());
-        final ISourceRange sourceRange = method.getSourceRange();
-        final ASTNode name = NodeFinder.perform(astRoot, sourceRange.getOffset(), sourceRange.getLength(),
-                method.getCompilationUnit());
-        if (name instanceof MethodDeclaration) {
-            final List parameterList = ((MethodDeclaration) name).parameters();
-            for (final Object obj : parameterList) {
-                if (obj instanceof SingleVariableDeclaration) {
-                    result.add(((SingleVariableDeclaration) obj).getType().resolveBinding().getQualifiedName());
-                }
-            }
-        }
-        item.setParamTypes(result);
         return item;
     }
 
@@ -150,16 +124,6 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
                 item.setDisplayName((String) annotation.getAllMemberValuePairs()[0].getValue());
                 break;
             }
-        }
-
-        // parse the parameters
-        final ITypeBinding[] parameters = methodBinding.getParameterTypes();
-        if (parameters.length > 0) {
-            final List<String> result = new LinkedList<>();
-            for (final ITypeBinding parameter : parameters) {
-                result.add(parameter.getQualifiedName());
-            }
-            item.setParamTypes(result);
         }
 
         return item;

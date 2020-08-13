@@ -94,12 +94,7 @@ public class TestSearchUtils {
             return resultList;
         }
 
-        final ASTParser parser = ASTParser.newParser(AST.JLS14);
-        parser.setSource(unit);
-        parser.setFocalPosition(0);
-        parser.setResolveBindings(true);
-        parser.setIgnoreMethodBodies(true);
-        final CompilationUnit root = (CompilationUnit) parser.createAST(monitor);
+        final CompilationUnit root = (CompilationUnit) parseToAst(unit, monitor);
         final ASTNode node = root.findDeclaringNode(primaryType.getKey());
         if (!(node instanceof TypeDeclaration)) {
             return resultList;
@@ -113,6 +108,15 @@ public class TestSearchUtils {
         TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /*parentClassItem*/);
 
         return resultList;
+    }
+
+    public static ASTNode parseToAst(final ICompilationUnit unit, IProgressMonitor monitor) {
+        final ASTParser parser = ASTParser.newParser(AST.JLS14);
+        parser.setSource(unit);
+        parser.setFocalPosition(0);
+        parser.setResolveBindings(true);
+        parser.setIgnoreMethodBodies(true);
+        return parser.createAST(monitor);
     }
 
     /**

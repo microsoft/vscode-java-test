@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchConfigurationDelegate.JUnitLaunchArguments;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,10 +34,17 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.NodeFinder;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
+import org.eclipse.jdt.ls.core.internal.handlers.JsonRpcHelpers;
+import org.eclipse.lsp4j.Position;
+
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,6 +54,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -79,7 +88,7 @@ public class JUnitLaunchUtils {
             if (args.scope == TestLevel.PACKAGE && file.isDirectory()) {
                 parseConfigurationInfoForContainer(info, args);
             } else if ((args.scope == TestLevel.CLASS || args.scope == TestLevel.METHOD) && file.isFile()) {
-                parseConfigurationInfoForClass(info, args);
+                parseConfigurationInfoForClass(info, args, monitor);
             } else {
                 throw new RuntimeException("The resource: " + file.getPath() + " is not testable.");
             }
@@ -103,7 +112,8 @@ public class JUnitLaunchUtils {
         }
     }
 
-    private static void parseConfigurationInfoForClass(TestInfo info, Argument args) throws JavaModelException {
+    private static void parseConfigurationInfoForClass(TestInfo info, Argument args,
+            IProgressMonitor monitor) throws JavaModelException {
         final ICompilationUnit cu = JDTUtils.resolveCompilationUnit(args.uri);
         if (cu == null) {
             throw new RuntimeException("Cannot resolve compilation unit from: " + args.uri);
@@ -112,8 +122,7 @@ public class JUnitLaunchUtils {
         for (final IType type : cu.getAllTypes()) {
             if (type.getFullyQualifiedName().equals(args.classFullName)) {
                 info.mainType = args.classFullName;
-                // TODO: validate test name
-                info.testName = StringUtils.isEmpty(args.testName) ? "" : args.testName;
+                info.testName = parseTestName(args, cu, monitor);
                 break;
             }
         }
@@ -121,6 +130,35 @@ public class JUnitLaunchUtils {
         if (info.mainType == null) {
             throw new RuntimeException("Failed to find class '" + args.classFullName + "'");
         }
+    }
+
+    private static String parseTestName(Argument args, ICompilationUnit cu,
+            IProgressMonitor monitor) throws JavaModelException {
+        String testName = StringUtils.isEmpty(args.testName) ? "" : args.testName;
+        // JUnit 5's methods need to have parameter information to launch
+        if (args.testKind == TestKind.JUnit5 && args.scope == TestLevel.METHOD) {
+            final ASTNode unit = TestSearchUtils.parseToAst(cu, monitor);
+            final int startOffset = JsonRpcHelpers.toOffset(cu.getOpenable(), args.start.getLine(),
+                args.start.getCharacter());
+            final int endOffset = JsonRpcHelpers.toOffset(cu.getOpenable(), args.end.getLine(),
+                args.end.getCharacter());
+            // the offsets point to the range of SimpleName
+            ASTNode methodDeclaration = NodeFinder.perform(unit, startOffset, endOffset - startOffset, cu);
+            while (!(methodDeclaration instanceof MethodDeclaration)) {
+                methodDeclaration = methodDeclaration.getParent();
+            }
+            final List<String> parameters = new LinkedList<>();
+            for (final Object obj : ((MethodDeclaration) methodDeclaration).parameters()) {
+                if (obj instanceof SingleVariableDeclaration) {
+                    parameters.add(((SingleVariableDeclaration) obj).getType()
+                        .resolveBinding().getQualifiedName());
+                }
+            }
+            if (parameters.size() > 0) {
+                testName += String.format("(%s)", String.join(",", parameters));
+            }
+        }
+        return testName;
     }
 
     private static void parseConfigurationInfoForContainer(TestInfo info, Argument args) throws URISyntaxException {
@@ -247,5 +285,7 @@ public class JUnitLaunchUtils {
         public String project;
         public TestLevel scope;
         public TestKind testKind;
+        public Position start;
+        public Position end;
     }
 }

@@ -16,7 +16,6 @@ export interface ITestItem {
     kind: TestKind;
     project: string;
     level: TestLevel;
-    paramTypes: string[];
     location: ILocation;
 }
 
