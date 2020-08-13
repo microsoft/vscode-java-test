@@ -4,13 +4,13 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
+import { DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
-import { JavaLanguageServerCommands, JavaTestRunnerCommands } from './constants/commands';
+import { JavaTestRunnerCommands } from './constants/commands';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
@@ -100,12 +100,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_SWITCH_SERVER_MODE, async () => {
-            if (isSwitchingServer()) {
-                return;
-            }
-            await commands.executeCommand(JavaLanguageServerCommands.SWITCH_SERVER_MODE);
-        }),
     );
 }
 
@@ -115,15 +109,25 @@ export function isStandardServerReady(): boolean {
         return true;
     }
 
-    if (serverMode !== 'Standard') {
+    if (serverMode !== LanguageServerMode.Standard) {
         return false;
     }
 
     return true;
 }
 
+export function isLightWeightMode(): boolean {
+    return serverMode === LanguageServerMode.LightWeight;
+}
+
 export function isSwitchingServer(): boolean {
-    return serverMode === 'Hybrid';
+    return serverMode === LanguageServerMode.Hybrid;
 }
 
 let serverMode: string | undefined;
+
+const enum LanguageServerMode {
+    LightWeight = 'LightWeight',
+    Standard = 'Standard',
+    Hybrid = 'Hybrid',
+}
