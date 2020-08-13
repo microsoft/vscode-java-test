@@ -4,6 +4,11 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.24.1
+### Changed
+- Improve the performance for resolving test Code Lenses. [#1039](https://github.com/microsoft/vscode-java-test/issues/1039)
+- Adopt welcome view for Test explorer in LightWeight Mode. [PR#1046](https://github.com/microsoft/vscode-java-test/pull/1046)
+
 ## 0.24.0
 ### Added
 - Add relaunch tests command. [#1030](https://github.com/microsoft/vscode-java-test/issues/1030)
