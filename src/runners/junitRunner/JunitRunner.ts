@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { AddressInfo } from 'net';
 import { DebugConfiguration } from 'vscode';
 import { BaseRunner } from '../baseRunner/BaseRunner';
 import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
@@ -15,9 +16,9 @@ export class JUnitRunner extends BaseRunner {
             const args: string[] = launchConfiguration.args as string[];
             const portIndex: number = args.lastIndexOf('-port');
             if (portIndex > -1 && portIndex + 1 < args.length) {
-                args[portIndex + 1] = `${this.server.address().port}`;
+                args[portIndex + 1] = `${(this.server.address() as AddressInfo).port}`;
             } else {
-                args.push('-port', `${this.server.address().port}`);
+                args.push('-port', `${(this.server.address() as AddressInfo).port}`);
             }
         }
         return super.run(launchConfiguration);
