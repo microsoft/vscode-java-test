@@ -4,7 +4,7 @@
 import * as fse from 'fs-extra';
 import { default as getPort } from 'get-port';
 import * as iconv from 'iconv-lite';
-import { createServer, Server, Socket } from 'net';
+import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } from 'vscode';
@@ -141,7 +141,7 @@ export abstract class BaseRunner implements ITestRunner {
     }
 
     public get serverPort(): number {
-        const address: { port: number; family: string; address: string; } = this.server.address();
+        const address: AddressInfo = this.server.address() as AddressInfo;
         if (address) {
             return address.port;
         }
@@ -151,7 +151,7 @@ export abstract class BaseRunner implements ITestRunner {
 
     public getApplicationArgs(config?: IExecutionConfig): string[] {
         const applicationArgs: string[] = [];
-        applicationArgs.push(`${this.server.address().port}`);
+        applicationArgs.push(`${(this.server.address() as AddressInfo).port}`);
 
         applicationArgs.push(...this.getRunnerCommandParams(config));
 
