@@ -41,7 +41,6 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
                 token.onCancellationRequested(() => {
                     clearTimeout(timeoutHandle);
                     resolve([]);
-                    this.dispose();
                 });
 
                 const timeoutHandle: NodeJS.Timeout = setTimeout(async () => {
