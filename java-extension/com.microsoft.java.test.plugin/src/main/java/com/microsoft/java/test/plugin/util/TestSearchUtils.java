@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.manipulation.CoreASTProvider;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -111,12 +112,16 @@ public class TestSearchUtils {
     }
 
     public static ASTNode parseToAst(final ICompilationUnit unit, IProgressMonitor monitor) {
-        final ASTParser parser = ASTParser.newParser(AST.JLS14);
-        parser.setSource(unit);
-        parser.setFocalPosition(0);
-        parser.setResolveBindings(true);
-        parser.setIgnoreMethodBodies(true);
-        return parser.createAST(monitor);
+        final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(unit, CoreASTProvider.WAIT_YES, monitor);
+        if (astRoot == null) {
+            final ASTParser parser = ASTParser.newParser(AST.JLS14);
+            parser.setSource(unit);
+            parser.setFocalPosition(0);
+            parser.setResolveBindings(true);
+            parser.setIgnoreMethodBodies(true);
+            return parser.createAST(monitor);
+        }
+        return astRoot;
     }
 
     /**
