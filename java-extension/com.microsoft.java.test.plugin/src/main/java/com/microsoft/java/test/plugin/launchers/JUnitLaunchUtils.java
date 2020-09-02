@@ -35,6 +35,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
@@ -150,8 +151,12 @@ public class JUnitLaunchUtils {
             final List<String> parameters = new LinkedList<>();
             for (final Object obj : ((MethodDeclaration) methodDeclaration).parameters()) {
                 if (obj instanceof SingleVariableDeclaration) {
-                    parameters.add(((SingleVariableDeclaration) obj).getType()
-                        .resolveBinding().getQualifiedName());
+                    final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj).getType().resolveBinding();
+                    if (paramTypeBinding.isParameterizedType()) {
+                        parameters.add(paramTypeBinding.getBinaryName());
+                    } else {
+                        parameters.add(paramTypeBinding.getQualifiedName());
+                    }
                 }
             }
             if (parameters.size() > 0) {
