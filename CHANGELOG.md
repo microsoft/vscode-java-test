@@ -4,6 +4,14 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.24.2
+### Changed
+- Adopt the adaptive debounce mechanism when resolving Code Lenses. [PR#1051](https://github.com/microsoft/vscode-java-test/pull/1051)
+- Use ASTProvider when parse the AST nodes. [PR#1052](https://github.com/microsoft/vscode-java-test/pull/1052)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.24.2)
+
 ## 0.24.1
 ### Changed
 - Improve the performance for resolving test Code Lenses. [#1039](https://github.com/microsoft/vscode-java-test/issues/1039)
