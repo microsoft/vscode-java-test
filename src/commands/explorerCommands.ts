@@ -68,10 +68,7 @@ async function searchTestItems(runnerContext: IRunnerContext): Promise<void> {
             async (progress: Progress<any>, token: CancellationToken): Promise<void> => {
                 progress.report({ message: 'Searching test items...' });
                 token.onCancellationRequested(reject);
-                runnerContext.tests = await testItemModel.getAllNodes(runnerContext.scope, runnerContext.fullName, runnerContext.testUri);
-                if (token.isCancellationRequested) {
-                    return reject();
-                }
+                runnerContext.tests = await testItemModel.getAllNodes(runnerContext.scope, runnerContext.fullName, runnerContext.testUri, token);
                 return resolve();
             },
         );

@@ -96,6 +96,10 @@ public class TestSearchUtils {
         }
 
         final CompilationUnit root = (CompilationUnit) parseToAst(unit, monitor);
+        if (root == null) {
+            return resultList;
+        }
+
         final ASTNode node = root.findDeclaringNode(primaryType.getKey());
         if (!(node instanceof TypeDeclaration)) {
             return resultList;
@@ -106,22 +110,27 @@ public class TestSearchUtils {
             return resultList;
         }
 
-        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /*parentClassItem*/);
+        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /*parentClassItem*/, monitor);
 
         return resultList;
     }
 
     public static ASTNode parseToAst(final ICompilationUnit unit, IProgressMonitor monitor) {
         final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(unit, CoreASTProvider.WAIT_YES, monitor);
-        if (astRoot == null) {
-            final ASTParser parser = ASTParser.newParser(AST.JLS14);
-            parser.setSource(unit);
-            parser.setFocalPosition(0);
-            parser.setResolveBindings(true);
-            parser.setIgnoreMethodBodies(true);
-            return parser.createAST(monitor);
+        if (astRoot != null) {
+            return astRoot;
         }
-        return astRoot;
+
+        if (monitor != null && monitor.isCanceled()) {
+            return null;
+        }
+
+        final ASTParser parser = ASTParser.newParser(AST.JLS14);
+        parser.setSource(unit);
+        parser.setFocalPosition(0);
+        parser.setResolveBindings(true);
+        parser.setIgnoreMethodBodies(true);
+        return parser.createAST(monitor);
     }
 
     /**
@@ -167,12 +176,11 @@ public class TestSearchUtils {
      * @param arguments {@link com.microsoft.java.test.plugin.model.SearchTestItemParams}
      * @param monitor
      * @throws CoreException
-     * @throws OperationCanceledException
      * @throws InterruptedException
      * @throws URISyntaxException
      */
     public static List<TestItem> searchAllTestItems(List<Object> arguments, IProgressMonitor monitor)
-            throws CoreException, OperationCanceledException, InterruptedException, URISyntaxException {
+            throws CoreException, InterruptedException, URISyntaxException {
         if (arguments == null || arguments.size() == 0) {
             return Collections.emptyList();
         }
@@ -229,8 +237,12 @@ public class TestSearchUtils {
 
         };
 
-        new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
+        try {
+            new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 scope, requestor, monitor);
+        } catch (OperationCanceledException ex) {
+            // do nothing
+        }
 
         return new ArrayList<TestItem>(classMap.values());
     }
@@ -238,7 +250,7 @@ public class TestSearchUtils {
     public static List<Location> searchLocation(List<Object> arguments, IProgressMonitor monitor) throws CoreException {
         final List<Location> searchResult = new LinkedList<>();
         if (arguments == null || arguments.size() == 0) {
-            throw new IllegalArgumentException("Invalid aruguments to search the location.");
+            throw new IllegalArgumentException("Invalid arguments to search the location.");
         }
         String searchString = ((String) arguments.get(0)).replaceAll("[$#]", ".");
         int searchFor = IJavaSearchConstants.METHOD;

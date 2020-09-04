@@ -98,6 +98,10 @@ public class JUnitLaunchUtils {
         final ILaunchConfiguration configuration = new JUnitLaunchConfiguration("JUnit Launch Configuration", info);
         final JUnitLaunchConfigurationDelegate delegate = new JUnitLaunchConfigurationDelegate();
 
+        if (monitor != null && monitor.isCanceled()) {
+            return null;
+        }
+
         if (TESTNG_LOADER.equals(info.testKind)) {
             // TestNG is not suported yet, we only use the junit launch configuration to resolve the classpath
             return resolveTestNGLaunchArguments(configuration, javaProject, delegate);
@@ -139,6 +143,9 @@ public class JUnitLaunchUtils {
         // JUnit 5's methods need to have parameter information to launch
         if (args.testKind == TestKind.JUnit5 && args.scope == TestLevel.METHOD) {
             final ASTNode unit = TestSearchUtils.parseToAst(cu, monitor);
+            if (unit == null) {
+                return "";
+            }
             final int startOffset = JsonRpcHelpers.toOffset(cu.getOpenable(), args.start.getLine(),
                 args.start.getCharacter());
             final int endOffset = JsonRpcHelpers.toOffset(cu.getOpenable(), args.end.getLine(),

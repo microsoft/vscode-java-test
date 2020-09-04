@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Position } from 'vscode';
+import { CancellationToken, commands, Position } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
@@ -17,9 +17,9 @@ export async function searchTestItems(params: ISearchTestItemParams): Promise<IT
         JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS, JSON.stringify(params)) || [];
 }
 
-export async function searchTestItemsAll(request: ISearchTestItemParams): Promise<ITestItem[]> {
+export async function searchTestItemsAll(request: ISearchTestItemParams, token: CancellationToken): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS_ALL, JSON.stringify(request)) || [];
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS_ALL, JSON.stringify(request), token) || [];
 }
 
 export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {

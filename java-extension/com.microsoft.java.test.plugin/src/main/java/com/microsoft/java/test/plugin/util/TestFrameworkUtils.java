@@ -19,6 +19,7 @@ import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IJavaProject;
@@ -49,7 +50,11 @@ public class TestFrameworkUtils {
     private static final JUnit5TestFinder JUNIT5_TEST_FINDER = new JUnit5TestFinder();
 
     public static void findTestItemsInTypeBinding(ITypeBinding typeBinding, List<TestItem> result,
-            TestItem parentClassTestItem) throws JavaModelException {
+            TestItem parentClassTestItem, IProgressMonitor monitor) throws JavaModelException {
+        if (monitor != null && monitor.isCanceled()) {
+            return;
+        }
+
         final List<TestFrameworkSearcher> searchers = new ArrayList<>();
         final IType type = (IType) typeBinding.getJavaElement();
         for (final TestFrameworkSearcher searcher : FRAMEWORK_SEARCHERS) {
@@ -100,7 +105,7 @@ public class TestFrameworkUtils {
         }
 
         for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
-            findTestItemsInTypeBinding(childTypeBinding, result, classItem);
+            findTestItemsInTypeBinding(childTypeBinding, result, classItem, monitor);
         }
     }
 
