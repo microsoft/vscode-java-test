@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Disposable, Uri } from 'vscode';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { ISearchTestItemParams, ITestItem, TestLevel } from './protocols';
 import { searchTestCodeLens, searchTestItems, searchTestItemsAll } from './utils/commandUtils';
 import { constructSearchTestItemParams } from './utils/protocolUtils';
@@ -23,9 +23,12 @@ class TestItemModel implements Disposable {
         return this.save(childrenNodes);
     }
 
-    public async getAllNodes(level: TestLevel, fullName: string, uri: string): Promise<ITestItem[]> {
+    public async getAllNodes(level: TestLevel, fullName: string, uri: string, token: CancellationToken): Promise<ITestItem[]> {
         const searchParam: ISearchTestItemParams = constructSearchTestItemParams(level, fullName, uri);
-        const tests: ITestItem[] = await searchTestItemsAll(searchParam);
+        const tests: ITestItem[] = await searchTestItemsAll(searchParam, token);
+        if (token.isCancellationRequested) {
+            return [];
+        }
         return this.save(tests);
     }
 
