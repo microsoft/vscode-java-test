@@ -51,7 +51,7 @@ public class TestFrameworkUtils {
 
     public static void findTestItemsInTypeBinding(ITypeBinding typeBinding, List<TestItem> result,
             TestItem parentClassTestItem, IProgressMonitor monitor) throws JavaModelException {
-        if (monitor != null && monitor.isCanceled()) {
+        if (monitor.isCanceled()) {
             return;
         }
 

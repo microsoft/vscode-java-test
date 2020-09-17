@@ -98,7 +98,7 @@ public class JUnitLaunchUtils {
         final ILaunchConfiguration configuration = new JUnitLaunchConfiguration("JUnit Launch Configuration", info);
         final JUnitLaunchConfigurationDelegate delegate = new JUnitLaunchConfigurationDelegate();
 
-        if (monitor != null && monitor.isCanceled()) {
+        if (monitor.isCanceled()) {
             return null;
         }
 

@@ -72,7 +72,7 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
         }
 
         const startTime: number = performance.now();
-        const items: ITestItem[] = await testItemModel.getItemsForCodeLens(uri);
+        const items: ITestItem[] = await testItemModel.getItemsForCodeLens(uri, token);
         const result: CodeLens[] = this.getCodeLenses(items);
         const executionTime: number = performance.now() - startTime;
 
