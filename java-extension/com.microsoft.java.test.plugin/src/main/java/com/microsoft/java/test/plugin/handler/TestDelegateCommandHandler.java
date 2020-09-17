@@ -16,6 +16,7 @@ import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
 
 import java.util.List;
@@ -32,6 +33,9 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
+        if (monitor == null) {
+            monitor = new NullProgressMonitor();
+        }
 
         switch (commandId) {
             case GET_TEST_SOURCE_PATH:

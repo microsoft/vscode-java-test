@@ -22,9 +22,9 @@ export async function searchTestItemsAll(request: ISearchTestItemParams, token: 
         JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS_ALL, JSON.stringify(request), token) || [];
 }
 
-export async function searchTestCodeLens(uri: string): Promise<ITestItem[]> {
+export async function searchTestCodeLens(uri: string, token: CancellationToken): Promise<ITestItem[]> {
     return await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri) || [];
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri, token) || [];
 }
 
 export async function searchTestLocation(fullName: string): Promise<ILocation[]> {

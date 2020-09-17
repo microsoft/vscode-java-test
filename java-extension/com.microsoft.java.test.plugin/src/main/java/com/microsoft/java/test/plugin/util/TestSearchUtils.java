@@ -121,7 +121,7 @@ public class TestSearchUtils {
             return astRoot;
         }
 
-        if (monitor != null && monitor.isCanceled()) {
+        if (monitor.isCanceled()) {
             return null;
         }
 
