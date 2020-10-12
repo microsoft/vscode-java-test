@@ -1,20 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as LRUCache from 'lru-cache';
-import {performance} from 'perf_hooks';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, EventEmitter, TextDocument, Uri } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, EventEmitter, TextDocument } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ITestItem, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
 import { testItemModel } from '../testItemModel';
 import { testResultManager } from '../testResultManager';
-import { MovingAverage } from './MovingAverage';
 
 export class TestCodeLensProvider implements CodeLensProvider, Disposable {
     private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private lruCache: LRUCache<Uri, MovingAverage> = new LRUCache<Uri, MovingAverage>(32);
     private isActivated: boolean = true;
 
     get onDidChangeCodeLenses(): Event<void> {
@@ -36,18 +32,8 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
         }
 
         try {
-            const timeout: number = this.getRequestDelay(document.uri);
-            return new Promise<CodeLens[]>((resolve: (ids: CodeLens[]) => void): void => {
-                token.onCancellationRequested(() => {
-                    clearTimeout(timeoutHandle);
-                    resolve([]);
-                });
-
-                const timeoutHandle: NodeJS.Timeout = setTimeout(async () => {
-                   resolve(await this.resolveAllCodeLenses(document.uri, token));
-                }, timeout);
-
-            });
+            const items: ITestItem[] = await testItemModel.getItemsForCodeLens(document.uri, token);
+            return this.getCodeLenses(items);
         } catch (error) {
             logger.error('Failed to provide Code Lens', error);
             return [];
@@ -56,30 +42,6 @@ export class TestCodeLensProvider implements CodeLensProvider, Disposable {
 
     public dispose(): void {
         this.onDidChangeCodeLensesEmitter.dispose();
-    }
-
-    private getRequestDelay(uri: Uri): number {
-        const avg: MovingAverage | undefined = this.lruCache.get(uri);
-        if (!avg) {
-            return 350;
-        }
-        return Math.max(350, Math.floor(1.3 * avg.value));
-    }
-
-    private async resolveAllCodeLenses(uri: Uri, token: CancellationToken): Promise<CodeLens[]> {
-        if (token.isCancellationRequested) {
-            return [];
-        }
-
-        const startTime: number = performance.now();
-        const items: ITestItem[] = await testItemModel.getItemsForCodeLens(uri, token);
-        const result: CodeLens[] = this.getCodeLenses(items);
-        const executionTime: number = performance.now() - startTime;
-
-        const movingAverage: MovingAverage = this.lruCache.get(uri) || new MovingAverage();
-        movingAverage.update(executionTime);
-        this.lruCache.set(uri, movingAverage);
-        return result;
     }
 
     private getCodeLenses(items: ITestItem[]): CodeLens[] {
