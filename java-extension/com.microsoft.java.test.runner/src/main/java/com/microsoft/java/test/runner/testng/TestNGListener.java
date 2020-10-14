@@ -44,6 +44,11 @@ public class TestNGListener implements ISuiteListener, ITestListener, ITestNGLis
 
     @Override
     public void onTestSkipped(ITestResult result) {
+        final Throwable throwable = result.getThrowable();
+        if (throwable != null) {
+            onTestFailure(result);
+            return;
+        }
         TestRunnerMessageHelper.testIgnored(result.getTestClass().getName() + "#" + result.getName());
     }
 
