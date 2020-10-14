@@ -29,6 +29,7 @@ export namespace Uris {
     export const JUNIT4_RUNWITH: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'RunWithAnnotation.java'));
     export const JUNIT4_EXCEPTION_BEFORE: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'ExceptionInBefore.java'));
     export const JUNIT4_PARAMETERIZED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'ParameterizedTest.java'));
+    export const JUNIT4_PARAMETERIZED_WITH_NAME_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'ParameterizedWithNameTest.java'));
     export const JUNIT4_ASSUME_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'AssumeTest.java'));
 
     // Gradle modular

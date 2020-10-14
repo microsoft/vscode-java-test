@@ -109,9 +109,10 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
          * '(?:@AssumptionFailure: |@Ignore: )?' - indicate if the case is ignored due to assumption failure or disabled
          * '(.*?)'                               - test method name
          * '(?:\[\d+\])?'                        - execution index, it will appear for the JUnit4's parameterized test
-         * '\((.*?)\)'                           - class fully qualified name
+         * '\(([^)]*)\)[^(]*$'                   - class fully qualified name which wrapped by the last paired brackets, see:
+         *                                         https://github.com/microsoft/vscode-java-test/issues/1075
          */
-        const regexp: RegExp = /\d+,(?:@AssumptionFailure: |@Ignore: )?(.*?)(?:\[\d+\])?\((.*?)\)/;
+        const regexp: RegExp = /\d+,(?:@AssumptionFailure: |@Ignore: )?(.*?)(?:\[\d+\])?\(([^)]*)\)[^(]*$/;
         const matchResults: RegExpExecArray | null = regexp.exec(message);
         if (matchResults && matchResults.length === 3) {
             return `${this.projectName}@${matchResults[2]}#${matchResults[1]}`;
