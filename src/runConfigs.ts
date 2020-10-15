@@ -7,7 +7,9 @@ export interface IExecutionConfig {
     name?: string;
     workingDirectory?: string;
     args?: any[];
+    // deprecated, we should align with the debug launch configuration, which is 'vmArgs'
     vmargs?: any[];
+    vmArgs?: any[];
     env?: { [key: string]: string; };
     sourcePaths?: string[];
 }
