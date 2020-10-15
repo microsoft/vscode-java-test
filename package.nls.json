@@ -9,6 +9,8 @@
     "contributes.commands.java.test.explorer.run.config.title": "Run With Configuration",
     "contributes.commands.java.test.explorer.debug.config.title": "Debug With Configuration",
     "contributes.commands.java.test.show.report.title": "Show Test Report",
+    "contributes.commands.java.test.editor.run.title": "Run Tests",
+    "contributes.commands.java.test.editor.debug.title": "Debug Tests",
     "contributes.commands.java.test.relaunch.title": "Relaunch the Tests",
     "contributes.commands.java.test.cancel.title": "Cancel Test Job",
     "contributes.commands.java.test.explorer.refresh.title": "Refresh",

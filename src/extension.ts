@@ -10,6 +10,7 @@ import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
+import { executeTestsFromUri } from './commands/runFromUri';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
@@ -100,6 +101,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, false /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, true /* isDebug */)),
     );
 }
 

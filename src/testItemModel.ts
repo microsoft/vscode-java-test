@@ -32,7 +32,7 @@ class TestItemModel implements Disposable {
         return this.save(tests);
     }
 
-    public async getItemsForCodeLens(uri: Uri, token: CancellationToken): Promise<ITestItem[]> {
+    public async getItemsForCodeLens(uri: Uri, token?: CancellationToken): Promise<ITestItem[]> {
         const result: ITestItem[] = await searchTestCodeLens(uri.toString(), token);
         return this.save(result);
     }

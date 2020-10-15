@@ -20,6 +20,8 @@ export namespace JavaTestRunnerCommands {
     export const RUN_TEST_FROM_CODELENS: string = 'java.test.run';
     export const DEBUG_TEST_FROM_CODELENS: string = 'java.test.debug';
     export const RUN_TEST_FROM_EXPLORER: string = 'java.test.explorer.run';
+    export const RUN_TEST_FROM_EDITOR: string = 'java.test.editor.run';
+    export const DEBUG_TEST_FROM_EDITOR: string = 'java.test.editor.debug';
     export const DEBUG_ALL_TEST_FROM_EXPLORER: string = 'java.test.explorer.debugAll';
     export const RUN_ALL_TEST_FROM_EXPLORER: string = 'java.test.explorer.runAll';
     export const DEBUG_TEST_FROM_EXPLORER: string = 'java.test.explorer.debug';
