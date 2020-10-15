@@ -19,7 +19,9 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, ru
             env = config.env;
         }
 
-        if (config && config.vmargs) {
+        if (config && config.vmArgs) {
+            testNGArguments.vmArguments.push(...config.vmArgs.filter(Boolean));
+        } else if (config && config.vmargs) {
             testNGArguments.vmArguments.push(...config.vmargs.filter(Boolean));
         }
 
@@ -51,7 +53,9 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, ru
 export async function getDebugConfigurationForEclipseRunner(runnerContext: IRunnerContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const junitLaunchArgs: IJUnitLaunchArguments = await getJUnitLaunchArguments(runnerContext);
 
-    if (config && config.vmargs) {
+    if (config && config.vmArgs) {
+        junitLaunchArgs.vmArguments.push(...config.vmArgs.filter(Boolean));
+    } else if (config && config.vmargs) {
         junitLaunchArgs.vmArguments.push(...config.vmargs.filter(Boolean));
     }
     let env: {} = {};

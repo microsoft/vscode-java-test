@@ -300,12 +300,12 @@
                             "description": "%configuration.java.test.config.workingDirectory.description%",
                             "default": "${workspaceFolder}"
                         },
-                        "vmargs": {
+                        "vmArgs": {
                             "type": "array",
                             "items": {
                                 "type": "string"
                             },
-                            "description": "%configuration.java.test.config.vmargs.description%",
+                            "description": "%configuration.java.test.config.vmArgs.description%",
                             "default": []
                         },
                         "args": {
