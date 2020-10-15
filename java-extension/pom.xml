@@ -4,7 +4,7 @@
     <groupId>com.microsoft.java.test</groupId>
     <artifactId>parent</artifactId>
     <name>${base.name} :: Parent</name>
-    <version>0.24.2</version>
+    <version>0.25.0</version>
     <packaging>pom</packaging>
     <properties>
         <base.name>Java Test Runner</base.name>

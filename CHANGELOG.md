@@ -4,6 +4,19 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.25.0
+### Added
+- Add new commands `java.test.editor.run` and `java.test.editor.debug` to run and debug tests in current file. [PR#1066](https://github.com/microsoft/vscode-java-test/pull/1066)
+
+### Changed
+- The field `vmargs` in `java.test.config` is deprecated, `vmArgs` is used to align with the debug launch configuration. [#852](https://github.com/microsoft/vscode-java-test/issues/852)
+
+### Removed
+- The adaptive debounce mechanism when resolving Code Lenses is removed since it is embedded in Visual Studio Code 1.50.0. [PR#1074](https://github.com/microsoft/vscode-java-test/pull/1074)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.25.0)
+
 ## 0.24.2
 ### Changed
 - Adopt the adaptive debounce mechanism when resolving Code Lenses. [PR#1051](https://github.com/microsoft/vscode-java-test/pull/1051)
