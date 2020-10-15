@@ -35,6 +35,8 @@
         "onCommand:java.test.explorer.refresh",
         "onCommand:java.test.explorer.run",
         "onCommand:java.test.explorer.debug",
+        "onCommand:java.test.editor.run",
+        "onCommand:java.test.editor.debug",
         "onCommand:java.test.run",
         "onCommand:java.test.debug",
         "onCommand:java.test.cancel",
@@ -149,6 +151,14 @@
                     "when": "java:serverMode != LightWeight"
                 },
                 {
+                    "command": "java.test.editor.run",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
+                    "command": "java.test.editor.debug",
+                    "when": "java:serverMode != LightWeight"
+                },
+                {
                     "command": "java.test.relaunch",
                     "when": "java:serverMode != LightWeight"
                 },
@@ -201,6 +211,16 @@
                 "command": "java.test.relaunch",
                 "title": "%contributes.commands.java.test.relaunch.title%",
                 "icon": "$(debug-restart)",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.editor.run",
+                "title": "%contributes.commands.java.test.editor.run.title%",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.editor.debug",
+                "title": "%contributes.commands.java.test.editor.debug.title%",
                 "category": "Java"
             },
             {
@@ -351,7 +371,7 @@
                                 "items": {
                                     "type": "string"
                                 },
-                                "description": "%configuration.java.test.config.vmargs.description%",
+                                "description": "%configuration.java.test.config.vmArgs.description%",
                                 "default": []
                             },
                             "args": {

@@ -9,6 +9,8 @@
     "contributes.commands.java.test.explorer.run.config.title": "根据配置文件运行",
     "contributes.commands.java.test.explorer.debug.config.title": "根据配置文件调试",
     "contributes.commands.java.test.show.report.title": "显示测试报告",
+    "contributes.commands.java.test.editor.run.title": "运行测试用例",
+    "contributes.commands.java.test.editor.debug.title": "调试测试用例",
     "contributes.commands.java.test.relaunch.title": "重新执行测试任务",
     "contributes.commands.java.test.cancel.title": "取消测试任务",
     "contributes.commands.java.test.explorer.refresh.title": "刷新",

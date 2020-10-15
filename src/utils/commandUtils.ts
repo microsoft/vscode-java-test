@@ -22,9 +22,13 @@ export async function searchTestItemsAll(request: ISearchTestItemParams, token: 
         JavaTestRunnerDelegateCommands.SEARCH_TEST_ITEMS_ALL, JSON.stringify(request), token) || [];
 }
 
-export async function searchTestCodeLens(uri: string, token: CancellationToken): Promise<ITestItem[]> {
+export async function searchTestCodeLens(uri: string, token?: CancellationToken): Promise<ITestItem[]> {
+    if (token) {
+        return await executeJavaLanguageServerCommand<ITestItem[]>(
+            JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri, token) || [];
+    }
     return await executeJavaLanguageServerCommand<ITestItem[]>(
-        JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri, token) || [];
+        JavaTestRunnerDelegateCommands.SEARCH_TEST_CODE_LENS, uri) || [];
 }
 
 export async function searchTestLocation(fullName: string): Promise<ILocation[]> {
