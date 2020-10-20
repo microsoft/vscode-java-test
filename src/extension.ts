@@ -134,7 +134,7 @@ async function setContextKeyForDeprecatedConfig(): Promise<void> {
     const deprecatedConfigs: Uri[] = await workspace.findFiles('**/.vscode/launch.test.json', null, 1 /*maxResult*/);
     if (deprecatedConfigs.length > 0) {
         commands.executeCommand('setContext', 'java:hasDeprecatedTestConfig', true);
-        sendInfo('', { hasDeprecatedTestConfig: 1 });
+        sendInfo('', { hasDeprecatedTestConfig: 'true' });
     }
 }
 
