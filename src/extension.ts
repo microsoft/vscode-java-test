@@ -4,8 +4,9 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
+import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from './commands/explorerCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
@@ -104,6 +105,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, true /* isDebug */)),
     );
+
+    setContextKeyForDeprecatedConfig();
 }
 
 export function isStandardServerReady(): boolean {
@@ -125,6 +128,14 @@ export function isLightWeightMode(): boolean {
 
 export function isSwitchingServer(): boolean {
     return serverMode === LanguageServerMode.Hybrid;
+}
+
+async function setContextKeyForDeprecatedConfig(): Promise<void> {
+    const deprecatedConfigs: Uri[] = await workspace.findFiles('**/.vscode/launch.test.json', null, 1 /*maxResult*/);
+    if (deprecatedConfigs.length > 0) {
+        commands.executeCommand('setContext', 'java:hasDeprecatedTestConfig', true);
+        sendInfo('', { hasDeprecatedTestConfig: 1 });
+    }
 }
 
 let serverMode: string | undefined;
