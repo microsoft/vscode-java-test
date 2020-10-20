@@ -80,6 +80,18 @@
             }
         ],
         "menus": {
+            "editor/title": [
+                {
+                    "command": "java.test.editor.run",
+                    "when": "resourcePath =~ /.*[\\\\/]src[\\\\/]test[\\\\/]java[\\\\/].*[Tt]ests?\\.java/",
+                    "group": "1_run@10"
+                },
+                {
+                    "command": "java.test.editor.debug",
+                    "when": "resourcePath =~ /.*[\\\\/]src[\\\\/]test[\\\\/]java[\\\\/].*[Tt]ests?\\.java/",
+                    "group": "1_run@20"
+                }
+            ],
             "view/title": [
                 {
                     "command": "java.test.relaunch",
@@ -216,11 +228,13 @@
             {
                 "command": "java.test.editor.run",
                 "title": "%contributes.commands.java.test.editor.run.title%",
+                "icon": "$(play)",
                 "category": "Java"
             },
             {
                 "command": "java.test.editor.debug",
                 "title": "%contributes.commands.java.test.editor.debug.title%",
+                "icon": "$(debug-alt-small)",
                 "category": "Java"
             },
             {
