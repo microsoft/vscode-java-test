@@ -186,13 +186,13 @@
             {
                 "command": "java.test.explorer.run",
                 "title": "%contributes.commands.java.test.explorer.run.title%",
-                "icon": "$(debug-start)",
+                "icon": "$(play)",
                 "category": "Java"
             },
             {
                 "command": "java.test.explorer.debug",
                 "title": "%contributes.commands.java.test.explorer.debug.title%",
-                "icon": "$(debug)",
+                "icon": "$(debug-alt-small)",
                 "category": "Java"
             },
             {
@@ -204,7 +204,7 @@
             {
                 "command": "java.test.explorer.debugAll",
                 "title": "%contributes.commands.java.test.explorer.debugAll.title%",
-                "icon": "$(debug)",
+                "icon": "$(debug-alt)",
                 "category": "Java"
             },
             {
