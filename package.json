@@ -132,15 +132,19 @@
             "commandPalette": [
                 {
                     "command": "java.test.explorer.run",
-                    "when": "never"
+                    "when": "false"
                 },
                 {
                     "command": "java.test.explorer.debug",
-                    "when": "never"
+                    "when": "false"
                 },
                 {
                     "command": "java.test.explorer.refresh",
-                    "when": "never"
+                    "when": "false"
+                },
+                {
+                    "command": "java.test.config.migrate",
+                    "when": "java:hasDeprecatedTestConfig"
                 },
                 {
                     "command": "java.test.explorer.runAll",
