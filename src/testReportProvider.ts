@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as compareVersions from 'compare-versions';
 import * as path from 'path';
 import * as pug from 'pug';
 import { commands, Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
@@ -20,11 +21,15 @@ class TestReportProvider implements Disposable {
     private context: ExtensionContext;
     private panel: WebviewPanel | undefined;
     private resourceBasePath: string;
+    private canResolveStackTrace: boolean;
 
-    public initialize(context: ExtensionContext): void {
+    public initialize(context: ExtensionContext, extensionVersion: string): void {
         this.context = context;
         this.compiledReportTemplate = require('pug-loader!../resources/templates/report.pug');
         this.resourceBasePath = path.join(this.context.extensionPath, 'resources', 'templates');
+        if (compareVersions(extensionVersion, '0.70.0') >= 0) {
+            this.canResolveStackTrace = true;
+        }
     }
 
     public async report(tests?: ITestResult[]): Promise<void> {
@@ -79,6 +84,10 @@ class TestReportProvider implements Disposable {
                         break;
                     case JavaTestRunnerCommands.RELAUNCH_TESTS:
                         commands.executeCommand(JavaTestRunnerCommands.RELAUNCH_TESTS);
+                        break;
+                    case JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_STACKTRACE:
+                        commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_STACKTRACE, message.trace, message.fullName);
+                        break;
                     default:
                         return;
                 }
@@ -111,7 +120,7 @@ class TestReportProvider implements Disposable {
                 const reportItem: ITestReportItem = Object.assign({},
                     result,
                     {
-                        fullName: result.id.slice(result.id.indexOf('@') + 1),
+                        fullName: result.id,
                         location: testItem ? testItem.location : undefined,
                         displayName: testItem ? testItem.displayName : result.id.slice(result.id.indexOf('#') + 1),
                     },
@@ -146,6 +155,7 @@ class TestReportProvider implements Disposable {
             skippedCount,
             resourceBaseUri: webview.asWebviewUri(Uri.file(path.join(this.resourceBasePath))),
             nonce: this.getNonce(),
+            canResolveStackTrace: this.canResolveStackTrace,
         });
     }
 

@@ -3,6 +3,7 @@
 
 export namespace JavaLanguageServerCommands {
     export const EXECUTE_WORKSPACE_COMMAND: string = 'java.execute.workspaceCommand';
+    export const RESOLVE_STACKTRACE_LOCATION: string = 'java.project.resolveStackTraceLocation';
 }
 
 export namespace JavaTestRunnerDelegateCommands {
@@ -31,4 +32,5 @@ export namespace JavaTestRunnerCommands {
     export const RELAUNCH_TESTS: string = 'java.test.relaunch';
     export const JAVA_TEST_CANCEL: string = 'java.test.cancel';
     export const JAVA_CONFIG_MIGRATE: string = 'java.test.config.migrate';
+    export const JAVA_TEST_REPORT_OPEN_STACKTRACE: string = 'java.test.report.openStackTrace';
 }

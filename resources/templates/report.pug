@@ -13,13 +13,23 @@ html(lang="en")
         script(nonce=`${nonce}`).
             $(() => {
                 const vscode = acquireVsCodeApi();
-                $('.list-group-item a').click((e) => {
+                $('.list-group-item a[title="Navigate to Source"]').click((e) => {
                     const $this = $(e.currentTarget);
                     vscode.postMessage({
                         command: 'java.test.open.document',
                         uri: $this.attr('uri'),
                         range: $this.attr('range'),
                         fullName: $this.attr('fullName'),
+                    });
+                    return false;
+                });
+
+                $('code.word-break-all a').click((e) => {
+                    const $this = $(e.currentTarget);
+                    vscode.postMessage({
+                        command: 'java.test.report.openStackTrace',
+                        fullName: $this.attr('fullName'),
+                        trace: $this.attr('trace'),
                     });
                     return false;
                 });

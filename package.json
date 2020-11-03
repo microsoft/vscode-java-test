@@ -444,6 +444,7 @@
         "webpack-cli": "^3.3.11"
     },
     "dependencies": {
+        "compare-versions": "^3.6.0",
         "fs-extra": "^7.0.1",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.4.24",
