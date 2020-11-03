@@ -37,6 +37,10 @@ export async function deactivate(): Promise<void> {
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
+    const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
+    await fse.ensureDir(storagePath);
+    logger.initialize(storagePath, context.subscriptions);
+
     const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
     let javaLanguageSupportVersion: string = '0.0.0';
     if (extension && extension.isActive) {
@@ -77,10 +81,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context, javaLanguageSupportVersion);
-
-    const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
-    await fse.ensureDir(storagePath);
-    logger.initialize(storagePath, context.subscriptions);
 
     context.subscriptions.push(
         testExplorer,
