@@ -12,6 +12,7 @@ import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer } from '
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
 import { executeTestsFromUri } from './commands/runFromUri';
+import { openStackTrace } from './commands/testReportCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
@@ -41,6 +42,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     logger.initialize(storagePath, context.subscriptions);
 
     const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
+    let javaLanguageSupportVersion: string = '0.0.0';
     if (extension && extension.isActive) {
         const extensionApi: any = extension.exports;
         if (!extensionApi) {
@@ -71,12 +73,14 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
             }));
         }
+
+        javaLanguageSupportVersion = extension.packageJSON.version;
     }
 
     await testFileWatcher.registerListeners();
     testExplorer.initialize(context);
     runnerScheduler.initialize(context);
-    testReportProvider.initialize(context);
+    testReportProvider.initialize(context, javaLanguageSupportVersion);
 
     context.subscriptions.push(
         testExplorer,
@@ -104,6 +108,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_STACKTRACE, async (trace: string, fullName: string) => await openStackTrace(trace, fullName)),
     );
 
     setContextKeyForDeprecatedConfig();

@@ -1,4 +1,5 @@
 mixin collapseMethodTable(children, type)
+    - var regex = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\(([\w-$]+\.java:\d+)\)/
     - var classIdx = 0
     //- See https://github.com/pugjs/pug/issues/2559#issuecomment-289873794 for iterating a map in Pug
     each entry in [...children]
@@ -46,6 +47,18 @@ mixin collapseMethodTable(children, type)
                                                 if idx > 0
                                                     br
                                                     span.text-warning Caused by:
-                                                span #{traces[idx]}
+                                                if canResolveStackTrace
+                                                    - var lines = traces[idx].split(/\r?\n/g);
+                                                    each line in lines
+                                                        - var result = regex.exec(line);
+                                                        if result && result.length === 5
+                                                            span #{result[1] + (result[2] || "") + result[3]}(
+                                                                a(href="#" fullName=`${method.fullName}` trace=`${line}`) #{result[4]}
+                                                                | )
+                                                        else
+                                                            span #{line}
+                                                        br
+                                                else
+                                                    span #{traces[idx]}
                                 else
                                     span N/A
