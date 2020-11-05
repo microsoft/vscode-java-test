@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { commands, Position, Range, Uri, window } from 'vscode';
-import { resolveSourceUri as resolveStackTraceLocation } from '../utils/commandUtils';
+import { resolveStackTraceLocation } from '../utils/commandUtils';
 
 export async function openStackTrace(trace: string, fullName: string): Promise<void> {
     if (!trace || !fullName) {

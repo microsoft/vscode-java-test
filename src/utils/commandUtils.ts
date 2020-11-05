@@ -36,7 +36,7 @@ export async function searchTestLocation(fullName: string): Promise<ILocation[]>
         JavaTestRunnerDelegateCommands.SEARCH_TEST_LOCATION, fullName) || [];
 }
 
-export async function resolveSourceUri(trace: string, projectNames: string[]): Promise<string> {
+export async function resolveStackTraceLocation(trace: string, projectNames: string[]): Promise<string> {
     return await executeJavaLanguageServerCommand<string>(
         JavaLanguageServerCommands.RESOLVE_STACKTRACE_LOCATION, trace, projectNames) || '';
 }
