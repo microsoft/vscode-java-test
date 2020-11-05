@@ -4,6 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.26.0
+### Added
+- Navigate from stacktrace line to proper file in test reports. [#384](https://github.com/microsoft/vscode-java-test/issues/384)
+
+### Changed
+- Only show the `Migrate Deprecated 'launch.test.json'` command when workspace has the deprecated files. [PR#1084](https://github.com/microsoft/vscode-java-test/pull/1084)
+- Update the run buttons in the Test Explorer. [PR#1086](https://github.com/microsoft/vscode-java-test/pull/1086)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.26.0)
+
 ## 0.25.0
 ### Added
 - Add new commands `java.test.editor.run` and `java.test.editor.debug` to run and debug tests in current file. [PR#1066](https://github.com/microsoft/vscode-java-test/pull/1066)
