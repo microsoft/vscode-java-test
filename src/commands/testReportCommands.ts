@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Position, Range, Uri, window } from 'vscode';
+import { commands, Position, Range, Uri, ViewColumn, window } from 'vscode';
 import { resolveStackTraceLocation } from '../utils/commandUtils';
 
 export async function openStackTrace(trace: string, fullName: string): Promise<void> {
@@ -21,6 +21,7 @@ export async function openStackTrace(trace: string, fullName: string): Promise<v
         await window.showTextDocument(Uri.parse(uri), {
             preserveFocus: true,
             selection: new Range(new Position(lineNumber, 0), new Position(lineNumber + 1, 0)),
+            viewColumn: ViewColumn.One,
         });
     } else {
         const methodNameGroup: RegExpExecArray | null = /([\w$\.]+\/)?(([\w$]+\.)+[<\w$>]+)\(.*\)/.exec(trace);
