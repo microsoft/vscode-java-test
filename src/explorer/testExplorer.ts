@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Command, Disposable, Event, EventEmitter, ExtensionContext, extensions, Range, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { Command, Disposable, Event, EventEmitter, ExtensionContext, extensions, Range, ThemeColor, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants/commands';
 import { isLightWeightMode, isSwitchingServer } from '../extension';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
@@ -100,15 +100,9 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
                 if (result) {
                     switch (result.status) {
                         case TestStatus.Pass:
-                            return {
-                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'pass.svg')),
-                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'pass.svg')),
-                            };
+                            return new ThemeIcon('pass', new ThemeColor('charts.green'));
                         case TestStatus.Fail:
-                            return {
-                                dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'error.svg')),
-                                light: this._context.asAbsolutePath(path.join('resources', 'media', 'light', 'error.svg')),
-                            };
+                            return new ThemeIcon('pass', new ThemeColor('charts.red'));
                         case TestStatus.Running:
                             return {
                                 dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'running.svg')),
