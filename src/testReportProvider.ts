@@ -65,7 +65,7 @@ class TestReportProvider implements Disposable {
                         if (message.uri && message.range) {
                             return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
                         } else if (message.fullName) {
-                            const items: ILocation[] = await searchTestLocation(message.fullName);
+                            const items: ILocation[] = await searchTestLocation(message.fullName.slice(message.fullName.indexOf('@') + 1));
                             if (items.length === 1) {
                                 return openTextDocument(Uri.parse(items[0].uri), items[0].range);
                             } else if (items.length > 1) {
