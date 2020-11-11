@@ -102,7 +102,7 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
                         case TestStatus.Pass:
                             return new ThemeIcon('pass', new ThemeColor('charts.green'));
                         case TestStatus.Fail:
-                            return new ThemeIcon('pass', new ThemeColor('charts.red'));
+                            return new ThemeIcon('error', new ThemeColor('charts.red'));
                         case TestStatus.Running:
                             return {
                                 dark: this._context.asAbsolutePath(path.join('resources', 'media', 'dark', 'running.svg')),
