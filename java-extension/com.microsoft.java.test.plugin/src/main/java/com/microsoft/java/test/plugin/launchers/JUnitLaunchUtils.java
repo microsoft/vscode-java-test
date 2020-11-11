@@ -23,6 +23,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -227,6 +228,11 @@ public class JUnitLaunchUtils {
         launchArguments.projectName = javaProject.getProject().getName();
         launchArguments.classpath = classpaths.toArray(new String[classpaths.size()]);
         launchArguments.modulepath = modulepaths.toArray(new String[modulepaths.size()]);
+
+        final IPath projectLocation = javaProject.getProject().getLocation();
+        if (projectLocation != null) {
+            launchArguments.workingDirectory = projectLocation.toFile().getAbsolutePath();
+        }
 
         final List<String> vmArgs = new ArrayList<>();
         vmArgs.add("-ea");
