@@ -9,6 +9,7 @@ suite('Test Report Tests', function() {
 
     suiteSetup(async function() {
         await extensions.getExtension('vscjava.vscode-java-test')!.activate();
+        await commands.executeCommand('workbench.action.closeActiveEditor');
     });
 
     test("Can open test source location from uri and range", async function() {
