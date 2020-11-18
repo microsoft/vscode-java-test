@@ -33,4 +33,5 @@ export namespace JavaTestRunnerCommands {
     export const JAVA_TEST_CANCEL: string = 'java.test.cancel';
     export const JAVA_CONFIG_MIGRATE: string = 'java.test.config.migrate';
     export const JAVA_TEST_REPORT_OPEN_STACKTRACE: string = 'java.test.report.openStackTrace';
+    export const JAVA_TEST_REPORT_OPEN_TEST_SOURCE_LOCATION: string = 'java.test.report.openTestSourceLocation';
 }

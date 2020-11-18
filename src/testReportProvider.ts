@@ -4,15 +4,12 @@
 import * as compareVersions from 'compare-versions';
 import * as path from 'path';
 import * as pug from 'pug';
-import { commands, Disposable, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
-import { openTextDocument } from './commands/explorerCommands';
+import { commands, Disposable, ExtensionContext, Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
 import { JavaTestRunnerCommands } from './constants/commands';
-import { logger } from './logger/logger';
 import { ILocation, ITestItem } from './protocols';
 import { ITestResult, TestStatus } from './runners/models';
 import { IExecutionCache, runnerScheduler } from './runners/runnerScheduler';
 import { testItemModel } from './testItemModel';
-import { searchTestLocation } from './utils/commandUtils';
 import { getReportPosition } from './utils/settingUtils';
 
 class TestReportProvider implements Disposable {
@@ -62,25 +59,7 @@ class TestReportProvider implements Disposable {
                 }
                 switch (message.command) {
                     case JavaTestRunnerCommands.OPEN_DOCUMENT:
-                        if (message.uri && message.range) {
-                            return openTextDocument(Uri.parse(message.uri), JSON.parse(message.range) as Range);
-                        } else if (message.fullName) {
-                            const items: ILocation[] = await searchTestLocation(message.fullName.slice(message.fullName.indexOf('@') + 1));
-                            if (items.length === 1) {
-                                return openTextDocument(Uri.parse(items[0].uri), items[0].range);
-                            } else if (items.length > 1) {
-                                const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
-                                    return { label: message.fullName, detail: Uri.parse(item.uri).fsPath, location: item };
-                                }), { placeHolder: 'Select the file you want to navigate to' });
-                                if (pick) {
-                                    return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
-                                }
-                            } else {
-                                logger.error('No test item could be found from Language Server.');
-                            }
-                        } else {
-                            logger.error('Could not open the document, Neither the Uri nor full name is null.');
-                        }
+                        commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_TEST_SOURCE_LOCATION, message.uri, message.range, message.fullName);
                         break;
                     case JavaTestRunnerCommands.RELAUNCH_TESTS:
                         commands.executeCommand(JavaTestRunnerCommands.RELAUNCH_TESTS);
@@ -182,10 +161,6 @@ class TestReportProvider implements Disposable {
         }
         return text;
     }
-}
-
-interface ILocationQuickPick extends QuickPickItem {
-    location: ILocation;
 }
 
 interface ITestReportItem extends ITestResult {

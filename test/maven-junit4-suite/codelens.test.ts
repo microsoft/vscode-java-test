@@ -18,32 +18,32 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 6, 'Code Lens should appear for @Test annotation');
+        assert.strictEqual(codeLens.length, 6, 'Code Lens should appear for @Test annotation');
 
         const command: Command | undefined = codeLens[4].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         // TODO: compare test item in cache and run from it.
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
-        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
-        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+        assert.notStrictEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notStrictEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.strictEqual(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
 
         await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.TestAnnotation#shouldFail`);
-        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
 
         const passedDetail: ITestResult | undefined = testResultManager.getResultById(`${projectName}@junit4.TestAnnotation#shouldPass`);
-        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.strictEqual(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
 
         const executionCache: IExecutionCache | undefined = runnerScheduler.getExecutionCache();
         assert.ok(executionCache!.context != undefined);
-        assert.equal(executionCache!.results!.length, 2);
+        assert.strictEqual(executionCache!.results!.length, 2);
     });
 
     test("Code Lens should be present for JUnit 4's @Theory annotation", async function() {
@@ -52,26 +52,26 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 6, 'Code Lens should appear for @Theory annotation');
+        assert.strictEqual(codeLens.length, 6, 'Code Lens should appear for @Theory annotation');
 
         const command: Command | undefined = codeLens[4].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
-        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
-        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+        assert.notStrictEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notStrictEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.strictEqual(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
 
         await await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.TheoryAnnotation#shouldFail`);
-        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
 
         const passedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.TheoryAnnotation#shouldPass`);
-        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.strictEqual(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
     });
 
@@ -81,26 +81,26 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 2, 'Code Lens should appear for @RunWith annotation');
+        assert.strictEqual(codeLens.length, 2, 'Code Lens should appear for @RunWith annotation');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: any = command!.arguments;
-        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
-        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
-        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+        assert.notStrictEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notStrictEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.strictEqual(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
 
         await await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.TestAnnotation#shouldFail`);
-        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
 
         const passedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.TestAnnotation#shouldPass`);
-        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.strictEqual(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
     });
 
@@ -110,22 +110,22 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4, 'Code Lens should appear.');
+        assert.strictEqual(codeLens.length, 4, 'Code Lens should appear.');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: any = command!.arguments;
-        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
-        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
-        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+        assert.notStrictEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notStrictEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.strictEqual(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
 
         await await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ExceptionInBefore#<TestError>`);
-        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.trace !== undefined, 'Should have error trace');
     });
 
@@ -135,22 +135,22 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4, 'Code Lens should appear for @Test annotation');
+        assert.strictEqual(codeLens.length, 4, 'Code Lens should appear for @Test annotation');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
-        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
-        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+        assert.notStrictEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notStrictEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.strictEqual(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
 
         await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ParameterizedTest#test`);
-        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
     });
 
@@ -160,26 +160,26 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4, 'Code Lens should appear for @Test annotation');
+        assert.strictEqual(codeLens.length, 4, 'Code Lens should appear for @Test annotation');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.notEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
-        assert.notEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
-        assert.equal(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
+        assert.notStrictEqual(testItem, undefined, 'Test Item inside Code Lens Command should not be undefined');
+        assert.notStrictEqual(testItem, null, 'Test Item inside Code Lens Command should not be null');
+        assert.strictEqual(testItem.length, 1, 'Test Item inside Code Lens Command should has one element');
 
         await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
         const passedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ParameterizedWithNameTest#test[0: expect=1]`);
-        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.strictEqual(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
 
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.ParameterizedWithNameTest#test[3: expect=()]`);
-        assert.equal(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail, 'Should have failed case');
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
 
     });
@@ -196,7 +196,7 @@ suite('Code Lens Tests', function() {
 
         const projectName: string = testItem[0].project;
         const skippedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit4.AssumeTest#shouldSkip`);
-        assert.equal(skippedDetail!.status, TestStatus.Skip, 'Should have skipped case');
+        assert.strictEqual(skippedDetail!.status, TestStatus.Skip, 'Should have skipped case');
         assert.ok(skippedDetail!.duration !== undefined, 'Should have execution time');
     });
 

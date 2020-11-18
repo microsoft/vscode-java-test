@@ -29,7 +29,7 @@ suite('Modular Porject Tests', function() {
         await commands.executeCommand(command!.command, testItem![0]);
 
         const result: ITestResult | undefined = testResultManager.getResultById(testItem![0].id);
-        assert.notEqual(result, undefined, 'Test Result for @Test should not be undefined');
+        assert.notStrictEqual(result, undefined, 'Test Result for @Test should not be undefined');
     });
 
     teardown(async function() {
