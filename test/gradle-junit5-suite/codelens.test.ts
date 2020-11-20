@@ -19,21 +19,21 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 8, 'Code Lens should appear for @ParameterizedTest annotation');
+        assert.strictEqual(codeLens.length, 8, 'Code Lens should appear for @ParameterizedTest annotation');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.equal(testItem.length, 1);
+        assert.strictEqual(testItem.length, 1);
 
         await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
 
         const passedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.ParameterizedAnnotationTest#canRunWithComment`);
-        assert.equal(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
+        assert.strictEqual(passedDetail!.status, TestStatus.Pass, 'Should have passed case');
         assert.ok(passedDetail!.duration !== undefined, 'Should have execution time');
     });
 
@@ -53,7 +53,7 @@ suite('Code Lens Tests', function() {
         const projectName: string = testItem[0].project;
 
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.ParameterizedAnnotationTest#equal`);
-        assert.equal(failedDetail!.status, TestStatus.Fail);
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail);
         assert.ok(failedDetail!.trace !== undefined, 'Should have error trace');
     });
 
@@ -73,7 +73,7 @@ suite('Code Lens Tests', function() {
         const projectName: string = testItem[0].project;
 
         const detail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.ParameterizedAnnotationTest#canRunWithGenericTypedParameter`);
-        assert.equal(detail!.status, TestStatus.Pass);
+        assert.strictEqual(detail!.status, TestStatus.Pass);
     });
 
     test("Can run test method annotated with @Testable", async function() {
@@ -82,21 +82,21 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4, 'Code Lens should appear for @Property annotation');
+        assert.strictEqual(codeLens.length, 4, 'Code Lens should appear for @Property annotation');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.equal(testItem.length, 1);
+        assert.strictEqual(testItem.length, 1);
 
         await commands.executeCommand(command!.command, testItem[0]);
 
         const projectName: string = testItem[0].project;
 
         const failedDetail: ITestResult| undefined = testResultManager.getResultById(`${projectName}@junit5.PropertyTest#absoluteValueOfIntegerAlwaysPositive`);
-        assert.equal(failedDetail!.status, TestStatus.Fail);
+        assert.strictEqual(failedDetail!.status, TestStatus.Fail);
         assert.ok(failedDetail!.duration !== undefined, 'Should have execution time');
     });
 
@@ -106,7 +106,7 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         let codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 4);
+        assert.strictEqual(codeLens.length, 4);
     });
 
     test("Can run test method annotated with @Nested", async function() {
@@ -115,23 +115,23 @@ suite('Code Lens Tests', function() {
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
         let codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-        assert.equal(codeLens.length, 14, 'Code Lens should appear for @Nested annotation');
+        assert.strictEqual(codeLens.length, 14, 'Code Lens should appear for @Nested annotation');
 
         const command: Command | undefined = codeLens[0].command;
-        assert.notEqual(command, undefined, 'Command inside Code Lens should not be undefined');
-        assert.notEqual(command, null, 'Command inside Code Lens should not be null');
+        assert.notStrictEqual(command, undefined, 'Command inside Code Lens should not be undefined');
+        assert.notStrictEqual(command, null, 'Command inside Code Lens should not be null');
 
         const testItem: ITestItem[] = command!.arguments as ITestItem[];
-        assert.equal(testItem.length, 1);
+        assert.strictEqual(testItem.length, 1);
 
         await commands.executeCommand(command!.command, testItem[0]);
 
         codeLens = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
 
-        assert.equal(codeLens.length, 21);
+        assert.strictEqual(codeLens.length, 21);
 
-        assert.equal(codeLens[2].command!.title, '$(x)');
-        assert.equal(codeLens[5].command!.title, '$(check)');
+        assert.strictEqual(codeLens[2].command!.title, '$(x)');
+        assert.strictEqual(codeLens[5].command!.title, '$(check)');
     });
 
     test("Can correctly update the test results for cucumber tests", async function() {
@@ -149,7 +149,7 @@ suite('Code Lens Tests', function() {
         const projectName: string = testItem[0].project;
 
         let result: ITestResult| undefined = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
-        assert.equal(result!.status, TestStatus.Fail);
+        assert.strictEqual(result!.status, TestStatus.Fail);
 
         // Correct the test case
         const fileContent: string = await fse.readFile(Uris.GRADLE_CUCUMBER_STEP.fsPath, 'utf-8');
@@ -160,7 +160,7 @@ suite('Code Lens Tests', function() {
 
         await commands.executeCommand('java.test.relaunch');
         result = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
-        assert.equal(result!.status, TestStatus.Pass);
+        assert.strictEqual(result!.status, TestStatus.Pass);
 
         // revert the file change
         await fse.writeFile(Uris.GRADLE_CUCUMBER_STEP.fsPath, fileContent, {encoding: 'utf-8'});

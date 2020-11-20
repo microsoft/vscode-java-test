@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Position, Range, Uri, ViewColumn, window } from 'vscode';
-import { resolveStackTraceLocation } from '../utils/commandUtils';
+import { commands, Position, QuickPickItem, Range, Uri, ViewColumn, window } from 'vscode';
+import { ILocation } from '../../extension.bundle';
+import { logger } from '../logger/logger';
+import { resolveStackTraceLocation, searchTestLocation } from '../utils/commandUtils';
+import { openTextDocument } from './explorerCommands';
 
 export async function openStackTrace(trace: string, fullName: string): Promise<void> {
     if (!trace || !fullName) {
@@ -31,4 +34,30 @@ export async function openStackTrace(trace: string, fullName: string): Promise<v
             commands.executeCommand('workbench.action.quickOpen', '#' + className);
         }
     }
+}
+
+export async function openTestSourceLocation(uri: string, range: string, fullName: string): Promise<void> {
+    if (uri && range) {
+        return openTextDocument(Uri.parse(uri), JSON.parse(range) as Range);
+    } else if (fullName) {
+        const items: ILocation[] = await searchTestLocation(fullName.slice(fullName.indexOf('@') + 1));
+        if (items.length === 1) {
+            return openTextDocument(Uri.parse(items[0].uri), items[0].range);
+        } else if (items.length > 1) {
+            const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
+                return { label: fullName, detail: Uri.parse(item.uri).fsPath, location: item };
+            }), { placeHolder: 'Select the file you want to navigate to' });
+            if (pick) {
+                return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
+            }
+        } else {
+            logger.error('No test item could be found from Language Server.');
+        }
+    } else {
+        logger.error('Could not open the document, Neither the Uri nor full name is null.');
+    }
+}
+
+interface ILocationQuickPick extends QuickPickItem {
+    location: ILocation;
 }
