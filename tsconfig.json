@@ -10,6 +10,7 @@
         "rootDir": ".",
         "noUnusedLocals": true,
         "noImplicitThis": true,
+        "noImplicitAny": true,
         "noImplicitReturns": true,
         "noUnusedParameters": true,
         "strictNullChecks": true,

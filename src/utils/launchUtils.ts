@@ -25,7 +25,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, ru
             testNGArguments.vmArguments.push(...config.vmargs.filter(Boolean));
         }
 
-        const moreEntries: object = {};
+        const moreEntries: {[key: string]: any} = {};
         if (config && config.sourcePaths) {
             moreEntries['sourcePaths'] = config.sourcePaths;
         }
@@ -63,7 +63,7 @@ export async function getDebugConfigurationForEclipseRunner(runnerContext: IRunn
         env = config.env;
     }
 
-    const moreEntries: object = {};
+    const moreEntries: {[key: string]: any} = {};
     if (config && config.sourcePaths) {
         moreEntries['sourcePaths'] = config.sourcePaths;
     }
