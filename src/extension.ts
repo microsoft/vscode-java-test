@@ -14,6 +14,7 @@ import { runFromCodeLens } from './commands/runFromCodeLens';
 import { executeTestsFromUri } from './commands/runFromUri';
 import { openStackTrace, openTestSourceLocation } from './commands/testReportCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
+import { ACTIVATION_CONTEXT_KEY } from './constants/configs';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
@@ -29,15 +30,16 @@ import { migrateTestConfig } from './utils/configUtils';
 export async function activate(context: ExtensionContext): Promise<void> {
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'), { firstParty: true });
     await instrumentOperation('activation', doActivate)(context);
+    await commands.executeCommand('setContext', ACTIVATION_CONTEXT_KEY, true);
 }
 
 export async function deactivate(): Promise<void> {
     await disposeTelemetryWrapper();
-    await runnerScheduler.cleanUp(false  /* isCancel */);
+    await runnerScheduler.cleanUp(false /* isCancel */);
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
-    const storagePath: string = context.storagePath || path.join(os.tmpdir(), 'java_test_runner');
+    const storagePath: string = context.storageUri?.fsPath || path.join(os.tmpdir(), 'java_test_runner');
     await fse.ensureDir(storagePath);
     logger.initialize(storagePath, context.subscriptions);
 

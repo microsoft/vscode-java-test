@@ -31,14 +31,9 @@
         "onLanguage:java",
         "workspaceContains:pom.xml",
         "workspaceContains:build.gradle",
-        "onView:testExplorer",
-        "onCommand:java.test.explorer.refresh",
-        "onCommand:java.test.explorer.run",
-        "onCommand:java.test.explorer.debug",
+        "workspaceContains:.classpath",
         "onCommand:java.test.editor.run",
         "onCommand:java.test.editor.debug",
-        "onCommand:java.test.run",
-        "onCommand:java.test.debug",
         "onCommand:java.test.cancel",
         "onCommand:java.test.show.report",
         "onCommand:java.test.show.output",
@@ -68,7 +63,8 @@
             "test": [
                 {
                     "id": "testExplorer",
-                    "name": "Java"
+                    "name": "Java",
+                    "when": "java:testRunnerActivated"
                 }
             ]
         },
