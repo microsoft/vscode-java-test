@@ -25,6 +25,8 @@ export const HINT_FOR_DEPRECATED_CONFIG_SETTING_KEY: string = 'java.test.message
 export const CONFIG_DOCUMENT_URL: string = 'https://aka.ms/java-test-config';
 export const HINT_FOR_DEFAULT_CONFIG_SETTING_KEY: string = 'java.test.message.hintForSetingDefaultConfig';
 
+export const ACTIVATION_CONTEXT_KEY: string = 'java:testRunnerActivated';
+
 export enum ReportShowSetting {
     Always = 'always',
     OnFail = 'onFailure',
