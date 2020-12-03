@@ -28,10 +28,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:java",
-        "workspaceContains:pom.xml",
-        "workspaceContains:build.gradle",
-        "workspaceContains:.classpath",
+        "onView:testExplorer",
         "onCommand:java.test.editor.run",
         "onCommand:java.test.editor.debug",
         "onCommand:java.test.cancel",
@@ -64,7 +61,7 @@
                 {
                     "id": "testExplorer",
                     "name": "Java",
-                    "when": "java:testRunnerActivated"
+                    "when": "java:serverMode"
                 }
             ]
         },
