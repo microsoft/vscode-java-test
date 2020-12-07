@@ -4,6 +4,14 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.26.1
+### Changed
+- Automatically switch to `DEBUG CONSOLE` when a new test session starts. [#1106](https://github.com/microsoft/vscode-java-test/issues/1106)
+- Do not show the `Test Explorer` for a non-Java workspace. [#793](https://github.com/microsoft/vscode-java-test/issues/793)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.26.1)
+
 ## 0.26.0
 ### Added
 - Navigate from stacktrace line to proper file in test reports. [#384](https://github.com/microsoft/vscode-java-test/issues/384)
