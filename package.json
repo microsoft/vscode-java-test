@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.26.0",
+    "version": "0.26.1",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -43,7 +43,7 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.26.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.26.1.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1200.v20200214-0716.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.900.v20200513-0617.jar",
             "./server/org.junit.jupiter.api_5.6.0.v20200203-2009.jar",
