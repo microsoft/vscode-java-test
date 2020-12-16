@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { ProgressLocation, Uri, window, workspace } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
 import { IProgressReporter } from '../debugger.api';
 import { progressProvider } from '../extension';
 import { ITestItem, TestLevel } from '../protocols';
@@ -27,9 +27,8 @@ export async function executeTestsFromUri(uri: Uri | undefined, progressReporter
         return;
     }
 
-    if (!progressReporter) {
-        progressReporter = progressProvider?.createProgressReporter(isDebug ? 'Debug Test' : 'Run Test', ProgressLocation.Notification, true);
-    }
+    progressReporter = progressReporter || progressProvider?.createProgressReporter(isDebug ? 'Debug Test' : 'Run Test');
+
     progressReporter?.report('Searching tests...');
 
     const tests: ITestItem[] = await testItemModel.getItemsForCodeLens(uri);

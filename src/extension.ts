@@ -81,11 +81,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     }
 
     const javaDebugger: Extension<any> | undefined = extensions.getExtension('vscjava.vscode-java-debug');
-    if (javaDebugger && javaDebugger.isActive) {
-        const extensionApi: any = javaDebugger.exports;
-        if (extensionApi) {
-            progressProvider = extensionApi.progressProvider;
-        }
+    if (javaDebugger?.isActive) {
+        progressProvider = javaDebugger.exports?.progressProvider;
     }
 
     await testFileWatcher.registerListeners();

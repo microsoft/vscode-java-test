@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { DebugConfiguration, ExtensionContext, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
 import { IProgressReporter } from '../debugger.api';
@@ -49,9 +49,7 @@ class RunnerScheduler {
 
         this._isRunning = true;
 
-        if (!progressReporter) {
-            progressReporter = progressProvider?.createProgressReporter(runnerContext.isDebug ? 'Debug Test' : 'Run Test', ProgressLocation.Notification, true);
-        }
+        progressReporter = progressReporter || progressProvider?.createProgressReporter(runnerContext.isDebug ? 'Debug Test' : 'Run Test');
 
         this._executionCache = {
             context: _.cloneDeep(runnerContext),
