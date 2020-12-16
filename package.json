@@ -257,7 +257,7 @@
                     ],
                     "default": "onFailure",
                     "description": "%configuration.java.test.report.showAfterExecution.description%",
-                    "scope": "application"
+                    "scope": "window"
                 },
                 "java.test.report.position": {
                     "type": "string",
