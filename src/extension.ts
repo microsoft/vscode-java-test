@@ -46,7 +46,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
     const javaLanguageSupport: Extension<any> | undefined = extensions.getExtension('redhat.java');
     let javaLanguageSupportVersion: string = '0.0.0';
-    if (javaLanguageSupport && javaLanguageSupport.isActive) {
+    if (javaLanguageSupport?.isActive) {
         const extensionApi: any = javaLanguageSupport.exports;
         if (!extensionApi) {
             return;
