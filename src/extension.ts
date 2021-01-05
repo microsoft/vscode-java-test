@@ -15,6 +15,7 @@ import { executeTestsFromUri } from './commands/runFromUri';
 import { openStackTrace, openTestSourceLocation } from './commands/testReportCommands';
 import { JavaTestRunnerCommands } from './constants/commands';
 import { ACTIVATION_CONTEXT_KEY } from './constants/configs';
+import { IProgressProvider, IProgressReporter } from './debugger.api';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
@@ -43,10 +44,10 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     await fse.ensureDir(storagePath);
     logger.initialize(storagePath, context.subscriptions);
 
-    const extension: Extension<any> | undefined = extensions.getExtension('redhat.java');
+    const javaLanguageSupport: Extension<any> | undefined = extensions.getExtension('redhat.java');
     let javaLanguageSupportVersion: string = '0.0.0';
-    if (extension && extension.isActive) {
-        const extensionApi: any = extension.exports;
+    if (javaLanguageSupport?.isActive) {
+        const extensionApi: any = javaLanguageSupport.exports;
         if (!extensionApi) {
             return;
         }
@@ -76,7 +77,12 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             }));
         }
 
-        javaLanguageSupportVersion = extension.packageJSON.version;
+        javaLanguageSupportVersion = javaLanguageSupport.packageJSON.version;
+    }
+
+    const javaDebugger: Extension<any> | undefined = extensions.getExtension('vscjava.vscode-java-debug');
+    if (javaDebugger?.isActive) {
+        progressProvider = javaDebugger.exports?.progressProvider;
     }
 
     await testFileWatcher.registerListeners();
@@ -108,8 +114,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_LOG, async () => await openLogFile(storagePath)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_CANCEL, async () => await runnerScheduler.cleanUp(true /* isCancel */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_CONFIG_MIGRATE, async () => await migrateTestConfig()),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, false /* isDebug */)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async (uri?: Uri) => await executeTestsFromUri(uri, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async (uri?: Uri, progressReporter?: IProgressReporter) => await executeTestsFromUri(uri, progressReporter, false /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async (uri?: Uri, progressReporter?: IProgressReporter) => await executeTestsFromUri(uri, progressReporter, true /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_STACKTRACE, async (trace: string, fullName: string) => await openStackTrace(trace, fullName)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_TEST_SOURCE_LOCATION, async (uri: string, range: string, fullName: string) => await openTestSourceLocation(uri, range, fullName)),
     );
@@ -153,3 +159,5 @@ const enum LanguageServerMode {
     Standard = 'Standard',
     Hybrid = 'Hybrid',
 }
+
+export let progressProvider: IProgressProvider | undefined;

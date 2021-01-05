@@ -9,6 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } from 'vscode';
 import { LOCAL_HOST } from '../../constants/configs';
+import { IProgressReporter } from '../../debugger.api';
 import { logger } from '../../logger/logger';
 import { ITestItem, TestLevel } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
@@ -40,7 +41,7 @@ export abstract class BaseRunner implements ITestRunner {
         this.updateTestResultsToPending();
     }
 
-    public async run(launchConfiguration: DebugConfiguration): Promise<Set<string>> {
+    public async run(launchConfiguration: DebugConfiguration, progressReporter?: IProgressReporter): Promise<Set<string>> {
         let data: string = '';
         this.server.on('connection', (socket: Socket) => {
             this.socket = socket;
@@ -70,6 +71,8 @@ export abstract class BaseRunner implements ITestRunner {
         // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
         launchConfiguration.internalConsoleOptions = 'openOnSessionStart';
+
+        launchConfiguration.__progressId = progressReporter?.getId();
 
         const uri: Uri = Uri.parse(this.context.tests[0].location.uri);
         logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
@@ -176,7 +179,7 @@ export abstract class BaseRunner implements ITestRunner {
     protected async startSocketServer(): Promise<void> {
         this.server = createServer();
         const socketPort: number = await getPort();
-        await new Promise((resolve: () => void): void => {
+        await new Promise<void>((resolve: () => void): void => {
             this.server.listen(socketPort, LOCAL_HOST, resolve);
         });
     }

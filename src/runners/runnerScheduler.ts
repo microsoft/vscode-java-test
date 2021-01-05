@@ -5,6 +5,8 @@ import * as _ from 'lodash';
 import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
+import { IProgressReporter } from '../debugger.api';
+import { progressProvider } from '../extension';
 import { logger } from '../logger/logger';
 import { ITestItem, TestKind } from '../protocols';
 import { IExecutionConfig } from '../runConfigs';
@@ -39,35 +41,41 @@ class RunnerScheduler {
         await this.run(this._executionCache.context);
     }
 
-    public async run(runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
+    public async run(runnerContext: IRunnerContext, progressReporter?: IProgressReporter, launchConfiguration?: DebugConfiguration): Promise<void> {
         if (this._isRunning) {
             window.showInformationMessage('A test session is currently running. Please wait until it finishes.\n');
             return;
         }
 
         this._isRunning = true;
+
+        progressReporter = progressReporter || progressProvider?.createProgressReporter(runnerContext.isDebug ? 'Debug Test' : 'Run Test');
+
         this._executionCache = {
             context: _.cloneDeep(runnerContext),
         };
 
         let allIds: Set<string> = new Set<string>();
         try {
-            testStatusBarProvider.showRunningTest();
             this._runnerMap = this.classifyTestsByKind(runnerContext.tests);
             for (const [runner, tests] of this._runnerMap.entries()) {
                 runnerContext.kind = tests[0].kind;
                 runnerContext.projectName = tests[0].project;
                 runnerContext.tests = tests;
-                // The test items that belong to a test runner, here the test items should be in the same workspace folder.
-                const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
-                const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
-                if (!config) {
-                    logger.info('Test job is canceled.\n');
-                    continue;
-                }
 
                 await runner.setup(runnerContext);
-                const ids: Set<string> = await runner.run(launchConfiguration || await resolveLaunchConfigurationForRunner(runner, runnerContext, config));
+                if (!launchConfiguration) {
+                    // The test items that belong to a test runner, here the test items should be in the same workspace folder.
+                    const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
+                    const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
+                    if (!config) {
+                        logger.info('Test job is canceled.\n');
+                        continue;
+                    }
+                    progressReporter?.report('Resolving launch configuration...');
+                    launchConfiguration = await resolveLaunchConfigurationForRunner(runner, runnerContext, config);
+                }
+                const ids: Set<string> = await runner.run(launchConfiguration, progressReporter);
                 allIds = new Set([...allIds, ...ids]);
             }
             const finalResults: ITestResult[] = testResultManager.getResultsByIds(Array.from(allIds));
@@ -79,6 +87,7 @@ class RunnerScheduler {
             logger.error(error.toString());
             uiUtils.showError(error);
         } finally {
+            progressReporter?.done();
             await this.cleanUp(false);
         }
     }
