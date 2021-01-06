@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { DebugConfiguration, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, ExtensionContext, ProgressLocation, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { testCodeLensController } from '../codelens/TestCodeLensController';
 import { ReportShowSetting } from '../constants/configs';
 import { IProgressReporter } from '../debugger.api';
@@ -64,7 +64,8 @@ class RunnerScheduler {
                 runnerContext.tests = tests;
 
                 await runner.setup(runnerContext);
-                if (!launchConfiguration) {
+                let resolvedConfiguration: DebugConfiguration | undefined = launchConfiguration;
+                if (!resolvedConfiguration) {
                     // The test items that belong to a test runner, here the test items should be in the same workspace folder.
                     const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(Uri.parse(tests[0].location.uri));
                     const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
@@ -72,10 +73,13 @@ class RunnerScheduler {
                         logger.info('Test job is canceled.\n');
                         continue;
                     }
+                    if (progressReporter?.isCancelled()) {
+                        progressReporter = progressProvider?.createProgressReporter(runnerContext.isDebug ? 'Debug Test' : 'Run Test', ProgressLocation.Notification, true);
+                    }
                     progressReporter?.report('Resolving launch configuration...');
-                    launchConfiguration = await resolveLaunchConfigurationForRunner(runner, runnerContext, config);
+                    resolvedConfiguration = await resolveLaunchConfigurationForRunner(runner, runnerContext, config);
                 }
-                const ids: Set<string> = await runner.run(launchConfiguration, progressReporter);
+                const ids: Set<string> = await runner.run(resolvedConfiguration, progressReporter);
                 allIds = new Set([...allIds, ...ids]);
             }
             const finalResults: ITestResult[] = testResultManager.getResultsByIds(Array.from(allIds));
