@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## 0.27.0
 ### Changed
 - Change the scope of the setting `java.test.report.showAfterExecution` to `window`. [#1104](https://github.com/microsoft/vscode-java-test/issues/1104)
-- Adopt the progress reporter API. [PR#1119](https://github.com/microsoft/vscode-java-test/pull/1119)
+- Adopt the progress reporter API proposed in `Debugger for Java@0.30.0`. [PR#1119](https://github.com/microsoft/vscode-java-test/pull/1119)
+  > To prevent the notification dialog showing up, you can set the setting `java.silentNotification` to `true`.
 
 ## 0.26.1
 ### Changed
