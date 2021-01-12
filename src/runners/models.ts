@@ -38,4 +38,5 @@ export interface IRunnerContext {
     isDebug: boolean;
     kind: TestKind;
     tests: ITestItem[];
+    isHierarchicalPackage?: boolean;
 }

@@ -13,6 +13,8 @@
     "contributes.commands.java.test.editor.debug.title": "调试测试用例",
     "contributes.commands.java.test.relaunch.title": "重新执行测试任务",
     "contributes.commands.java.test.cancel.title": "取消测试任务",
+    "contributes.commands.java.test.runFromJavaProjectExplorer": "运行测试",
+    "contributes.commands.java.test.debugFromJavaProjectExplorer": "调试测试",
     "contributes.commands.java.test.explorer.refresh.title": "刷新",
     "contributes.commands.java.test.config.migrate.title": "迁移已弃用的 'launch.test.json' 文件",
     "configuration.java.test.report.showAfterExecution.description": "设定测试报告是否会在测试完成后自动显示",

@@ -293,7 +293,7 @@ public class TestSearchUtils {
     }
 
     private static IJavaSearchScope createSearchScope(SearchTestItemParams params)
-            throws JavaModelException, URISyntaxException {
+            throws URISyntaxException, CoreException {
         switch (params.getLevel()) {
             case ROOT:
                 final IJavaProject[] projects = Stream.of(ProjectUtils.getJavaProjects())
@@ -306,9 +306,14 @@ public class TestSearchUtils {
                 return SearchEngine.createJavaSearchScope(projectSet.toArray(new IJavaElement[projectSet.size()]),
                         IJavaSearchScope.SOURCES);
             case PACKAGE:
+                final IJavaElement[] elements;
                 final IJavaElement packageElement = resolvePackage(params.getUri(), params.getFullName());
-                return SearchEngine.createJavaSearchScope(new IJavaElement[] { packageElement },
-                        IJavaSearchScope.SOURCES);
+                if (params.isHierarchicalPackage()) {
+                    elements = getAllSubPackages(packageElement);
+                } else {
+                    elements = new IJavaElement[] { packageElement };
+                }
+                return SearchEngine.createJavaSearchScope(elements, IJavaSearchScope.SOURCES);
             case CLASS:
                 final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
                 final IType[] types = compilationUnit.getAllTypes();
@@ -354,24 +359,27 @@ public class TestSearchUtils {
 
     private static void searchInPackage(List<TestItem> resultList, SearchTestItemParams params)
             throws JavaModelException {
-        final IPackageFragment packageFragment = resolvePackage(params.getUri(), params.getFullName());
-        if (packageFragment == null) {
+        final IJavaElement packageFragment = resolvePackage(params.getUri(), params.getFullName());
+        if (packageFragment == null || !(packageFragment instanceof IPackageFragment)) {
             return;
         }
 
-        for (final ICompilationUnit unit : packageFragment.getCompilationUnits()) {
+        for (final ICompilationUnit unit : ((IPackageFragment) packageFragment).getCompilationUnits()) {
             for (final IType type : unit.getTypes()) {
                 resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS));
             }
         }
     }
 
-    private static IPackageFragment resolvePackage(String uriString, String fullName) throws JavaModelException {
-        if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
-            final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
+    private static IJavaElement resolvePackage(String uriString, String fullName) throws JavaModelException {
+        final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
                     ResourcesPlugin.getWorkspace().getRoot()::findContainersForLocationURI);
-            final IJavaElement element = JavaCore.create(resource);
-            if (element instanceof IPackageFragmentRoot) {
+        final IJavaElement element = JavaCore.create(resource);
+        if (element == null) {
+            return null;
+        }
+        if (element instanceof IPackageFragmentRoot) {
+            if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
                 final IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) element;
                 for (final IJavaElement child : packageRoot.getChildren()) {
                     if (child instanceof IPackageFragment && ((IPackageFragment) child).isDefaultPackage()) {
@@ -379,11 +387,26 @@ public class TestSearchUtils {
                     }
                 }
             }
-        } else {
-            return JDTUtils.resolvePackage(uriString);
         }
 
-        return null;
+        return element;
+    }
+
+    public static IPackageFragment[] getAllSubPackages(IJavaElement packageFragment) throws CoreException {
+        final List<IPackageFragment> result = new ArrayList<>();
+        if (packageFragment != null && packageFragment instanceof IPackageFragment) {
+            final IJavaElement[] packages = ((IPackageFragmentRoot) packageFragment.getParent()).getChildren();
+            for (final IJavaElement p : packages) {
+                if (!(p instanceof IPackageFragment)) {
+                    continue;
+                }
+    
+                if (p.getElementName().startsWith(packageFragment.getElementName())) {
+                    result.add((IPackageFragment) p);
+                }
+            }
+        }
+        return result.toArray(new IPackageFragment[result.size()]);
     }
 
     private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params)

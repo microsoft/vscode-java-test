@@ -108,7 +108,7 @@ public class JUnitLaunchUtils {
             return resolveTestNGLaunchArguments(configuration, javaProject, delegate);
         }
 
-        return delegate.getJUnitLaunchArguments(configuration, "run", monitor);
+        return delegate.getJUnitLaunchArguments(configuration, "run", args.isHierarchicalPackage, monitor);
     }
 
     public static void addOverrideDependencies(List<String> vmArgs, String dependencies) {
@@ -305,5 +305,6 @@ public class JUnitLaunchUtils {
         public TestKind testKind;
         public Position start;
         public Position end;
+        public boolean isHierarchicalPackage;
     }
 }
