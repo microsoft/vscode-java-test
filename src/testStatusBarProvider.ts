@@ -41,7 +41,7 @@ class TestStatusBarProvider implements Disposable {
         }
 
         this.statusBarItem.accessibilityInformation = {
-            label: `${failedNum} failed, ${passedNum} passed test${failedNum + passedNum > 1 ? 's' : ''}`,
+            label: `${failedNum} failed, ${passedNum} passed test${failedNum + passedNum === 1 ? '' : 's'}`,
         };
         this.update(`$(x) ${failedNum} $(check) ${passedNum}`, 'Show test report', JavaTestRunnerCommands.SHOW_TEST_REPORT, [results]);
     }
