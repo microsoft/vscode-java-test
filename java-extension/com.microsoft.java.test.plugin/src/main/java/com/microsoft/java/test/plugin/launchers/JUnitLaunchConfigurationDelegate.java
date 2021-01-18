@@ -166,6 +166,10 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
         return vmArgs.toArray(new String[vmArgs.size()]);
     }
 
+    /**
+     * JUnit5's runner will run packages defined in a file, we can add more packages into that file when it's 
+     * run from hierarchical mode to let the runner run test in all the sub-packages.
+     */
     private void appendPackageNames(String[] programArguments, ILaunchConfiguration configuration) {
         for (int i = 0; i < programArguments.length; i++) {
             if ("-packageNameFile".equals(programArguments[i]) && i + 1 < programArguments.length) {

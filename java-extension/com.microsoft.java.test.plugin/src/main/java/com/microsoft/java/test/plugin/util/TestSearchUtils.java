@@ -392,6 +392,9 @@ public class TestSearchUtils {
         return element;
     }
 
+    /**
+     * Get all sub-packages whose name starts with the given package.
+     */
     public static IPackageFragment[] getAllSubPackages(IJavaElement packageFragment) throws CoreException {
         final List<IPackageFragment> result = new ArrayList<>();
         if (packageFragment != null && packageFragment instanceof IPackageFragment) {
