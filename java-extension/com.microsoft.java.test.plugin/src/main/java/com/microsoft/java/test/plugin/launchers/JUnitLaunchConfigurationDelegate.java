@@ -11,7 +11,6 @@
 
 package com.microsoft.java.test.plugin.launchers;
 
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -24,6 +23,7 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.corext.refactoring.util.JavaElementUtil;
 import org.eclipse.jdt.internal.junit.JUnitMessages;
 import org.eclipse.jdt.internal.junit.Messages;
 import org.eclipse.jdt.internal.junit.launcher.ITestKind;
@@ -106,7 +106,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             return super.evaluateTests(configuration, monitor);
         }
 
-        final IPackageFragment[] packages = TestSearchUtils.getAllSubPackages(testPackage);
+        final IPackageFragment[] packages = JavaElementUtil.getPackageAndSubpackages(testPackage);
         
         final HashSet<IType> result = new HashSet<>();
         final ITestKind testKind = getTestRunnerKind(configuration);
@@ -181,7 +181,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     if (testPackage == null) {
                         return;
                     }
-                    final IPackageFragment[] packages = TestSearchUtils.getAllSubPackages(testPackage);
+                    final IPackageFragment[] packages = JavaElementUtil.getPackageAndSubpackages(testPackage);
                     for (final IPackageFragment pkg : packages) {
                         bw.write(pkg.getElementName());
                         bw.newLine();

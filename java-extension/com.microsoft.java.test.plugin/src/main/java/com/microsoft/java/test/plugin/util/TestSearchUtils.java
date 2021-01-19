@@ -49,6 +49,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.corext.refactoring.util.JavaElementUtil;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
@@ -309,7 +310,7 @@ public class TestSearchUtils {
                 final IJavaElement[] elements;
                 final IJavaElement packageElement = resolvePackage(params.getUri(), params.getFullName());
                 if (params.isHierarchicalPackage()) {
-                    elements = getAllSubPackages(packageElement);
+                    elements = JavaElementUtil.getPackageAndSubpackages((IPackageFragment) packageElement);
                 } else {
                     elements = new IJavaElement[] { packageElement };
                 }
@@ -390,26 +391,6 @@ public class TestSearchUtils {
         }
 
         return element;
-    }
-
-    /**
-     * Get all sub-packages whose name starts with the given package.
-     */
-    public static IPackageFragment[] getAllSubPackages(IJavaElement packageFragment) throws CoreException {
-        final List<IPackageFragment> result = new ArrayList<>();
-        if (packageFragment != null && packageFragment instanceof IPackageFragment) {
-            final IJavaElement[] packages = ((IPackageFragmentRoot) packageFragment.getParent()).getChildren();
-            for (final IJavaElement p : packages) {
-                if (!(p instanceof IPackageFragment)) {
-                    continue;
-                }
-    
-                if (p.getElementName().startsWith(packageFragment.getElementName())) {
-                    result.add((IPackageFragment) p);
-                }
-            }
-        }
-        return result.toArray(new IPackageFragment[result.size()]);
     }
 
     private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params)
