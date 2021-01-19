@@ -23,9 +23,12 @@ class TestItemModel implements Disposable {
         return this.save(childrenNodes);
     }
 
-    public async getAllNodes(level: TestLevel, fullName: string, uri: string, token: CancellationToken): Promise<ITestItem[]> {
+    public async getAllNodes(level: TestLevel, fullName: string, uri: string, isHierarchicalPackage: boolean | undefined, token: CancellationToken): Promise<ITestItem[]> {
         const searchParam: ISearchTestItemParams = constructSearchTestItemParams(level, fullName, uri);
-        const tests: ITestItem[] = await searchTestItemsAll(searchParam, token);
+        const tests: ITestItem[] = await searchTestItemsAll({
+            ...searchParam,
+            isHierarchicalPackage,
+        }, token);
         if (token.isCancellationRequested) {
             return [];
         }

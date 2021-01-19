@@ -9,6 +9,7 @@ import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { IRunnerContext } from '../runners/models';
 import { runnerScheduler } from '../runners/runnerScheduler';
 import { testItemModel } from '../testItemModel';
+import { executeTestsFromUri } from './runFromUri';
 
 export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
     const document: TextDocument = await workspace.openTextDocument(uri);
@@ -44,8 +45,31 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
             runnerContext.tests = [node];
         }
     }
+    return executeTests(runnerContext, launchConfiguration);
+}
 
-    const progressReporter: IProgressReporter | undefined = progressProvider?.createProgressReporter(isDebug ? 'Debug Test' : 'Run Test', ProgressLocation.Notification, true);
+export async function runTestsFromJavaProjectExplorer(node: any, isDebug: boolean): Promise<void> {
+    if (node._nodeData.kind === 6 /*PrimaryType*/) {
+        return executeTestsFromUri(Uri.parse(node._nodeData.uri), undefined, isDebug);
+    }
+
+    const runnerContext: IRunnerContext = {
+        scope: TestLevel.Package,
+        testUri: node._nodeData.uri,
+        fullName: node._nodeData.name,
+        projectName: node._project.name,
+        kind: TestKind.None,
+        isDebug,
+        tests: [],
+        // isPackage is only available when the explorer is in hierarchical mode
+        isHierarchicalPackage: node._nodeData.isPackage,
+    };
+
+    return executeTests(runnerContext);
+}
+
+async function executeTests(runnerContext: IRunnerContext, launchConfiguration?: DebugConfiguration): Promise<void> {
+    const progressReporter: IProgressReporter | undefined = progressProvider?.createProgressReporter(runnerContext.isDebug ? 'Debug Test' : 'Run Test', ProgressLocation.Notification, true);
     if (runnerContext.tests.length === 0) {
         try {
             await searchTestItems(runnerContext, progressReporter);
@@ -58,7 +82,7 @@ async function executeTestsFromExplorer(isDebug: boolean, node?: ITestItem, laun
     }
 
     if (runnerContext.tests.length === 0) {
-        logger.info('No test items found.\n');
+        window.showInformationMessage(`No tests found under: '${Uri.parse(runnerContext.testUri).fsPath}'.`);
         progressReporter?.done();
         return;
     }
@@ -70,7 +94,7 @@ async function searchTestItems(runnerContext: IRunnerContext, progressReporter?:
     return new Promise<void>(async (resolve: () => void, reject: () => void): Promise<void> => {
         const searchImpl: (token: CancellationToken) => Promise<void> = async (token: CancellationToken) => {
             token.onCancellationRequested(reject);
-            runnerContext.tests = await testItemModel.getAllNodes(runnerContext.scope, runnerContext.fullName, runnerContext.testUri, token);
+            runnerContext.tests = await testItemModel.getAllNodes(runnerContext.scope, runnerContext.fullName, runnerContext.testUri, runnerContext.isHierarchicalPackage, token);
             return resolve();
         };
 

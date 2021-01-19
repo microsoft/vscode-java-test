@@ -42,7 +42,8 @@ export async function resolveStackTraceLocation(trace: string, projectNames: str
 }
 
 export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string,
-                                                  scope: TestLevel, testKind: TestKind, start?: Position, end?: Position): Promise<IJUnitLaunchArguments> {
+                                                  scope: TestLevel, testKind: TestKind, start?: Position, end?: Position,
+                                                  isHierarchicalPackage?: boolean): Promise<IJUnitLaunchArguments> {
     const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             uri,
@@ -53,6 +54,7 @@ export async function resolveJUnitLaunchArguments(uri: string, classFullName: st
             testKind,
             start,
             end,
+            isHierarchicalPackage,
         }));
 
     if (!argument) {

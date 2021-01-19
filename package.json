@@ -123,6 +123,21 @@
                     "command": "java.test.explorer.debug",
                     "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
                     "group": "inline@1"
+                },
+                {
+                    "command": "java.test.runFromJavaProjectExplorer",
+                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
+                    "group": "8_execution@10"
+                },
+                {
+                    "command": "java.test.debugFromJavaProjectExplorer",
+                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
+                    "group": "8_execution@20"
+                },
+                {
+                    "command": "java.test.runFromJavaProjectExplorer",
+                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
+                    "group": "inline@run_0"
                 }
             ],
             "commandPalette": [
@@ -136,6 +151,14 @@
                 },
                 {
                     "command": "java.test.explorer.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "java.test.runFromJavaProjectExplorer",
+                    "when": "false"
+                },
+                {
+                    "command": "java.test.debugFromJavaProjectExplorer",
                     "when": "false"
                 },
                 {
@@ -199,6 +222,17 @@
                 "command": "java.test.explorer.runAll",
                 "title": "%contributes.commands.java.test.explorer.runAll.title%",
                 "icon": "$(run-all)",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.runFromJavaProjectExplorer",
+                "title": "%contributes.commands.java.test.runFromJavaProjectExplorer%",
+                "icon": "$(play)",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.debugFromJavaProjectExplorer",
+                "title": "%contributes.commands.java.test.debugFromJavaProjectExplorer%",
                 "category": "Java"
             },
             {

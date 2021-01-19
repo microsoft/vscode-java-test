@@ -102,7 +102,7 @@ async function getJUnitLaunchArguments(runnerContext: IRunnerContext): Promise<I
         end = runnerContext.tests[0].location.range.end;
     }
 
-    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName, runnerContext.scope, runnerContext.kind, start, end);
+    return await resolveJUnitLaunchArguments(runnerContext.testUri, className, methodName, runnerContext.projectName, runnerContext.scope, runnerContext.kind, start, end, runnerContext.isHierarchicalPackage);
 }
 
 async function getTestNGLaunchArguments(projectName: string): Promise<IJUnitLaunchArguments> {

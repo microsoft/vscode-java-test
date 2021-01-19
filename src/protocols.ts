@@ -23,6 +23,7 @@ export interface ISearchTestItemParams {
     level: TestLevel;
     fullName: string;
     uri: string;
+    isHierarchicalPackage?: boolean;
 }
 
 export enum TestLevel {

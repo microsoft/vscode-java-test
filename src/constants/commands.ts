@@ -26,6 +26,8 @@ export namespace JavaTestRunnerCommands {
     export const DEBUG_ALL_TEST_FROM_EXPLORER: string = 'java.test.explorer.debugAll';
     export const RUN_ALL_TEST_FROM_EXPLORER: string = 'java.test.explorer.runAll';
     export const DEBUG_TEST_FROM_EXPLORER: string = 'java.test.explorer.debug';
+    export const RUN_TEST_FROM_JAVA_PROJECT_EXPLORER: string = 'java.test.runFromJavaProjectExplorer';
+    export const DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER: string = 'java.test.debugFromJavaProjectExplorer';
     export const SHOW_TEST_REPORT: string = 'java.test.show.report';
     export const SHOW_TEST_OUTPUT: string = 'java.test.show.output';
     export const OPEN_TEST_LOG: string = 'java.test.open.log';

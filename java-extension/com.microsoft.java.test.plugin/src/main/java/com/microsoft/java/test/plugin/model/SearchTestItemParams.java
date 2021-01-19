@@ -18,8 +18,18 @@ public class SearchTestItemParams {
 
     private String fullName;
 
+    private boolean isHierarchicalPackage;
+
     public TestLevel getLevel() {
         return level;
+    }
+
+    public boolean isHierarchicalPackage() {
+        return isHierarchicalPackage;
+    }
+
+    public void setHierarchicalPackage(boolean isHierarchicalPackage) {
+        this.isHierarchicalPackage = isHierarchicalPackage;
     }
 
     public void setLevel(TestLevel level) {
