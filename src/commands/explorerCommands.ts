@@ -13,7 +13,7 @@ import { executeTestsFromUri } from './runFromUri';
 
 export async function openTextDocument(uri: Uri, range?: Range): Promise<void> {
     const document: TextDocument = await workspace.openTextDocument(uri);
-    await window.showTextDocument(document, {preserveFocus: true, selection: range, viewColumn: ViewColumn.One});
+    await window.showTextDocument(document, {selection: range, viewColumn: ViewColumn.One});
 }
 
 export async function runTestsFromExplorer(node?: ITestItem, launchConfiguration?: DebugConfiguration): Promise<void> {
