@@ -63,11 +63,9 @@ gulp.task('sass', (done) => {
 });
 
 gulp.task('download-resources', (done) => {
-    remoteSrc(['jquery-3.3.1.slim.min.js'], { base: 'https://code.jquery.com/' })
+    remoteSrc(['jquery-3.5.1.slim.min.js'], { base: 'https://code.jquery.com/' })
         .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
-    remoteSrc(['popper.min.js'], { base: 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/' })
-        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
-    remoteSrc(['bootstrap.min.js'], { base: 'https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/' })
+    remoteSrc(['bootstrap.bundle.min.js'], { base: 'https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/' })
         .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
     done();
 });

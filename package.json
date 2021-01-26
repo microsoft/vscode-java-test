@@ -458,7 +458,7 @@
         "@types/pug": "^2.0.4",
         "@types/sinon": "^9.0.3",
         "@types/vscode": "1.52.0",
-        "bootstrap": "^4.5.0",
+        "bootstrap": "^4.6.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "gulp": "^4.0.2",
         "gulp-remote-src": "^0.4.4",
