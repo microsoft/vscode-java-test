@@ -4,7 +4,7 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, Uri, window, workspace } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, TreeView, TreeViewExpansionEvent, TreeViewSelectionChangeEvent, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { testCodeLensController } from './codelens/TestCodeLensController';
@@ -35,6 +35,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
+    sendInfo('treeViewEventSummary', EventCounter.dict);
     await disposeTelemetryWrapper();
     await runnerScheduler.cleanUp(false /* isCancel */);
 }
@@ -87,12 +88,13 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
     await testFileWatcher.registerListeners();
     testExplorer.initialize(context);
+    const testTreeView: TreeView<ITestItem> = window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true });
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context, javaLanguageSupportVersion);
 
     context.subscriptions.push(
         testExplorer,
-        window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true }),
+        testTreeView,
         testStatusBarProvider,
         testResultManager,
         testReportProvider,
@@ -120,6 +122,17 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_TEST_SOURCE_LOCATION, async (uri: string, range: string, fullName: string) => await openTestSourceLocation(uri, range, fullName)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
+
+        // track the test tree view events.
+        testTreeView.onDidChangeSelection((_e: TreeViewSelectionChangeEvent<ITestItem>) => {
+            EventCounter.increase('didChangeSelection');
+        }),
+        testTreeView.onDidCollapseElement((_e: TreeViewExpansionEvent<ITestItem>) => {
+            EventCounter.increase('didCollapseElement');
+        }),
+        testTreeView.onDidExpandElement((_e: TreeViewExpansionEvent<ITestItem>) => {
+            EventCounter.increase('didExpandElement');
+        }),
     );
 
     setContextKeyForDeprecatedConfig();
@@ -163,3 +176,12 @@ const enum LanguageServerMode {
 }
 
 export let progressProvider: IProgressProvider | undefined;
+
+class EventCounter {
+    public static dict: {[key: string]: number} = {};
+
+    public static increase(event: string): void {
+        const count: number = this.dict[event] ?? 0;
+        this.dict[event] = count + 1;
+    }
+}

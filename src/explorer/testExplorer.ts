@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { Command, Disposable, Event, EventEmitter, ExtensionContext, extensions, Range, ThemeColor, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, workspace, WorkspaceFolder } from 'vscode';
-import { JavaTestRunnerCommands } from '../constants/commands';
+import { VsCodeCommands } from '../constants/commands';
 import { isLightWeightMode, isSwitchingServer } from '../extension';
 import { ITestItem, TestKind, TestLevel } from '../protocols';
 import { ITestResult, TestStatus } from '../runners/models';
@@ -128,9 +128,9 @@ export class TestExplorer implements TreeDataProvider<ITestItem>, Disposable {
     private resolveCommand(element: ITestItem): Command | undefined {
         if (element.level >= TestLevel.Class) {
             return {
-                command: JavaTestRunnerCommands.OPEN_DOCUMENT,
-                title: '',
-                arguments: [Uri.parse(element.location.uri), element.location.range],
+                command: VsCodeCommands.VSCODE_OPEN,
+                title: 'Open File',
+                arguments: [Uri.parse(element.location.uri), { preserveFocus: true, selection: element.location.range }],
             };
         }
         return undefined;

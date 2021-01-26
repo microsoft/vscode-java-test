@@ -3,9 +3,9 @@
 
 import { commands, Position, QuickPickItem, Range, Uri, ViewColumn, window } from 'vscode';
 import { ILocation } from '../../extension.bundle';
+import { JavaTestRunnerCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { resolveStackTraceLocation, searchTestLocation } from '../utils/commandUtils';
-import { openTextDocument } from './explorerCommands';
 
 export async function openStackTrace(trace: string, fullName: string): Promise<void> {
     if (!trace || !fullName) {
@@ -22,7 +22,6 @@ export async function openStackTrace(trace: string, fullName: string): Promise<v
             lineNumber = parseInt(lineNumberGroup[1], 10) - 1;
         }
         await window.showTextDocument(Uri.parse(uri), {
-            preserveFocus: true,
             selection: new Range(new Position(lineNumber, 0), new Position(lineNumber + 1, 0)),
             viewColumn: ViewColumn.One,
         });
@@ -38,17 +37,17 @@ export async function openStackTrace(trace: string, fullName: string): Promise<v
 
 export async function openTestSourceLocation(uri: string, range: string, fullName: string): Promise<void> {
     if (uri && range) {
-        return openTextDocument(Uri.parse(uri), JSON.parse(range) as Range);
+        return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(uri), JSON.parse(range) as Range);
     } else if (fullName) {
         const items: ILocation[] = await searchTestLocation(fullName.slice(fullName.indexOf('@') + 1));
         if (items.length === 1) {
-            return openTextDocument(Uri.parse(items[0].uri), items[0].range);
+            return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(items[0].uri), items[0].range);
         } else if (items.length > 1) {
             const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
                 return { label: fullName, detail: Uri.parse(item.uri).fsPath, location: item };
             }), { placeHolder: 'Select the file you want to navigate to' });
             if (pick) {
-                return openTextDocument(Uri.parse(pick.location.uri), pick.location.range);
+                return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(pick.location.uri), pick.location.range);
             }
         } else {
             logger.error('No test item could be found from Language Server.');
