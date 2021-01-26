@@ -5,16 +5,17 @@ mixin collapseMethodTable(children, type)
     each entry in [...children]
         - classIdx++
         ul.list-group.mb-3
-            li.list-group-item.active
+            li.list-group-item.active(tabindex="0", aria-label=`Class: ${entry[0]}`)
                 h5.mb-0.text-truncate-left #{entry[0]}
             - var methodIdx = 0
             each method in entry[1]
                 - methodIdx++
                 li.list-group-item.list-group-item-action
-                    div.row.accordion-toggle
-                        div.col-7.text-truncate.px-1.collapsed.cursor-pointer(data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}`, title="View details")
-                            include /images/chevron-right.svg
-                            span.ml-1 #{method.displayName}
+                    div.row.accordion
+                        a.col-7.method-link.collapsed.px-1(id=`${type}-${classIdx}-${methodIdx}-title`, href="", role="button", data-toggle="collapse", data-target=`#${type}-${classIdx}-${methodIdx}-detail`, aria-expanded="false", aria-controls=`${type}-${classIdx}-${methodIdx}-detail`, aria-label=`${method.status} method: ${method.displayName}.`)
+                            div.text-truncate
+                                include /images/chevron-right.svg
+                                span.ml-1 #{method.displayName}
                         div.col-2.text-right.p-0
                             if !method.status
                                 span.badge.badge-warning Not run
@@ -28,7 +29,7 @@ mixin collapseMethodTable(children, type)
                         div.col-1.text-right.px-1
                             a(href="#", title="Navigate to Source", uri=`${method.location && method.location.uri ? method.location.uri : ''}`, range=`${method.location && method.location.range ? JSON.stringify(method.location.range) : ''}`, fullname=`${method.fullName}`)
                                 include /images/go-to-file.svg
-                    div.mt-2.pl-2.accordion-body(id=`${type}-${classIdx}-${methodIdx}`, class="collapse")
+                    div.mt-2.pl-2(id=`${type}-${classIdx}-${methodIdx}-detail`, class="collapse", aria-labelledby=`${type}-${classIdx}-${methodIdx}-title`, tabindex="0")
                         div.row
                             div.col
                                 h6 Message:

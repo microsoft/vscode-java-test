@@ -7,9 +7,8 @@ html(lang="en")
         meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
         style(nonce=`${nonce}`)
             include /css/report.css
-        script(nonce=`${nonce}`, src=`${resourceBaseUri}/js/jquery-3.3.1.slim.min.js`, integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo", crossorigin="anonymous")
-        script(nonce=`${nonce}`, src=`${resourceBaseUri}/js/popper.min.js`, integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49", crossorigin="anonymous")
-        script(nonce=`${nonce}`, src=`${resourceBaseUri}/js/bootstrap.min.js`, integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy", crossorigin="anonymous")
+        script(nonce=`${nonce}`, src=`${resourceBaseUri}/js/jquery-3.5.1.slim.min.js`, integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj", crossorigin="anonymous")
+        script(nonce=`${nonce}`, src=`${resourceBaseUri}/js/bootstrap.bundle.min.js`, integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns", crossorigin="anonymous")
         script(nonce=`${nonce}`).
             $(() => {
                 const vscode = acquireVsCodeApi();
@@ -47,6 +46,18 @@ html(lang="en")
                 }).on('hide.bs.collapse', function(){
                     $(this).parent().find("svg").first().removeClass("rotate");
                 });
+
+                $(document).keydown(function(event) {
+                    if (event.which === 27) {
+                        let detailCollapse = $(':focus').closest("div.collapse[id$='detail']");
+                        if (detailCollapse.length === 0) {
+                            $('div.collapse').collapse('hide');
+                        } else {
+                            detailCollapse.collapse('hide');
+                            detailCollapse.closest("li.list-group-item-action").find("a.method-link").focus();
+                        }
+                    }
+                });
             });
 
     body.container-fluid
@@ -69,6 +80,8 @@ html(lang="en")
             li.nav-item.d-inline-flex
                 button.btn.btn-sm.btn-dark.mb-2(id='relaunch-tab', data-toggle='tooltip' data-placement='bottom' title='Relaunch the tests')
                     include /images/debug-restart.svg
+
+        span(aria-label="The below part contains collapsible components to show the stacktrace of failed methods. If you want to collapse the expanded view, you can press ESC.", tabindex="0")
 
         div.tab-content
             div.tab-pane.fade.show.active(id='all', role='tabpanel', aria-labelledby='all-tab')

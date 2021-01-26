@@ -40,6 +40,6 @@ pre.pre-wrap {
     transform: rotate(90deg);
 }
 
-.cursor-pointer {
-    cursor: pointer
+.method-link, .method-link:hover {
+    color: var(--vscode-foreground);
 }
