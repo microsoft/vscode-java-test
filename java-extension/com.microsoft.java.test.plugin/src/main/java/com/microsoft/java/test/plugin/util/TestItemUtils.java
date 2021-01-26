@@ -62,7 +62,7 @@ public class TestItemUtils {
         return new Range();
     }
 
-    private static String parseTestItemFullName(IJavaElement element, TestLevel level) {
+    public static String parseTestItemFullName(IJavaElement element, TestLevel level) {
         switch (level) {
             case CLASS:
                 final IType type = (IType) element;
