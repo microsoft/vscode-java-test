@@ -4,6 +4,18 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.28.0
+### Added
+- Support running tests from the Java Project explorer for Maven and Gradle projects. [PR#1125](https://github.com/microsoft/vscode-java-test/pull/1125)
+
+### Changed
+- Improve the accessibility of the test status bar item. [#1126](https://github.com/microsoft/vscode-java-test/issues/1126)
+- improve the accessibility of the test report page. [#1128](https://github.com/microsoft/vscode-java-test/issues/1128)
+- Opening files from the `Test` explorer now has the same experience as the `File` explorer. [PR#1129](https://github.com/microsoft/vscode-java-test/pull/1129)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.28.0)
+
 ## 0.27.0
 ### Changed
 - Change the scope of the setting `java.test.report.showAfterExecution` to `window`. [#1104](https://github.com/microsoft/vscode-java-test/issues/1104)
