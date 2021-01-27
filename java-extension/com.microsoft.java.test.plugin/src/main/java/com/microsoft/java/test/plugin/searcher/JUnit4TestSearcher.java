@@ -79,8 +79,8 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
         for (final IType type : types) {
             final TestItem item = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit);
             item.setChildren(Arrays.stream(type.getMethods())
-                    .map(m -> String.format("%s@%s", m.getJavaProject().getProject().getName(),
-                            TestItemUtils.parseTestItemFullName(m, TestLevel.METHOD)))
+                    .map(m -> m.getJavaProject().getProject().getName() + "@" +
+                            TestItemUtils.parseTestItemFullName(m, TestLevel.METHOD))
                     .collect(Collectors.toList())
             );
             result.put(item.getId(), item);

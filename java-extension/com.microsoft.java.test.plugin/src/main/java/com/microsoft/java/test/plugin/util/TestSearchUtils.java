@@ -195,7 +195,7 @@ public class TestSearchUtils {
 
         if (params.getLevel() == TestLevel.METHOD) {
             // unreachable code since the client will directly run the test when it's triggered from method level
-            return Collections.emptyList();
+            throw new UnsupportedOperationException("Method level execution is not supported at server side.");
         } else if (params.getLevel() == TestLevel.CLASS) {
             final IJavaElement[] elements = getJavaElementForSearch(params);
             if (elements == null) {

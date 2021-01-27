@@ -42,7 +42,7 @@ public class TestItem {
         this.kind = kind;
         this.project = project;
         this.location = new Location(uri, range);
-        this.id = String.format("%s@%s", project, fullName);
+        this.id = project + "@" + fullName;
     }
 
     public String getId() {
