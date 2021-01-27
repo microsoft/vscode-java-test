@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.model.SearchTestItemParams;
 import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestLevel;
-import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
+import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -32,7 +31,6 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
@@ -49,7 +47,6 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.internal.corext.refactoring.util.JavaElementUtil;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
@@ -58,11 +55,14 @@ import org.eclipse.lsp4j.Location;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -96,7 +96,7 @@ public class TestSearchUtils {
             return resultList;
         }
 
-        final CompilationUnit root = (CompilationUnit) parseToAst(unit, monitor);
+        final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
         if (root == null) {
             return resultList;
         }
@@ -111,15 +111,19 @@ public class TestSearchUtils {
             return resultList;
         }
 
-        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /*parentClassItem*/, monitor);
+        TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /* parentClassItem */, monitor);
 
         return resultList;
     }
 
-    public static ASTNode parseToAst(final ICompilationUnit unit, IProgressMonitor monitor) {
-        final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(unit, CoreASTProvider.WAIT_YES, monitor);
-        if (astRoot != null) {
-            return astRoot;
+    public static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
+            final IProgressMonitor monitor) {
+        if (fromCache) {
+            final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(unit, CoreASTProvider.WAIT_YES,
+                    monitor);
+            if (astRoot != null) {
+                return astRoot;
+            }
         }
 
         if (monitor.isCanceled()) {
@@ -144,7 +148,7 @@ public class TestSearchUtils {
      * @throws URISyntaxException
      * @throws JavaModelException
      */
-    public static List<TestItem> searchTestItems(List<Object> arguments, IProgressMonitor monitor)
+    public static List<TestItem> searchTestItems(final List<Object> arguments, final IProgressMonitor monitor)
             throws OperationCanceledException, InterruptedException, URISyntaxException, JavaModelException {
         final List<TestItem> resultList = new LinkedList<>();
 
@@ -162,7 +166,7 @@ public class TestSearchUtils {
                 searchInPackage(resultList, params);
                 break;
             case CLASS:
-                searchInClass(resultList, params);
+                searchInClass(resultList, params, monitor);
                 break;
             default:
                 break;
@@ -189,63 +193,66 @@ public class TestSearchUtils {
         final Gson gson = new Gson();
         final SearchTestItemParams params = gson.fromJson((String) arguments.get(0), SearchTestItemParams.class);
 
-        final IJavaSearchScope scope = createSearchScope(params);
+        if (params.getLevel() == TestLevel.METHOD) {
+            // unreachable code since the client will directly run the test when it's triggered from method level
+            throw new UnsupportedOperationException("Method level execution is not supported at server side.");
+        } else if (params.getLevel() == TestLevel.CLASS) {
+            final IJavaElement[] elements = getJavaElementForSearch(params);
+            if (elements == null) {
+                return Collections.emptyList();
+            }
+            final IType type = (IType) elements[0];
+            TestItem[] testItems = null;
+            if (TestFrameworkUtils.JUNIT4_TEST_SEARCHER.isTestClass(type)) {
+                testItems = TestFrameworkUtils.JUNIT4_TEST_SEARCHER.findTestsInContainer(type, monitor);
+            } else if (TestFrameworkUtils.JUNIT5_TEST_SEARCHER.isTestClass(type)) {
+                testItems = TestFrameworkUtils.JUNIT5_TEST_SEARCHER.findTestsInContainer(type, monitor);
+            } else if (TestFrameworkUtils.TESTNG_TEST_SEARCHER.isTestClass(type)) {
+                testItems = TestFrameworkUtils.TESTNG_TEST_SEARCHER.findTestsInContainer(type, monitor);
+            }
 
-        SearchPattern pattern = TestFrameworkUtils.FRAMEWORK_SEARCHERS[0].getSearchPattern();
-        for (int i = 1; i < TestFrameworkUtils.FRAMEWORK_SEARCHERS.length; i++) {
-            pattern = SearchPattern.createOrPattern(pattern,
-                    TestFrameworkUtils.FRAMEWORK_SEARCHERS[i].getSearchPattern());
-        }
+            if (testItems != null) {
+                return Arrays.asList(testItems);
+            }
 
-        final Map<String, TestItem> classMap = new HashMap<>();
-        final SearchRequestor requestor = new SearchRequestor() {
-            @Override
-            public void acceptSearchMatch(SearchMatch match) throws CoreException {
-                final Object element = match.getElement();
-                if (element instanceof IMethod) {
-                    final IMethod method = (IMethod) element;
-                    // The search result might not in the search scope.
-                    // See: https://github.com/Microsoft/vscode-java-test/issues/441
-                    if (!scope.encloses(method)) {
-                        return;
-                    }
-                    final TestItem methodItem = TestFrameworkUtils.resolveTestItemForMethod(method);
-                    if (methodItem == null) {
-                        return;
-                    }
-                    final IType type = (IType) method.getParent();
-                    final TestItem classItem = classMap.get(type.getFullyQualifiedName());
-                    if (classItem != null) {
-                        classItem.addChild(methodItem.getId());
-                    } else {
-                        final TestItem newClassItem = TestItemUtils.constructTestItem(type, TestLevel.CLASS,
-                                methodItem.getKind());
-                        newClassItem.addChild(methodItem.getId());
-                        classMap.put(type.getFullyQualifiedName(), newClassItem);
-                    }
-                } else if (element instanceof IType) {
-                    final IType type = (IType) element;
-                    if (classMap.containsKey(type.getFullyQualifiedName())) {
-                        return;
-                    }
-                    final TestItem item = TestFrameworkUtils.resolveTestItemForClass(type);
-                    if (item == null) {
-                        return;
-                    }
-                    classMap.put(type.getFullyQualifiedName(), item);
+            return Collections.emptyList();
+        } else {
+            final IJavaElement[] elements = getJavaElementForSearch(params);
+            final Map<IJavaProject, List<TestFrameworkSearcher>> javaProjectMapping = new HashMap<>();
+            final Set<IJavaProject> javaProjects = new HashSet<>();
+            for (final IJavaElement element : elements) {
+                javaProjects.add(element.getJavaProject());
+            }
+
+            final List<TestFrameworkSearcher> searchers = new LinkedList<>();
+            for (final IJavaProject javaProject : javaProjects) {
+
+                // We don't check JUnit 4 when JUnit 5 is available since it's backward compatible
+                if (javaProject.findType("org.junit.jupiter.api.Test") != null) {
+                    searchers.add(TestFrameworkUtils.JUNIT5_TEST_SEARCHER);
+                } else if (javaProject.findType("org.junit.Test") != null) {
+                    searchers.add(TestFrameworkUtils.JUNIT4_TEST_SEARCHER);
+                }
+
+                if (javaProject.findType("org.testng.annotations.Test") != null) {
+                    searchers.add(TestFrameworkUtils.TESTNG_TEST_SEARCHER);
+                }
+                javaProjectMapping.put(javaProject, searchers);
+            }
+
+            final Map<String, TestItem> map = new HashMap<>();
+            for (final IJavaElement element : elements) {
+                for (final TestFrameworkSearcher searcher : javaProjectMapping.get(element.getJavaProject())) {
+                    final TestItem[] items = searcher.findTestsInContainer(element, monitor);
+                    Arrays.stream(items).forEach(item -> {
+                        map.put(item.getId(), item);
+                    });
                 }
             }
 
-        };
-
-        try {
-            new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
-                scope, requestor, monitor);
-        } catch (OperationCanceledException ex) {
-            // do nothing
+            return new ArrayList<>(map.values());
         }
 
-        return new ArrayList<TestItem>(classMap.values());
     }
 
     public static List<Location> searchLocation(List<Object> arguments, IProgressMonitor monitor) throws CoreException {
@@ -282,7 +289,7 @@ public class TestSearchUtils {
 
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
-        for (final IPath sourcePath  : ProjectUtils.listSourcePaths(project)) {
+        for (final IPath sourcePath : ProjectUtils.listSourcePaths(project)) {
             if (!ProjectTestUtils.isTest(project, sourcePath)) {
                 continue;
             }
@@ -293,57 +300,33 @@ public class TestSearchUtils {
         return false;
     }
 
-    private static IJavaSearchScope createSearchScope(SearchTestItemParams params)
-            throws URISyntaxException, CoreException {
+    private static IJavaElement[] getJavaElementForSearch(SearchTestItemParams params) throws JavaModelException {
         switch (params.getLevel()) {
             case ROOT:
-                final IJavaProject[] projects = Stream.of(ProjectUtils.getJavaProjects())
+                return Stream.of(ProjectUtils.getJavaProjects())
                         .filter(javaProject -> !ProjectsManager.DEFAULT_PROJECT_NAME
                                 .equals(javaProject.getProject().getName()))
                         .toArray(IJavaProject[]::new);
-                return SearchEngine.createJavaSearchScope(projects, IJavaSearchScope.SOURCES);
             case FOLDER:
                 final Set<IJavaProject> projectSet = ProjectTestUtils.parseProjects(params.getUri());
-                return SearchEngine.createJavaSearchScope(projectSet.toArray(new IJavaElement[projectSet.size()]),
-                        IJavaSearchScope.SOURCES);
+                return projectSet.toArray(new IJavaElement[projectSet.size()]);
             case PACKAGE:
-                final IJavaElement[] elements;
                 final IJavaElement packageElement = resolvePackage(params.getUri(), params.getFullName());
-                if (params.isHierarchicalPackage()) {
-                    elements = JavaElementUtil.getPackageAndSubpackages((IPackageFragment) packageElement);
-                } else {
-                    elements = new IJavaElement[] { packageElement };
-                }
-                return SearchEngine.createJavaSearchScope(elements, IJavaSearchScope.SOURCES);
+                return new IJavaElement[] { packageElement };
             case CLASS:
                 final ICompilationUnit compilationUnit = JDTUtils.resolveCompilationUnit(params.getUri());
-                final IType[] types = compilationUnit.getAllTypes();
-                for (final IType type : types) {
-                    if (type.getFullyQualifiedName().equals(params.getFullName())) {
-                        return SearchEngine.createJavaSearchScope(new IJavaElement[] { type },
-                                IJavaSearchScope.SOURCES);
+                if (compilationUnit == null) {
+                    return null;
+                }
+                for (final IType type : compilationUnit.getAllTypes()) {
+                    if (Objects.equals(type.getFullyQualifiedName(), params.getFullName())) {
+                        return new IJavaElement[] { type };
                     }
                 }
-                break;
-            case METHOD:
-                final String fullName = params.getFullName();
-                final String className = fullName.substring(0, fullName.lastIndexOf("#"));
-                final String methodName = fullName.substring(fullName.lastIndexOf("#") + 1);
-                final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(params.getUri());
-                final IType[] allTypes = unit.getAllTypes();
-                for (final IType type : allTypes) {
-                    if (type.getFullyQualifiedName().equals(className)) {
-                        for (final IMethod method : type.getMethods()) {
-                            if (method.getElementName().equals(methodName)) {
-                                return SearchEngine.createJavaSearchScope(new IJavaElement[] { method },
-                                        IJavaSearchScope.SOURCES);
-                            }
-                        }
-                    }
-                }
+                return null;
         }
 
-        throw new RuntimeException("Cannot resolve the search scope for " + params.getFullName());
+        return new IJavaElement[] {};
     }
 
     private static void searchInFolder(List<TestItem> resultList, SearchTestItemParams params)
@@ -360,27 +343,24 @@ public class TestSearchUtils {
 
     private static void searchInPackage(List<TestItem> resultList, SearchTestItemParams params)
             throws JavaModelException {
-        final IJavaElement packageFragment = resolvePackage(params.getUri(), params.getFullName());
-        if (packageFragment == null || !(packageFragment instanceof IPackageFragment)) {
+        final IPackageFragment packageFragment = resolvePackage(params.getUri(), params.getFullName());
+        if (packageFragment == null) {
             return;
         }
 
-        for (final ICompilationUnit unit : ((IPackageFragment) packageFragment).getCompilationUnits()) {
+        for (final ICompilationUnit unit : packageFragment.getCompilationUnits()) {
             for (final IType type : unit.getTypes()) {
                 resultList.add(TestItemUtils.constructTestItem(type, TestLevel.CLASS));
             }
         }
     }
 
-    private static IJavaElement resolvePackage(String uriString, String fullName) throws JavaModelException {
-        final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
+    private static IPackageFragment resolvePackage(String uriString, String fullName) throws JavaModelException {
+        if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
+            final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
                     ResourcesPlugin.getWorkspace().getRoot()::findContainersForLocationURI);
-        final IJavaElement element = JavaCore.create(resource);
-        if (element == null) {
-            return null;
-        }
-        if (element instanceof IPackageFragmentRoot) {
-            if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
+            final IJavaElement element = JavaCore.create(resource);
+            if (element instanceof IPackageFragmentRoot) {
                 final IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) element;
                 for (final IJavaElement child : packageRoot.getChildren()) {
                     if (child instanceof IPackageFragment && ((IPackageFragment) child).isDefaultPackage()) {
@@ -388,82 +368,38 @@ public class TestSearchUtils {
                     }
                 }
             }
+        } else {
+            return JDTUtils.resolvePackage(uriString);
         }
 
-        return element;
+        return null;
     }
 
-    private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params)
-            throws JavaModelException {
+    private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params,
+            IProgressMonitor monitor) throws JavaModelException {
         final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(params.getUri());
+        final CompilationUnit root = (CompilationUnit) parseToAst(unit, false /* fromCache */, monitor);
         for (final IType type : unit.getAllTypes()) {
             if (type.getFullyQualifiedName().equals(params.getFullName())) {
+                final ASTNode node = root.findDeclaringNode(type.getKey());
+                if (!(node instanceof TypeDeclaration)) {
+                    continue;
+                }
+
+                final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+                if (binding == null) {
+                    continue;
+                }
+
+                TestFrameworkUtils.findTestItemsInTypeBinding(binding, resultList, null /* parentClassItem */, monitor);
+                resultList.removeIf(item -> item.getLevel() != TestLevel.METHOD ||
+                        !item.getFullName().startsWith(params.getFullName() + "#"));
                 for (final IType innerType : type.getTypes()) {
                     resultList.add(TestItemUtils.constructTestItem(innerType, TestLevel.CLASS));
                 }
-
-                if (!isTestableClass(type)) {
-                    continue;
-                }
-                for (final IMethod method : type.getMethods()) {
-                    final TestItem item = TestFrameworkUtils.resolveTestItemForMethod(method);
-                    if (item != null) {
-                        resultList.add(item);
-                    }
-                }
+                break;
             }
         }
-    }
-
-    private static boolean isTestableClass(IType type) throws JavaModelException {
-        final int flags = type.getFlags();
-        if (Flags.isInterface(flags) || Flags.isAbstract(flags)) {
-            return false;
-        }
-
-        final IJavaElement parent = type.getParent();
-
-        if (parent instanceof ITypeRoot) {
-            return true;
-        }
-
-        if (!(parent instanceof IType)) {
-            return false;
-        }
-
-        if (isJunit5TestableClass(type)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private static boolean isJunit5TestableClass(IType type) throws JavaModelException {
-        final int flags = type.getFlags();
-
-        // Classes with Testable annotation are testable
-        if (TestFrameworkUtils.hasAnnotation(
-                type,
-                JUnit5TestSearcher.JUNIT_PLATFORM_TESTABLE,
-                true /*checkHierarchy*/
-        )) {
-            return true;
-        }
-
-        // Jupiter's Nested annotation does not have Testable as meta annotation
-        if (TestFrameworkUtils.hasAnnotation(type, JUnit5TestSearcher.JUPITER_NESTED, true /*checkHierarchy*/) ||
-                (Flags.isStatic(flags) && Flags.isPublic(flags))) {
-            return true;
-        }
-
-        // Classes whose inner classes are testable should also be testable
-        for (final IJavaElement child : type.getChildren())  {
-            if (child instanceof IType && isJunit5TestableClass((IType) child)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static boolean isJavaElementExist(IJavaElement element) {

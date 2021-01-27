@@ -11,24 +11,35 @@
 
 package com.microsoft.java.test.plugin.searcher;
 
+import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
+import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.util.TestItemUtils;
 
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IMethod;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder;
 import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
-    public static final String RUN_WITH = "org.junit.runner.RunWith";
+    private static final JUnit4TestFinder JUNIT4_TEST_FINDER = new JUnit4TestFinder();
 
     public JUnit4TestSearcher() {
         super();
         this.testMethodAnnotations = new String[] { "org.junit.Test", "org.junit.experimental.theories.Theory" };
-        this.testClassAnnotations = new String[] { RUN_WITH };
     }
 
     @Override
@@ -39,29 +50,6 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
     @Override
     public String getJdtTestKind() {
         return TestKindRegistry.JUNIT4_TEST_KIND_ID;
-    }
-
-    @Override
-    public boolean isTestMethod(IMethod method) {
-        try {
-            final int flags = method.getFlags();
-            if (Flags.isAbstract(flags) || Flags.isStatic(flags) || !Flags.isPublic(flags)) {
-                return false;
-            }
-            // 'V' is void signature
-            if (method.isConstructor() || !"V".equals(method.getReturnType())) {
-                return false;
-            }
-            for (final String annotation : this.testMethodAnnotations) {
-                if (TestFrameworkUtils.hasAnnotation(method, annotation, false /*checkHierarchy*/)) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (final JavaModelException e) {
-            // ignore
-            return false;
-        }
     }
 
     @Override
@@ -76,5 +64,28 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
         }
 
         return this.findAnnotation(methodBinding.getAnnotations(), this.getTestMethodAnnotations());
+    }
+
+    @Override
+    public boolean isTestClass(IType type) throws JavaModelException {
+        return JUNIT4_TEST_FINDER.isTest(type);
+    }
+
+    @Override
+    public TestItem[] findTestsInContainer(IJavaElement element, IProgressMonitor monitor) throws CoreException {
+        final Map<String, TestItem> result = new HashMap<>();
+        final Set<IType> types = new HashSet<>();
+        JUNIT4_TEST_FINDER.findTestsInContainer(element, types, monitor);
+        for (final IType type : types) {
+            final TestItem item = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.JUnit);
+            item.setChildren(Arrays.stream(type.getMethods())
+                    .map(m -> m.getJavaProject().getProject().getName() + "@" +
+                            TestItemUtils.parseTestItemFullName(m, TestLevel.METHOD))
+                    .collect(Collectors.toList())
+            );
+            result.put(item.getId(), item);
+        }
+
+        return result.values().toArray(new TestItem[0]);
     }
 }

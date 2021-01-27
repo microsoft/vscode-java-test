@@ -143,7 +143,7 @@ public class JUnitLaunchUtils {
         String testName = StringUtils.isEmpty(args.testName) ? "" : args.testName;
         // JUnit 5's methods need to have parameter information to launch
         if (args.testKind == TestKind.JUnit5 && args.scope == TestLevel.METHOD) {
-            final ASTNode unit = TestSearchUtils.parseToAst(cu, monitor);
+            final ASTNode unit = TestSearchUtils.parseToAst(cu, true /*fromCache*/, monitor);
             if (unit == null) {
                 return "";
             }
