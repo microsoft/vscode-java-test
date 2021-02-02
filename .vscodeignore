@@ -5,7 +5,6 @@ test/**
 src/**
 **/*.map
 .gitignore
-.travis.yml
 tsconfig.json
 tslint.json
 package-lock.json
