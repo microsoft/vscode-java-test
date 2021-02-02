@@ -39,7 +39,8 @@ export async function openTestSourceLocation(uri: string, range: string, fullNam
     if (uri && range) {
         return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(uri), JSON.parse(range) as Range);
     } else if (fullName) {
-        const items: ILocation[] = await searchTestLocation(fullName.slice(fullName.indexOf('@') + 1, fullName.indexOf('[')));
+        const methodEndIndex: number = fullName.indexOf('[');
+        const items: ILocation[] = await searchTestLocation(fullName.slice(fullName.indexOf('@') + 1, methodEndIndex < 0 ? undefined : methodEndIndex));
         if (items.length === 1) {
             return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(items[0].uri), items[0].range);
         } else if (items.length > 1) {
