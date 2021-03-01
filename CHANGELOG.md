@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.28.1
+### Added
+- Add welcome view in Test explorer when there is no folders opened. [PR#1141](https://github.com/microsoft/vscode-java-test/pull/1141)
+
+### Changed
+- Apply the new extension icon. [PR#1144](https://github.com/microsoft/vscode-java-test/pull/1144)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.28.1)
+
 ## 0.28.0
 ### Added
 - Support running tests from the Java Project explorer for Maven and Gradle projects. [PR#1125](https://github.com/microsoft/vscode-java-test/pull/1125)
