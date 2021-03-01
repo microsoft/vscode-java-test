@@ -343,7 +343,8 @@ public class TestSearchUtils {
 
     private static void searchInPackage(List<TestItem> resultList, SearchTestItemParams params)
             throws JavaModelException {
-        final IPackageFragment packageFragment = resolvePackage(params.getUri(), params.getFullName());
+        final IPackageFragment packageFragment = (IPackageFragment) resolvePackage(params.getUri(),
+                params.getFullName());
         if (packageFragment == null) {
             return;
         }
@@ -355,11 +356,11 @@ public class TestSearchUtils {
         }
     }
 
-    private static IPackageFragment resolvePackage(String uriString, String fullName) throws JavaModelException {
-        if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
-            final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
+    private static IJavaElement resolvePackage(String uriString, String fullName) throws JavaModelException {
+        final IFolder resource = (IFolder) JDTUtils.findResource(JDTUtils.toURI(uriString),
                     ResourcesPlugin.getWorkspace().getRoot()::findContainersForLocationURI);
-            final IJavaElement element = JavaCore.create(resource);
+        final IJavaElement element = JavaCore.create(resource);
+        if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(fullName)) {
             if (element instanceof IPackageFragmentRoot) {
                 final IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) element;
                 for (final IJavaElement child : packageRoot.getChildren()) {
@@ -368,11 +369,9 @@ public class TestSearchUtils {
                     }
                 }
             }
-        } else {
-            return JDTUtils.resolvePackage(uriString);
         }
 
-        return null;
+        return element;
     }
 
     private static void searchInClass(List<TestItem> resultList, SearchTestItemParams params,
