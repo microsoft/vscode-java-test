@@ -41,13 +41,13 @@ export async function resolveStackTraceLocation(trace: string, projectNames: str
         JavaLanguageServerCommands.RESOLVE_STACKTRACE_LOCATION, trace, projectNames) || '';
 }
 
-export async function resolveJUnitLaunchArguments(uri: string, classFullName: string, testName: string, project: string,
+export async function resolveJUnitLaunchArguments(uri: string, fullName: string, testName: string, project: string,
                                                   scope: TestLevel, testKind: TestKind, start?: Position, end?: Position,
                                                   isHierarchicalPackage?: boolean): Promise<IJUnitLaunchArguments> {
     const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             uri,
-            classFullName,
+            fullName,
             testName,
             project,
             scope,
