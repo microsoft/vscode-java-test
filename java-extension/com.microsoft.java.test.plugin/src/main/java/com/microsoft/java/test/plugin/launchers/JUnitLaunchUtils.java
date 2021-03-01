@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchConfigurationDelegate.JUnitLaunchArguments;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.util.TestItemUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -126,15 +127,15 @@ public class JUnitLaunchUtils {
         }
 
         for (final IType type : cu.getAllTypes()) {
-            if (type.getFullyQualifiedName().equals(args.classFullName)) {
-                info.mainType = args.classFullName;
+            if (type.getFullyQualifiedName().equals(args.fullName)) {
+                info.mainType = args.fullName;
                 info.testName = parseTestName(args, cu, monitor);
                 break;
             }
         }
 
         if (info.mainType == null) {
-            throw new RuntimeException("Failed to find class '" + args.classFullName + "'");
+            throw new RuntimeException("Failed to find class '" + args.fullName + "'");
         }
     }
 
@@ -174,7 +175,8 @@ public class JUnitLaunchUtils {
         return testName;
     }
 
-    private static void parseConfigurationInfoForContainer(TestInfo info, Argument args) throws URISyntaxException {
+    private static void parseConfigurationInfoForContainer(TestInfo info, Argument args) throws URISyntaxException,
+            JavaModelException {
         final IContainer[] targetContainers = ResourcesPlugin.getWorkspace().getRoot()
                 .findContainersForLocationURI(new URI(args.uri));
         if (targetContainers == null || targetContainers.length == 0) {
@@ -202,6 +204,18 @@ public class JUnitLaunchUtils {
         
         if (targetElement == null) {
             throw new RuntimeException("Cannot resolve valid element from: " + args.uri);
+        }
+
+        if (TestItemUtils.DEFAULT_PACKAGE_NAME.equals(args.fullName)) {
+            if (targetElement instanceof IPackageFragmentRoot) {
+                final IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) targetElement;
+                for (final IJavaElement child : packageRoot.getChildren()) {
+                    if (child instanceof IPackageFragment && ((IPackageFragment) child).isDefaultPackage()) {
+                        targetElement = (IPackageFragment) child;
+                        break;
+                    }
+                }
+            }
         }
         info.testContainer = StringEscapeUtils.escapeXml(targetElement.getHandleIdentifier());
     }
@@ -298,7 +312,7 @@ public class JUnitLaunchUtils {
 
     class Argument {
         public String uri;
-        public String classFullName;
+        public String fullName;
         public String testName;
         public String project;
         public TestLevel scope;
