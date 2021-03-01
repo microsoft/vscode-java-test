@@ -3,7 +3,7 @@
 > Run and debug Java test cases in Visual Studio Code
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/resources/logo.png" width="150" height="150" alt="">
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/resources/logo.png" width="128" height="128" alt="">
 </p>
 <p align="center">
   <a href="https://github.com/microsoft/vscode-java-test/actions?query=workflow%3ACI+branch%3Amaster">

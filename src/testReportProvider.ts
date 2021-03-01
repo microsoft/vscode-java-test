@@ -74,7 +74,10 @@ class TestReportProvider implements Disposable {
         }
 
         this.panel.webview.html = await testReportProvider.provideHtmlContent(tests, this.panel.webview);
-        this.panel.iconPath = Uri.file(path.join(this.resourceBasePath, '..', 'logo.lowers.png'));
+        this.panel.iconPath = {
+            light: Uri.file(path.join(this.resourceBasePath, '..', 'logo.lowers.light.svg')),
+            dark: Uri.file(path.join(this.resourceBasePath, '..', 'logo.lowers.dark.svg'))
+        };
 
         this.panel.reveal(this.panel.viewColumn || position);
     }
