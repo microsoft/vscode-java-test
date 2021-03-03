@@ -475,6 +475,7 @@
         "gulp-sass": "^4.1.0",
         "gulp-tslint": "^8.1.4",
         "mocha": "^7.1.2",
+        "pug": "^3.0.1",
         "pug-loader": "^2.4.0",
         "sinon": "^9.0.2",
         "ts-loader": "^5.4.5",
@@ -490,7 +491,6 @@
         "get-port": "^4.2.0",
         "iconv-lite": "^0.4.24",
         "lodash": "^4.17.19",
-        "pug": "^3.0.1",
         "vscode-extension-telemetry-wrapper": "^0.8.0",
         "winston": "^3.2.1",
         "winston-transport": "^4.3.0"
