@@ -490,7 +490,7 @@
         "get-port": "^4.2.0",
         "iconv-lite": "^0.4.24",
         "lodash": "^4.17.19",
-        "pug": "^2.0.4",
+        "pug": "^3.0.1",
         "vscode-extension-telemetry-wrapper": "^0.8.0",
         "winston": "^3.2.1",
         "winston-transport": "^4.3.0"
