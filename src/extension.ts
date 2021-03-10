@@ -16,6 +16,7 @@ import { openStackTrace, openTestSourceLocation } from './commands/testReportCom
 import { JavaTestRunnerCommands } from './constants/commands';
 import { ACTIVATION_CONTEXT_KEY } from './constants/configs';
 import { IProgressProvider, IProgressReporter } from './debugger.api';
+import { initExpService } from './experimentationService';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
@@ -44,6 +45,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     const storagePath: string = context.storageUri?.fsPath || path.join(os.tmpdir(), 'java_test_runner');
     await fse.ensureDir(storagePath);
     logger.initialize(storagePath, context.subscriptions);
+    initExpService(context);
 
     const javaLanguageSupport: Extension<any> | undefined = extensions.getExtension('redhat.java');
     let javaLanguageSupportVersion: string = '0.0.0';
