@@ -3,7 +3,7 @@
 
 import { ExtensionContext } from 'vscode';
 import { addContextProperty, sendInfo } from 'vscode-extension-telemetry-wrapper';
-import { getExperimentationService, IExperimentationService, IExperimentationTelemetry, TargetPopulation } from 'vscode-tas-client';
+import { getExperimentationServiceAsync, IExperimentationService, IExperimentationTelemetry, TargetPopulation } from 'vscode-tas-client';
 
 class ExperimentationTelemetry implements IExperimentationTelemetry {
 
@@ -27,10 +27,10 @@ export function getExpService(): IExperimentationService {
     return expService;
 }
 
-export function initExpService(context: ExtensionContext): void {
+export async function initExpService(context: ExtensionContext): Promise<void> {
     const packageJson: {[key: string]: any} = require('../package.json');
     const extensionName: string = `${packageJson['publisher']}.${packageJson['name']}`;
     const extensionVersion: string = packageJson['version'];
-    expService = getExperimentationService(extensionName, extensionVersion,
+    expService = await getExperimentationServiceAsync(extensionName, extensionVersion,
         TargetPopulation.Public, new ExperimentationTelemetry(), context.globalState);
 }

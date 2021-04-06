@@ -30,6 +30,7 @@ import { testStatusBarProvider } from './testStatusBarProvider';
 import { migrateTestConfig } from './utils/configUtils';
 
 export async function activate(context: ExtensionContext): Promise<void> {
+    await initExpService(context);
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'), { firstParty: true });
     await instrumentOperation('activation', doActivate)(context);
     await commands.executeCommand('setContext', ACTIVATION_CONTEXT_KEY, true);
@@ -45,7 +46,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     const storagePath: string = context.storageUri?.fsPath || path.join(os.tmpdir(), 'java_test_runner');
     await fse.ensureDir(storagePath);
     logger.initialize(storagePath, context.subscriptions);
-    initExpService(context);
 
     const javaLanguageSupport: Extension<any> | undefined = extensions.getExtension('redhat.java');
     let javaLanguageSupportVersion: string = '0.0.0';
