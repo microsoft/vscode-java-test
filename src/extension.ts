@@ -30,8 +30,8 @@ import { testStatusBarProvider } from './testStatusBarProvider';
 import { migrateTestConfig } from './utils/configUtils';
 
 export async function activate(context: ExtensionContext): Promise<void> {
-    await initExpService(context);
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'), { firstParty: true });
+    await initExpService(context);
     await instrumentOperation('activation', doActivate)(context);
     await commands.executeCommand('setContext', ACTIVATION_CONTEXT_KEY, true);
 }
