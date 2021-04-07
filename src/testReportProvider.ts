@@ -31,7 +31,7 @@ class TestReportProvider implements Disposable {
 
     public async report(tests?: ITestResult[]): Promise<void> {
         const executionCache: IExecutionCache | undefined = runnerScheduler.getExecutionCache();
-        if (executionCache && executionCache.results) {
+        if (!tests && executionCache && executionCache.results) {
             tests = executionCache.results;
         }
         if (!tests || tests.length === 0) {
