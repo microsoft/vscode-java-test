@@ -53,9 +53,9 @@
     </build>
     <repositories>
         <repository>
-            <id>202006</id>
+            <id>202103</id>
             <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/2020-06/</url>
+            <url>https://download.eclipse.org/releases/2021-03/202103171000/</url>
         </repository>
         <repository>
             <id>oss.sonatype.org</id>
@@ -63,11 +63,6 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
-        <repository>
-            <id>LSP4J</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/lsp4j/updates/releases/0.8.0/</url>
         </repository>
         <repository>
             <id>JDT.LS</id>
