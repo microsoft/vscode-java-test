@@ -1,4 +1,4 @@
-package junit5;
+package junit;
 
 public class App {
     public String getGreeting() {

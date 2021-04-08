@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { CancellationToken, Event, Uri, Extension, extensions } from 'vscode';
+import * as fse from 'fs-extra';
+import { CancellationToken, Event, Uri, Extension, extensions, workspace, commands } from 'vscode';
 
 interface IDisposable {
     dispose(): void;
@@ -21,9 +22,9 @@ export namespace Token {
 }
 
 export namespace Uris {
-    // JUnit 4
+    // JUnit
     const TEST_PROJECT_BASE_PATH: string = path.join(__dirname, '..', '..', 'test', 'test-projects');
-    export const JUNIT4_TEST_PACKAGE: string = path.join('junit4', 'src', 'test', 'java', 'junit4');
+    export const JUNIT4_TEST_PACKAGE: string = path.join('junit', 'src', 'test', 'java', 'junit4');
     export const JUNIT4_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'TestAnnotation.java'));
     export const JUNIT4_THEROY: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'TheoryAnnotation.java'));
     export const JUNIT4_RUNWITH: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'RunWithAnnotation.java'));
@@ -32,18 +33,42 @@ export namespace Uris {
     export const JUNIT4_PARAMETERIZED_WITH_NAME_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'ParameterizedWithNameTest.java'));
     export const JUNIT4_ASSUME_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT4_TEST_PACKAGE, 'AssumeTest.java'));
 
+    // JUnit5
+    const JUNIT5_TEST_PACKAGE: string = path.join('junit', 'src', 'test', 'java', 'junit5');
+    export const JUNIT5_PARAMETERIZED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT5_TEST_PACKAGE, 'ParameterizedAnnotationTest.java'));
+    export const JUNIT5_NESTED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT5_TEST_PACKAGE, 'NestedTest.java'));
+    export const JUNIT5_META_ANNOTATION_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT5_TEST_PACKAGE, 'MetaAnnotationTest.java'));
+    export const JUNIT5_PROPERTY_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT5_TEST_PACKAGE, 'PropertyTest.java'));
+    export const CUCUMBER_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT5_TEST_PACKAGE, 'cucumber', 'CucumberTest.java'));
+    export const CUCUMBER_STEP: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, JUNIT5_TEST_PACKAGE, 'cucumber', 'CucumberSteps.java'));
+
     // Gradle modular
     const MODULAR_GRADLE: string = path.join('modular-gradle', 'src', 'test', 'java', 'com', 'example', 'project');
     export const MODULAR_GRADLE_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, MODULAR_GRADLE, 'GradleModularTest.java'));
+}
 
-    // Gradle JUnit5
-    const GRADLE_JUNIT5_TEST_PACKAGE: string = path.join('junit5', 'src', 'test', 'java', 'junit5');
-    export const GRADLE_JUNIT5_PARAMETERIZED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'ParameterizedAnnotationTest.java'));
-    export const GRADLE_JUNIT5_NESTED_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'NestedTest.java'));
-    export const GRADLE_JUNIT5_META_ANNOTATION_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'MetaAnnotationTest.java'));
-    export const GRADLE_JUNIT5_PROPERTY_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'PropertyTest.java'));
-    export const GRADLE_CUCUMBER_TEST: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'cucumber', 'CucumberTest.java'));
-    export const GRADLE_CUCUMBER_STEP: Uri = Uri.file(path.join(TEST_PROJECT_BASE_PATH, GRADLE_JUNIT5_TEST_PACKAGE, 'cucumber', 'CucumberSteps.java'));
+export async function setupTestEnv() {
+    await extensions.getExtension("redhat.java")!.activate();
+    const javaExt = extensions.getExtension("redhat.java");
+    await javaExt!.activate();
+    const api = javaExt?.exports;
+    while (api.serverMode !== "Standard") {
+        await sleep(2 * 1000/*ms*/);
+    }
+    await extensions.getExtension("vscjava.vscode-java-test")!.activate();
+
+    const workspaceRootPath: string = workspace.workspaceFolders![0]!.uri.fsPath;
+    if (await fse.pathExists(path.join(workspaceRootPath, 'pom.xml'))) {
+        await commands.executeCommand('java.projectConfiguration.update', Uri.file(path.join(workspaceRootPath, 'pom.xml')));
+    } else if (await fse.pathExists(path.join(workspaceRootPath, 'build.gradle'))) {
+        await commands.executeCommand('java.projectConfiguration.update', Uri.file(path.join(workspaceRootPath, 'build.gradle')));
+    }
+}
+
+async function sleep(ms: number) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 }
 
 export async function getJavaVersion(): Promise<number> {

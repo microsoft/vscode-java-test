@@ -3,14 +3,14 @@
 
 import * as assert from 'assert';
 import * as path from "path";
-import { commands, TextDocument, window, workspace, extensions, Uri } from 'vscode';
+import { commands, TextDocument, window, workspace, Uri } from 'vscode';
 import { searchTestLocation, ILocation } from '../../extension.bundle';
-import { Uris } from '../shared';
+import { setupTestEnv, Uris } from '../shared';
 
 suite('Command Utils Tests', function() {
 
     suiteSetup(async function() {
-        await extensions.getExtension('vscjava.vscode-java-test')!.activate();
+        setupTestEnv()
     });
 
     test("Can search location for <TestError> items", async function() {
