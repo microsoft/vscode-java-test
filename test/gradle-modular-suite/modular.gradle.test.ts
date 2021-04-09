@@ -4,13 +4,14 @@
 import * as assert from 'assert';
 import { CodeLens, Command, commands, TextDocument, window, workspace } from 'vscode';
 import { ITestResult, TestCodeLensProvider, testResultManager, ITestItem } from '../../extension.bundle';
-import { getJavaVersion, Token, Uris } from '../shared';
+import { getJavaVersion, setupTestEnv, Token, Uris } from '../shared';
 
-suite('Modular Porject Tests', function() {
+suite('Modular Project Tests', function() {
 
     let javaVersion: number = -1;
 
     suiteSetup(async function() {
+        setupTestEnv();
         javaVersion = await getJavaVersion();
     });
 

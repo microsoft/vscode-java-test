@@ -2,14 +2,14 @@
 // Licensed under the MIT license.
 
 import * as assert from 'assert';
-import { CodeLens, Command, commands, TextDocument, window, workspace, extensions } from 'vscode';
+import { CodeLens, Command, commands, TextDocument, window, workspace } from 'vscode';
 import { IExecutionCache, ITestResult, runnerScheduler, TestCodeLensProvider, testResultManager, TestStatus, ITestItem } from '../../extension.bundle';
-import { Token, Uris } from '../shared';
+import { setupTestEnv, Token, Uris } from '../shared';
 
 suite('Code Lens Tests', function() {
 
     suiteSetup(async function() {
-        await extensions.getExtension('vscjava.vscode-java-test')!.activate();
+        setupTestEnv()
     });
 
     test("Code Lens should work for JUnit 4's @Test annotation", async function() {

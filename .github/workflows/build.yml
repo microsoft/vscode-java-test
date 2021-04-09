@@ -107,9 +107,8 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
-    # TODO: Enable the darwin build after figure out how to stop Gradle Daemon
-    # - name: Test extension
-    #   run: npm test
+    - name: Test extension
+      run: npm test
 
     - name: Print language server Log if job failed
       if: ${{ failure() }}

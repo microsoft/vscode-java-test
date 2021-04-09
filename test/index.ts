@@ -4,6 +4,7 @@
 import * as cp from 'child_process';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests  } from 'vscode-test';
+import * as util from 'util';
 
 async function main(): Promise<void> {
     try {
@@ -24,15 +25,16 @@ async function main(): Promise<void> {
             stdio: 'inherit',
         });
 
-        // Run Maven JUnit 4 Code Lens tests
+        // Run Maven JUnit tests
         await runTests({
             vscodeExecutablePath,
             extensionDevelopmentPath,
-            extensionTestsPath: path.resolve(__dirname, './maven-junit4-suite'),
+            extensionTestsPath: path.resolve(__dirname, './maven-junit-suite'),
             launchArgs: [
-                path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit4'),
+                path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit'),
             ],
         });
+        await killJavaProcess();
 
         // Run Gradle modular project tests
         await runTests({
@@ -43,21 +45,26 @@ async function main(): Promise<void> {
                 path.join(__dirname, '..', '..', 'test', 'test-projects', 'modular-gradle'),
             ],
         });
-
-        // Run Gradle JUnit 5 project tests
-        await runTests({
-            vscodeExecutablePath,
-            extensionDevelopmentPath,
-            extensionTestsPath: path.resolve(__dirname, './gradle-junit5-suite'),
-            launchArgs: [
-                path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit5'),
-            ],
-        });
-
+        await killJavaProcess();
     } catch (err) {
         console.error('Failed to run tests');
         process.exit(1);
     }
 }
 
+
+async function killJavaProcess(): Promise<void> {
+    const execAsync = util.promisify(cp.exec);
+    try {
+        if (process.platform === "win32") {
+            await execAsync(`wmic process where "name like '%java%'" delete`);
+        } else {
+            await execAsync("kill -9 $(jps | awk '{print $1}')");
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+
 main();
+

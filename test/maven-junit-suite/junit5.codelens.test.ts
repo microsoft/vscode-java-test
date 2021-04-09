@@ -3,18 +3,18 @@
 
 import * as assert from 'assert';
 import * as fse from 'fs-extra';
-import { CodeLens, Command, commands, TextDocument, window, workspace, extensions } from 'vscode';
+import { CodeLens, Command, commands, Range, TextDocument, window, workspace, WorkspaceEdit } from 'vscode';
 import { TestCodeLensProvider, testResultManager, ITestItem, ITestResult, TestStatus } from '../../extension.bundle';
-import { Token, Uris } from '../shared';
+import { setupTestEnv, sleep, Token, Uris } from '../shared';
 
 suite('Code Lens Tests', function() {
 
     suiteSetup(async function() {
-        await extensions.getExtension('vscjava.vscode-java-test')!.activate();
+        setupTestEnv();
     });
 
     test("Can run test method if it has comments above", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_PARAMETERIZED_TEST);
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT5_PARAMETERIZED_TEST);
         await window.showTextDocument(document);
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
@@ -38,7 +38,7 @@ suite('Code Lens Tests', function() {
     });
 
     test("Can get correct result", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_PARAMETERIZED_TEST);
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT5_PARAMETERIZED_TEST);
         await window.showTextDocument(document);
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
@@ -58,7 +58,7 @@ suite('Code Lens Tests', function() {
     });
 
     test("Can run test with generic typed parameter", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_PARAMETERIZED_TEST);
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT5_PARAMETERIZED_TEST);
         await window.showTextDocument(document);
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
@@ -77,7 +77,7 @@ suite('Code Lens Tests', function() {
     });
 
     test("Can run test method annotated with @Testable", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_PROPERTY_TEST);
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT5_PROPERTY_TEST);
         await window.showTextDocument(document);
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
@@ -101,7 +101,7 @@ suite('Code Lens Tests', function() {
     });
 
     test("Can show Code Lens for methods annotated with meta-annotation", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_META_ANNOTATION_TEST);
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT5_META_ANNOTATION_TEST);
         await window.showTextDocument(document);
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
@@ -110,7 +110,7 @@ suite('Code Lens Tests', function() {
     });
 
     test("Can run test method annotated with @Nested", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_JUNIT5_NESTED_TEST);
+        const document: TextDocument = await workspace.openTextDocument(Uris.JUNIT5_NESTED_TEST);
         await window.showTextDocument(document);
 
         const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
@@ -135,35 +135,39 @@ suite('Code Lens Tests', function() {
     });
 
     test("Can correctly update the test results for cucumber tests", async function() {
-        const document: TextDocument = await workspace.openTextDocument(Uris.GRADLE_CUCUMBER_TEST);
-        await window.showTextDocument(document);
+        const fileContent: string = await fse.readFile(Uris.CUCUMBER_STEP.fsPath, 'utf-8');
+        try {
+            const document: TextDocument = await workspace.openTextDocument(Uris.CUCUMBER_TEST);
+            await window.showTextDocument(document);
+    
+            const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
+            const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
+    
+            const command: Command | undefined = codeLens[0].command;
+    
+            const testItem: ITestItem[] = command!.arguments as ITestItem[];
+    
+            await commands.executeCommand(command!.command, testItem[0]);
+            const projectName: string = testItem[0].project;
+    
+            let result: ITestResult| undefined = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
+            assert.strictEqual(result!.status, TestStatus.Fail);
+    
+            // Correct the test case
+            const edit: WorkspaceEdit = new WorkspaceEdit();
+            edit.replace(Uris.CUCUMBER_STEP, new Range(15, 4, 15, 31), 'assertEquals(value, 6);');
+            await workspace.applyEdit(edit);
+    
+            await commands.executeCommand('java.workspace.compile', false);
+            await sleep(1000 /*ms*/);
 
-        const codeLensProvider: TestCodeLensProvider = new TestCodeLensProvider();
-        const codeLens: CodeLens[] = await codeLensProvider.provideCodeLenses(document, Token.cancellationToken);
-
-        const command: Command | undefined = codeLens[0].command;
-
-        const testItem: ITestItem[] = command!.arguments as ITestItem[];
-
-        await commands.executeCommand(command!.command, testItem[0]);
-        const projectName: string = testItem[0].project;
-
-        let result: ITestResult| undefined = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
-        assert.strictEqual(result!.status, TestStatus.Fail);
-
-        // Correct the test case
-        const fileContent: string = await fse.readFile(Uris.GRADLE_CUCUMBER_STEP.fsPath, 'utf-8');
-        await fse.writeFile(Uris.GRADLE_CUCUMBER_STEP.fsPath,
-            fileContent.replace('assertEquals(value + 1, 6);', 'assertEquals(value, 6);'), {encoding: 'utf-8'});
-
-        await commands.executeCommand('java.workspace.compile', false);
-
-        await commands.executeCommand('java.test.relaunch');
-        result = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
-        assert.strictEqual(result!.status, TestStatus.Pass);
-
-        // revert the file change
-        await fse.writeFile(Uris.GRADLE_CUCUMBER_STEP.fsPath, fileContent, {encoding: 'utf-8'});
+            await commands.executeCommand('java.test.relaunch');
+            result = testResultManager.getResultById(`${projectName}@The calculator application#client wants to add 2 numbers`);
+            assert.strictEqual(result!.status, TestStatus.Pass);
+        } finally {
+            // revert the file change
+            await fse.writeFile(Uris.CUCUMBER_STEP.fsPath, fileContent, {encoding: 'utf-8'});
+        }
     });
 
     teardown(async function() {
