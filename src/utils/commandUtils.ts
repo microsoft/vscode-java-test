@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, commands, Position } from 'vscode';
+import { CancellationToken, commands, Position, Uri } from 'vscode';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
@@ -39,6 +39,18 @@ export async function searchTestLocation(fullName: string): Promise<ILocation[]>
 export async function resolveStackTraceLocation(trace: string, projectNames: string[]): Promise<string> {
     return await executeJavaLanguageServerCommand<string>(
         JavaLanguageServerCommands.RESOLVE_STACKTRACE_LOCATION, trace, projectNames) || '';
+}
+
+export async function getSourcePaths(): Promise<any> {
+    const result = await executeJavaLanguageServerCommand<any>('java.project.listSourcePaths');
+    if (result?.data) {
+        return result.data;
+    }
+    return [];
+}
+
+export async function generateTests(uri: Uri, startPosition: number): Promise<any> {
+    return await executeJavaLanguageServerCommand<any>('vscode.java.test.generateTests', uri.toString(), startPosition);
 }
 
 export async function resolveJUnitLaunchArguments(uri: string, fullName: string, testName: string, project: string,
