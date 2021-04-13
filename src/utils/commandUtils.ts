@@ -42,7 +42,7 @@ export async function resolveStackTraceLocation(trace: string, projectNames: str
 }
 
 export async function getSourcePaths(): Promise<any> {
-    const result = await executeJavaLanguageServerCommand<any>('java.project.listSourcePaths');
+    const result: any = await executeJavaLanguageServerCommand<any>('java.project.listSourcePaths');
     if (result?.data) {
         return result.data;
     }
