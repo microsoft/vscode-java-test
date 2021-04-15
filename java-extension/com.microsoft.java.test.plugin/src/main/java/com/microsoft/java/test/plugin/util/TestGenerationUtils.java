@@ -30,8 +30,6 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -57,7 +55,6 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -168,7 +165,6 @@ public class TestGenerationUtils {
         }
 
         final List<String> lifecycleAnnotations = getLifecycleAnnotations(testKind);
-        filterExistedLifeCycle(lifecycleAnnotations, unit, typeBinding);
         final List<String> methodsToGenerate = determineMethodsToGenerate(lifecycleAnnotations);
 
         if (methodsToGenerate == null || methodsToGenerate.size() == 0) {
@@ -235,23 +231,6 @@ public class TestGenerationUtils {
         return testKindsInFile;
     }
 
-    private static void filterExistedLifeCycle(List<String> annotations, ICompilationUnit unit,
-            ITypeBinding typeBinding) {
-        for (final IMethodBinding methodBinding : typeBinding.getDeclaredMethods()) {
-            for (final IAnnotationBinding annotation : methodBinding.getAnnotations()) {
-                final ITypeBinding annotationType = annotation.getAnnotationType();
-                final Iterator<String> iterator = annotations.iterator();
-                while (iterator.hasNext()) {
-                    final String annotationName = iterator.next();
-                    if (TestFrameworkUtils.isEquivalentAnnotationType(annotationType, annotationName)) {
-                        iterator.remove();
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     private static TextEdit createTextEdit(TestKind kind, List<String> methodsToGenerate, CompilationUnit root,
             TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
             throws MalformedTreeException, CoreException {
@@ -277,6 +256,11 @@ public class TestGenerationUtils {
             // JUnit 4's test method must be public
             if (kind == TestKind.JUnit) {
                 decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.PUBLIC));
+            }
+
+            // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
+            if (needStaticModifier(kind, annotationName)) {
+                decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.STATIC));
             }
 
             // set a unique method name according to the annotation type
@@ -361,6 +345,38 @@ public class TestGenerationUtils {
             default:
                 return "testName";
         }
+    }
+
+    private static boolean needStaticModifier(TestKind kind, String annotation) {
+        if (annotation == null) {
+            return false;
+        }
+
+        if (kind == TestKind.TestNG) {
+            return false;
+        }
+
+        if (kind == TestKind.JUnit) {
+            switch (annotation) {
+                case JUNIT4_BEFORE_CLASS_ANNOTATION:
+                case JUNIT4_AFTER_CLASS_ANNOTATION:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        if (kind == TestKind.JUnit5) {
+            switch (annotation) {
+                case JUNIT5_BEFORE_CLASS_ANNOTATION:
+                case JUNIT5_AFTER_CLASS_ANNOTATION:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        return false;
     }
 
     private static String getUniqueMethodName(IJavaElement type, String suggestedName) throws JavaModelException {

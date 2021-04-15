@@ -29,7 +29,7 @@ export class TestCodeActionProvider implements CodeActionProvider {
 
     private getCodeAction(document: TextDocument, range: Range | Selection): CodeAction {
         const start: number = document.offsetAt(range.start);
-        const codeAction: CodeAction = new CodeAction('Generate tests...', CodeActionKind.Source.append('generate.tests'));
+        const codeAction: CodeAction = new CodeAction('Generate Tests...', CodeActionKind.Source.append('generate.tests'));
         codeAction.command = {
             title: 'Generate Tests...',
             command: 'java.test.generateTests',
