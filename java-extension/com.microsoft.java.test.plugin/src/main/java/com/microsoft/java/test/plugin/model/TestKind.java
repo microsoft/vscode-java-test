@@ -15,17 +15,17 @@ import com.google.gson.annotations.SerializedName;
 
 public enum TestKind {
 
-    @SerializedName("-1")
-    None(-1),
-
     @SerializedName("0")
-    JUnit(0),
-    
+    JUnit5(0),
+
     @SerializedName("1")
-    JUnit5(1),
-    
+    JUnit(1),
+
     @SerializedName("2")
-    TestNG(2);
+    TestNG(2),
+
+    @SerializedName("100")
+    None(100);
 
     private int value;
 
@@ -60,17 +60,8 @@ public enum TestKind {
         }
     }
 
-    public int getValueForRank() {
-        switch (this) {
-            case JUnit:
-                return 1;
-            case JUnit5:
-                return 0;
-            case TestNG:
-                return 2;
-            default:
-                return Integer.MAX_VALUE;
-        }
+    public int getValue() {
+        return this.value;
     }
 
     private TestKind(int value){

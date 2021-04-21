@@ -99,8 +99,8 @@ public class TestGenerationUtils {
         final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
                 true /* fromCache */, monitor);
 
-        final int cursorPosition = ((Double) arguments.get(1)).intValue();
-        final NodeFinder nodeFinder = new NodeFinder(root, cursorPosition, 0);
+        final int cursorOffset = ((Double) arguments.get(1)).intValue();
+        final NodeFinder nodeFinder = new NodeFinder(root, cursorOffset, 0);
         ASTNode coveringNode = nodeFinder.getCoveringNode();
 
         while (coveringNode != null) {
@@ -137,7 +137,7 @@ public class TestGenerationUtils {
         for (final IClasspathEntry entry : javaProject.readRawClasspath()) {
             if (entry.getPath().isPrefixOf(unit.getPath())) {
                 if (ProjectTestUtils.isTestEntry(entry)) {
-                    return generateTestsFromTest(unit, root, (TypeDeclaration) coveringNode, binding, cursorPosition);
+                    return generateTestsFromTest(unit, root, (TypeDeclaration) coveringNode, binding, cursorOffset);
                 } else {
                     generateTestsFromSource();
                 }
@@ -152,7 +152,7 @@ public class TestGenerationUtils {
     }
 
     private static WorkspaceEdit generateTestsFromTest(ICompilationUnit unit, CompilationUnit root,
-            TypeDeclaration typeNode, ITypeBinding typeBinding, int cursorPosition)
+            TypeDeclaration typeNode, ITypeBinding typeBinding, int cursorOffset)
             throws MalformedTreeException, CoreException {
         final Set<TestKind> availableFrameworks = getTestKindFromFile(unit);
         if (availableFrameworks.size() == 0) {
@@ -174,7 +174,7 @@ public class TestGenerationUtils {
         IJavaElement insertPosition = null; // Insert to the last by default.
         try {
             insertPosition = CodeGenerationUtils.findInsertElement(
-                        (IType) typeBinding.getJavaElement(), cursorPosition);
+                        (IType) typeBinding.getJavaElement(), cursorOffset);
         } catch (Throwable e) {
             // ignore if the upstream does not support insert position preference.
         }
@@ -186,7 +186,7 @@ public class TestGenerationUtils {
 
     private static List<String> determineMethodsToGenerate(List<String> lifecycleAnnotations) {
         final List<String> methodList = lifecycleAnnotations.stream()
-                .map(annotation -> "@" + annotation.substring(annotation.lastIndexOf(".") + 1) + " Method")
+                .map(annotation -> "@" + annotation + " Method")
                 .collect(Collectors.toList());
         methodList.add(0, "@Test Method");
         return (List<String>) JUnitPlugin.askClientForChoice("Select methods to generate",
@@ -203,7 +203,7 @@ public class TestGenerationUtils {
             return availableFrameworks.iterator().next();
         } else {
             final List<String> frameworkList = availableFrameworks.stream()
-                .sorted((kind1, kind2) -> kind1.getValueForRank() - kind2.getValueForRank())
+                .sorted((kind1, kind2) -> kind1.getValue() - kind2.getValue())
                 .map(framework -> framework.toString())
                 .collect(Collectors.toList());
 
@@ -265,7 +265,7 @@ public class TestGenerationUtils {
 
             // set a unique method name according to the annotation type
             decl.setName(ast.newSimpleName(getUniqueMethodName(typeBinding.getJavaElement(),
-                    getPromptNameByAnnotation(annotationName))));
+                    getSuggestedMethodNameByAnnotation(annotationName))));
             decl.setConstructor(false);
             decl.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 
@@ -299,22 +299,22 @@ public class TestGenerationUtils {
         final List<String> list = new ArrayList<>();
         switch (testKind) {
             case JUnit:
-                list.add(JUNIT4_LIFECYCLE_ANNOTATION_PREFIX + JUNIT4_BEFORE_CLASS_ANNOTATION);
-                list.add(JUNIT4_LIFECYCLE_ANNOTATION_PREFIX + JUNIT4_SET_UP_ANNOTATION);
-                list.add(JUNIT4_LIFECYCLE_ANNOTATION_PREFIX + JUNIT4_TEAR_DOWN_ANNOTATION);
-                list.add(JUNIT4_LIFECYCLE_ANNOTATION_PREFIX + JUNIT4_AFTER_CLASS_ANNOTATION);
+                list.add(JUNIT4_BEFORE_CLASS_ANNOTATION);
+                list.add(JUNIT4_SET_UP_ANNOTATION);
+                list.add(JUNIT4_TEAR_DOWN_ANNOTATION);
+                list.add(JUNIT4_AFTER_CLASS_ANNOTATION);
                 break;
             case JUnit5:
-                list.add(JUNIT5_LIFECYCLE_ANNOTATION_PREFIX + JUNIT5_BEFORE_CLASS_ANNOTATION);
-                list.add(JUNIT5_LIFECYCLE_ANNOTATION_PREFIX + JUNIT5_SET_UP_ANNOTATION);
-                list.add(JUNIT5_LIFECYCLE_ANNOTATION_PREFIX + JUNIT5_TEAR_DOWN_ANNOTATION);
-                list.add(JUNIT5_LIFECYCLE_ANNOTATION_PREFIX + JUNIT5_AFTER_CLASS_ANNOTATION);
+                list.add(JUNIT5_BEFORE_CLASS_ANNOTATION);
+                list.add(JUNIT5_SET_UP_ANNOTATION);
+                list.add(JUNIT5_TEAR_DOWN_ANNOTATION);
+                list.add(JUNIT5_AFTER_CLASS_ANNOTATION);
                 break;
             case TestNG:
-                list.add(TESTNG_LIFECYCLE_ANNOTATION_PREFIX + TESTNG_BEFORE_CLASS_ANNOTATION);
-                list.add(TESTNG_LIFECYCLE_ANNOTATION_PREFIX + TESTNG_SET_UP_ANNOTATION);
-                list.add(TESTNG_LIFECYCLE_ANNOTATION_PREFIX + TESTNG_TEAR_DOWN_ANNOTATION);
-                list.add(TESTNG_LIFECYCLE_ANNOTATION_PREFIX + TESTNG_AFTER_CLASS_ANNOTATION);
+                list.add(TESTNG_BEFORE_CLASS_ANNOTATION);
+                list.add(TESTNG_SET_UP_ANNOTATION);
+                list.add(TESTNG_TEAR_DOWN_ANNOTATION);
+                list.add(TESTNG_AFTER_CLASS_ANNOTATION);
                 break;
             default:
                 break;
@@ -322,7 +322,7 @@ public class TestGenerationUtils {
         return list;
     }
 
-    private static String getPromptNameByAnnotation(String annotation) {
+    private static String getSuggestedMethodNameByAnnotation(String annotation) {
         switch (annotation) {
             case JUNIT4_BEFORE_CLASS_ANNOTATION:
             case JUNIT5_BEFORE_CLASS_ANNOTATION:

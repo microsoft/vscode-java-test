@@ -6,8 +6,8 @@ import * as protocolConverter from 'vscode-languageclient/lib/protocolConverter'
 import * as commandUtils from '../utils/commandUtils';
 
 const converter: protocolConverter.Converter = protocolConverter.createConverter();
-export async function generateTests(uri: Uri, startPosition: number): Promise<void> {
-    const edit: WorkspaceEdit = converter.asWorkspaceEdit(await commandUtils.generateTests(uri, startPosition));
+export async function generateTests(uri: Uri, cursorOffset: number): Promise<void> {
+    const edit: WorkspaceEdit = converter.asWorkspaceEdit(await commandUtils.generateTests(uri, cursorOffset));
     if (edit) {
         workspace.applyEdit(edit);
     }
