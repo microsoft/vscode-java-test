@@ -4,11 +4,13 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, TreeView, TreeViewExpansionEvent, TreeViewSelectionChangeEvent, Uri, window, workspace } from 'vscode';
+import { CodeActionKind, commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, languages, Range, TreeView, TreeViewExpansionEvent, TreeViewSelectionChangeEvent, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
+import { TestCodeActionProvider } from './codeActionProvider';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer, runTestsFromJavaProjectExplorer } from './commands/explorerCommands';
+import { generateTests, registerSelectTestFrameworkCommand } from './commands/generationCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
 import { executeTestsFromUri } from './commands/runFromUri';
@@ -93,6 +95,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     const testTreeView: TreeView<ITestItem> = window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true });
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context, javaLanguageSupportVersion);
+    registerSelectTestFrameworkCommand(context);
 
     context.subscriptions.push(
         testExplorer,
@@ -124,6 +127,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_REPORT_OPEN_TEST_SOURCE_LOCATION, async (uri: string, range: string, fullName: string) => await openTestSourceLocation(uri, range, fullName)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, ((uri: Uri, startPosition: number) => generateTests(uri, startPosition))),
 
         // track the test tree view events.
         testTreeView.onDidChangeSelection((_e: TreeViewSelectionChangeEvent<ITestItem>) => {
@@ -135,6 +139,12 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testTreeView.onDidExpandElement((_e: TreeViewExpansionEvent<ITestItem>) => {
             EventCounter.increase('didExpandElement');
         }),
+
+        languages.registerCodeActionsProvider(
+            { language: 'java', scheme: 'file', pattern: '**/*.java' },
+            new TestCodeActionProvider(),
+            { providedCodeActionKinds: [CodeActionKind.Source.append('generate.tests')] },
+        ),
     );
 
     setContextKeyForDeprecatedConfig();

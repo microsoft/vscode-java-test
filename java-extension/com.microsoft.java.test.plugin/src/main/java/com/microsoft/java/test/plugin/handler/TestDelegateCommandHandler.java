@@ -13,6 +13,7 @@ package com.microsoft.java.test.plugin.handler;
 
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
+import com.microsoft.java.test.plugin.util.TestGenerationUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -30,6 +31,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String SEARCH_TEST_CODE_LENS = "vscode.java.test.search.codelens";
     private static final String SEARCH_TEST_LOCATION = "vscode.java.test.search.location";
     private static final String RESOLVE_JUNIT_ARGUMENT = "vscode.java.test.junit.argument";
+    private static final String GENERATE_TESTS = "vscode.java.test.generateTests";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -50,6 +52,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return TestSearchUtils.searchLocation(arguments, monitor);
             case RESOLVE_JUNIT_ARGUMENT:
                 return JUnitLaunchUtils.resolveLaunchArgument(arguments, monitor);
+            case GENERATE_TESTS:
+                return TestGenerationUtils.generateTests(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));

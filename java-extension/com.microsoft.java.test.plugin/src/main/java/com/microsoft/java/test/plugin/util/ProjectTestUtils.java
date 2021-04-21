@@ -114,6 +114,10 @@ public final class ProjectTestUtils {
             return true;
         }
 
+        return isTestEntry(entry);
+    }
+
+    public static boolean isTestEntry(IClasspathEntry entry) {
         if (entry.isTest()) {
             return true;
         }

@@ -9,6 +9,7 @@
       <command id="vscode.java.test.search.codelens" />
       <command id="vscode.java.test.search.location" />
       <command id="vscode.java.test.junit.argument" />
+      <command id="vscode.java.test.generateTests" />
     </delegateCommandHandler>
   </extension>
 </plugin>
