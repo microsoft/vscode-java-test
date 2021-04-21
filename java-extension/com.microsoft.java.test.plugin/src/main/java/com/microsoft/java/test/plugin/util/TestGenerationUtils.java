@@ -179,7 +179,7 @@ public class TestGenerationUtils {
             // ignore if the upstream does not support insert position preference.
         }
 
-        final TextEdit textEdit = createTextEdit(testKind, methodsToGenerate, root, typeNode,
+        final TextEdit textEdit = createTextEditFromTestFile(testKind, methodsToGenerate, root, typeNode,
                 typeBinding, insertPosition);
         return SourceAssistProcessor.convertToWorkspaceEdit(unit, textEdit);
     }
@@ -231,8 +231,8 @@ public class TestGenerationUtils {
         return testKindsInFile;
     }
 
-    private static TextEdit createTextEdit(TestKind kind, List<String> methodsToGenerate, CompilationUnit root,
-            TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
+    private static TextEdit createTextEditFromTestFile(TestKind kind, List<String> methodsToGenerate,
+            CompilationUnit root, TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
             throws MalformedTreeException, CoreException {
         String annotationPrefix = "";
         if (kind == TestKind.JUnit) {
@@ -243,14 +243,25 @@ public class TestGenerationUtils {
             annotationPrefix = TESTNG_LIFECYCLE_ANNOTATION_PREFIX;
         }
 
+        final String prefix = annotationPrefix;
+        final List<MethodMetaData> metadata = methodsToGenerate.stream().map(method -> {
+            final String annotationName = method.substring(method.indexOf("@") + 1, method.lastIndexOf(" "));
+            final String methodName = getSuggestedMethodNameByAnnotation(annotationName);
+            return new MethodMetaData(methodName, prefix + annotationName);
+        }).collect(Collectors.toList());
+
+        return getTextEdit(kind, metadata, root, typeNode, typeBinding, insertPosition);
+    }
+
+    private static TextEdit getTextEdit(TestKind kind, List<MethodMetaData> methodMetadata, CompilationUnit root,
+            TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
+            throws JavaModelException, CoreException {
         final ASTRewrite astRewrite = ASTRewrite.create(root.getAST());
         final ImportRewrite importRewrite = StubUtility.createImportRewrite(root, true);
         final ListRewrite listRewrite = astRewrite.getListRewrite(typeNode,
                 ((AbstractTypeDeclaration) typeNode).getBodyDeclarationsProperty());
         final AST ast = astRewrite.getAST();
-        for (final String method : methodsToGenerate) {
-            final String annotationName = method.substring(1 /*1 for leading "@"*/, method.lastIndexOf(" "));
-            final String fullyQualifiedAnnotationName = annotationPrefix + annotationName;
+        for (final MethodMetaData method : methodMetadata) {
             
             final MethodDeclaration decl = ast.newMethodDeclaration();
             // JUnit 4's test method must be public
@@ -259,13 +270,13 @@ public class TestGenerationUtils {
             }
 
             // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
-            if (needStaticModifier(kind, annotationName)) {
+            if (needStaticModifier(kind, method.annotation)) {
                 decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.STATIC));
             }
 
             // set a unique method name according to the annotation type
             decl.setName(ast.newSimpleName(getUniqueMethodName(typeBinding.getJavaElement(),
-                    getSuggestedMethodNameByAnnotation(annotationName))));
+                    method.methodName)));
             decl.setConstructor(false);
             decl.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 
@@ -278,7 +289,7 @@ public class TestGenerationUtils {
             final Annotation marker = ast.newMarkerAnnotation();
             final ImportRewriteContext context = new ContextSensitiveImportRewriteContext(root,
                     decl.getStartPosition(), importRewrite);
-            marker.setTypeName(ast.newName(importRewrite.addImport(fullyQualifiedAnnotationName, context)));
+            marker.setTypeName(ast.newName(importRewrite.addImport(method.annotation, context)));
             astRewrite.getListRewrite(decl, MethodDeclaration.MODIFIERS2_PROPERTY).insertFirst(marker, null);
 
             final ASTNode insertion = StubUtility2Core.getNodeToInsertBefore(listRewrite, insertPosition);
@@ -403,5 +414,15 @@ public class TestGenerationUtils {
             }
         }
         return false;
+    }
+
+    static class MethodMetaData {
+        public String methodName;
+        public String annotation;
+
+        public MethodMetaData(String methodName, String annotation) {
+            this.methodName = methodName;
+            this.annotation = annotation;
+        }
     }
 }
