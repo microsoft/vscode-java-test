@@ -5,25 +5,15 @@ import { RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { getTestSourcePaths } from '../utils/commandUtils';
 
 class TestSourcePathProvider {
-    /**
-     * Test source paths which contains all the source paths from a general project(eclipse & unmanaged-folder)
-     * even it does not have 'test' attribute.
-     */
-    private testSource: string[];
-    /**
-     * Test source paths of which the classpath entry have 'test' attribute.
-     */
-    private strictTestSource: string[];
+    private testSource: ITestSourcePath[];
 
     public async initialize(): Promise<void> {
         this.testSource = [];
-        this.strictTestSource = [];
         if (!workspace.workspaceFolders) {
             return;
         }
 
-        this.testSource = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()), true);
-        this.strictTestSource = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()), false);
+        this.testSource = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
     }
 
     public async getTestSourcePattern(containsGeneral: boolean = true): Promise<RelativePattern[]> {
@@ -38,16 +28,26 @@ class TestSourcePathProvider {
     }
 
     public async getTestSourcePath(containsGeneral: boolean = true): Promise<string[]> {
-        if (this.testSource === undefined || this.strictTestSource === undefined) {
+        if (this.testSource === undefined) {
             await this.initialize();
         }
 
         if (containsGeneral) {
-            return this.testSource;
+            return this.testSource.map((s: ITestSourcePath) => s.testSourcePath);
         }
 
-        return this.strictTestSource;
+        return this.testSource.filter((s: ITestSourcePath) => s.isStrict)
+            .map((s: ITestSourcePath) => s.testSourcePath);
     }
+}
+
+export interface ITestSourcePath {
+    testSourcePath: string;
+    /**
+     * All the source paths from eclipse and invisible project will be treated as test source
+     * even they are not marked as test in the classpath entry, in that case, this field will be false.
+     */
+    isStrict: boolean;
 }
 
 export const testSourceProvider: TestSourcePathProvider = new TestSourcePathProvider();

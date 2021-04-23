@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,25 +47,46 @@ public final class ProjectTestUtils {
      * @throws JavaModelException
      */
     @SuppressWarnings("unchecked")
-    public static String[] listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
+    public static List<TestSourcePath> listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
             throws JavaModelException {
-        final List<String> resultList = new ArrayList<>();
+        final List<TestSourcePath> resultList = new ArrayList<>();
         if (arguments == null || arguments.size() == 0) {
-            return new String[0];
+            return Collections.emptyList();
         }
 
         final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
-        final boolean containsGeneral = (boolean) arguments.get(1);
         for (final String uri : uriArray) {
             final Set<IJavaProject> projectSet = parseProjects(uri);
             for (final IJavaProject project : projectSet) {
-                for (final IPath path : getTestPath(project, containsGeneral)) {
-                    final IPath relativePath = path.makeRelativeTo(project.getPath());
-                    resultList.add(project.getProject().getFolder(relativePath).getLocation().toOSString());
-                }
+                resultList.addAll(getTestSourcePaths(project));
             }
         }
-        return resultList.toArray(new String[resultList.size()]);
+        return resultList;
+    }
+
+    public static List<TestSourcePath> getTestSourcePaths(IJavaProject project) throws JavaModelException {
+        final List<TestSourcePath> paths = new LinkedList<>();
+        for (final IClasspathEntry entry : project.getRawClasspath()) {
+            // Ignore default project
+            if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+                continue;
+            }
+            
+            if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
+                continue;
+            }
+    
+            if (isTestEntry(entry)) {
+                paths.add(new TestSourcePath(parseTestSourcePathString(entry, project), true));
+                continue;
+            }
+    
+            // Always return true Eclipse & invisible project
+            if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
+                paths.add(new TestSourcePath(parseTestSourcePathString(entry, project), false));
+            }
+        }
+        return paths;
     }
 
     public static Set<IJavaProject> parseProjects(String uriStr) {
@@ -78,12 +100,9 @@ public final class ProjectTestUtils {
                 .collect(Collectors.toSet());
     }
 
-    public static List<IPath> getTestPath(IJavaProject project, boolean containsGeneral) throws JavaModelException {
-        final IClasspathEntry[] entries = project.getRawClasspath();
-        return Arrays.stream(entries)
-                .filter(entry -> isTest(project, entry, containsGeneral))
-                .map(entry -> entry.getPath())
-                .collect(Collectors.toList());
+    private static String parseTestSourcePathString(IClasspathEntry entry, IJavaProject project) {
+        final IPath relativePath = entry.getPath().makeRelativeTo(project.getPath());
+        return project.getProject().getFolder(relativePath).getLocation().toOSString();
     }
 
     public static boolean isTest(IJavaProject project, IPath path, boolean containsGeneral) {
@@ -130,5 +149,19 @@ public final class ProjectTestUtils {
         }
 
         return false;
+    }
+
+    static class TestSourcePath {
+        public String testSourcePath;
+        /**
+         * All the source paths from eclipse and invisible project will be treated as test source
+         * even they are not marked as test in the classpath entry, in that case, this field will be false.
+         */
+        public boolean isStrict;
+
+        public TestSourcePath(String testSourcePath, boolean isStrict) {
+            this.testSourcePath = testSourcePath;
+            this.isStrict = isStrict;
+        }
     }
 }

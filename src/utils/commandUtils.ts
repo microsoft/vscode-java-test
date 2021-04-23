@@ -2,14 +2,15 @@
 // Licensed under the MIT license.
 
 import { CancellationToken, commands, Position, Uri } from 'vscode';
+import { ITestSourcePath } from '../../extension.bundle';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
 import { IJUnitLaunchArguments } from '../runners/baseRunner/BaseRunner';
 
-export async function getTestSourcePaths(uri: string[], containsGeneral: boolean): Promise<string[]> {
-    return await executeJavaLanguageServerCommand<string[]>(
-        JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri, containsGeneral) || [];
+export async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
+    return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
+        JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
 }
 
 export async function searchTestItems(params: ISearchTestItemParams): Promise<ITestItem[]> {
