@@ -2,13 +2,14 @@
 // Licensed under the MIT license.
 
 import { CancellationToken, commands, Position, Uri } from 'vscode';
+import { ITestSourcePath } from '../../extension.bundle';
 import { JavaLanguageServerCommands, JavaTestRunnerDelegateCommands } from '../constants/commands';
 import { logger } from '../logger/logger';
 import { ILocation, ISearchTestItemParams, ITestItem, TestKind, TestLevel } from '../protocols';
 import { IJUnitLaunchArguments } from '../runners/baseRunner/BaseRunner';
 
-export async function getTestSourcePaths(uri: string[]): Promise<string[]> {
-    return await executeJavaLanguageServerCommand<string[]>(
+export async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
+    return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
         JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
 }
 
@@ -41,16 +42,8 @@ export async function resolveStackTraceLocation(trace: string, projectNames: str
         JavaLanguageServerCommands.RESOLVE_STACKTRACE_LOCATION, trace, projectNames) || '';
 }
 
-export async function getSourcePaths(): Promise<any> {
-    const result: any = await executeJavaLanguageServerCommand<any>('java.project.listSourcePaths');
-    if (result?.data) {
-        return result.data;
-    }
-    return [];
-}
-
 export async function generateTests(uri: Uri, startPosition: number): Promise<any> {
-    return await executeJavaLanguageServerCommand<any>('vscode.java.test.generateTests', uri.toString(), startPosition);
+    return await executeJavaLanguageServerCommand<any>(JavaTestRunnerDelegateCommands.GENERATE_TESTS, uri.toString(), startPosition);
 }
 
 export async function resolveJUnitLaunchArguments(uri: string, fullName: string, testName: string, project: string,

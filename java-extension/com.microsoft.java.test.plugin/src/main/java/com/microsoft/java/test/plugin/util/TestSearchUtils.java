@@ -290,7 +290,7 @@ public class TestSearchUtils {
     private static boolean isInTestScope(IJavaElement element) throws JavaModelException {
         final IJavaProject project = element.getJavaProject();
         for (final IPath sourcePath : ProjectUtils.listSourcePaths(project)) {
-            if (!ProjectTestUtils.isTest(project, sourcePath)) {
+            if (!ProjectTestUtils.isTest(project, sourcePath, true /*containsGeneralProject*/)) {
                 continue;
             }
             if (sourcePath.isPrefixOf(element.getPath())) {

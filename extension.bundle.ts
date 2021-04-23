@@ -10,3 +10,4 @@ export * from './src/protocols';
 export * from './src/utils/commandUtils';
 export * from './src/testFileWatcher';
 export * from './src/runners/runnerScheduler';
+export * from './src/provider/testSourceProvider';

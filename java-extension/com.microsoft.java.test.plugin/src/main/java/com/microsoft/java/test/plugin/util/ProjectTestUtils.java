@@ -11,7 +11,6 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathAttribute;
@@ -27,11 +26,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.eclipse.jdt.ls.core.internal.ProjectUtils.WORKSPACE_LINK;
 
 @SuppressWarnings("restriction")
 public final class ProjectTestUtils {
@@ -49,24 +47,46 @@ public final class ProjectTestUtils {
      * @throws JavaModelException
      */
     @SuppressWarnings("unchecked")
-    public static String[] listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
+    public static List<TestSourcePath> listTestSourcePaths(List<Object> arguments, IProgressMonitor monitor)
             throws JavaModelException {
-        final List<String> resultList = new ArrayList<>();
+        final List<TestSourcePath> resultList = new ArrayList<>();
         if (arguments == null || arguments.size() == 0) {
-            return new String[0];
+            return Collections.emptyList();
         }
 
         final ArrayList<String> uriArray = ((ArrayList<String>) arguments.get(0));
         for (final String uri : uriArray) {
             final Set<IJavaProject> projectSet = parseProjects(uri);
             for (final IJavaProject project : projectSet) {
-                for (final IPath path : getTestPath(project)) {
-                    final IPath relativePath = path.makeRelativeTo(project.getPath());
-                    resultList.add(project.getProject().getFolder(relativePath).getLocation().toOSString());
-                }
+                resultList.addAll(getTestSourcePaths(project));
             }
         }
-        return resultList.toArray(new String[resultList.size()]);
+        return resultList;
+    }
+
+    public static List<TestSourcePath> getTestSourcePaths(IJavaProject project) throws JavaModelException {
+        final List<TestSourcePath> paths = new LinkedList<>();
+        for (final IClasspathEntry entry : project.getRawClasspath()) {
+            // Ignore default project
+            if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+                continue;
+            }
+            
+            if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
+                continue;
+            }
+    
+            if (isTestEntry(entry)) {
+                paths.add(new TestSourcePath(parseTestSourcePathString(entry, project), true));
+                continue;
+            }
+    
+            // Always return true Eclipse & invisible project
+            if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
+                paths.add(new TestSourcePath(parseTestSourcePathString(entry, project), false));
+            }
+        }
+        return paths;
     }
 
     public static Set<IJavaProject> parseProjects(String uriStr) {
@@ -75,31 +95,29 @@ public final class ProjectTestUtils {
             return Collections.emptySet();
         }
         return Arrays.stream(ProjectUtils.getJavaProjects())
-                .filter(p -> isProjectBelongToPath(p.getProject(), parentPath))
+                .filter(p -> ResourceUtils.isContainedIn(ProjectUtils.getProjectRealFolder(p.getProject()),
+                        Arrays.asList(parentPath)))
                 .collect(Collectors.toSet());
     }
 
-    public static List<IPath> getTestPath(IJavaProject project) throws JavaModelException {
-        final IClasspathEntry[] entries = project.getRawClasspath();
-        return Arrays.stream(entries)
-                .filter(entry -> isTest(project, entry))
-                .map(entry -> entry.getPath())
-                .collect(Collectors.toList());
+    private static String parseTestSourcePathString(IClasspathEntry entry, IJavaProject project) {
+        final IPath relativePath = entry.getPath().makeRelativeTo(project.getPath());
+        return project.getProject().getFolder(relativePath).getLocation().toOSString();
     }
 
-    public static boolean isTest(IJavaProject project, IPath path) {
+    public static boolean isTest(IJavaProject project, IPath path, boolean containsGeneral) {
         try {
             final IClasspathEntry entry = project.getClasspathEntryFor(path);
             if (entry == null) {
                 return false;
             }
-            return isTest(project, entry);
+            return isTest(project, entry, containsGeneral);
         } catch (final JavaModelException e) {
             return false;
         }
     }
 
-    public static boolean isTest(IJavaProject project, IClasspathEntry entry) {
+    public static boolean isTest(IJavaProject project, IClasspathEntry entry, boolean containsGeneral) {
         // Ignore default project
         if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
             return false;
@@ -109,12 +127,12 @@ public final class ProjectTestUtils {
             return false;
         }
 
-        // Always return true Eclipse & invisible project
-        if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
+        if (isTestEntry(entry)) {
             return true;
         }
 
-        return isTestEntry(entry);
+        // Always return true Eclipse & invisible project
+        return containsGeneral && ProjectUtils.isGeneralJavaProject(project.getProject());
     }
 
     public static boolean isTestEntry(IClasspathEntry entry) {
@@ -133,19 +151,17 @@ public final class ProjectTestUtils {
         return false;
     }
 
-    public static boolean isProjectBelongToPath(IProject project, IPath path) {
-        // Check for visible project
-        if (project.getLocation() != null && path.isPrefixOf(project.getLocation())) {
-            return true;
+    static class TestSourcePath {
+        public String testSourcePath;
+        /**
+         * All the source paths from eclipse and invisible project will be treated as test source
+         * even they are not marked as test in the classpath entry, in that case, this field will be false.
+         */
+        public boolean isStrict;
+
+        public TestSourcePath(String testSourcePath, boolean isStrict) {
+            this.testSourcePath = testSourcePath;
+            this.isStrict = isStrict;
         }
-
-
-        // Check for invisible project
-        final IPath linkedLocation = project.getFolder(WORKSPACE_LINK).getLocation();
-        if (linkedLocation != null && path.isPrefixOf(linkedLocation)) {
-            return true;
-        }
-
-        return false;
     }
 }
