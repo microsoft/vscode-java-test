@@ -13,6 +13,7 @@ export namespace JavaTestRunnerDelegateCommands {
     export const SEARCH_TEST_CODE_LENS: string = 'vscode.java.test.search.codelens';
     export const SEARCH_TEST_LOCATION: string = 'vscode.java.test.search.location';
     export const RESOLVE_JUNIT_ARGUMENT: string = 'vscode.java.test.junit.argument';
+    export const GENERATE_TESTS: string = 'vscode.java.test.generateTests';
 }
 
 export namespace JavaTestRunnerCommands {

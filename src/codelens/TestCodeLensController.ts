@@ -3,6 +3,8 @@
 
 import { ConfigurationChangeEvent, Disposable, DocumentSelector, languages, RelativePattern, workspace } from 'vscode';
 import { ENABLE_EDITOR_SHORTCUTS_KEY } from '../constants/configs';
+import { testSourceProvider } from '../provider/testSourceProvider';
+import { parseDocumentSelector } from '../utils/uiUtils';
 import { TestCodeLensProvider } from './TestCodeLensProvider';
 
 class TestCodeLensController implements Disposable {
@@ -22,18 +24,14 @@ class TestCodeLensController implements Disposable {
         this.setCodeLensVisibility();
     }
 
-    public registerCodeLensProvider(patterns: RelativePattern[]): void {
+    public async registerCodeLensProvider(): Promise<void> {
         if (this.registeredProvider) {
             this.registeredProvider.dispose();
         }
 
-        const documentSelector: DocumentSelector = patterns.map((p: RelativePattern) => {
-            return {
-                language: 'java',
-                scheme: 'file',
-                pattern: p,
-            };
-        });
+        const patterns: RelativePattern[] = await testSourceProvider.getTestSourcePattern();
+
+        const documentSelector: DocumentSelector = parseDocumentSelector(patterns);
 
         this.registeredProvider = languages.registerCodeLensProvider(documentSelector, this.internalProvider);
     }

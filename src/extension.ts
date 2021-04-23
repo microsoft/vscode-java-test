@@ -22,6 +22,7 @@ import { initExpService } from './experimentationService';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
+import { testSourceProvider } from './provider/testSourceProvider';
 import { ITestResult } from './runners/models';
 import { runnerScheduler } from './runners/runnerScheduler';
 import { testFileWatcher } from './testFileWatcher';
@@ -62,23 +63,35 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         if (extensionApi.onDidClasspathUpdate) {
             const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
             context.subscriptions.push(onDidClasspathUpdate(async () => {
+                await testSourceProvider.initialize();
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
+                await testCodeLensController.registerCodeLensProvider();
             }));
         }
 
         if (extensionApi.onDidServerModeChange) {
             const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
             context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
+                if (serverMode === mode) {
+                    return;
+                }
+                // Only re-initialize the component when its lightweight -> standard
+                if (serverMode !== LanguageServerMode.Hybrid) {
+                    testExplorer.refresh();
+                    await testSourceProvider.initialize();
+                    await testFileWatcher.registerListeners();
+                    await testCodeLensController.registerCodeLensProvider();
+                }
                 serverMode = mode;
-                testExplorer.refresh();
-                await testFileWatcher.registerListeners();
             }));
         }
 
         if (extensionApi.onDidProjectsImport) {
             const onDidProjectsImport: Event<Uri[]> = extensionApi.onDidProjectsImport;
             context.subscriptions.push(onDidProjectsImport(async () => {
+                await testSourceProvider.initialize();
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
+                await testCodeLensController.registerCodeLensProvider();
             }));
         }
 
@@ -90,7 +103,9 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         progressProvider = javaDebugger.exports?.progressProvider;
     }
 
+    await testSourceProvider.initialize();
     await testFileWatcher.registerListeners();
+    await testCodeLensController.registerCodeLensProvider();
     testExplorer.initialize(context);
     const testTreeView: TreeView<ITestItem> = window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true });
     runnerScheduler.initialize(context);
