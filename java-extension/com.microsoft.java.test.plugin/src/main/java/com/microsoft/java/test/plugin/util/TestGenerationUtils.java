@@ -367,6 +367,7 @@ public class TestGenerationUtils {
             return false;
         }
 
+        annotation = annotation.substring(annotation.lastIndexOf(".") + 1);
         if (kind == TestKind.JUnit) {
             switch (annotation) {
                 case JUNIT4_BEFORE_CLASS_ANNOTATION:
