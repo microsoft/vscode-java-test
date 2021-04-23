@@ -3,11 +3,11 @@
 
 import * as _ from 'lodash';
 import { Disposable, FileSystemWatcher, RelativePattern, Uri, workspace } from 'vscode';
+import { testSourceProvider } from '../extension.bundle';
 import { testExplorer } from './explorer/testExplorer';
 import { isStandardServerReady } from './extension';
 import { logger } from './logger/logger';
 import { ITestItem, TestLevel } from './protocols';
-import { testSourceProvider } from './provider/testSourceProvider';
 import { testItemModel } from './testItemModel';
 import { testResultManager } from './testResultManager';
 

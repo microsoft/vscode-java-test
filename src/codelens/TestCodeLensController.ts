@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { ConfigurationChangeEvent, Disposable, DocumentSelector, languages, RelativePattern, workspace } from 'vscode';
+import { testSourceProvider } from '../../extension.bundle';
 import { ENABLE_EDITOR_SHORTCUTS_KEY } from '../constants/configs';
-import { testSourceProvider } from '../provider/testSourceProvider';
 import { parseDocumentSelector } from '../utils/uiUtils';
 import { TestCodeLensProvider } from './TestCodeLensProvider';
 
