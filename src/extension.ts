@@ -4,11 +4,10 @@
 import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { CodeActionKind, commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, languages, Range, TreeView, TreeViewExpansionEvent, TreeViewSelectionChangeEvent, Uri, window, workspace } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, Range, TreeView, TreeViewExpansionEvent, TreeViewSelectionChangeEvent, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { testSourceProvider } from '../extension.bundle';
-import { TestCodeActionProvider } from './codeActionProvider';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer, runTestsFromJavaProjectExplorer } from './commands/explorerCommands';
 import { generateTests, registerSelectTestFrameworkCommand } from './commands/generationCommands';
@@ -23,6 +22,7 @@ import { initExpService } from './experimentationService';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
+import { registerTestCodeActionProvider } from './provider/codeActionProvider';
 import { ITestResult } from './runners/models';
 import { runnerScheduler } from './runners/runnerScheduler';
 import { testFileWatcher } from './testFileWatcher';
@@ -66,6 +66,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 await testSourceProvider.initialize();
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
                 await testCodeLensController.registerCodeLensProvider();
+                await registerTestCodeActionProvider();
             }));
         }
 
@@ -81,6 +82,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                     await testSourceProvider.initialize();
                     await testFileWatcher.registerListeners();
                     await testCodeLensController.registerCodeLensProvider();
+                    await registerTestCodeActionProvider();
                 }
                 serverMode = mode;
             }));
@@ -92,6 +94,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 await testSourceProvider.initialize();
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
                 await testCodeLensController.registerCodeLensProvider();
+                await registerTestCodeActionProvider();
             }));
         }
 
@@ -155,11 +158,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             EventCounter.increase('didExpandElement');
         }),
 
-        languages.registerCodeActionsProvider(
-            { language: 'java', scheme: 'file', pattern: '**/*.java' },
-            new TestCodeActionProvider(),
-            { providedCodeActionKinds: [CodeActionKind.Source.append('generate.tests')] },
-        ),
+        await registerTestCodeActionProvider(),
     );
 
     setContextKeyForDeprecatedConfig();
