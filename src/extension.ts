@@ -109,7 +109,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     await testSourceProvider.initialize();
     await testFileWatcher.registerListeners();
     await testCodeLensController.registerCodeLensProvider();
-    await registerTestCodeActionProvider();
     testExplorer.initialize(context);
     const testTreeView: TreeView<ITestItem> = window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true });
     runnerScheduler.initialize(context);
@@ -158,6 +157,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testTreeView.onDidExpandElement((_e: TreeViewExpansionEvent<ITestItem>) => {
             EventCounter.increase('didExpandElement');
         }),
+
+        await registerTestCodeActionProvider(),
     );
 
     setContextKeyForDeprecatedConfig();

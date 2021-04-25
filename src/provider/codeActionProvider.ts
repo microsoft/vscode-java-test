@@ -27,7 +27,7 @@ export class TestCodeActionProvider implements CodeActionProvider {
     }
 }
 
-export async function registerTestCodeActionProvider(): Promise<void> {
+export async function registerTestCodeActionProvider(): Promise<Disposable> {
     if (provider) {
         provider.dispose();
     }
@@ -38,4 +38,5 @@ export async function registerTestCodeActionProvider(): Promise<void> {
         new TestCodeActionProvider(),
         { providedCodeActionKinds: [CodeActionKind.Source.append('generate.tests')] },
     );
+    return provider;
 }
