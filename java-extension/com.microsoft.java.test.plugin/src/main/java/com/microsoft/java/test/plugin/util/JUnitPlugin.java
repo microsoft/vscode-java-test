@@ -12,6 +12,7 @@
 package com.microsoft.java.test.plugin.util;
 
 import com.microsoft.java.test.plugin.handler.ClasspathUpdateHandler;
+import com.microsoft.java.test.plugin.model.Option;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -79,13 +80,12 @@ public class JUnitPlugin implements BundleActivator {
         }
     }
 
-    public static Object askClientForChoice(String placeHolder, List<String> choices) {
+    public static Object askClientForChoice(String placeHolder, List<Option> choices) {
         return askClientForChoice(placeHolder, choices, false);
     }
 
-    public static Object askClientForChoice(String placeHolder, List<String> choices, boolean canPickMany) {
+    public static Object askClientForChoice(String placeHolder, List<Option> choices, boolean canPickMany) {
         return JavaLanguageServerPlugin.getInstance().getClientConnection()
                     .executeClientCommand("_java.test.askClientForChoice", placeHolder, choices, canPickMany);
     }
-
 }
