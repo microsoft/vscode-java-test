@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -57,6 +58,7 @@ import org.eclipse.text.edits.TextEdit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -265,19 +267,13 @@ public class TestGenerationUtils {
         for (final MethodMetaData method : methodMetadata) {
             
             final MethodDeclaration decl = ast.newMethodDeclaration();
-            // JUnit 4's test method must be public
-            if (kind == TestKind.JUnit) {
-                decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.PUBLIC));
-            }
-
-            // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
-            if (needStaticModifier(kind, method.annotation)) {
-                decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.STATIC));
-            }
 
             // set a unique method name according to the annotation type
-            decl.setName(ast.newSimpleName(getUniqueMethodName(typeBinding.getJavaElement(),
-                    method.methodName)));
+            final String methodName = getUniqueMethodName(typeBinding.getJavaElement(), method.methodName);
+            decl.setName(ast.newSimpleName(methodName));
+
+            decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, getTestMethodModifiers(typeBinding, kind,
+                    method.annotation, methodName)));
             decl.setConstructor(false);
             decl.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 
@@ -357,6 +353,42 @@ public class TestGenerationUtils {
             default:
                 return "testName";
         }
+    }
+
+    /**
+     * return modifier bit mask.
+     */
+    private static int getTestMethodModifiers(ITypeBinding typeBinding, TestKind kind,
+            String annotation, String methodName) {
+        int modifiers = Modifier.NONE;
+        // JUnit 4's test method must be public
+        if (kind == TestKind.JUnit) {
+            modifiers |= Modifier.PUBLIC;
+        }
+
+        // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
+        if (needStaticModifier(kind, annotation)) {
+            modifiers |= Modifier.STATIC;
+        }
+
+        ITypeBinding superClass = typeBinding.getSuperclass();
+        while (superClass != null) {
+            final IMethodBinding[] superMethods = superClass.getDeclaredMethods();
+            for (final IMethodBinding superMethod : superMethods) {
+                if (Objects.equals(superMethod.getName(), methodName)) {
+                    final int superModifiers = superMethod.getModifiers();
+                    // Cannot reduce the visibility of the inherited method
+                    if (Modifier.isPublic(superModifiers)) {
+                        modifiers |= Modifier.PUBLIC;
+                        return modifiers;
+                    }
+                    break;
+                }
+            }
+            superClass = superClass.getSuperclass();
+        }
+
+        return modifiers;
     }
 
     private static boolean needStaticModifier(TestKind kind, String annotation) {
