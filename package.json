@@ -12,6 +12,7 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-java-test/blob/master/extension/README.md",
     "preview": true,
+    "enableProposedApi": true,
     "icon": "resources/logo.png",
     "keywords": [
         "java",
@@ -27,6 +28,10 @@
     "categories": [
         "Other"
     ],
+    "workspaceTrust": {
+      "request": "onDemand",
+      "description": "Extension may require your trust on workspace for code execution."
+    },
     "activationEvents": [
         "onLanguage:java",
         "workspaceContains:pom.xml",
