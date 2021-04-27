@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -299,7 +300,7 @@ public class TestGenerationUtils {
             marker.setTypeName(ast.newName(importRewrite.addImport(method.annotation, context)));
             astRewrite.getListRewrite(decl, MethodDeclaration.MODIFIERS2_PROPERTY).insertFirst(marker, null);
 
-            if (!isStatic && methodsMap.containsKey(methodName)) {
+            if (needsOverrideAnnotation(isStatic, methodsMap.get(methodName), typeBinding)) {
                 final CodeGenerationSettings settings = new CodeGenerationSettings();
                 settings.overrideAnnotation = true;
                 StubUtility2Core.addOverrideAnnotation(settings, root.getJavaElement().getJavaProject(), astRewrite,
@@ -457,6 +458,21 @@ public class TestGenerationUtils {
         }
 
         return false;
+    }
+
+    private static boolean needsOverrideAnnotation(boolean isStatic, IMethodBinding methodBinding,
+            ITypeBinding declaredType) {
+        if (isStatic) {
+            return false;
+        }
+
+        if (methodBinding == null) {
+            return false;
+        }
+        if (Objects.equals(declaredType.getBinaryName(), methodBinding.getDeclaringClass().getBinaryName())) {
+            return false;
+        }
+        return true;
     }
 
     private static String getUniqueMethodName(IJavaElement type, Map<String, IMethodBinding> methodsMap,
