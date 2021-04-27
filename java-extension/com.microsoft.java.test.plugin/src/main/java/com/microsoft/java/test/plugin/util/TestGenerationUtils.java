@@ -380,14 +380,16 @@ public class TestGenerationUtils {
     private static int getTestMethodModifiers(Map<String, IMethodBinding> methodsMap, TestKind kind,
             String annotation, String methodName) {
         int modifiers = Modifier.NONE;
-        // JUnit 4's test method must be public
-        if (kind == TestKind.JUnit) {
-            modifiers |= Modifier.PUBLIC;
-        }
 
         // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
         if (needStaticModifier(kind, annotation)) {
             modifiers |= Modifier.STATIC;
+        }
+
+        // JUnit 4's test method must be public
+        if (kind == TestKind.JUnit) {
+            modifiers |= Modifier.PUBLIC;
+            return modifiers;
         }
 
         final IMethodBinding binding = methodsMap.get(methodName);
