@@ -11,6 +11,7 @@
 
 package com.microsoft.java.test.plugin.util;
 
+import com.microsoft.java.test.plugin.model.Option;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.provider.TestKindProvider;
 
@@ -185,10 +186,11 @@ public class TestGenerationUtils {
     }
 
     private static List<String> determineMethodsToGenerate(List<String> lifecycleAnnotations) {
-        final List<String> methodList = lifecycleAnnotations.stream()
-                .map(annotation -> "@" + annotation + " Method")
+        final List<Option> methodList = lifecycleAnnotations.stream()
+                .map(annotation -> new Option(annotation, "@" + annotation, 
+                        capitalize(getSuggestedMethodNameByAnnotation(annotation)) + " Method"))
                 .collect(Collectors.toList());
-        methodList.add(0, "@Test Method");
+        methodList.add(0, new Option("Test", "@Test", "Test Method"));
         return (List<String>) JUnitPlugin.askClientForChoice("Select methods to generate",
                 methodList, true /*pickMany*/);
     }
@@ -202,9 +204,9 @@ public class TestGenerationUtils {
         if (availableFrameworks.size() == 1) {
             return availableFrameworks.iterator().next();
         } else {
-            final List<String> frameworkList = availableFrameworks.stream()
+            final List<Option> frameworkList = availableFrameworks.stream()
                 .sorted((kind1, kind2) -> kind1.getValue() - kind2.getValue())
-                .map(framework -> framework.toString())
+                .map(framework -> new Option(framework.toString()))
                 .collect(Collectors.toList());
 
             final Object result = JUnitPlugin.askClientForChoice("Select a test framework to use", frameworkList);
@@ -244,8 +246,7 @@ public class TestGenerationUtils {
         }
 
         final String prefix = annotationPrefix;
-        final List<MethodMetaData> metadata = methodsToGenerate.stream().map(method -> {
-            final String annotationName = method.substring(method.indexOf("@") + 1, method.lastIndexOf(" "));
+        final List<MethodMetaData> metadata = methodsToGenerate.stream().map(annotationName -> {
             final String methodName = getSuggestedMethodNameByAnnotation(annotationName);
             return new MethodMetaData(methodName, prefix + annotationName);
         }).collect(Collectors.toList());
@@ -415,6 +416,10 @@ public class TestGenerationUtils {
             }
         }
         return false;
+    }
+
+    private static String capitalize(String str) {
+        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
 
     static class MethodMetaData {
