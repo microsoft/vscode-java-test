@@ -435,7 +435,7 @@ public class TestGenerationUtils {
             return false;
         }
 
-        if (!Modifier.isProtected(modifiers) && !Modifier.isProtected(modifiers)) {
+        if (!Modifier.isProtected(modifiers) && !Modifier.isPublic(modifiers)) {
             final IPackageBinding superMethodPackage = superMethod.getDeclaringClass().getPackage();
             final IPackageBinding declaredPackage = declaredType.getPackage();
             return superMethodPackage != null && declaredPackage != null &&
