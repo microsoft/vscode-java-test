@@ -32,6 +32,7 @@ import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -417,14 +418,31 @@ public class TestGenerationUtils {
                     continue;
                 }
 
-                if (Modifier.isPrivate(methodBinding.getModifiers())) {
+                if (!isAccessible(methodBinding, typeBinding)) {
                     continue;
                 }
+
                 methods.put(methodBinding.getName(), methodBinding);
             }
             superClass = superClass.getSuperclass();
         }
         return methods;
+    }
+
+    private static boolean isAccessible(IMethodBinding superMethod, ITypeBinding declaredType) {
+        final int modifiers = superMethod.getModifiers();
+        if (Modifier.isPrivate(modifiers)) {
+            return false;
+        }
+
+        if (!Modifier.isProtected(modifiers) && !Modifier.isProtected(modifiers)) {
+            final IPackageBinding superMethodPackage = superMethod.getDeclaringClass().getPackage();
+            final IPackageBinding declaredPackage = declaredType.getPackage();
+            return superMethodPackage != null && declaredPackage != null &&
+                    superMethodPackage.getName().equals(declaredPackage.getName());
+        }
+
+        return true;
     }
 
     private static boolean needStaticModifier(TestKind kind, String annotation) {
