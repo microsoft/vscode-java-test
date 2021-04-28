@@ -9,6 +9,9 @@ let provider: Disposable;
 export class TestCodeActionProvider implements CodeActionProvider {
 
     public async provideCodeActions(document: TextDocument, range: Range | Selection, _context: CodeActionContext, _token: CancellationToken): Promise<CodeAction[] | null> {
+        if (document.fileName === 'module-info.java' || document.fileName === 'package-info.java') {
+            return [];
+        }
         return [this.getCodeAction(document, range)];
     }
 

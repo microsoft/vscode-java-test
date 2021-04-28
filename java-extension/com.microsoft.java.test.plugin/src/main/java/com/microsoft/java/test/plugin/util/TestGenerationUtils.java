@@ -31,6 +31,8 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -42,6 +44,7 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite.ImportRewriteContext;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.internal.core.manipulation.StubUtility;
+import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationSettings;
 import org.eclipse.jdt.internal.corext.codemanipulation.ContextSensitiveImportRewriteContext;
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility2Core;
 import org.eclipse.jdt.internal.corext.dom.ASTNodeFactory;
@@ -55,8 +58,11 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -126,6 +132,12 @@ public class TestGenerationUtils {
         final ITypeBinding binding = ((TypeDeclaration) coveringNode).resolveBinding();
         if (binding == null) {
             JUnitPlugin.logError("Failed to resolve type binding from " + unit.getElementName());
+            return null;
+        }
+
+        if (!binding.isClass()) {
+            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                    "Cannot generate tests if it's not a Java class.");
             return null;
         }
 
@@ -262,22 +274,18 @@ public class TestGenerationUtils {
         final ListRewrite listRewrite = astRewrite.getListRewrite(typeNode,
                 ((AbstractTypeDeclaration) typeNode).getBodyDeclarationsProperty());
         final AST ast = astRewrite.getAST();
+        final Map<String, IMethodBinding> methodsMap = getMethodsBindings(typeBinding);
         for (final MethodMetaData method : methodMetadata) {
-            
             final MethodDeclaration decl = ast.newMethodDeclaration();
-            // JUnit 4's test method must be public
-            if (kind == TestKind.JUnit) {
-                decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.PUBLIC));
-            }
 
-            // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
-            if (needStaticModifier(kind, method.annotation)) {
-                decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, Modifier.STATIC));
-            }
-
+            final boolean isStatic = needStaticModifier(kind, method.annotation);
             // set a unique method name according to the annotation type
-            decl.setName(ast.newSimpleName(getUniqueMethodName(typeBinding.getJavaElement(),
-                    method.methodName)));
+            final String methodName = getUniqueMethodName(typeBinding.getJavaElement(), methodsMap,
+                    method.methodName, isStatic);
+            decl.setName(ast.newSimpleName(methodName));
+
+            decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, getTestMethodModifiers(methodsMap, kind,
+                    method.annotation, methodName)));
             decl.setConstructor(false);
             decl.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 
@@ -292,6 +300,13 @@ public class TestGenerationUtils {
                     decl.getStartPosition(), importRewrite);
             marker.setTypeName(ast.newName(importRewrite.addImport(method.annotation, context)));
             astRewrite.getListRewrite(decl, MethodDeclaration.MODIFIERS2_PROPERTY).insertFirst(marker, null);
+
+            if (needsOverrideAnnotation(isStatic, methodsMap.get(methodName), typeBinding)) {
+                final CodeGenerationSettings settings = new CodeGenerationSettings();
+                settings.overrideAnnotation = true;
+                StubUtility2Core.addOverrideAnnotation(settings, root.getJavaElement().getJavaProject(), astRewrite,
+                        importRewrite, decl, typeBinding.isInterface(), null);
+            }
 
             final ASTNode insertion = StubUtility2Core.getNodeToInsertBefore(listRewrite, insertPosition);
             if (insertion != null) {
@@ -359,6 +374,79 @@ public class TestGenerationUtils {
         }
     }
 
+    /**
+     * return modifier bit mask.
+     */
+    private static int getTestMethodModifiers(Map<String, IMethodBinding> methodsMap, TestKind kind,
+            String annotation, String methodName) {
+        int modifiers = Modifier.NONE;
+
+        // @BeforeClass and @AfterClass in JUnit 4 & 5 needs static modifier
+        if (needStaticModifier(kind, annotation)) {
+            modifiers |= Modifier.STATIC;
+        }
+
+        // JUnit 4's test method must be public
+        if (kind == TestKind.JUnit) {
+            modifiers |= Modifier.PUBLIC;
+            return modifiers;
+        }
+
+        final IMethodBinding binding = methodsMap.get(methodName);
+        if (binding == null) {
+            return modifiers;
+        }
+
+        final int superModifiers = binding.getModifiers();
+        if (Modifier.isProtected(superModifiers)) {
+            modifiers |= Modifier.PROTECTED;
+        } else if (Modifier.isPublic(superModifiers)) {
+            modifiers |= Modifier.PUBLIC;
+        }
+
+        return modifiers;
+    }
+
+    private static Map<String, IMethodBinding> getMethodsBindings(ITypeBinding typeBinding) {
+        final Map<String, IMethodBinding> methods = new HashMap<>();
+        final IMethodBinding[] typeMethods = typeBinding.getDeclaredMethods();
+        for (final IMethodBinding methodBinding : typeMethods) {
+            methods.put(methodBinding.getName(), methodBinding);
+        }
+        ITypeBinding superClass = typeBinding.getSuperclass();
+        while (superClass != null) {
+            for (final IMethodBinding methodBinding : superClass.getDeclaredMethods()) {
+                if (methods.containsKey(methodBinding.getName())) {
+                    continue;
+                }
+
+                if (!isAccessible(methodBinding, typeBinding)) {
+                    continue;
+                }
+
+                methods.put(methodBinding.getName(), methodBinding);
+            }
+            superClass = superClass.getSuperclass();
+        }
+        return methods;
+    }
+
+    private static boolean isAccessible(IMethodBinding superMethod, ITypeBinding declaredType) {
+        final int modifiers = superMethod.getModifiers();
+        if (Modifier.isPrivate(modifiers)) {
+            return false;
+        }
+
+        if (!Modifier.isProtected(modifiers) && !Modifier.isPublic(modifiers)) {
+            final IPackageBinding superMethodPackage = superMethod.getDeclaringClass().getPackage();
+            final IPackageBinding declaredPackage = declaredType.getPackage();
+            return superMethodPackage != null && declaredPackage != null &&
+                    superMethodPackage.getName().equals(declaredPackage.getName());
+        }
+
+        return true;
+    }
+
     private static boolean needStaticModifier(TestKind kind, String annotation) {
         if (annotation == null) {
             return false;
@@ -392,17 +480,49 @@ public class TestGenerationUtils {
         return false;
     }
 
-    private static String getUniqueMethodName(IJavaElement type, String suggestedName) throws JavaModelException {
+    private static boolean needsOverrideAnnotation(boolean isStatic, IMethodBinding methodBinding,
+            ITypeBinding declaredType) {
+        if (isStatic) {
+            return false;
+        }
+
+        if (methodBinding == null) {
+            return false;
+        }
+        if (Objects.equals(declaredType.getBinaryName(), methodBinding.getDeclaringClass().getBinaryName())) {
+            return false;
+        }
+        return true;
+    }
+
+    private static String getUniqueMethodName(IJavaElement type, Map<String, IMethodBinding> methodsMap,
+            String suggestedName, boolean isStatic) throws JavaModelException {
         if (type instanceof IType) {
             final IMethod[] methods = ((IType) type).getMethods();
 
-            int suggestedPostfix = 2;
+            int suggestedPostfix = 0;
             String resultName = suggestedName;
             while (suggestedPostfix < 1000) {
-                if (!hasMethod(methods, resultName)) {
+                suggestedPostfix++;
+                resultName = suggestedPostfix > 1 ? suggestedName + suggestedPostfix : suggestedName;
+                if (hasMethod(methods, resultName)) {
+                    continue;
+                }
+                final IMethodBinding superMethod = methodsMap.get(resultName);
+                if (superMethod == null) {
                     return resultName;
                 }
-                resultName = suggestedName + suggestedPostfix++;
+                if (!"void".equals(superMethod.getReturnType().getName())) {
+                    continue;
+                }
+                final int modifier = superMethod.getModifiers();
+                if (Modifier.isFinal(modifier)) {
+                    continue;
+                }
+                if (Modifier.isStatic(modifier) != isStatic) {
+                    continue;
+                }
+                return resultName;
             }
         }
 
