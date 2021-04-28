@@ -12,7 +12,6 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-java-test/blob/master/extension/README.md",
     "preview": true,
-    "enableProposedApi": true,
     "icon": "resources/logo.png",
     "keywords": [
         "java",
