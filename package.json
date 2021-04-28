@@ -27,6 +27,10 @@
     "categories": [
         "Other"
     ],
+    "workspaceTrust": {
+      "request": "onDemand",
+      "description": "Extension may require your trust on workspace for code execution."
+    },
     "activationEvents": [
         "onLanguage:java",
         "workspaceContains:pom.xml",
