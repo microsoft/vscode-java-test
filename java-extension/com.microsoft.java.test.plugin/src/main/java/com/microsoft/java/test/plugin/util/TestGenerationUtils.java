@@ -17,12 +17,15 @@ import com.microsoft.java.test.plugin.provider.TestKindProvider;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
@@ -43,23 +46,31 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite.ImportRewriteContext;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
+import org.eclipse.jdt.core.formatter.CodeFormatter;
+import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.internal.core.manipulation.StubUtility;
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationSettings;
 import org.eclipse.jdt.internal.corext.codemanipulation.ContextSensitiveImportRewriteContext;
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility2Core;
 import org.eclipse.jdt.internal.corext.dom.ASTNodeFactory;
+import org.eclipse.jdt.internal.corext.refactoring.changes.CreateCompilationUnitChange;
+import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
+import org.eclipse.jdt.ls.core.internal.ChangeUtil;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.handlers.CodeGenerationUtils;
 import org.eclipse.jdt.ls.core.internal.text.correction.SourceAssistProcessor;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -152,7 +163,7 @@ public class TestGenerationUtils {
                 if (ProjectTestUtils.isTestEntry(entry)) {
                     return generateTestsFromTest(unit, root, (TypeDeclaration) coveringNode, binding, cursorOffset);
                 } else {
-                    generateTestsFromSource();
+                    return generateTestsFromSource(unit, binding, cursorOffset);
                 }
             }
         }
@@ -160,8 +171,272 @@ public class TestGenerationUtils {
         return null;
     }
 
-    private static void generateTestsFromSource() {
-        // TODO: unimplement
+    /**
+     * Generate test methods from a focal source file
+     */
+    private static WorkspaceEdit generateTestsFromSource(ICompilationUnit unit, ITypeBinding typeBinding,
+            int cursorOffset) throws CoreException {
+        final IJavaProject javaProject = unit.getJavaProject();
+        final List<TestKind> testFrameworksInProject = TestKindProvider.getTestKindsFromCache(javaProject);
+        final TestKind testKind = determineTestFramework(new HashSet<>(testFrameworksInProject));
+        if (testKind == null) {
+            return null;
+        }
+
+        final IClasspathEntry testEntry = getTestClasspathEntry(unit);
+        final String testFullyQualifiedName = getTestFullyQualifiedName(typeBinding, javaProject, testEntry);
+        if (testFullyQualifiedName == null) {
+            return null;
+        }
+        final List<String> methodsToTest = getMethodsToTest(typeBinding);
+        if (methodsToTest == null || methodsToTest.size() == 0) {
+            return null;
+        }
+
+        final ICompilationUnit testUnit = getTestCompilationUnit(javaProject, testEntry, testFullyQualifiedName);
+        return createTextEditFromSourceFile(testKind, testUnit, methodsToTest, cursorOffset);
+    }
+
+    private static WorkspaceEdit createTextEditFromSourceFile(TestKind kind, ICompilationUnit testUnit,
+            List<String> methodsToTest, int cursorPosition) throws CoreException {
+        if (testUnit.exists()) {
+            final IType[] types = testUnit.getAllTypes();
+            if (types.length == 0) {
+                // an empty java file
+                return getTestCompilationUnit(kind, testUnit, methodsToTest);
+            }
+
+            final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(testUnit,
+                false /* fromCache */, new NullProgressMonitor());
+
+            if (root == null) {
+                return null;
+            }
+
+            IType type = testUnit.findPrimaryType();
+            if (type == null) {
+                type = types[0];
+            }
+
+            final ASTNode typeNode = root.findDeclaringNode(type.getKey());
+            if (!(typeNode instanceof TypeDeclaration)) {
+                return null;
+            }
+
+            final ITypeBinding binding = ((TypeDeclaration) typeNode).resolveBinding();
+            if (binding == null) {
+                return null;
+            }
+
+            IJavaElement insertPosition = null; // Insert to the last by default.
+            try {
+                insertPosition = CodeGenerationUtils.findInsertElement(type, cursorPosition);
+            } catch (Throwable e) {
+                // ignore if the upstream does not support insert position preference.
+            }
+
+            return createEditToExistingTestFile(root, kind, methodsToTest, (TypeDeclaration) typeNode,
+                    binding, insertPosition);
+        } else {
+            return createAndGetNewTestCompilationUnit(kind, testUnit, methodsToTest);
+        }
+    }
+
+    /**
+     * Get a compilation unit change without creating.
+     */
+    private static WorkspaceEdit getTestCompilationUnit(TestKind kind, ICompilationUnit testUnit,
+            List<String> methodsToTest) throws CoreException {
+        final CompilationUnitChange cuChange = new CompilationUnitChange("", testUnit);
+        final String cuContent = constructNewCU(testUnit, methodsToTest, kind);
+        cuChange.setEdit(new InsertEdit(0, cuContent));
+        return ChangeUtil.convertToWorkspaceEdit(cuChange);
+    }
+
+    /**
+     * Create and get a compilation unit change.
+     */
+    private static WorkspaceEdit createAndGetNewTestCompilationUnit(TestKind kind, ICompilationUnit testUnit,
+            List<String> methodsToTest) throws CoreException {
+        final String cuContent = constructNewCU(testUnit, methodsToTest, kind);
+        final CreateCompilationUnitChange change =
+                new CreateCompilationUnitChange(testUnit, cuContent, "");
+        return ChangeUtil.convertToWorkspaceEdit(change);
+    }
+
+    private static WorkspaceEdit createEditToExistingTestFile(CompilationUnit testRoot, TestKind kind,
+            List<String> methodsToTest, TypeDeclaration typeNode, ITypeBinding typeBinding,
+            IJavaElement insertPosition) throws JavaModelException, CoreException {
+        final String testAnnotation = getTestAnnotation(kind);
+        final List<MethodMetaData> metadata = methodsToTest.stream().map(method -> {
+            final String methodName = getTestMethodName(method);
+            return new MethodMetaData(methodName, testAnnotation);
+        }).collect(Collectors.toList());
+
+        final TextEdit edit = getTextEdit(kind, metadata, testRoot, typeNode, typeBinding, insertPosition);
+        return SourceAssistProcessor.convertToWorkspaceEdit((ICompilationUnit) testRoot.getJavaElement(), edit);
+    }
+
+    private static String constructNewCU(ICompilationUnit testUnit,
+            List<String> methods, TestKind testKind) throws CoreException {
+        final String delimiter = StubUtility.getLineDelimiterUsed(testUnit);
+        final String typeStub = constructTypeStub(testUnit, methods, testKind, delimiter);
+        final String cuContent = constructCUContent(testUnit, testKind, typeStub, delimiter);
+        final String formattedCuStub = CodeFormatterUtil.format(
+                CodeFormatter.K_COMPILATION_UNIT, cuContent, 0, delimiter, testUnit.getJavaProject().getOptions(true));
+        return formattedCuStub;
+    }
+
+    private static String constructCUContent(ICompilationUnit testUnit, TestKind testKind, 
+            String typeContent, String delimiter) throws CoreException {
+        final IPackageFragment packageFragment = (IPackageFragment) testUnit.getParent();
+        final StringBuilder buf = new StringBuilder();
+        if (!packageFragment.isDefaultPackage()) {
+            buf.append("package ")
+                .append(packageFragment.getElementName())
+                .append(";")
+                .append(delimiter)
+                .append(delimiter)
+                .append("import ")
+                .append(getTestAnnotation(testKind))
+                .append(";")
+                .append(delimiter)
+                .append(delimiter);
+        }
+        buf.append(typeContent);
+        return buf.toString();
+    }
+
+    private static String constructTypeStub(ICompilationUnit testUnit, List<String> methods,
+            TestKind testKind, String delimiter) throws CoreException {
+        final String typeName = testUnit.getElementName().replace(".java", "");
+        final StringBuilder buf = new StringBuilder();
+        buf.append("public class ").append(typeName).append(" {").append(delimiter);
+        for (final String method : methods) {
+            buf.append(constructMethodStub(testUnit, testKind, method, delimiter)).append(delimiter);
+        }
+        buf.append("}").append(delimiter);
+        return buf.toString();
+    }
+
+    private static String constructMethodStub(ICompilationUnit testUnit, TestKind testKind,
+            String method, String delimiter) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("@Test").append(delimiter);
+        if (testKind == TestKind.JUnit) {
+            buf.append("public ");
+        }
+        final String methodName = getTestMethodName(method);
+        buf.append("void ").append(methodName).append("() {").append(delimiter).append(delimiter).append("}");
+        final String methodContent = buf.toString();
+        // TODO: get test unit options directly
+        return CodeFormatterUtil.format(CodeFormatter.K_STATEMENTS, methodContent, 1,
+                delimiter, testUnit.getJavaProject().getOptions(true));
+    }
+
+    private static IClasspathEntry getTestClasspathEntry(ICompilationUnit unit) throws JavaModelException {
+        final IJavaProject javaProject = unit.getJavaProject();
+        // In most cases, this is the classpath entry used for testing, we first find the target entry by hard-code
+        // to avoid go into the generated entries.
+        final IClasspathEntry testEntry = javaProject.getClasspathEntryFor(
+            javaProject.getPath().append("src/test/java"));
+        if (ProjectTestUtils.isTestEntry(testEntry)) {
+            return testEntry;
+        }
+
+        final IClasspathEntry[] entries = javaProject.readRawClasspath();
+        for (final IClasspathEntry entry : entries) {
+            if (ProjectTestUtils.isTestEntry(entry)) {
+                return entry;
+            }
+        }
+
+        return entries[0];
+    }
+
+    private static String getTestFullyQualifiedName(ITypeBinding typeBinding, IJavaProject project,
+            IClasspathEntry testEntry) throws JavaModelException {
+        String promptName = typeBinding.getBinaryName() + "Tests";
+        final ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, promptName);
+        if (!testCompilationUnit.exists()) {
+            promptName = typeBinding.getBinaryName() + "Test";
+        }
+
+        final String fullyQualifiedName = (String) JUnitPlugin.askClientForInput(
+            "Please type the target test class name", promptName);
+        if (fullyQualifiedName == null) {
+            return null;
+        }
+
+        if (fullyQualifiedName.charAt(fullyQualifiedName.length() - 1) == '.') {
+            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                    "Invalid Java class name: " + fullyQualifiedName);
+            return null;
+        }
+
+        final String[] identifiers = fullyQualifiedName.split("\\.");
+        for (final String identifier : identifiers) {
+            final char[] chars = identifier.toCharArray();
+            if (!Character.isJavaIdentifierStart(chars[0])) {
+                JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                    "Invalid Java identifier: " + identifier);
+                return null;
+            }
+            for (int i = 1; i < chars.length; i++) {
+                if (!Character.isJavaIdentifierPart(chars[i])) {
+                    JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(
+                        MessageType.Error, "Invalid Java identifier: " + identifier);
+                    return null;
+                }
+            }
+        }
+
+        return fullyQualifiedName;
+    }
+
+    private static ICompilationUnit getTestCompilationUnit(IJavaProject javaProject, IClasspathEntry testEntry,
+            String testFullyQualifiedName) throws JavaModelException {
+        final IPackageFragmentRoot packageRoot = javaProject.findPackageFragmentRoot(testEntry.getPath());
+        final String packageQualifiedName = testFullyQualifiedName.substring(0,
+                testFullyQualifiedName.lastIndexOf("."));
+        final IPackageFragment packageFragment = packageRoot.getPackageFragment(packageQualifiedName);
+        final String compilationUnitName = testFullyQualifiedName.substring(
+                testFullyQualifiedName.lastIndexOf(".") + 1) + ".java";
+        final ICompilationUnit testUnit = packageFragment.getCompilationUnit(compilationUnitName);
+        return testUnit;
+    }
+
+    private static List<String> getMethodsToTest(ITypeBinding typeBinding) {
+        // TODO: list all the accessible methods via advanced option button
+        final List<IMethodBinding> allMethods = new LinkedList<>();
+        final IMethodBinding[] typeMethods = typeBinding.getDeclaredMethods();
+        for (final IMethodBinding method : typeMethods) {
+            final int modifiers = method.getModifiers();
+            if (!method.isConstructor() && !Modifier.isPrivate(modifiers) && !method.isSynthetic()) {
+                allMethods.add(method);
+            }
+        }
+
+        final List<Option> methodNames = allMethods.stream()
+            .map(method -> {
+                final String returnValue = method.getReturnType().getName();
+                final ITypeBinding[] paramTypes = method.getParameterTypes();
+                final String params = String.join(", ",
+                        Arrays.stream(paramTypes).map(t -> t.getName()).toArray(String[]::new));
+
+                return new Option(method.getName(), method.getName() + "(" + params + ")", ": " + returnValue);
+            })
+            .sorted((methodA, methodB) -> {
+                return methodA.label.compareTo(methodB.label);
+            })
+            .collect(Collectors.toList());
+
+        return (List<String>) JUnitPlugin.askClientForChoice("Select the methods to test",
+                methodNames, true /*pickMany*/);
+    }
+
+    private static String getTestMethodName(String methodName) {
+        return "test" + Character.toUpperCase(methodName.charAt(0)) + methodName.substring(1);
     }
 
     private static WorkspaceEdit generateTestsFromTest(ICompilationUnit unit, CompilationUnit root,
@@ -493,6 +768,16 @@ public class TestGenerationUtils {
             return false;
         }
         return true;
+    }
+
+    private static String getTestAnnotation(TestKind testKind) {
+        if (testKind == TestKind.JUnit) {
+            return JUNIT4_LIFECYCLE_ANNOTATION_PREFIX + "Test";
+        } else if (testKind == TestKind.TestNG) {
+            return TESTNG_LIFECYCLE_ANNOTATION_PREFIX + "Test";
+        }
+
+        return JUNIT5_LIFECYCLE_ANNOTATION_PREFIX + "Test";
     }
 
     private static String getUniqueMethodName(IJavaElement type, Map<String, IMethodBinding> methodsMap,

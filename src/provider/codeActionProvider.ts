@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Disposable, DocumentSelector, languages, Range, RelativePattern, Selection, TextDocument } from 'vscode';
-import { testSourceProvider } from '../../extension.bundle';
-import { parseDocumentSelector } from '../utils/uiUtils';
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Disposable, languages, Range, Selection, TextDocument } from 'vscode';
 
 let provider: Disposable;
 export class TestCodeActionProvider implements CodeActionProvider {
@@ -34,10 +32,8 @@ export async function registerTestCodeActionProvider(): Promise<Disposable> {
     if (provider) {
         provider.dispose();
     }
-    const patterns: RelativePattern[] = await testSourceProvider.getTestSourcePattern(false /*containsGeneralProject*/);
-    const documentSelector: DocumentSelector = parseDocumentSelector(patterns);
     provider = languages.registerCodeActionsProvider(
-        documentSelector,
+        {language: 'java', scheme: 'file', pattern: '**/*.java'},
         new TestCodeActionProvider(),
         { providedCodeActionKinds: [CodeActionKind.Source.append('generate.tests')] },
     );
