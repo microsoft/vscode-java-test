@@ -78,11 +78,18 @@ function checkJavaQualifiedName(value: string): string {
     return '';
 }
 
+// Copied from https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-Keyword
 const keywords: Set<string> = new Set([
-    'abstract', 'default', 'if', 'private', 'this', 'boolean', 'do', 'implements', 'protected', 'throw', 'break', 'double', 'import',
-    'public', 'throws', 'byte', 'else', 'instanceof', 'return', 'transient', 'case', 'extends', 'int', 'short', 'try', 'catch', 'final',
-    'interface', 'static', 'void', 'char', 'finally', 'long', 'strictfp', 'volatile', 'class', 'float', 'native', 'super', 'while',
-    'const', 'for', 'new', 'switch', 'continue', 'goto', 'package', 'synchronized', 'true', 'false', 'null', 'assert', 'enum',
+    'abstract', 'continue', 'for',        'new',       'switch',
+    'assert',   'default',  'if',         'package',   'synchronized',
+    'boolean',  'do',       'goto',       'private',   'this',
+    'break',    'double',   'implements', 'protected', 'throw',
+    'byte',     'else',     'import',     'public',    'throws',
+    'case',     'enum',     'instanceof', 'return',    'transient',
+    'catch',    'extends',  'int',        'short',     'try',
+    'char',     'final',    'interface',  'static',    'void',
+    'class',    'finally',  'long',       'strictfp',  'volatile',
+    'const',    'float',    'native',     'super',     'while',
 ]);
 export function isKeyword(identifier: string): boolean {
     return keywords.has(identifier);

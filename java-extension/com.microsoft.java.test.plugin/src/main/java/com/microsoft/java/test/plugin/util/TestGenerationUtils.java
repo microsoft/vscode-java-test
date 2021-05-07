@@ -288,50 +288,50 @@ public class TestGenerationUtils {
     }
 
     private static String constructCUContent(ICompilationUnit testUnit, TestKind testKind, 
-            String typeContent, String delimiter) throws CoreException {
+            String typeContent, String lineDelimiter) throws CoreException {
         final IPackageFragment packageFragment = (IPackageFragment) testUnit.getParent();
         final StringBuilder buf = new StringBuilder();
         if (!packageFragment.isDefaultPackage()) {
             buf.append("package ")
                 .append(packageFragment.getElementName())
                 .append(";")
-                .append(delimiter)
-                .append(delimiter)
+                .append(lineDelimiter)
+                .append(lineDelimiter)
                 .append("import ")
                 .append(getTestAnnotation(testKind))
                 .append(";")
-                .append(delimiter)
-                .append(delimiter);
+                .append(lineDelimiter)
+                .append(lineDelimiter);
         }
         buf.append(typeContent);
         return buf.toString();
     }
 
     private static String constructTypeStub(ICompilationUnit testUnit, List<String> methods,
-            TestKind testKind, String delimiter) throws CoreException {
+            TestKind testKind, String lineDelimiter) throws CoreException {
         final String typeName = testUnit.getElementName().replace(".java", "");
         final StringBuilder buf = new StringBuilder();
-        buf.append("public class ").append(typeName).append(" {").append(delimiter);
+        buf.append("public class ").append(typeName).append(" {").append(lineDelimiter);
         for (final String method : methods) {
-            buf.append(constructMethodStub(testUnit, testKind, method, delimiter)).append(delimiter);
+            buf.append(constructMethodStub(testUnit, testKind, method, lineDelimiter)).append(lineDelimiter);
         }
-        buf.append("}").append(delimiter);
+        buf.append("}").append(lineDelimiter);
         return buf.toString();
     }
 
     private static String constructMethodStub(ICompilationUnit testUnit, TestKind testKind,
-            String method, String delimiter) {
+            String method, String lineDelimiter) {
         final StringBuilder buf = new StringBuilder();
-        buf.append("@Test").append(delimiter);
+        buf.append("@Test").append(lineDelimiter);
         if (testKind == TestKind.JUnit) {
             buf.append("public ");
         }
         final String methodName = getTestMethodName(method);
-        buf.append("void ").append(methodName).append("() {").append(delimiter).append(delimiter).append("}");
+        buf.append("void ").append(methodName).append("() {").append(lineDelimiter).append(lineDelimiter).append("}");
         final String methodContent = buf.toString();
         // TODO: get test unit options directly
         return CodeFormatterUtil.format(CodeFormatter.K_STATEMENTS, methodContent, 1,
-                delimiter, testUnit.getJavaProject().getOptions(true));
+                lineDelimiter, testUnit.getJavaProject().getOptions(true));
     }
 
     private static IClasspathEntry getTestClasspathEntry(ICompilationUnit unit) throws JavaModelException {
