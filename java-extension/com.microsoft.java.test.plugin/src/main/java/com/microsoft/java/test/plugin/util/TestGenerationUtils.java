@@ -17,6 +17,7 @@ import com.microsoft.java.test.plugin.provider.TestKindProvider;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -27,6 +28,8 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaConventions;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -194,16 +197,16 @@ public class TestGenerationUtils {
         }
 
         final ICompilationUnit testUnit = getTestCompilationUnit(javaProject, testEntry, testFullyQualifiedName);
-        return createTextEditFromSourceFile(testKind, testUnit, methodsToTest, cursorOffset);
+        return scaffoldTestFile(testKind, testUnit, methodsToTest, cursorOffset);
     }
 
-    private static WorkspaceEdit createTextEditFromSourceFile(TestKind kind, ICompilationUnit testUnit,
+    private static WorkspaceEdit scaffoldTestFile(TestKind kind, ICompilationUnit testUnit,
             List<String> methodsToTest, int cursorPosition) throws CoreException {
         if (testUnit.exists()) {
             final IType[] types = testUnit.getAllTypes();
             if (types.length == 0) {
                 // an empty java file
-                return getTestCompilationUnit(kind, testUnit, methodsToTest);
+                return addTestClassToExistingFile(kind, testUnit, methodsToTest);
             }
 
             final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(testUnit,
@@ -235,17 +238,17 @@ public class TestGenerationUtils {
                 // ignore if the upstream does not support insert position preference.
             }
 
-            return createEditToExistingTestFile(root, kind, methodsToTest, (TypeDeclaration) typeNode,
+            return addTestMethodsToExistingTestClass(root, kind, methodsToTest, (TypeDeclaration) typeNode,
                     binding, insertPosition);
         } else {
-            return createAndGetNewTestCompilationUnit(kind, testUnit, methodsToTest);
+            return createNewTestClass(kind, testUnit, methodsToTest);
         }
     }
 
     /**
      * Get a compilation unit change without creating.
      */
-    private static WorkspaceEdit getTestCompilationUnit(TestKind kind, ICompilationUnit testUnit,
+    private static WorkspaceEdit addTestClassToExistingFile(TestKind kind, ICompilationUnit testUnit,
             List<String> methodsToTest) throws CoreException {
         final CompilationUnitChange cuChange = new CompilationUnitChange("", testUnit);
         final String cuContent = constructNewCU(testUnit, methodsToTest, kind);
@@ -256,7 +259,7 @@ public class TestGenerationUtils {
     /**
      * Create and get a compilation unit change.
      */
-    private static WorkspaceEdit createAndGetNewTestCompilationUnit(TestKind kind, ICompilationUnit testUnit,
+    private static WorkspaceEdit createNewTestClass(TestKind kind, ICompilationUnit testUnit,
             List<String> methodsToTest) throws CoreException {
         final String cuContent = constructNewCU(testUnit, methodsToTest, kind);
         final CreateCompilationUnitChange change =
@@ -264,7 +267,7 @@ public class TestGenerationUtils {
         return ChangeUtil.convertToWorkspaceEdit(change);
     }
 
-    private static WorkspaceEdit createEditToExistingTestFile(CompilationUnit testRoot, TestKind kind,
+    private static WorkspaceEdit addTestMethodsToExistingTestClass(CompilationUnit testRoot, TestKind kind,
             List<String> methodsToTest, TypeDeclaration typeNode, ITypeBinding typeBinding,
             IJavaElement insertPosition) throws JavaModelException, CoreException {
         final String testAnnotation = getTestAnnotation(kind);
@@ -356,42 +359,56 @@ public class TestGenerationUtils {
 
     private static String getTestFullyQualifiedName(ITypeBinding typeBinding, IJavaProject project,
             IClasspathEntry testEntry) throws JavaModelException {
-        String promptName = typeBinding.getBinaryName() + "Tests";
-        final ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, promptName);
-        if (!testCompilationUnit.exists()) {
-            promptName = typeBinding.getBinaryName() + "Test";
-        }
-
+        final String promptName = getDefaultTestFullyQualifiedName(typeBinding, project, testEntry);
         final String fullyQualifiedName = (String) JUnitPlugin.askClientForInput(
             "Please type the target test class name", promptName);
         if (fullyQualifiedName == null) {
             return null;
         }
 
-        if (fullyQualifiedName.charAt(fullyQualifiedName.length() - 1) == '.') {
-            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
-                    "Invalid Java class name: " + fullyQualifiedName);
-            return null;
+        final IStatus status = JavaConventions.validateJavaTypeName(fullyQualifiedName,
+                project.getOption(JavaCore.COMPILER_SOURCE, true),
+                project.getOption(JavaCore.COMPILER_COMPLIANCE, true),
+                project.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true)
+        );
+
+        final int severity = status.getSeverity();
+        if (severity == IStatus.OK || severity == IStatus.WARNING) {
+            return fullyQualifiedName;
         }
 
-        final String[] identifiers = fullyQualifiedName.split("\\.");
-        for (final String identifier : identifiers) {
-            final char[] chars = identifier.toCharArray();
-            if (!Character.isJavaIdentifierStart(chars[0])) {
-                JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
-                    "Invalid Java identifier: " + identifier);
-                return null;
-            }
-            for (int i = 1; i < chars.length; i++) {
-                if (!Character.isJavaIdentifierPart(chars[i])) {
-                    JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(
-                        MessageType.Error, "Invalid Java identifier: " + identifier);
-                    return null;
-                }
+        JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                status.getMessage());
+        return null;
+    }
+
+    private static String getDefaultTestFullyQualifiedName(ITypeBinding typeBinding, IJavaProject project,
+            IClasspathEntry testEntry) throws JavaModelException {
+        final String defaultName = typeBinding.getBinaryName() + "Test";
+        final String attemptName = typeBinding.getBinaryName() + "Tests";
+        final ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
+        if (testCompilationUnit.exists()) {
+            return attemptName;
+        }
+
+        // check the majority naming under the package and use it as the default type name
+        final IPackageFragment packageFragment = (IPackageFragment) testCompilationUnit.getParent();
+        int counter = 0;
+        final ICompilationUnit[] compilationUnits = packageFragment.getCompilationUnits();
+        for (final ICompilationUnit unit : compilationUnits) {
+            final String name = unit.getElementName();
+            if (name.endsWith("Tests.java")) {
+                counter++;
+            } else if (name.endsWith("Test.java")) {
+                counter--;
             }
         }
 
-        return fullyQualifiedName;
+        if (counter > 0) {
+            return attemptName;
+        }
+
+        return defaultName;
     }
 
     private static ICompilationUnit getTestCompilationUnit(IJavaProject javaProject, IClasspathEntry testEntry,
