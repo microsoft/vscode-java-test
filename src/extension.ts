@@ -10,7 +10,7 @@ import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { testSourceProvider } from '../extension.bundle';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer, runTestsFromJavaProjectExplorer } from './commands/explorerCommands';
-import { generateTests, registerSelectTestFrameworkCommand } from './commands/generationCommands';
+import { generateTests, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
 import { executeTestsFromUri } from './commands/runFromUri';
@@ -66,7 +66,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 await testSourceProvider.initialize();
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
                 await testCodeLensController.registerCodeLensProvider();
-                await registerTestCodeActionProvider();
             }));
         }
 
@@ -82,7 +81,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                     await testSourceProvider.initialize();
                     await testFileWatcher.registerListeners();
                     await testCodeLensController.registerCodeLensProvider();
-                    await registerTestCodeActionProvider();
                 }
                 serverMode = mode;
             }));
@@ -94,7 +92,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 await testSourceProvider.initialize();
                 await testFileWatcher.registerListeners(true /*enableDebounce*/);
                 await testCodeLensController.registerCodeLensProvider();
-                await registerTestCodeActionProvider();
             }));
         }
 
@@ -113,7 +110,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     const testTreeView: TreeView<ITestItem> = window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true });
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context, javaLanguageSupportVersion);
-    registerSelectTestFrameworkCommand(context);
+    registerAskForChoiceCommand(context);
+    registerAskForInputCommand(context);
 
     context.subscriptions.push(
         testExplorer,

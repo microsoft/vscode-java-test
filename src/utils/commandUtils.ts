@@ -42,8 +42,8 @@ export async function resolveStackTraceLocation(trace: string, projectNames: str
         JavaLanguageServerCommands.RESOLVE_STACKTRACE_LOCATION, trace, projectNames) || '';
 }
 
-export async function generateTests(uri: Uri, startPosition: number): Promise<any> {
-    return await executeJavaLanguageServerCommand<any>(JavaTestRunnerDelegateCommands.GENERATE_TESTS, uri.toString(), startPosition);
+export async function generateTests(uri: Uri, cursorOffset: number): Promise<any> {
+    return await executeJavaLanguageServerCommand<any>(JavaTestRunnerDelegateCommands.GENERATE_TESTS, uri.toString(), cursorOffset);
 }
 
 export async function resolveJUnitLaunchArguments(uri: string, fullName: string, testName: string, project: string,
