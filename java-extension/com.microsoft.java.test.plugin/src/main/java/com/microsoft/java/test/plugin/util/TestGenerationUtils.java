@@ -187,6 +187,11 @@ public class TestGenerationUtils {
         }
 
         final IClasspathEntry testEntry = getTestClasspathEntry(unit);
+        if (testEntry == null) {
+            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                    "Cannot find a valid classpath entry to generate tests.");
+            return null;
+        }
         final String testFullyQualifiedName = getTestFullyQualifiedName(typeBinding, javaProject, testEntry);
         if (testFullyQualifiedName == null) {
             return null;
@@ -299,14 +304,16 @@ public class TestGenerationUtils {
                 .append(packageFragment.getElementName())
                 .append(";")
                 .append(lineDelimiter)
-                .append(lineDelimiter)
-                .append("import ")
-                .append(getTestAnnotation(testKind))
-                .append(";")
-                .append(lineDelimiter)
                 .append(lineDelimiter);
         }
-        buf.append(typeContent);
+
+        buf.append("import ")
+            .append(getTestAnnotation(testKind))
+            .append(";")
+            .append(lineDelimiter)
+            .append(lineDelimiter)
+            .append(typeContent);
+
         return buf.toString();
     }
 
@@ -341,9 +348,9 @@ public class TestGenerationUtils {
         final IJavaProject javaProject = unit.getJavaProject();
         // In most cases, this is the classpath entry used for testing, we first find the target entry by hard-code
         // to avoid go into the generated entries.
-        final IClasspathEntry testEntry = javaProject.getClasspathEntryFor(
+        IClasspathEntry testEntry = javaProject.getClasspathEntryFor(
             javaProject.getPath().append("src/test/java"));
-        if (ProjectTestUtils.isTestEntry(testEntry)) {
+        if (testEntry != null && ProjectTestUtils.isTestEntry(testEntry)) {
             return testEntry;
         }
 
@@ -352,9 +359,13 @@ public class TestGenerationUtils {
             if (ProjectTestUtils.isTestEntry(entry)) {
                 return entry;
             }
-        }
 
-        return entries[0];
+            if (entry.getPath().isPrefixOf(unit.getPath())) {
+                testEntry = entry;
+            }
+        }
+        
+        return testEntry;
     }
 
     private static String getTestFullyQualifiedName(ITypeBinding typeBinding, IJavaProject project,
@@ -414,7 +425,8 @@ public class TestGenerationUtils {
     private static ICompilationUnit getTestCompilationUnit(IJavaProject javaProject, IClasspathEntry testEntry,
             String testFullyQualifiedName) throws JavaModelException {
         final IPackageFragmentRoot packageRoot = javaProject.findPackageFragmentRoot(testEntry.getPath());
-        final String packageQualifiedName = testFullyQualifiedName.substring(0,
+        final int lastDelimiterIndex = testFullyQualifiedName.lastIndexOf(".");
+        final String packageQualifiedName = lastDelimiterIndex < 0 ? "" : testFullyQualifiedName.substring(0,
                 testFullyQualifiedName.lastIndexOf("."));
         final IPackageFragment packageFragment = packageRoot.getPackageFragment(packageQualifiedName);
         final String compilationUnitName = testFullyQualifiedName.substring(
