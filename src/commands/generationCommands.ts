@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, ExtensionContext, QuickPickItem, TextEdit, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { commands, Disposable, ExtensionContext, QuickInputButton, QuickPick, QuickPickItem, TextEdit, ThemeIcon, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 import * as protocolConverter from 'vscode-languageclient/lib/protocolConverter';
 import * as commandUtils from '../utils/commandUtils';
 
@@ -21,17 +21,10 @@ export async function generateTests(uri: Uri, cursorOffset: number): Promise<voi
 
 export async function registerAskForChoiceCommand(context: ExtensionContext): Promise<void> {
     context.subscriptions.push(commands.registerCommand('_java.test.askClientForChoice', async (placeHolder: string, choices: IOption[], canPickMany: boolean) => {
-        const options: IOption[] = [];
-        for (const c of choices) {
-            options.push({
-                label: c.label,
-                description: c.description,
-                value: c.value,
-            });
-        }
-        const ans: any = await window.showQuickPick(options, {
+        const ans: any = await window.showQuickPick(choices, {
             placeHolder,
             canPickMany,
+            ignoreFocusOut: true,
         });
 
         if (!ans) {
@@ -42,6 +35,68 @@ export async function registerAskForChoiceCommand(context: ExtensionContext): Pr
 
         return ans.value || ans.label;
     }));
+}
+
+export async function registerAdvanceAskForChoice(context: ExtensionContext): Promise<void> {
+    context.subscriptions.push(commands.registerCommand('_java.test.advancedAskClientForChoice', async (placeHolder: string, choices: IOption[], advancedAction: string, canPickMany: boolean) => {
+        let result: string[] | undefined;
+        const disposables: Disposable[] = [];
+        try {
+            result = await new Promise<string[] | undefined>((resolve: (value: string[] | undefined) => void) => {
+                const quickPick: QuickPick<IOption> = window.createQuickPick<IOption>();
+                // if all the items are advanced item, show them directly
+                let showAdvancedItem: boolean = choices.filter((c: IOption) => {
+                    return !c.isAdvance;
+                }).length === 0;
+                quickPick.title = placeHolder;
+                quickPick.placeholder = placeHolder;
+                quickPick.items = filterOptions(showAdvancedItem, choices);
+                quickPick.buttons = getActionButtons(showAdvancedItem, advancedAction);
+                quickPick.canSelectMany = canPickMany;
+                quickPick.ignoreFocusOut = true;
+                disposables.push(quickPick.onDidTriggerButton((btn: QuickInputButton) => {
+                    if (btn.tooltip?.endsWith(advancedAction)) { //'inherit methods'
+                        showAdvancedItem = !showAdvancedItem;
+                        quickPick.items = filterOptions(showAdvancedItem, choices);
+                        quickPick.buttons = getActionButtons(showAdvancedItem, advancedAction);
+                    }
+                }));
+                disposables.push(quickPick.onDidHide(() => {
+                    return resolve(undefined);
+                }));
+                disposables.push(quickPick.onDidAccept(() => {
+                    return resolve(quickPick.selectedItems.map((o: IOption) => o.value));
+                }));
+                disposables.push(quickPick);
+                quickPick.show();
+            });
+        } finally {
+            for (const d of disposables) {
+                d.dispose();
+            }
+        }
+        return result;
+    }));
+
+    function filterOptions(showAdvancedItem: boolean, choices: IOption[]): IOption[] {
+        return choices.filter((c: IOption) => {
+            return !c.isAdvance || showAdvancedItem && c.isAdvance;
+        });
+    }
+
+    function getActionButtons(showAdvancedItem: boolean, advancedAction: string): QuickInputButton[] {
+        if (showAdvancedItem) {
+            return [{
+                iconPath: new ThemeIcon('collapse-all'),
+                tooltip: `Hide ${advancedAction}`,
+            }];
+        }
+
+        return [{
+            iconPath: new ThemeIcon('expand-all'),
+            tooltip: `Show ${advancedAction}`,
+        }];
+    }
 }
 
 /**
@@ -102,4 +157,5 @@ export function isJavaIdentifier(identifier: string): boolean {
 
 interface IOption extends QuickPickItem {
     value: string;
+    isAdvance?: boolean;
 }

@@ -71,6 +71,7 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -197,7 +198,7 @@ public class TestGenerationUtils {
             return null;
         }
         final List<String> methodsToTest = getMethodsToTest(typeBinding);
-        if (methodsToTest == null || methodsToTest.size() == 0) {
+        if (methodsToTest == null) {
             return null;
         }
 
@@ -289,13 +290,13 @@ public class TestGenerationUtils {
             List<String> methods, TestKind testKind) throws CoreException {
         final String delimiter = StubUtility.getLineDelimiterUsed(testUnit);
         final String typeStub = constructTypeStub(testUnit, methods, testKind, delimiter);
-        final String cuContent = constructCUContent(testUnit, testKind, typeStub, delimiter);
+        final String cuContent = constructCUContent(testUnit, methods.size() > 0, testKind, typeStub, delimiter);
         final String formattedCuStub = CodeFormatterUtil.format(
                 CodeFormatter.K_COMPILATION_UNIT, cuContent, 0, delimiter, testUnit.getJavaProject().getOptions(true));
         return formattedCuStub;
     }
 
-    private static String constructCUContent(ICompilationUnit testUnit, TestKind testKind, 
+    private static String constructCUContent(ICompilationUnit testUnit, boolean hasMethods, TestKind testKind, 
             String typeContent, String lineDelimiter) throws CoreException {
         final IPackageFragment packageFragment = (IPackageFragment) testUnit.getParent();
         final StringBuilder buf = new StringBuilder();
@@ -307,12 +308,15 @@ public class TestGenerationUtils {
                 .append(lineDelimiter);
         }
 
-        buf.append("import ")
-            .append(getTestAnnotation(testKind))
-            .append(";")
-            .append(lineDelimiter)
-            .append(lineDelimiter)
-            .append(typeContent);
+        if (hasMethods) {
+            buf.append("import ")
+                .append(getTestAnnotation(testKind))
+                .append(";")
+                .append(lineDelimiter)
+                .append(lineDelimiter);
+        }
+
+        buf.append(typeContent);
 
         return buf.toString();
     }
@@ -436,8 +440,8 @@ public class TestGenerationUtils {
     }
 
     private static List<String> getMethodsToTest(ITypeBinding typeBinding) {
-        // TODO: list all the accessible methods via advanced option button
         final List<IMethodBinding> allMethods = new LinkedList<>();
+        final List<Option> options = new LinkedList<>();
         final IMethodBinding[] typeMethods = typeBinding.getDeclaredMethods();
         for (final IMethodBinding method : typeMethods) {
             final int modifiers = method.getModifiers();
@@ -445,23 +449,58 @@ public class TestGenerationUtils {
                 allMethods.add(method);
             }
         }
-
-        final List<Option> methodNames = allMethods.stream()
+        options.addAll(allMethods.stream()
             .map(method -> {
                 final String returnValue = method.getReturnType().getName();
                 final ITypeBinding[] paramTypes = method.getParameterTypes();
                 final String params = String.join(", ",
                         Arrays.stream(paramTypes).map(t -> t.getName()).toArray(String[]::new));
-
-                return new Option(method.getName(), method.getName() + "(" + params + ")", ": " + returnValue);
+                return new Option(method.getName(), method.getName() + "(" + params + ")", ": " + returnValue, false);
             })
             .sorted((methodA, methodB) -> {
                 return methodA.label.compareTo(methodB.label);
             })
-            .collect(Collectors.toList());
+            .collect(Collectors.toList())
+        );
 
+        ITypeBinding superClass = typeBinding.getSuperclass();
+        while (superClass != null && !"java.lang.Object".equals(superClass.getBinaryName())) {
+            // iterate the declared methods and add them into the option list in each loop,
+            // this is to make sure methods from each super class will be grouped together
+            allMethods.clear();
+            for (final IMethodBinding method: superClass.getDeclaredMethods()) {
+                if (!method.isConstructor() && !method.isSynthetic() && isAccessible(method, typeBinding)) {
+                    allMethods.add(method);
+                }
+            }
+            options.addAll(allMethods.stream()
+                .map(method -> {
+                    final String returnValue = method.getReturnType().getName();
+                    final ITypeBinding[] paramTypes = method.getParameterTypes();
+                    final String params = String.join(", ",
+                            Arrays.stream(paramTypes).map(t -> t.getName()).toArray(String[]::new));
+                    final String description = ": " + returnValue + " (" + method.getDeclaringClass().getName() + ")";
+                    return new Option(method.getName(), method.getName() + "(" + params + ")", description, true);
+                })
+                .sorted((methodA, methodB) -> {
+                    return methodA.label.compareTo(methodB.label);
+                })
+                .collect(Collectors.toList())
+            );
+            superClass = superClass.getSuperclass();
+        }
+
+        if (options.size() == 0) {
+            return Collections.emptyList();
+        }
+
+        final boolean hasInheritMethods = options.stream().anyMatch(o -> o.isAdvance);
+        if (hasInheritMethods) {
+            return (List<String>) JUnitPlugin.advancedAskClientForChoice("Select the methods to test",
+                    options, "inherit methods", true /*pickMany*/);
+        }
         return (List<String>) JUnitPlugin.askClientForChoice("Select the methods to test",
-                methodNames, true /*pickMany*/);
+                options, true /*pickMany*/);
     }
 
     private static String getTestMethodName(String methodName) {
