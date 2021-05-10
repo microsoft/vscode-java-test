@@ -46,7 +46,7 @@ export async function registerAdvanceAskForChoice(context: ExtensionContext): Pr
                 const quickPick: QuickPick<IOption> = window.createQuickPick<IOption>();
                 // if all the items are advanced item, show them directly
                 let showAdvancedItem: boolean = choices.filter((c: IOption) => {
-                    return !c.isAdvance;
+                    return !c.isAdvanced;
                 }).length === 0;
                 quickPick.title = placeHolder;
                 quickPick.placeholder = placeHolder;
@@ -80,7 +80,7 @@ export async function registerAdvanceAskForChoice(context: ExtensionContext): Pr
 
     function filterOptions(showAdvancedItem: boolean, choices: IOption[]): IOption[] {
         return choices.filter((c: IOption) => {
-            return !c.isAdvance || showAdvancedItem && c.isAdvance;
+            return !c.isAdvanced || showAdvancedItem && c.isAdvanced;
         });
     }
 
@@ -157,5 +157,5 @@ export function isJavaIdentifier(identifier: string): boolean {
 
 interface IOption extends QuickPickItem {
     value: string;
-    isAdvance?: boolean;
+    isAdvanced?: boolean;
 }

@@ -494,7 +494,7 @@ public class TestGenerationUtils {
             return Collections.emptyList();
         }
 
-        final boolean hasInheritMethods = options.stream().anyMatch(o -> o.isAdvance);
+        final boolean hasInheritMethods = options.stream().anyMatch(o -> o.isAdvanced);
         if (hasInheritMethods) {
             return (List<String>) JUnitPlugin.advancedAskClientForChoice("Select the methods to test",
                     options, "inherit methods", true /*pickMany*/);
