@@ -55,7 +55,7 @@ export async function registerAdvanceAskForChoice(context: ExtensionContext): Pr
                 quickPick.canSelectMany = canPickMany;
                 quickPick.ignoreFocusOut = true;
                 disposables.push(quickPick.onDidTriggerButton((btn: QuickInputButton) => {
-                    if (btn.tooltip?.endsWith(advancedAction)) { //'inherit methods'
+                    if (btn.tooltip?.endsWith(advancedAction)) {
                         showAdvancedItem = !showAdvancedItem;
                         quickPick.items = filterOptions(showAdvancedItem, choices);
                         quickPick.buttons = getActionButtons(showAdvancedItem, advancedAction);
