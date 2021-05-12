@@ -32,7 +32,7 @@
       "description": "Extension may require your trust on workspace for code execution."
     },
     "capabilities": {
-      "virtualWorkspaces": false
+        "virtualWorkspaces": false
     },
     "activationEvents": [
         "onLanguage:java",
