@@ -31,6 +31,9 @@
       "request": "onDemand",
       "description": "Extension may require your trust on workspace for code execution."
     },
+    "capabilities": {
+        "virtualWorkspaces": false
+    },
     "activationEvents": [
         "onLanguage:java",
         "workspaceContains:pom.xml",
