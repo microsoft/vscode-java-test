@@ -401,9 +401,14 @@ public class TestGenerationUtils {
             IClasspathEntry testEntry) throws JavaModelException {
         final String defaultName = typeBinding.getBinaryName() + "Test";
         final String attemptName = typeBinding.getBinaryName() + "Tests";
-        final ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
+        ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
         if (testCompilationUnit.exists()) {
             return attemptName;
+        }
+
+        testCompilationUnit = getTestCompilationUnit(project, testEntry, defaultName);
+        if (testCompilationUnit.exists()) {
+            return defaultName;
         }
 
         // check the majority naming under the package and use it as the default type name
