@@ -10,7 +10,7 @@ import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { testSourceProvider } from '../extension.bundle';
 import { testCodeLensController } from './codelens/TestCodeLensController';
 import { debugTestsFromExplorer, openTextDocument, runTestsFromExplorer, runTestsFromJavaProjectExplorer } from './commands/explorerCommands';
-import { generateTests, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
+import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
 import { openLogFile, showOutputChannel } from './commands/logCommands';
 import { runFromCodeLens } from './commands/runFromCodeLens';
 import { executeTestsFromUri } from './commands/runFromUri';
@@ -111,6 +111,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     runnerScheduler.initialize(context);
     testReportProvider.initialize(context, javaLanguageSupportVersion);
     registerAskForChoiceCommand(context);
+    registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
 
     context.subscriptions.push(

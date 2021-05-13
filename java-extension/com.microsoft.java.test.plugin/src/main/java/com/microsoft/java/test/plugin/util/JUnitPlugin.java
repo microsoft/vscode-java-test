@@ -35,6 +35,11 @@ public class JUnitPlugin implements BundleActivator {
      * Client registered command to handle the server-side request to ask user for a choice
      */
     private static final String JAVA_TEST_ASK_CLIENT_FOR_CHOICE = "_java.test.askClientForChoice";
+
+    /**
+     * Client registered command to handle the server-side request to ask user for a choice in advanced mode
+     */
+    private static final String JAVA_TEST_ADVANCED_ASK_CLIENT_FOR_CHOICE = "_java.test.advancedAskClientForChoice";
     public static final String PLUGIN_ID = "java.test.runner";
     private static ClasspathUpdateHandler handler = new ClasspathUpdateHandler();
     private static BundleContext context;
@@ -96,6 +101,13 @@ public class JUnitPlugin implements BundleActivator {
     public static Object askClientForChoice(String placeHolder, List<Option> choices, boolean canPickMany) {
         return JavaLanguageServerPlugin.getInstance().getClientConnection()
                     .executeClientCommand(JAVA_TEST_ASK_CLIENT_FOR_CHOICE, placeHolder, choices, canPickMany);
+    }
+
+    public static Object advancedAskClientForChoice(String placeHolder, List<Option> choices, String advancedAction,
+            boolean canPickMany) {
+        return JavaLanguageServerPlugin.getInstance().getClientConnection()
+                .executeClientCommand(JAVA_TEST_ADVANCED_ASK_CLIENT_FOR_CHOICE, placeHolder, choices,
+                advancedAction, canPickMany);
     }
 
     public static Object askClientForInput(String prompt, String defaultValue) {

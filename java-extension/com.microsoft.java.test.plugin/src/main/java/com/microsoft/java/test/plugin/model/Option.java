@@ -15,6 +15,7 @@ public class Option {
     public String value;
     public String label;
     public String description;
+    public boolean isAdvanced;
 
     public Option(String label) {
         this.label = label;
@@ -24,5 +25,10 @@ public class Option {
         this.value = value;
         this.label = label;
         this.description = description;
+    }
+
+    public Option(String value, String label, String description, boolean isAdvanced) {
+        this(value, label, description);
+        this.isAdvanced = isAdvanced;
     }
 }
