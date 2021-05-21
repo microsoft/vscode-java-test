@@ -4,6 +4,10 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.30.0
+### Added
+- Support new Source Action: `Generate Tests...` in source files to help scaffold the tests. [#1172](https://github.com/microsoft/vscode-java-test/issues/1172)
+
 ## 0.29.0
 ### Added
 - Support new Source Action: `Generate Tests...` in the test source files. [#1172](https://github.com/microsoft/vscode-java-test/issues/1172)
