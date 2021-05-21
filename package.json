@@ -27,12 +27,11 @@
     "categories": [
         "Other"
     ],
-    "workspaceTrust": {
-      "request": "onDemand",
-      "description": "Extension may require your trust on workspace for code execution."
-    },
     "capabilities": {
-        "virtualWorkspaces": false
+        "virtualWorkspaces": false,
+        "untrustedWorkspaces": {
+            "supported": false
+        }
     },
     "activationEvents": [
         "onLanguage:java",
