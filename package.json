@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.29.0",
+    "version": "0.30.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -27,12 +27,11 @@
     "categories": [
         "Other"
     ],
-    "workspaceTrust": {
-      "request": "onDemand",
-      "description": "Extension may require your trust on workspace for code execution."
-    },
     "capabilities": {
-        "virtualWorkspaces": false
+        "virtualWorkspaces": false,
+        "untrustedWorkspaces": {
+            "supported": false
+        }
     },
     "activationEvents": [
         "onLanguage:java",
@@ -50,7 +49,7 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.29.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.30.0.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1200.v20200214-0716.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.900.v20200513-0617.jar",
             "./server/org.junit.jupiter.api_5.6.0.v20200203-2009.jar",
