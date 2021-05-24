@@ -126,7 +126,7 @@ public class TestGenerationUtils {
         ASTNode coveringNode = nodeFinder.getCoveringNode();
 
         while (coveringNode != null) {
-            if (coveringNode instanceof TypeDeclaration) {
+            if (coveringNode instanceof AbstractTypeDeclaration) {
                 break;
             }
             coveringNode = coveringNode.getParent();
@@ -139,20 +139,20 @@ public class TestGenerationUtils {
             coveringNode = root.findDeclaringNode(primaryType.getKey());
         }
 
-        if (!(coveringNode instanceof TypeDeclaration)) {
+        if (!(coveringNode instanceof AbstractTypeDeclaration)) {
             JUnitPlugin.logError("Failed to find type declaration from " + unit.getElementName());
             return null;
         }
 
-        final ITypeBinding binding = ((TypeDeclaration) coveringNode).resolveBinding();
+        final ITypeBinding binding = ((AbstractTypeDeclaration) coveringNode).resolveBinding();
         if (binding == null) {
             JUnitPlugin.logError("Failed to resolve type binding from " + unit.getElementName());
             return null;
         }
 
-        if (!binding.isClass()) {
+        if (!(binding.isClass() || binding.isInterface() || binding.isRecord())) {
             JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
-                    "Cannot generate tests if it's not a Java class.");
+                    "Cannot generate tests if it's not a Java class/interface/record.");
             return null;
         }
 
