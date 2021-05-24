@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
 import org.eclipse.jdt.ls.core.internal.ChangeUtil;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.CodeGenerationUtils;
 import org.eclipse.jdt.ls.core.internal.text.correction.SourceAssistProcessor;
 import org.eclipse.lsp4j.MessageType;
@@ -180,14 +181,17 @@ public class TestGenerationUtils {
      */
     private static WorkspaceEdit generateTestsFromSource(ICompilationUnit unit, ITypeBinding typeBinding,
             int cursorOffset) throws CoreException {
-        final IJavaProject javaProject = unit.getJavaProject();
+        final IJavaProject javaProject = determineTestProject(unit);
+        if (javaProject == null) {
+            return null;
+        }
         final List<TestKind> testFrameworksInProject = TestKindProvider.getTestKindsFromCache(javaProject);
         final TestKind testKind = determineTestFramework(new HashSet<>(testFrameworksInProject));
         if (testKind == null) {
             return null;
         }
 
-        final IClasspathEntry testEntry = getTestClasspathEntry(unit);
+        final IClasspathEntry testEntry = getTestClasspathEntry(javaProject, unit);
         if (testEntry == null) {
             JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
                     "Cannot find a valid classpath entry to generate tests.");
@@ -352,8 +356,8 @@ public class TestGenerationUtils {
                 lineDelimiter, testUnit.getJavaProject().getOptions(true));
     }
 
-    private static IClasspathEntry getTestClasspathEntry(ICompilationUnit unit) throws JavaModelException {
-        final IJavaProject javaProject = unit.getJavaProject();
+    private static IClasspathEntry getTestClasspathEntry(IJavaProject javaProject, ICompilationUnit unit)
+            throws JavaModelException {
         // In most cases, this is the classpath entry used for testing, we first find the target entry by hard-code
         // to avoid go into the generated entries.
         IClasspathEntry testEntry = javaProject.getClasspathEntryFor(
@@ -561,6 +565,38 @@ public class TestGenerationUtils {
         methodList.add(0, new Option("Test", "@Test", "Test Method"));
         return (List<String>) JUnitPlugin.askClientForChoice("Select methods to generate",
                 methodList, true /*pickMany*/);
+    }
+
+    private static IJavaProject determineTestProject(ICompilationUnit unit) {
+        final IJavaProject javaProject = unit.getJavaProject();
+        if (TestKindProvider.getTestKindsFromCache(javaProject).size() > 0) {
+            return javaProject;
+        }
+
+        final IJavaProject[] javaProjects = ProjectUtils.getJavaProjects();
+        final List<Option> javaTestProjects = new LinkedList<>();
+        for (final IJavaProject project : javaProjects) {
+            if (project.equals(JavaLanguageServerPlugin.getProjectsManager().getDefaultProject())) {
+                continue;
+            }
+            if (TestKindProvider.getTestKindsFromCache(project).size() > 0) {
+                javaTestProjects.add(new Option(project.getHandleIdentifier(), project.getElementName(),
+                    project.getProject().getLocation().toOSString()));
+            }
+        }
+
+        if (javaTestProjects.size() == 0) {
+            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                    "The projects in the workspace do not have a test framework," +
+                    " please make sure they are configured correctly.");
+            return null;
+        }
+        final Object result = JUnitPlugin.askClientForChoice("Select a project where tests are generated in",
+                javaTestProjects);
+        if (result == null) {
+            return null;
+        }
+        return (IJavaProject) JavaCore.create((String) result);
     }
 
     private static TestKind determineTestFramework(Set<TestKind> availableFrameworks) throws CoreException {
