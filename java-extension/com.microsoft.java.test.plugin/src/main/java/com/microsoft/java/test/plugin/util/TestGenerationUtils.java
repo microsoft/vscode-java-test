@@ -150,9 +150,9 @@ public class TestGenerationUtils {
             return null;
         }
 
-        if (!(binding.isClass() || binding.isInterface() || binding.isRecord())) {
+        if (!(binding.isClass() || binding.isInterface() || binding.isRecord() || binding.isEnum())) {
             JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
-                    "Cannot generate tests if it's not a Java class/interface/record.");
+                    "Cannot generate tests if it's not a Java class/interface/record/enum.");
             return null;
         }
 
