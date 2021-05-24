@@ -401,31 +401,35 @@ public class TestGenerationUtils {
             IClasspathEntry testEntry) throws JavaModelException {
         final String defaultName = typeBinding.getBinaryName() + "Test";
         final String attemptName = typeBinding.getBinaryName() + "Tests";
-        ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
-        if (testCompilationUnit.exists()) {
-            return attemptName;
-        }
-
-        testCompilationUnit = getTestCompilationUnit(project, testEntry, defaultName);
-        if (testCompilationUnit.exists()) {
-            return defaultName;
-        }
-
-        // check the majority naming under the package and use it as the default type name
-        final IPackageFragment packageFragment = (IPackageFragment) testCompilationUnit.getParent();
-        int counter = 0;
-        final ICompilationUnit[] compilationUnits = packageFragment.getCompilationUnits();
-        for (final ICompilationUnit unit : compilationUnits) {
-            final String name = unit.getElementName();
-            if (name.endsWith("Tests.java")) {
-                counter++;
-            } else if (name.endsWith("Test.java")) {
-                counter--;
+        try {
+            ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
+            if (testCompilationUnit.exists()) {
+                return attemptName;
             }
-        }
 
-        if (counter > 0) {
-            return attemptName;
+            testCompilationUnit = getTestCompilationUnit(project, testEntry, defaultName);
+            if (testCompilationUnit.exists()) {
+                return defaultName;
+            }
+
+            // check the majority naming under the package and use it as the default type name
+            final IPackageFragment packageFragment = (IPackageFragment) testCompilationUnit.getParent();
+            int counter = 0;
+            final ICompilationUnit[] compilationUnits = packageFragment.getCompilationUnits();
+            for (final ICompilationUnit unit : compilationUnits) {
+                final String name = unit.getElementName();
+                if (name.endsWith("Tests.java")) {
+                    counter++;
+                } else if (name.endsWith("Test.java")) {
+                    counter--;
+                }
+            }
+    
+            if (counter > 0) {
+                return attemptName;
+            }
+        } catch (JavaModelException e) {
+            // ignore exception, for example: when packageFragment does not exist
         }
 
         return defaultName;
