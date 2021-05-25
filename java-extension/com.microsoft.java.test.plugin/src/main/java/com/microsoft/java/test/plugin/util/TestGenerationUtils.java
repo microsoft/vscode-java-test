@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
 import org.eclipse.jdt.ls.core.internal.ChangeUtil;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.CodeGenerationUtils;
 import org.eclipse.jdt.ls.core.internal.text.correction.SourceAssistProcessor;
 import org.eclipse.lsp4j.MessageType;
@@ -180,14 +181,17 @@ public class TestGenerationUtils {
      */
     private static WorkspaceEdit generateTestsFromSource(ICompilationUnit unit, ITypeBinding typeBinding,
             int cursorOffset) throws CoreException {
-        final IJavaProject javaProject = unit.getJavaProject();
+        final IJavaProject javaProject = determineTestProject(unit);
+        if (javaProject == null) {
+            return null;
+        }
         final List<TestKind> testFrameworksInProject = TestKindProvider.getTestKindsFromCache(javaProject);
         final TestKind testKind = determineTestFramework(new HashSet<>(testFrameworksInProject));
         if (testKind == null) {
             return null;
         }
 
-        final IClasspathEntry testEntry = getTestClasspathEntry(unit);
+        final IClasspathEntry testEntry = getTestClasspathEntry(javaProject, unit);
         if (testEntry == null) {
             JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
                     "Cannot find a valid classpath entry to generate tests.");
@@ -282,7 +286,8 @@ public class TestGenerationUtils {
             return new MethodMetaData(methodName, testAnnotation);
         }).collect(Collectors.toList());
 
-        final TextEdit edit = getTextEdit(kind, metadata, testRoot, typeNode, typeBinding, insertPosition);
+        final TextEdit edit = getTextEdit(kind, metadata, testRoot, typeNode, typeBinding, insertPosition,
+                false /*fromTest*/);
         return SourceAssistProcessor.convertToWorkspaceEdit((ICompilationUnit) testRoot.getJavaElement(), edit);
     }
 
@@ -352,8 +357,8 @@ public class TestGenerationUtils {
                 lineDelimiter, testUnit.getJavaProject().getOptions(true));
     }
 
-    private static IClasspathEntry getTestClasspathEntry(ICompilationUnit unit) throws JavaModelException {
-        final IJavaProject javaProject = unit.getJavaProject();
+    private static IClasspathEntry getTestClasspathEntry(IJavaProject javaProject, ICompilationUnit unit)
+            throws JavaModelException {
         // In most cases, this is the classpath entry used for testing, we first find the target entry by hard-code
         // to avoid go into the generated entries.
         IClasspathEntry testEntry = javaProject.getClasspathEntryFor(
@@ -563,6 +568,37 @@ public class TestGenerationUtils {
                 methodList, true /*pickMany*/);
     }
 
+    private static IJavaProject determineTestProject(ICompilationUnit unit) {
+        final IJavaProject javaProject = unit.getJavaProject();
+        if (TestKindProvider.getTestKindsFromCache(javaProject).size() > 0) {
+            return javaProject;
+        }
+
+        final IJavaProject[] javaProjects = ProjectUtils.getJavaProjects();
+        final List<Option> javaTestProjects = new LinkedList<>();
+        for (final IJavaProject project : javaProjects) {
+            if (project.equals(JavaLanguageServerPlugin.getProjectsManager().getDefaultProject())) {
+                continue;
+            }
+            if (TestKindProvider.getTestKindsFromCache(project).size() > 0) {
+                javaTestProjects.add(new Option(project.getHandleIdentifier(), project.getElementName(),
+                    project.getProject().getLocation().toOSString()));
+            }
+        }
+
+        if (javaTestProjects.size() == 0) {
+            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
+                "No test library found in your workspace, please add a test library to your project classpath first.");
+            return null;
+        }
+        final Object result = JUnitPlugin.askClientForChoice("Select a project where tests are generated in",
+                javaTestProjects);
+        if (result == null) {
+            return null;
+        }
+        return (IJavaProject) JavaCore.create((String) result);
+    }
+
     private static TestKind determineTestFramework(Set<TestKind> availableFrameworks) throws CoreException {
         if (availableFrameworks.size() == 0) {
             JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
@@ -619,11 +655,11 @@ public class TestGenerationUtils {
             return new MethodMetaData(methodName, prefix + annotationName);
         }).collect(Collectors.toList());
 
-        return getTextEdit(kind, metadata, root, typeNode, typeBinding, insertPosition);
+        return getTextEdit(kind, metadata, root, typeNode, typeBinding, insertPosition, true /*fromTest*/);
     }
 
     private static TextEdit getTextEdit(TestKind kind, List<MethodMetaData> methodMetadata, CompilationUnit root,
-            TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
+            TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition, boolean fromTest)
             throws CoreException {
         final ASTRewrite astRewrite = ASTRewrite.create(root.getAST());
         final ImportRewrite importRewrite = StubUtility.createImportRewrite(root, true);
@@ -667,7 +703,10 @@ public class TestGenerationUtils {
             }
 
             final ASTNode insertion = StubUtility2Core.getNodeToInsertBefore(listRewrite, insertPosition);
-            if (insertion != null) {
+            // Only try to insert according to the cursor position when it's triggered from test file,
+            // If it's triggered from source file, since code snippets will be generated into a new file,
+            // they will always insert to the last.
+            if (insertion != null && fromTest) {
                 listRewrite.insertBefore(decl, insertion, null);
             } else {
                 listRewrite.insertLast(decl, null);
