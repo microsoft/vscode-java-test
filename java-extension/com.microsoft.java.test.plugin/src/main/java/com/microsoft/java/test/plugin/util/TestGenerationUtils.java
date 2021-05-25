@@ -286,7 +286,8 @@ public class TestGenerationUtils {
             return new MethodMetaData(methodName, testAnnotation);
         }).collect(Collectors.toList());
 
-        final TextEdit edit = getTextEdit(kind, metadata, testRoot, typeNode, typeBinding, insertPosition);
+        final TextEdit edit = getTextEdit(kind, metadata, testRoot, typeNode, typeBinding, insertPosition,
+                false /*fromTest*/);
         return SourceAssistProcessor.convertToWorkspaceEdit((ICompilationUnit) testRoot.getJavaElement(), edit);
     }
 
@@ -587,8 +588,7 @@ public class TestGenerationUtils {
 
         if (javaTestProjects.size() == 0) {
             JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
-                    "The projects in the workspace do not have a test framework," +
-                    " please make sure they are configured correctly.");
+                "No test library found in your workspace, please add a test library to your project classpath first.");
             return null;
         }
         final Object result = JUnitPlugin.askClientForChoice("Select a project where tests are generated in",
@@ -655,11 +655,11 @@ public class TestGenerationUtils {
             return new MethodMetaData(methodName, prefix + annotationName);
         }).collect(Collectors.toList());
 
-        return getTextEdit(kind, metadata, root, typeNode, typeBinding, insertPosition);
+        return getTextEdit(kind, metadata, root, typeNode, typeBinding, insertPosition, true /*fromTest*/);
     }
 
     private static TextEdit getTextEdit(TestKind kind, List<MethodMetaData> methodMetadata, CompilationUnit root,
-            TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
+            TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition, boolean fromTest)
             throws CoreException {
         final ASTRewrite astRewrite = ASTRewrite.create(root.getAST());
         final ImportRewrite importRewrite = StubUtility.createImportRewrite(root, true);
@@ -703,7 +703,10 @@ public class TestGenerationUtils {
             }
 
             final ASTNode insertion = StubUtility2Core.getNodeToInsertBefore(listRewrite, insertPosition);
-            if (insertion != null) {
+            // Only try to insert according to the cursor position when it's triggered from test file,
+            // If it's triggered from source file, since code snippets will be generated into a new file,
+            // they will always insert to the last.
+            if (insertion != null && fromTest) {
                 listRewrite.insertBefore(decl, insertion, null);
             } else {
                 listRewrite.insertLast(decl, null);
