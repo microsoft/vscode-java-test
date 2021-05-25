@@ -326,21 +326,25 @@ public class TestGenerationUtils {
         final String typeName = testUnit.getElementName().replace(".java", "");
         final StringBuilder buf = new StringBuilder();
         buf.append("public class ").append(typeName).append(" {").append(lineDelimiter);
+        final Set<String> addedMethods = new HashSet<>();
         for (final String method : methods) {
-            buf.append(constructMethodStub(testUnit, testKind, method, lineDelimiter)).append(lineDelimiter);
+            buf.append(constructMethodStub(testUnit, testKind, addedMethods, method, lineDelimiter))
+                .append(lineDelimiter);
         }
         buf.append("}").append(lineDelimiter);
         return buf.toString();
     }
 
     private static String constructMethodStub(ICompilationUnit testUnit, TestKind testKind,
-            String method, String lineDelimiter) {
+            Set<String> addedMethods, String method, String lineDelimiter) {
         final StringBuilder buf = new StringBuilder();
         buf.append("@Test").append(lineDelimiter);
         if (testKind == TestKind.JUnit) {
             buf.append("public ");
         }
-        final String methodName = getTestMethodName(method);
+        final String methodName = getUniqueMethodName(null, Collections.emptyMap(),
+                addedMethods, getTestMethodName(method), false);
+        addedMethods.add(methodName);
         buf.append("void ").append(methodName).append("() {").append(lineDelimiter).append(lineDelimiter).append("}");
         final String methodContent = buf.toString();
         // TODO: get test unit options directly
@@ -401,31 +405,35 @@ public class TestGenerationUtils {
             IClasspathEntry testEntry) throws JavaModelException {
         final String defaultName = typeBinding.getBinaryName() + "Test";
         final String attemptName = typeBinding.getBinaryName() + "Tests";
-        ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
-        if (testCompilationUnit.exists()) {
-            return attemptName;
-        }
-
-        testCompilationUnit = getTestCompilationUnit(project, testEntry, defaultName);
-        if (testCompilationUnit.exists()) {
-            return defaultName;
-        }
-
-        // check the majority naming under the package and use it as the default type name
-        final IPackageFragment packageFragment = (IPackageFragment) testCompilationUnit.getParent();
-        int counter = 0;
-        final ICompilationUnit[] compilationUnits = packageFragment.getCompilationUnits();
-        for (final ICompilationUnit unit : compilationUnits) {
-            final String name = unit.getElementName();
-            if (name.endsWith("Tests.java")) {
-                counter++;
-            } else if (name.endsWith("Test.java")) {
-                counter--;
+        try {
+            ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
+            if (testCompilationUnit.exists()) {
+                return attemptName;
             }
-        }
 
-        if (counter > 0) {
-            return attemptName;
+            testCompilationUnit = getTestCompilationUnit(project, testEntry, defaultName);
+            if (testCompilationUnit.exists()) {
+                return defaultName;
+            }
+
+            // check the majority naming under the package and use it as the default type name
+            final IPackageFragment packageFragment = (IPackageFragment) testCompilationUnit.getParent();
+            int counter = 0;
+            final ICompilationUnit[] compilationUnits = packageFragment.getCompilationUnits();
+            for (final ICompilationUnit unit : compilationUnits) {
+                final String name = unit.getElementName();
+                if (name.endsWith("Tests.java")) {
+                    counter++;
+                } else if (name.endsWith("Test.java")) {
+                    counter--;
+                }
+            }
+    
+            if (counter > 0) {
+                return attemptName;
+            }
+        } catch (JavaModelException e) {
+            // ignore exception, for example: when packageFragment does not exist
         }
 
         return defaultName;
@@ -616,20 +624,22 @@ public class TestGenerationUtils {
 
     private static TextEdit getTextEdit(TestKind kind, List<MethodMetaData> methodMetadata, CompilationUnit root,
             TypeDeclaration typeNode, ITypeBinding typeBinding, IJavaElement insertPosition)
-            throws JavaModelException, CoreException {
+            throws CoreException {
         final ASTRewrite astRewrite = ASTRewrite.create(root.getAST());
         final ImportRewrite importRewrite = StubUtility.createImportRewrite(root, true);
         final ListRewrite listRewrite = astRewrite.getListRewrite(typeNode,
                 ((AbstractTypeDeclaration) typeNode).getBodyDeclarationsProperty());
         final AST ast = astRewrite.getAST();
         final Map<String, IMethodBinding> methodsMap = getMethodsBindings(typeBinding);
+        final Set<String> addedMethods = new HashSet<>();
         for (final MethodMetaData method : methodMetadata) {
             final MethodDeclaration decl = ast.newMethodDeclaration();
 
             final boolean isStatic = needStaticModifier(kind, method.annotation);
             // set a unique method name according to the annotation type
             final String methodName = getUniqueMethodName(typeBinding.getJavaElement(), methodsMap,
-                    method.methodName, isStatic);
+                    addedMethods, method.methodName, isStatic);
+            addedMethods.add(methodName);
             decl.setName(ast.newSimpleName(methodName));
 
             decl.modifiers().addAll(ASTNodeFactory.newModifiers(ast, getTestMethodModifiers(methodsMap, kind,
@@ -854,40 +864,54 @@ public class TestGenerationUtils {
     }
 
     private static String getUniqueMethodName(IJavaElement type, Map<String, IMethodBinding> methodsMap,
-            String suggestedName, boolean isStatic) throws JavaModelException {
+            Set<String> addedMethods, String suggestedName, boolean isStatic) {
+        IMethod[] methods = null;
         if (type instanceof IType) {
-            final IMethod[] methods = ((IType) type).getMethods();
+            try {
+                methods = ((IType) type).getMethods();
+            } catch (JavaModelException e) {
+                // ignore
+            }
+        }
 
-            int suggestedPostfix = 0;
-            String resultName = suggestedName;
-            while (suggestedPostfix < 1000) {
-                suggestedPostfix++;
-                resultName = suggestedPostfix > 1 ? suggestedName + suggestedPostfix : suggestedName;
-                if (hasMethod(methods, resultName)) {
-                    continue;
-                }
-                final IMethodBinding superMethod = methodsMap.get(resultName);
-                if (superMethod == null) {
-                    return resultName;
-                }
-                if (!"void".equals(superMethod.getReturnType().getName())) {
-                    continue;
-                }
-                final int modifier = superMethod.getModifiers();
-                if (Modifier.isFinal(modifier)) {
-                    continue;
-                }
-                if (Modifier.isStatic(modifier) != isStatic) {
-                    continue;
-                }
+        if (methods == null) {
+            methods = new IMethod[0];
+
+        }
+
+        int suggestedPostfix = 0;
+        String resultName = suggestedName;
+        while (suggestedPostfix < 1000) {
+            suggestedPostfix++;
+            resultName = suggestedPostfix > 1 ? suggestedName + suggestedPostfix : suggestedName;
+            if (hasMethod(methods, addedMethods, resultName)) {
+                continue;
+            }
+            final IMethodBinding superMethod = methodsMap.get(resultName);
+            if (superMethod == null) {
                 return resultName;
             }
+            if (!"void".equals(superMethod.getReturnType().getName())) {
+                continue;
+            }
+            final int modifier = superMethod.getModifiers();
+            if (Modifier.isFinal(modifier)) {
+                continue;
+            }
+            if (Modifier.isStatic(modifier) != isStatic) {
+                continue;
+            }
+            return resultName;
         }
 
         return suggestedName;
     }
 
-    private static boolean hasMethod(IMethod[] methods, String name) {
+    private static boolean hasMethod(IMethod[] methods, Set<String> addedMethods, String name) {
+        if (addedMethods.contains(name)) {
+            return true;
+        }
+
         for (final IMethod method : methods) {
             if (name.equals(method.getElementName())) {
                 return true;
