@@ -512,10 +512,10 @@ public class TestGenerationUtils {
             return Collections.emptyList();
         }
 
-        final boolean hasInheritMethods = options.stream().anyMatch(o -> o.isAdvanced);
-        if (hasInheritMethods) {
+        final boolean hasInheritedMethods = options.stream().anyMatch(o -> o.isAdvanced);
+        if (hasInheritedMethods) {
             return (List<String>) JUnitPlugin.advancedAskClientForChoice("Select the methods to test",
-                    options, "inherit methods", true /*pickMany*/);
+                    options, "inherited methods", true /*pickMany*/);
         }
         return (List<String>) JUnitPlugin.askClientForChoice("Select the methods to test",
                 options, true /*pickMany*/);
