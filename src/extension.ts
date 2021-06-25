@@ -22,7 +22,7 @@ import { initExpService } from './experimentationService';
 import { testExplorer } from './explorer/testExplorer';
 import { logger } from './logger/logger';
 import { ITestItem } from './protocols';
-import { registerTestCodeActionProvider } from './provider/codeActionProvider';
+import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
 import { ITestResult } from './runners/models';
 import { runnerScheduler } from './runners/runnerScheduler';
 import { testFileWatcher } from './testFileWatcher';
@@ -41,6 +41,9 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
 export async function deactivate(): Promise<void> {
     sendInfo('treeViewEventSummary', EventCounter.dict);
+    testFileWatcher.dispose();
+    testCodeLensController.dispose();
+    disposeCodeActionProvider();
     await disposeTelemetryWrapper();
     await runnerScheduler.cleanUp(false /* isCancel */);
 }
@@ -76,13 +79,13 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                     return;
                 }
                 // Only re-initialize the component when its lightweight -> standard
+                serverMode = mode;
                 if (serverMode !== LanguageServerMode.Hybrid) {
                     testExplorer.refresh();
                     await testSourceProvider.initialize();
                     await testFileWatcher.registerListeners();
                     await testCodeLensController.registerCodeLensProvider();
                 }
-                serverMode = mode;
             }));
         }
 
@@ -103,9 +106,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         progressProvider = javaDebugger.exports?.progressProvider;
     }
 
-    await testSourceProvider.initialize();
-    await testFileWatcher.registerListeners();
-    await testCodeLensController.registerCodeLensProvider();
     testExplorer.initialize(context);
     const testTreeView: TreeView<ITestItem> = window.createTreeView(testExplorer.testExplorerViewId, { treeDataProvider: testExplorer, showCollapseAll: true });
     runnerScheduler.initialize(context);
@@ -113,6 +113,13 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     registerAskForChoiceCommand(context);
     registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
+
+    if (isStandardServerReady()) {
+        await testSourceProvider.initialize();
+        await testFileWatcher.registerListeners();
+        await testCodeLensController.registerCodeLensProvider();
+        await registerTestCodeActionProvider();
+    }
 
     context.subscriptions.push(
         testExplorer,
@@ -156,8 +163,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         testTreeView.onDidExpandElement((_e: TreeViewExpansionEvent<ITestItem>) => {
             EventCounter.increase('didExpandElement');
         }),
-
-        await registerTestCodeActionProvider(),
     );
 
     setContextKeyForDeprecatedConfig();

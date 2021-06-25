@@ -39,3 +39,7 @@ export async function registerTestCodeActionProvider(): Promise<Disposable> {
     );
     return provider;
 }
+
+export function disposeCodeActionProvider(): void {
+    provider?.dispose();
+}
