@@ -85,6 +85,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                     await testSourceProvider.initialize();
                     await testFileWatcher.registerListeners();
                     await testCodeLensController.registerCodeLensProvider();
+                    await registerTestCodeActionProvider();
                 }
             }));
         }
