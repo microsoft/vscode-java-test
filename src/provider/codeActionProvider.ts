@@ -29,9 +29,8 @@ export class TestCodeActionProvider implements CodeActionProvider {
 }
 
 export async function registerTestCodeActionProvider(): Promise<Disposable> {
-    if (provider) {
-        provider.dispose();
-    }
+    disposeCodeActionProvider();
+
     provider = languages.registerCodeActionsProvider(
         {language: 'java', scheme: 'file', pattern: '**/*.java'},
         new TestCodeActionProvider(),
