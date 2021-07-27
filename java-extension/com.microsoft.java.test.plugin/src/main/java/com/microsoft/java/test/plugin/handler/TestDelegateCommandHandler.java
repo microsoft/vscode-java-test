@@ -26,10 +26,6 @@ import java.util.List;
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.get.testpath";
-    private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
-    private static final String SEARCH_TEST_ALL_ITEMS = "vscode.java.test.search.items.all";
-    private static final String SEARCH_TEST_CODE_LENS = "vscode.java.test.search.codelens";
-    private static final String SEARCH_TEST_LOCATION = "vscode.java.test.search.location";
     private static final String RESOLVE_JUNIT_ARGUMENT = "vscode.java.test.junit.argument";
     private static final String GENERATE_TESTS = "vscode.java.test.generateTests";
 
@@ -42,14 +38,6 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
         switch (commandId) {
             case GET_TEST_SOURCE_PATH:
                 return ProjectTestUtils.listTestSourcePaths(arguments, monitor);
-            case SEARCH_TEST_ITEMS:
-                return TestSearchUtils.searchTestItems(arguments, monitor);
-            case SEARCH_TEST_ALL_ITEMS:
-                return TestSearchUtils.searchAllTestItems(arguments, monitor);
-            case SEARCH_TEST_CODE_LENS:
-                return TestSearchUtils.searchCodeLens(arguments, monitor);
-            case SEARCH_TEST_LOCATION:
-                return TestSearchUtils.searchLocation(arguments, monitor);
             case RESOLVE_JUNIT_ARGUMENT:
                 return JUnitLaunchUtils.resolveLaunchArgument(arguments, monitor);
             case GENERATE_TESTS:
