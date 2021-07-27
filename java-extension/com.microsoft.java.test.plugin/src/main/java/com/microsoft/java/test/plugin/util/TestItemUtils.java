@@ -35,14 +35,12 @@ public class TestItemUtils {
     public static JavaTestItem constructJavaTestItem(IJavaElement element, TestLevel level, TestKind kind)
             throws JavaModelException {
         final String displayName;
-        final String fullName;
         if (element instanceof IPackageFragment && ((IPackageFragment) element).isDefaultPackage()) {
             displayName = DEFAULT_PACKAGE_NAME;
-            fullName = "";
         } else {
             displayName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT);
-            fullName = parseFullName(element, level);
         }
+        final String fullName = parseFullName(element, level);
         final String uri = JDTUtils.getFileURI(element.getResource());
         Range range = null;
         if (level == TestLevel.CLASS || level == TestLevel.METHOD) {
@@ -60,6 +58,7 @@ public class TestItemUtils {
         if (element instanceof ISourceReference) {
             final ISourceRange sourceRange = ((ISourceReference) element).getSourceRange();
             final ISourceRange nameRange = ((ISourceReference) element).getNameRange();
+            // get the code range excluding the comment part
             if (SourceRange.isAvailable(sourceRange) && SourceRange.isAvailable(nameRange)) {
                 return JDTUtils.toRange(element.getOpenable(), nameRange.getOffset(),
                         sourceRange.getLength() - nameRange.getOffset() + sourceRange.getOffset());
