@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2018 Microsoft Corporation and others.
+* Copyright (c) 2018-2021 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -11,7 +11,7 @@
 
 package com.microsoft.java.test.plugin.util;
 
-import com.microsoft.java.test.plugin.model.TestItem;
+import com.microsoft.java.test.plugin.model.JavaTestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
@@ -22,7 +22,9 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.hover.JavaElementLabels;
 import org.eclipse.lsp4j.Range;
 
 @SuppressWarnings("restriction")
@@ -30,39 +32,43 @@ public class TestItemUtils {
 
     public static final String DEFAULT_PACKAGE_NAME = "<Default Package>";
 
-    public static TestItem constructTestItem(IJavaElement element, TestLevel level) throws JavaModelException {
-        return constructTestItem(element, level, null);
-    }
-
-    public static TestItem constructTestItem(IJavaElement element, TestLevel level, TestKind kind)
+    public static JavaTestItem constructJavaTestItem(IJavaElement element, TestLevel level, TestKind kind)
             throws JavaModelException {
         final String displayName;
         final String fullName;
         if (element instanceof IPackageFragment && ((IPackageFragment) element).isDefaultPackage()) {
             displayName = DEFAULT_PACKAGE_NAME;
-            fullName = DEFAULT_PACKAGE_NAME;
+            fullName = "";
         } else {
-            displayName = element.getElementName();
-            fullName = parseTestItemFullName(element, level);
+            displayName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT);
+            fullName = parseFullName(element, level);
         }
         final String uri = JDTUtils.getFileURI(element.getResource());
-        final Range range = parseTestItemRange(element);
+        Range range = null;
+        if (level == TestLevel.CLASS || level == TestLevel.METHOD) {
+            range = parseTestItemRange(element);
+        }
+        
         final String projectName = element.getJavaProject().getProject().getName();
 
-        return new TestItem(displayName, fullName, uri, projectName, range, level, kind);
+        final JavaTestItem result = new JavaTestItem(displayName, fullName, projectName, uri, range, level, kind);
+        result.setJdtHandler(element.getHandleIdentifier());
+        return result;
     }
 
     public static Range parseTestItemRange(IJavaElement element) throws JavaModelException {
         if (element instanceof ISourceReference) {
-            // getSourceRange() is not used here because we want the Code Lens appear above the
-            // method name, not above the annotation.
-            final ISourceRange range = ((ISourceReference) element).getNameRange();
-            return JDTUtils.toRange(element.getOpenable(), range.getOffset(), range.getLength());
+            final ISourceRange sourceRange = ((ISourceReference) element).getSourceRange();
+            final ISourceRange nameRange = ((ISourceReference) element).getNameRange();
+            if (SourceRange.isAvailable(sourceRange) && SourceRange.isAvailable(nameRange)) {
+                return JDTUtils.toRange(element.getOpenable(), nameRange.getOffset(),
+                        sourceRange.getLength() - nameRange.getOffset() + sourceRange.getOffset());
+            }
         }
-        return new Range();
+        return null;
     }
 
-    public static String parseTestItemFullName(IJavaElement element, TestLevel level) {
+    public static String parseFullName(IJavaElement element, TestLevel level) {
         switch (level) {
             case CLASS:
                 final IType type = (IType) element;
