@@ -6,6 +6,7 @@
       <command id="vscode.java.test.get.testpath" />
       <command id="vscode.java.test.junit.argument" />
       <command id="vscode.java.test.generateTests" />
+      <command id="vscode.java.test.findJavaProjects" />
     </delegateCommandHandler>
   </extension>
 </plugin>
