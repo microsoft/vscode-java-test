@@ -12,22 +12,13 @@
 package com.microsoft.java.test.plugin.util;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 
 public class TestFrameworkUtils {
@@ -38,5 +29,18 @@ public class TestFrameworkUtils {
 
     public static boolean isEquivalentAnnotationType(ITypeBinding annotationType, String annotationName) {
         return annotationType != null && Objects.equals(annotationType.getQualifiedName(), annotationName);
+    }
+
+    public static TestFrameworkSearcher getSearcherByTestKind(TestKind kind) {
+        switch (kind) {
+            case JUnit:
+                return JUNIT4_TEST_SEARCHER;
+            case JUnit5:
+                return JUNIT5_TEST_SEARCHER;
+            case TestNG:
+                return TESTNG_TEST_SEARCHER;
+            default:
+                return null;
+        }
     }
 }

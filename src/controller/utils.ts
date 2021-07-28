@@ -59,7 +59,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
 
 /**
  * Parse the range object with server mode to client format
- * @param range
+ * @param range range with server side format
  */
 export function asRange(range: any): Range | undefined {
     if (!range) {

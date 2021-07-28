@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017 Microsoft Corporation and others.
+* Copyright (c) 2017-2021 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -64,14 +64,39 @@ public final class ProjectTestUtils {
         return resultList;
     }
 
-    public static List<TestSourcePath> getTestSourcePaths(IJavaProject project) throws JavaModelException {
-        final List<TestSourcePath> paths = new LinkedList<>();
+    public static List<IClasspathEntry> getTestEntries(IJavaProject project) throws JavaModelException {
+        // Ignore default project
+        if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+            return Collections.emptyList();
+        }
+
+        final List<IClasspathEntry> entries = new LinkedList<>();
         for (final IClasspathEntry entry : project.getRawClasspath()) {
-            // Ignore default project
-            if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+            if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
                 continue;
             }
-            
+    
+            if (isTestEntry(entry)) {
+                entries.add(entry);
+                continue;
+            }
+    
+            // Always return true Eclipse & invisible project
+            if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
+                entries.add(entry);
+            }
+        }
+        return entries;
+    }
+
+    public static List<TestSourcePath> getTestSourcePaths(IJavaProject project) throws JavaModelException {
+        // Ignore default project
+        if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+            return Collections.emptyList();
+        }
+
+        final List<TestSourcePath> paths = new LinkedList<>();
+        for (final IClasspathEntry entry : project.getRawClasspath()) {
             if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE) {
                 continue;
             }

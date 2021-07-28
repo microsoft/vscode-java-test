@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017, 2019 Microsoft Corporation and others.
+* Copyright (c) 2017-2021 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -29,6 +29,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String RESOLVE_JUNIT_ARGUMENT = "vscode.java.test.junit.argument";
     private static final String GENERATE_TESTS = "vscode.java.test.generateTests";
     private static final String FIND_JAVA_PROJECT = "vscode.java.test.findJavaProjects";
+    private static final String FIND_PACKAGES_AND_TYPES = "vscode.java.test.findTestPackagesAndTypes";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -45,6 +46,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return TestGenerationUtils.generateTests(arguments, monitor);
             case FIND_JAVA_PROJECT:
                 return TestSearchUtils.findJavaProjects(arguments, monitor);
+            case FIND_PACKAGES_AND_TYPES:
+                return TestSearchUtils.findTestPackagesAndTypes(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));
