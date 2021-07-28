@@ -20,10 +20,13 @@ import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
@@ -33,10 +36,14 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.manipulation.CoreASTProvider;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
+import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -176,6 +183,85 @@ public class TestSearchUtils {
         for (final JavaTestItem item : testItemMapping.values()) {
             if (item.getTestLevel() == TestLevel.PACKAGE) {
                 result.add(item);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Find the direct declared testable class and method for a given class
+     * @param arguments
+     * @param monitor
+     * @return
+     * @throws JavaModelException
+     * @throws OperationCanceledException
+     * @throws InterruptedException
+     */
+    public static List<JavaTestItem> findDirectTestChildrenForClass(List<Object> arguments, IProgressMonitor monitor)
+            throws JavaModelException, OperationCanceledException, InterruptedException {
+        final String handlerId = (String) arguments.get(0);
+
+        // wait for the LS finishing updating
+        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
+
+        final IType testType = (IType) JavaCore.create(handlerId);
+        if (testType == null) {
+            return Collections.emptyList();
+        }
+
+        final ICompilationUnit unit = testType.getCompilationUnit();
+        if (unit == null) {
+            return Collections.emptyList();
+        }
+        final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(unit.getJavaProject());
+
+        final List<JavaTestItem> result = new LinkedList<>();
+        final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
+        for (final IType type : unit.getAllTypes()) {
+            if (monitor != null && monitor.isCanceled()) {
+                return result;
+            }
+
+            final IType declaringType = type.getDeclaringType();
+            if (declaringType != null &&
+                    declaringType.getFullyQualifiedName().equals(testType.getFullyQualifiedName())) {
+                for (final TestKind kind: testKinds) {
+                    final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
+                    if (searcher.isTestClass(type)) {
+                        result.add(TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, kind));
+                        break;
+                    }
+                }
+                continue;
+            }
+
+            if (!type.getFullyQualifiedName().equals(testType.getFullyQualifiedName())) {
+                continue;
+            }
+
+            final ASTNode node = root.findDeclaringNode(type.getKey());
+            if (!(node instanceof TypeDeclaration)) {
+                continue;
+            }
+
+            final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+            if (binding == null) {
+                continue;
+            }
+
+            
+            for (final IMethodBinding methodBinding : binding.getDeclaredMethods()) {
+                for (final TestKind kind: testKinds) {
+                    final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
+                    if (searcher.isTestMethod(methodBinding)) {
+                        result.add(TestItemUtils.constructJavaTestItem(
+                            (IMethod) methodBinding.getJavaElement(),
+                            TestLevel.METHOD,
+                            kind
+                        ));
+                    }
+                }
             }
         }
 

@@ -30,6 +30,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String GENERATE_TESTS = "vscode.java.test.generateTests";
     private static final String FIND_JAVA_PROJECT = "vscode.java.test.findJavaProjects";
     private static final String FIND_PACKAGES_AND_TYPES = "vscode.java.test.findTestPackagesAndTypes";
+    private static final String FIND_DIRECT_CHILDREN_FOR_CLASS = "vscode.java.test.findDirectTestChildrenForClass";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -48,6 +49,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return TestSearchUtils.findJavaProjects(arguments, monitor);
             case FIND_PACKAGES_AND_TYPES:
                 return TestSearchUtils.findTestPackagesAndTypes(arguments, monitor);
+            case FIND_DIRECT_CHILDREN_FOR_CLASS:
+                return TestSearchUtils.findDirectTestChildrenForClass(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));
