@@ -55,17 +55,7 @@ public class TestSearchUtils {
             if (project.getProject().equals(JavaLanguageServerPlugin.getProjectsManager().getDefaultProject())) {
                 continue;
             }
-            if (workspaceFolderPath.isPrefixOf(project.getProject().getLocation())) {
-                javaProjects.add(project);
-                continue;
-            }
-
-            final IPath linkedFolderLocation = project.getProject()
-                    .getFolder(ProjectUtils.WORKSPACE_LINK).getLocation();
-            if (workspaceFolderPath.isPrefixOf(linkedFolderLocation)) {
-                javaProjects.add(project);
-                continue;
-            }
+            javaProjects.add(project);
         }
 
         final List<JavaTestItem> resultList = new LinkedList<>();
