@@ -74,7 +74,7 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
         } catch (OperationCanceledException e) {
             return Collections.emptySet();
         }
-        
+
         return types;
     }
 }

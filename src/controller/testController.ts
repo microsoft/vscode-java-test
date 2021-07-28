@@ -3,8 +3,11 @@
 
 import * as _ from 'lodash';
 import { CancellationToken, TestController, TestItem, tests } from 'vscode';
+import { instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { isStandardServerReady } from '../extension';
-import { loadJavaProjects } from './utils';
+import { IJavaTestItem, TestLevel } from '../types';
+import { dataCache, ITestItemData } from './testItemDataCache';
+import { findTestPackagesAndTypes, loadJavaProjects, synchronizeItemsRecursively } from './utils';
 
 export let testController: TestController | undefined;
 
@@ -20,10 +23,22 @@ export function createTestController(): void {
     };
 }
 
-export async function loadChildren(item: TestItem, token?: CancellationToken): Promise<void> {
+export const loadChildren: (item: TestItem, token?: CancellationToken) => any = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken) => {
     if (!item) {
         await loadJavaProjects();
         return;
     }
-    // todo: load other items
-}
+
+    const data: ITestItemData | undefined = dataCache.get(item);
+    if (!data) {
+        return;
+    }
+    if (data.testLevel === TestLevel.Project) {
+        const packageAndTypes: IJavaTestItem[] = await findTestPackagesAndTypes(data.jdtHandler, token);
+        synchronizeItemsRecursively(item, packageAndTypes);
+    } else if (data.testLevel === TestLevel.Package) {
+        // unreachable code
+    } else if (data.testLevel === TestLevel.Class) {
+        // todo
+    }
+});
