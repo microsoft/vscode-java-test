@@ -129,3 +129,8 @@ export async function findTestPackagesAndTypes(handlerId: string, token?: Cancel
     return await executeJavaLanguageServerCommand<IJavaTestItem[]>(
         JavaTestRunnerDelegateCommands.FIND_TEST_PACKAGES_AND_TYPES, handlerId, token) || [];
 }
+
+export async function findDirectTestChildrenForClass(handlerId: string, token?: CancellationToken): Promise<IJavaTestItem[]> {
+    return await executeJavaLanguageServerCommand<IJavaTestItem[]>(
+        JavaTestRunnerDelegateCommands.FIND_DIRECT_CHILDREN_FOR_CLASS, handlerId, token) || [];
+}

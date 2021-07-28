@@ -3,11 +3,11 @@
 
 import * as _ from 'lodash';
 import { CancellationToken, TestController, TestItem, tests } from 'vscode';
-import { instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import { instrumentOperation, sendError } from 'vscode-extension-telemetry-wrapper';
 import { isStandardServerReady } from '../extension';
 import { IJavaTestItem, TestLevel } from '../types';
 import { dataCache, ITestItemData } from './testItemDataCache';
-import { findTestPackagesAndTypes, loadJavaProjects, synchronizeItemsRecursively } from './utils';
+import { findDirectTestChildrenForClass, findTestPackagesAndTypes, loadJavaProjects, synchronizeItemsRecursively } from './utils';
 
 export let testController: TestController | undefined;
 
@@ -39,6 +39,11 @@ export const loadChildren: (item: TestItem, token?: CancellationToken) => any = 
     } else if (data.testLevel === TestLevel.Package) {
         // unreachable code
     } else if (data.testLevel === TestLevel.Class) {
-        // todo
+        if (!data.jdtHandler) {
+            sendError(new Error('The class node does not have jdt handler id.'));
+            return;
+        }
+        const testMethods: IJavaTestItem[] = await findDirectTestChildrenForClass(data.jdtHandler, token);
+        synchronizeItemsRecursively(item, testMethods);
     }
 });
