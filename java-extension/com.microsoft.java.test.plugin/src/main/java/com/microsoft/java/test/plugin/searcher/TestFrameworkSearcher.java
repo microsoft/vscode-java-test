@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Microsoft Corporation and others.
+ * Copyright (c) 2017-2021 Microsoft Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 
 package com.microsoft.java.test.plugin.searcher;
 
-import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 
 import org.eclipse.core.runtime.CoreException;
@@ -21,6 +20,8 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+
+import java.util.Set;
 
 public interface TestFrameworkSearcher {
 
@@ -36,7 +37,5 @@ public interface TestFrameworkSearcher {
 
     boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames);
 
-    TestItem parseTestItem(IMethodBinding methodBinding) throws JavaModelException;
-
-    TestItem[] findTestsInContainer(IJavaElement element, IProgressMonitor monitor) throws CoreException;
+    Set<IType> findTestItemsInContainer(IJavaElement element, IProgressMonitor monitor) throws CoreException;
 }
