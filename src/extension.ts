@@ -5,6 +5,7 @@ import { commands, Event, Extension, ExtensionContext, extensions, Uri } from 'v
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
 import { Context, ExtensionName, VSCodeCommands } from './constants';
+import { createTestController, testController } from './controller/testController';
 import { IProgressProvider } from './debugger.api';
 import { initExpService } from './experimentationService';
 import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
@@ -22,6 +23,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 export async function deactivate(): Promise<void> {
     disposeCodeActionProvider();
     await disposeTelemetryWrapper();
+    testController?.dispose();
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
@@ -51,6 +53,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 // Only re-initialize the component when its lightweight -> standard
                 if (mode === LanguageServerMode.Standard) {
                     registerTestCodeActionProvider();
+                    createTestController();
                 }
             }));
         }
@@ -71,6 +74,11 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     registerAskForChoiceCommand(context);
     registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
+
+    if (isStandardServerReady()) {
+        registerTestCodeActionProvider();
+        createTestController();
+    }
 }
 
 export function isStandardServerReady(): boolean {
