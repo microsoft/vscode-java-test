@@ -54,3 +54,10 @@ export namespace ExtensionName {
 export namespace Context {
     export const ACTIVATION_CONTEXT_KEY: string = 'java:testRunnerActivated';
 }
+
+/**
+ * This is the prefix of the invocation test item's id.
+ * Invocation test items are created during test run.
+ * For example, the invocations from a parameterized test.
+ */
+export const INVOCATION_PREFIX: string = '[__INVOCATION__]-';
