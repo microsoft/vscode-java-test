@@ -8,7 +8,7 @@ import { extensionContext, isStandardServerReady } from '../extension';
 import { testSourceProvider } from '../provider/testSourceProvider';
 import { IJavaTestItem, TestLevel } from '../types';
 import { dataCache, ITestItemData } from './testItemDataCache';
-import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively } from './utils';
+import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 
 export let testController: TestController | undefined;
 
@@ -67,10 +67,10 @@ async function startWatchingWorkspace(): Promise<void> {
                     if (testTypes.length === 0) {
                         return;
                     }
-                    // todo: await updateNodeForDocumentWithDebounce(uri, testTypes);
+                    await updateItemForDocumentWithDebounce(uri, testTypes);
                 }),
                 watcher.onDidChange(async (uri: Uri) => {
-                    // todo: await updateNodeForDocumentWithDebounce(uri);
+                    await updateItemForDocumentWithDebounce(uri);
                 }),
                 watcher.onDidDelete(async (uri: Uri) => {
                     const pathsData: IJavaTestItem[] = await resolvePath(uri.toString());
