@@ -9,6 +9,7 @@ import { createTestController, testController } from './controller/testControlle
 import { IProgressProvider } from './debugger.api';
 import { initExpService } from './experimentationService';
 import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
+import { testSourceProvider } from './provider/testSourceProvider';
 
 export let extensionContext: ExtensionContext;
 
@@ -39,6 +40,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         if (extensionApi.onDidClasspathUpdate) {
             const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
             context.subscriptions.push(onDidClasspathUpdate(async () => {
+                testSourceProvider.clear();
                 commands.executeCommand(VSCodeCommands.REFRESH_TESTS);
             }));
         }
@@ -52,6 +54,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 serverMode = mode;
                 // Only re-initialize the component when its lightweight -> standard
                 if (mode === LanguageServerMode.Standard) {
+                    testSourceProvider.clear();
                     registerTestCodeActionProvider();
                     createTestController();
                 }
@@ -61,6 +64,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         if (extensionApi.onDidProjectsImport) {
             const onDidProjectsImport: Event<Uri[]> = extensionApi.onDidProjectsImport;
             context.subscriptions.push(onDidProjectsImport(async () => {
+                testSourceProvider.clear();
                 commands.executeCommand(VSCodeCommands.REFRESH_TESTS);
             }));
         }
