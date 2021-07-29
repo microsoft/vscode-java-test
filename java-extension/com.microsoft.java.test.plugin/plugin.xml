@@ -9,6 +9,7 @@
       <command id="vscode.java.test.findJavaProjects" />
       <command id="vscode.java.test.findTestPackagesAndTypes" />
       <command id="vscode.java.test.findDirectTestChildrenForClass" />
+      <command id="vscode.java.test.findTestTypesAndMethods" />
     </delegateCommandHandler>
   </extension>
 </plugin>

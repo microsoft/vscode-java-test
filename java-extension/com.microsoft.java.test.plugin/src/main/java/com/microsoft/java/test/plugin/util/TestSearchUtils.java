@@ -40,6 +40,8 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.manipulation.CoreASTProvider;
+import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
+import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
@@ -52,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
 public class TestSearchUtils {
@@ -266,6 +269,120 @@ public class TestSearchUtils {
         }
 
         return result;
+    }
+
+    /**
+     * Get all the test types and methods is the given file
+     * @param arguments Contains the target file's uri
+     * @param monitor Progress monitor
+     * @throws CoreException
+     * @throws OperationCanceledException
+     * @throws InterruptedException
+     */
+    public static List<JavaTestItem> findTestTypesAndMethods(List<Object> arguments, IProgressMonitor monitor)
+            throws CoreException, OperationCanceledException, InterruptedException {
+        // todo: This method is somehow duplicated with findDirectTestChildrenForClass, considering merge them in the future.
+        final String uriString = (String) arguments.get(0);
+
+        // wait for the LS finishing updating
+        Job.getJobManager().join(DocumentLifeCycleHandler.DOCUMENT_LIFE_CYCLE_JOBS, monitor);
+
+        final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uriString);
+        if (unit == null) {
+            return Collections.emptyList();
+        }
+
+        final IType primaryType = unit.findPrimaryType();
+        if (primaryType == null) {
+            return Collections.emptyList();
+        }
+
+        final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
+        if (root == null) {
+            return Collections.emptyList();
+        }
+
+        final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(unit.getJavaProject());
+        final List<TestFrameworkSearcher> searchers = new LinkedList<>();
+        for (final TestKind kind : testKinds) {
+            final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
+            if (searcher != null) {
+                searchers.add(searcher);
+            }
+        }
+
+        if (searchers.size() == 0) {
+            Collections.emptyList();
+        }
+
+        final ASTNode node = root.findDeclaringNode(primaryType.getKey());
+        if (!(node instanceof TypeDeclaration)) {
+            return Collections.emptyList();
+        }
+
+        final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+        if (binding == null) {
+            return Collections.emptyList();
+        }
+
+        final JavaTestItem fakeRoot = new JavaTestItem();
+        findTestItemsInTypeBinding(binding, fakeRoot, searchers, monitor);
+        return fakeRoot.getChildren();
+    }
+
+    private static void findTestItemsInTypeBinding(ITypeBinding typeBinding, JavaTestItem parentItem,
+            List<TestFrameworkSearcher> searchers, IProgressMonitor monitor) throws JavaModelException {
+        if (monitor.isCanceled()) {
+            return;
+        }
+
+        final IType type = (IType) typeBinding.getJavaElement();
+        final List<JavaTestItem> testMethods = new LinkedList<>();
+        searchers = searchers.stream().filter(s -> {
+            try {
+                return CoreTestSearchEngine.isAccessibleClass(type, s.getJdtTestKind());
+            } catch (JavaModelException e) {
+                return false;
+            }
+        }).collect(Collectors.toList());
+
+        for (final IMethodBinding methodBinding : typeBinding.getDeclaredMethods()) {
+            for (final TestFrameworkSearcher searcher : searchers) {
+                if (searcher.isTestMethod(methodBinding)) {
+                    final JavaTestItem methodItem = TestItemUtils.constructJavaTestItem(
+                        (IMethod) methodBinding.getJavaElement(),
+                        TestLevel.METHOD,
+                        searcher.getTestKind()
+                    );
+                    testMethods.add(methodItem);
+                    break;
+                }
+            }
+        }
+
+        JavaTestItem classItem = null;
+        if (testMethods.size() > 0) {
+            classItem = TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, testMethods.get(0).getTestKind());
+            classItem.setChildren(testMethods);
+        } else {
+            if (TestFrameworkUtils.JUNIT4_TEST_SEARCHER.isTestClass(type)) {
+                // to handle @RunWith classes
+                classItem = TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, TestKind.JUnit);
+            } else if (TestFrameworkUtils.JUNIT5_TEST_SEARCHER.isTestClass(type)) {
+                // to handle @Nested and @Testable classes
+                classItem = TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, TestKind.JUnit5);
+            }
+        }
+
+        // set the class item as the child of its declaring type
+        if (classItem != null && parentItem != null) {
+            parentItem.addChild(classItem);
+        }
+
+        for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
+            findTestItemsInTypeBinding(childTypeBinding, classItem, searchers, monitor);
+        }
+
     }
 
     public static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
