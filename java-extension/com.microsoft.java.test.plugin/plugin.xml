@@ -10,6 +10,7 @@
       <command id="vscode.java.test.findTestPackagesAndTypes" />
       <command id="vscode.java.test.findDirectTestChildrenForClass" />
       <command id="vscode.java.test.findTestTypesAndMethods" />
+      <command id="vscode.java.test.resolvePath" />
     </delegateCommandHandler>
   </extension>
 </plugin>

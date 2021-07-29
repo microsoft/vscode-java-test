@@ -1,24 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as path from 'path';
 import { RelativePattern, Uri, workspace, WorkspaceFolder } from 'vscode';
-import { getTestSourcePaths } from '../utils/commandUtils';
+import { JavaTestRunnerDelegateCommands } from '../constants';
+import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 
 class TestSourcePathProvider {
-    private testSource: ITestSourcePath[];
+    private testSourceMapping: Map<Uri, ITestSourcePath[]> = new Map();
 
-    public async initialize(): Promise<void> {
-        this.testSource = [];
-        if (!workspace.workspaceFolders) {
-            return;
-        }
-
-        this.testSource = await getTestSourcePaths(workspace.workspaceFolders.map((workspaceFolder: WorkspaceFolder) => workspaceFolder.uri.toString()));
-    }
-
-    public async getTestSourcePattern(containsGeneral: boolean = true): Promise<RelativePattern[]> {
+    public async getTestSourcePattern(workspaceFolder: WorkspaceFolder, containsGeneral: boolean = true): Promise<RelativePattern[]> {
         const patterns: RelativePattern[] = [];
-        const sourcePaths: string[] = await testSourceProvider.getTestSourcePath(containsGeneral);
+        const sourcePaths: string[] = await testSourceProvider.getTestSourcePath(workspaceFolder, containsGeneral);
         for (const sourcePath of sourcePaths) {
             const normalizedPath: string = Uri.file(sourcePath).fsPath;
             const pattern: RelativePattern = new RelativePattern(normalizedPath, '**/*.java');
@@ -27,21 +20,53 @@ class TestSourcePathProvider {
         return patterns;
     }
 
-    public async getTestSourcePath(containsGeneral: boolean = true): Promise<string[]> {
-        if (this.testSource === undefined) {
-            await this.initialize();
-        }
+    public async getTestSourcePath(workspaceFolder: WorkspaceFolder, containsGeneral: boolean = true): Promise<string[]> {
+        const testPaths: ITestSourcePath[] = await this.getTestPaths(workspaceFolder);
 
         if (containsGeneral) {
-            return this.testSource.map((s: ITestSourcePath) => s.testSourcePath);
+            return testPaths.map((s: ITestSourcePath) => s.testSourcePath);
         }
 
-        return this.testSource.filter((s: ITestSourcePath) => s.isStrict)
+        return testPaths.filter((s: ITestSourcePath) => s.isStrict)
             .map((s: ITestSourcePath) => s.testSourcePath);
+    }
+
+    public async isOnTestSourcePath(uri: Uri): Promise<boolean> {
+        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(uri);
+        if (!workspaceFolder) {
+            return false;
+        }
+        const testPaths: ITestSourcePath[] = await this.getTestPaths(workspaceFolder);
+        const fsPath: string = uri.fsPath;
+        for (const testPath of testPaths) {
+            const relativePath: string = path.relative(testPath.testSourcePath, fsPath);
+            if (!relativePath.startsWith('..')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public clear(): void {
+        this.testSourceMapping.clear();
+    }
+
+    private async getTestPaths(workspaceFolder: WorkspaceFolder): Promise<ITestSourcePath[]> {
+        let testPaths: ITestSourcePath[] | undefined = this.testSourceMapping.get(workspaceFolder.uri);
+        if (!testPaths) {
+            testPaths = await getTestSourcePaths([workspaceFolder.uri.toString()]);
+            this.testSourceMapping.set(workspaceFolder.uri, testPaths);
+        }
+        return testPaths;
     }
 }
 
-export interface ITestSourcePath {
+async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
+    return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
+        JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
+}
+
+interface ITestSourcePath {
     testSourcePath: string;
     /**
      * All the source paths from eclipse and invisible project will be treated as test source

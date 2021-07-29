@@ -382,7 +382,38 @@ public class TestSearchUtils {
         for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
             findTestItemsInTypeBinding(childTypeBinding, classItem, searchers, monitor);
         }
+    }
 
+    /**
+     * Given a file Uri, resolve its belonging project and package node in the test explorer, this is
+     * used to find the test item node when a test file is changed
+     * @param arguments A list containing a uri of the file
+     * @param monitor Progress monitor
+     * @throws JavaModelException
+     */
+    public static List<JavaTestItem> resolvePath(List<Object> arguments, IProgressMonitor monitor)
+            throws JavaModelException {
+        final List<JavaTestItem> result = new LinkedList<>();
+        final String uriString = (String) arguments.get(0);
+        if (JavaCore.isJavaLikeFileName(uriString)) {
+            final ICompilationUnit unit = JDTUtils.resolveCompilationUnit(uriString);
+            if (unit == null) {
+                return Collections.emptyList();
+            }
+            final IJavaProject project = unit.getJavaProject();
+            if (project == null) {
+                return Collections.emptyList();
+            }
+            result.add(TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, TestKind.None));
+
+            final IPackageFragment packageFragment = (IPackageFragment) unit.getParent();
+            if (packageFragment == null || !(packageFragment instanceof IPackageFragment)) {
+                return Collections.emptyList();
+            }
+            result.add(TestItemUtils.constructJavaTestItem(packageFragment, TestLevel.PACKAGE, TestKind.None));
+        }
+
+        return result;
     }
 
     public static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,

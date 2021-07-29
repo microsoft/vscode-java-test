@@ -134,3 +134,13 @@ export async function findDirectTestChildrenForClass(handlerId: string, token?: 
     return await executeJavaLanguageServerCommand<IJavaTestItem[]>(
         JavaTestRunnerDelegateCommands.FIND_DIRECT_CHILDREN_FOR_CLASS, handlerId, token) || [];
 }
+
+export async function findTestTypesAndMethods(uri: string, token?: CancellationToken): Promise<IJavaTestItem[]> {
+    return await executeJavaLanguageServerCommand<IJavaTestItem[]>(
+        JavaTestRunnerDelegateCommands.FIND_TEST_TYPES_AND_METHODS, uri, token) || [];
+}
+
+export async function resolvePath(uri: string): Promise<IJavaTestItem[]> {
+    return await executeJavaLanguageServerCommand<IJavaTestItem[]>(
+        JavaTestRunnerDelegateCommands.RESOLVE_PATH, uri) || [];
+}
