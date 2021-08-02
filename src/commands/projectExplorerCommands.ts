@@ -12,7 +12,7 @@ import { TestLevel } from '../types';
 
 export async function runTestsFromJavaProjectExplorer(node: any, isDebug: boolean): Promise<void> {
     const testLevel: TestLevel = getTestLevel(node._nodeData);
-    const isHierarchicalPackage: boolean = isHierarchical(node._nodeData);
+    const isHierarchicalMode: boolean = isHierarchical(node._nodeData);
     const progressReporter: IProgressReporter | undefined = progressProvider?.createProgressReporter(isDebug ? 'Debug Test' : 'Run Test');
     progressReporter?.report('Searching tests...');
     const tests: TestItem[] = [];
@@ -32,11 +32,14 @@ export async function runTestsFromJavaProjectExplorer(node: any, isDebug: boolea
         const nodeFsPath: string = Uri.parse(node._nodeData.uri).fsPath;
         projectItem.children.forEach((child: TestItem) => {
             const itemPath: string = child.uri?.fsPath || '';
-            if (isHierarchicalPackage || node._nodeData.kind === 4 /*packageRoot*/) {
+            if (isHierarchicalMode || node._nodeData.kind === 4 /*packageRoot*/) {
+                // if the selected node is a package root or the view is in hierarchical mode,
+                // all the test items whose path start from the path of the selected node will be added
                 if (itemPath.startsWith(nodeFsPath)) {
                     tests.push(child);
                 }
             } else {
+                // in flat mode, we require the paths exact match
                 if (path.relative(itemPath, nodeFsPath) === '') {
                     tests.push(child);
                 }
