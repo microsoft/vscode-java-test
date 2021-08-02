@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { BUILTIN_CONFIG_NAME } from './constants/configs';
+import { Configurations } from './constants';
 
 export interface IExecutionConfig {
     name?: string;
@@ -14,21 +14,11 @@ export interface IExecutionConfig {
     sourcePaths?: string[];
 }
 
-export interface IExecutionConfigGroup {
-    default: string;
-    items: IExecutionConfig[];
-}
-
-export interface ITestConfig {
-    run: IExecutionConfigGroup;
-    debug: IExecutionConfigGroup;
-}
-
 export function getBuiltinConfig(): IExecutionConfig {
     return Object.assign({}, BUILTIN_CONFIG);
 }
 
 const BUILTIN_CONFIG: IExecutionConfig = {
-    name: BUILTIN_CONFIG_NAME,
+    name: Configurations.BUILTIN_CONFIG_NAME,
     workingDirectory: '${workspaceFolder}',
 };

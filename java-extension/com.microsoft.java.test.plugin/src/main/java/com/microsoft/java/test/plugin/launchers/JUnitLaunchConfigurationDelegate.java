@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Microsoft Corporation and others.
+ * Copyright (c) 2019-2021 Microsoft Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,25 +11,30 @@
 
 package com.microsoft.java.test.plugin.launchers;
 
+import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils.Argument;
+import com.microsoft.java.test.plugin.model.TestKind;
+import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.util.JUnitPlugin;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
-import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMember;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.corext.refactoring.util.JavaElementUtil;
-import org.eclipse.jdt.internal.junit.JUnitMessages;
-import org.eclipse.jdt.internal.junit.Messages;
-import org.eclipse.jdt.internal.junit.launcher.ITestKind;
-import org.eclipse.jdt.internal.junit.launcher.JUnitLaunchConfigurationConstants;
-import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.NodeFinder;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 import java.io.BufferedWriter;
@@ -42,16 +47,23 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate {
 
-    private boolean fIsHierarchicalPackage;
+    private Argument args;
+
+    private static final Set<String> testNameArgs = Set.of("-test", "-classNames", "-packageNameFile", "-testNameFile");
+
+    public JUnitLaunchConfigurationDelegate(Argument args) {
+        super();
+        this.args = args;
+    }
 
     public JUnitLaunchArguments getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
-            boolean isHierarchicalPackage, IProgressMonitor monitor) throws CoreException {
-        fIsHierarchicalPackage = isHierarchicalPackage;
+            IProgressMonitor monitor) throws CoreException {
         final ILaunch launch = new Launch(configuration, mode, null);
 
         // TODO: Make the getVMRunnerConfiguration() in super class protected.
@@ -70,86 +82,15 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             launchArguments.classpath = config.getClassPath();
             launchArguments.modulepath = config.getModulepath();
             launchArguments.vmArguments = getVmArguments(config);
-            launchArguments.programArguments = config.getProgramArguments();
+            launchArguments.programArguments = parseParameters(config.getProgramArguments());
 
-            // The JUnit 5 launcher only supports run a single package, here we add all the sub-package names
-            // to the package name file as a workaround
-            if (isHierarchicalPackage &&
-                    TestKindRegistry.JUNIT5_TEST_KIND_ID.equals(getTestRunnerKind(configuration).getId())) {
-                appendPackageNames(launchArguments.programArguments, configuration);
-            }
+
             return launchArguments;
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException |
                 InvocationTargetException e) {
+            JUnitPlugin.logException("failed to resolve the classpath.", e);
             return null;
-        } finally {
-            fIsHierarchicalPackage = false;
         }
-    }
-
-    /*
-     * Override the super implementation when it is launched in hierarchical mode and starts from
-     * the package level
-     *
-     * @see org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate#evaluateTests(
-     *      org.eclipse.debug.core.ILaunchConfiguration, org.eclipse.core.runtime.IProgressMonitor)
-     */
-    @Override
-    protected IMember[] evaluateTests(ILaunchConfiguration configuration, IProgressMonitor monitor)
-            throws CoreException {
-        if (!fIsHierarchicalPackage) {
-            return super.evaluateTests(configuration, monitor);
-        }
-
-        final IPackageFragment testPackage = getTestPackage(configuration);
-        if (testPackage == null) {
-            return super.evaluateTests(configuration, monitor);
-        }
-
-        final IPackageFragment[] packages = JavaElementUtil.getPackageAndSubpackages(testPackage);
-        
-        final HashSet<IType> result = new HashSet<>();
-        final ITestKind testKind = getTestRunnerKind(configuration);
-        for (final IPackageFragment packageFragment : packages) {
-            testKind.getFinder().findTestsInContainer(packageFragment, result, monitor);
-        }
-        
-        if (result.isEmpty()) {
-            final String msg = Messages.format(JUnitMessages.JUnitLaunchConfigurationDelegate_error_notests_kind,
-                testKind.getDisplayName());
-            abort(msg, null, IJavaLaunchConfigurationConstants.ERR_UNSPECIFIED_MAIN_TYPE);
-        }
-        return result.toArray(new IMember[result.size()]);
-    }
-    
-    private IPackageFragment getTestPackage(ILaunchConfiguration configuration) throws CoreException {
-        final String containerHandle = configuration.getAttribute(
-                JUnitLaunchConfigurationConstants.ATTR_TEST_CONTAINER, "");
-        if (containerHandle.length() != 0) {
-            final IJavaElement element = JavaCore.create(containerHandle);
-            if (element == null || !element.exists()) {
-                abort(JUnitMessages.JUnitLaunchConfigurationDelegate_error_input_element_deosn_not_exist, null,
-                        IJavaLaunchConfigurationConstants.ERR_UNSPECIFIED_MAIN_TYPE);
-            }
-            if (element instanceof IPackageFragment) {
-                return (IPackageFragment) element;
-            }
-        }
-        return null;
-    }
-    
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate#getTestRunnerKind(
-     *      org.eclipse.debug.core.ILaunchConfiguration)
-     */
-    private ITestKind getTestRunnerKind(ILaunchConfiguration configuration) {
-        ITestKind testKind = JUnitLaunchConfigurationConstants.getTestRunnerKind(configuration);
-        if (testKind.isNull()) {
-            testKind = TestKindRegistry.getDefault().getKind(TestKindRegistry.JUNIT4_TEST_KIND_ID);
-        }
-        return testKind;
     }
 
     private String[] getVmArguments(VMRunnerConfiguration config) {
@@ -167,30 +108,97 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     }
 
     /**
-     * JUnit5's runner will run packages defined in a file, we can add more packages into that file when it's 
-     * run from hierarchical mode to let the runner run test in all the sub-packages.
+     * To re-calculate the parameters to the test runner, this is because the argument resolved by Eclipse only supports
+     * run single package/class, but its test runner supports to run multiple test items in a test session, so we update the
+     * parameters here to leverage this capability.
+     * @param programArguments
+     * @return
+     * @throws CoreException
      */
-    private void appendPackageNames(String[] programArguments, ILaunchConfiguration configuration) {
+    private String[] parseParameters(String[] programArguments) throws CoreException {
+        final List<String> arguments = new LinkedList<>();
         for (int i = 0; i < programArguments.length; i++) {
-            if ("-packageNameFile".equals(programArguments[i]) && i + 1 < programArguments.length) {
-                final String packageNameFilePath = programArguments[i + 1];
-                final File file = new File(packageNameFilePath);
-                try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),
-                        StandardCharsets.UTF_8))) {
-                    final IPackageFragment testPackage = getTestPackage(configuration);
-                    if (testPackage == null) {
-                        return;
-                    }
-                    final IPackageFragment[] packages = JavaElementUtil.getPackageAndSubpackages(testPackage);
-                    for (final IPackageFragment pkg : packages) {
-                        bw.write(pkg.getElementName());
-                        bw.newLine();
-                    }
-                } catch (IOException | CoreException e) {
-                    // do nothing
+            if (testNameArgs.contains(programArguments[i])) {
+                while (i + 1 < programArguments.length && !programArguments[i + 1].startsWith("-")) {
+                    i++;
                 }
-                return;
+            } else {
+                arguments.add(programArguments[i]);
+                while (i + 1 < programArguments.length && !programArguments[i + 1].startsWith("-")) {
+                    arguments.add(programArguments[++i]);
+                }
             }
+        }
+
+        addTestItemArgs(arguments);
+
+        return arguments.toArray(new String[arguments.size()]);
+    }
+
+    private void addTestItemArgs(List<String> arguments) throws CoreException {
+        if (this.args.testLevel == TestLevel.CLASS) {
+            final String fileName = createTestNamesFile(this.args.testNames);
+            arguments.add("-testNameFile");
+            arguments.add(fileName);
+        } else if (this.args.testLevel == TestLevel.METHOD) {
+            arguments.add("-test");
+            final IMethod method = (IMethod) JavaCore.create(this.args.testNames[0]);
+            String testName = method.getElementName();
+            if (this.args.testKind == TestKind.JUnit5 && method.getParameters().length > 0) {
+                final ICompilationUnit unit = method.getCompilationUnit();
+                if (unit == null) {
+                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                            "Cannot get compilation unit of method" + method.getElementName(), null)); //$NON-NLS-1$
+                }
+                final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
+                        false /*fromCache*/, new NullProgressMonitor());
+                final String key = method.getKey();
+                ASTNode methodDeclaration = root.findDeclaringNode(key);
+                if (methodDeclaration == null) {
+                    // fallback to find it according to source range
+                    methodDeclaration = NodeFinder.perform(root, method.getSourceRange().getOffset(),
+                            method.getSourceRange().getLength(), unit);
+                }
+                if (!(methodDeclaration instanceof MethodDeclaration)) {
+                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                            "Cannot get method declaration of method" + method.getElementName(), null)); //$NON-NLS-1$
+                }
+
+                final List<String> parameters = new LinkedList<>();
+                for (final Object obj : ((MethodDeclaration) methodDeclaration).parameters()) {
+                    if (obj instanceof SingleVariableDeclaration) {
+                        final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
+                                .getType().resolveBinding();
+                        if (paramTypeBinding.isParameterizedType()) {
+                            parameters.add(paramTypeBinding.getBinaryName());
+                        } else {
+                            parameters.add(paramTypeBinding.getQualifiedName());
+                        }
+                    }
+                }
+                if (parameters.size() > 0) {
+                    testName += "(" + String.join(",", parameters) + ")";
+                }
+            }
+            arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
+        }
+    }
+
+    private String createTestNamesFile(String[] testNames) throws CoreException {
+        try {
+            final File file = File.createTempFile("testNames", ".txt"); //$NON-NLS-1$ //$NON-NLS-2$
+            file.deleteOnExit();
+            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(file), StandardCharsets.UTF_8));) {
+                for (final String testName : testNames) {
+                    bw.write(testName.substring(testName.indexOf("@") + 1));
+                    bw.newLine();
+                }
+            }
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            throw new CoreException(new Status(
+                    IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR, "", e)); //$NON-NLS-1$
         }
     }
 
