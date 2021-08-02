@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Event, Extension, ExtensionContext, extensions, Uri } from 'vscode';
+import * as path from 'path';
+import { commands, Event, Extension, ExtensionContext, extensions, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 import { registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
 import { Context, ExtensionName, VSCodeCommands } from './constants';
 import { createTestController, testController } from './controller/testController';
+import { updateItemForDocument, updateItemForDocumentWithDebounce } from './controller/utils';
 import { IProgressProvider } from './debugger.api';
 import { initExpService } from './experimentationService';
 import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
@@ -57,6 +59,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                     testSourceProvider.clear();
                     registerTestCodeActionProvider();
                     createTestController();
+                    await showTestItemsInCurrentFile();
                 }
             }));
         }
@@ -79,9 +82,44 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
 
+    context.subscriptions.push(
+        window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
+            if (e?.document) {
+                if (!isJavaFile(e.document)) {
+                    return;
+                }
+
+                if (!await testSourceProvider.isOnTestSourcePath(e.document.uri)) {
+                    return;
+                }
+                await updateItemForDocumentWithDebounce(e.document.uri);
+            }
+        }),
+        workspace.onDidChangeTextDocument(async (e: TextDocumentChangeEvent) => {
+            if (!isJavaFile(e.document)) {
+                return;
+            }
+            if (!await testSourceProvider.isOnTestSourcePath(e.document.uri)) {
+                return;
+            }
+            await updateItemForDocumentWithDebounce(e.document.uri);
+        }),
+    );
+
     if (isStandardServerReady()) {
         registerTestCodeActionProvider();
         createTestController();
+    }
+
+    await showTestItemsInCurrentFile();
+}
+
+async function showTestItemsInCurrentFile(): Promise<void> {
+    if (window.activeTextEditor && isJavaFile(window.activeTextEditor.document) &&
+            await testSourceProvider.isOnTestSourcePath(window.activeTextEditor.document.uri)) {
+        // we didn't call the debounced version to avoid first call takes a long time and expand too much
+        // for the debounce window. (cpu resources are limited during activation)
+        await updateItemForDocument(window.activeTextEditor.document.uri);
     }
 }
 
@@ -107,3 +145,7 @@ const enum LanguageServerMode {
 }
 
 export let progressProvider: IProgressProvider | undefined;
+
+function isJavaFile(document: TextDocument): boolean {
+    return path.extname(document.fileName) === '.java';
+}

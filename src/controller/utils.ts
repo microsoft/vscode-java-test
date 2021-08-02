@@ -2,10 +2,13 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
+import { performance } from 'perf_hooks';
 import { CancellationToken, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants';
 import { IJavaTestItem, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
+import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
 import { testController } from './testController';
 import { dataCache } from './testItemDataCache';
 
@@ -107,6 +110,119 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
         parent.children.add(item);
     }
     return item;
+}
+
+let updateNodeForDocumentTimeout: NodeJS.Timer;
+/**
+ * Update test item in a document with adaptive debounce enabled.
+ * @param uri uri of the document
+ * @param testTypes test metadata
+ */
+export async function updateItemForDocumentWithDebounce(uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
+    if (updateNodeForDocumentTimeout) {
+        clearTimeout(updateNodeForDocumentTimeout);
+    }
+    const timeout: number = getRequestDelay(uri);
+    return new Promise<TestItem[]>((resolve: (items: TestItem[]) => void): void => {
+        updateNodeForDocumentTimeout = setTimeout(async () => {
+            const startTime: number = performance.now();
+            const result: TestItem[] = await updateItemForDocument(uri, testTypes);
+            const executionTime: number = performance.now() - startTime;
+            const movingAverage: MovingAverage = lruCache.get(uri) || new MovingAverage();
+            movingAverage.update(executionTime);
+            lruCache.set(uri, movingAverage);
+            return resolve(result);
+        }, timeout);
+    });
+}
+
+/**
+ * Update test item in a document immediately.
+ * @param uri uri of the document
+ * @param testTypes test metadata
+ */
+export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
+    testTypes = testTypes ?? await findTestTypesAndMethods(uri.toString());
+    if (testTypes.length === 0) {
+        return [];
+    }
+
+    const belongingPackage: TestItem | undefined = findBelongingPackageItem(testTypes[0])
+        || await resolveBelongingPackage(uri);
+    if (!belongingPackage) {
+        sendError(new Error('Failed to find the belonging package'));
+        return [];
+    }
+
+    const tests: TestItem[] = [];
+    for (const testType of testTypes) {
+        // here we do not directly call synchronizeItemsRecursively() because testTypes here are just part of the
+        // children of the belonging package, we don't want to delete other children unexpectedly.
+        let testTypeItem: TestItem | undefined = belongingPackage.children.get(testType.id);
+        if (!testTypeItem) {
+            testTypeItem = createTestItem(testType, belongingPackage);
+            testTypeItem.canResolveChildren = true;
+        } else {
+            updateTestItem(testTypeItem, testType);
+        }
+        tests.push(testTypeItem);
+        synchronizeItemsRecursively(testTypeItem, testType.children);
+    }
+
+    return tests;
+}
+
+/**
+ * Give a test item for a type, find its belonging package item according to its id.
+ */
+function findBelongingPackageItem(testType: IJavaTestItem): TestItem | undefined {
+    const indexOfProjectSeparator: number = testType.id.indexOf('@');
+    if (indexOfProjectSeparator < 0) {
+        return undefined;
+    }
+    const projectId: string = testType.id.substring(0, indexOfProjectSeparator);
+    const projectItem: TestItem | undefined = testController?.items.get(projectId);
+    if (!projectItem) {
+        return undefined;
+    }
+    const indexOfPackageSeparator: number = testType.id.lastIndexOf('.');
+    const packageId: string = testType.id.substring(indexOfProjectSeparator + 1, indexOfPackageSeparator);
+    const packageItem: TestItem | undefined = projectItem.children.get(`${projectId}@${packageId}`);
+    return packageItem;
+}
+
+/**
+ * Give a document uri, resolve its belonging package item.
+ */
+async function resolveBelongingPackage(uri: Uri): Promise<TestItem | undefined> {
+    const pathsData: IJavaTestItem[] = await resolvePath(uri.toString());
+    if (_.isEmpty(pathsData) || pathsData.length < 2) {
+        return undefined;
+    }
+
+    const projectData: IJavaTestItem = pathsData[0];
+    if (projectData.testLevel !== TestLevel.Project) {
+        return undefined;
+    }
+
+    let belongingProject: TestItem | undefined = testController?.items.get(projectData.id);
+    if (!belongingProject) {
+        belongingProject = createTestItem(projectData);
+        testController?.items.add(belongingProject);
+        belongingProject.canResolveChildren = true;
+    }
+
+    const packageData: IJavaTestItem = pathsData[1];
+    if (packageData.testLevel !== TestLevel.Package) {
+        return undefined;
+    }
+
+    let belongingPackage: TestItem | undefined = belongingProject.children.get(packageData.id);
+    if (!belongingPackage) {
+        belongingPackage = createTestItem(packageData, belongingProject);
+        belongingPackage.canResolveChildren = true;
+    }
+    return belongingPackage;
 }
 
 /**
