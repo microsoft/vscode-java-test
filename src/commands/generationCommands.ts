@@ -3,11 +3,12 @@
 
 import { commands, Disposable, ExtensionContext, QuickInputButton, QuickPick, QuickPickItem, TextEdit, ThemeIcon, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 import * as protocolConverter from 'vscode-languageclient/lib/protocolConverter';
-import * as commandUtils from '../utils/commandUtils';
+import { JavaTestRunnerDelegateCommands } from '../constants';
+import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 
 const converter: protocolConverter.Converter = protocolConverter.createConverter();
 export async function generateTests(uri: Uri, cursorOffset: number): Promise<void> {
-    const edit: WorkspaceEdit = converter.asWorkspaceEdit(await commandUtils.generateTests(uri, cursorOffset));
+    const edit: WorkspaceEdit = converter.asWorkspaceEdit(await askServerToGenerateTests(uri, cursorOffset));
     if (edit) {
         await workspace.applyEdit(edit);
         const entries: Array<[Uri, TextEdit[]]> = edit.entries();
@@ -113,6 +114,10 @@ export async function registerAskForInputCommand(context: ExtensionContext): Pro
         });
         return ans;
     }));
+}
+
+async function askServerToGenerateTests(uri: Uri, cursorOffset: number): Promise<any> {
+    return await executeJavaLanguageServerCommand<any>(JavaTestRunnerDelegateCommands.GENERATE_TESTS, uri.toString(), cursorOffset);
 }
 
 function checkJavaQualifiedName(value: string): string {
