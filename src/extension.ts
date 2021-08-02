@@ -3,9 +3,10 @@
 
 import * as path from 'path';
 import { commands, Event, Extension, ExtensionContext, extensions, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace } from 'vscode';
-import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
-import { registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
-import { Context, ExtensionName, VSCodeCommands } from './constants';
+import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
+import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
+import { openStackTrace } from './commands/testReportCommands';
+import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
 import { createTestController, testController } from './controller/testController';
 import { updateItemForDocument, updateItemForDocumentWithDebounce } from './controller/utils';
 import { IProgressProvider } from './debugger.api';
@@ -83,6 +84,10 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     registerAskForInputCommand(context);
 
     context.subscriptions.push(
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_OPEN_STACKTRACE, openStackTrace),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async () => await commands.executeCommand(VSCodeCommands.RUN_TESTS_IN_CURRENT_FILE)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async () => await commands.executeCommand(VSCodeCommands.DEBUG_TESTS_IN_CURRENT_FILE)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, ((uri: Uri, startPosition: number) => generateTests(uri, startPosition))),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (e?.document) {
                 if (!isJavaFile(e.document)) {
