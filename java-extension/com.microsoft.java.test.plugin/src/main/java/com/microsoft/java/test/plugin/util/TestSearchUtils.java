@@ -17,14 +17,17 @@ import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.provider.TestKindProvider;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -40,12 +43,18 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.manipulation.CoreASTProvider;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.core.search.TypeNameMatchRequestor;
 import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
+import org.eclipse.lsp4j.Location;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -414,6 +423,131 @@ public class TestSearchUtils {
         }
 
         return result;
+    }
+
+    /**
+     * Given the test item's full name, get its location. This is used to calculate the location for each test message.
+     */
+    public static Location findTestLocation(List<Object> arguments, IProgressMonitor monitor)
+            throws JavaModelException {
+        final String fullName = (String) arguments.get(0);
+        if (StringUtils.isEmpty(fullName)) {
+            return null;
+        }
+
+        final int projectNameEnd = fullName.indexOf("@");
+        if (projectNameEnd < 0) {
+            return null;
+        }
+
+        final String projectName = fullName.substring(0, projectNameEnd);
+        if (StringUtils.isEmpty(projectName)) {
+            return null;
+        }
+
+        final IJavaProject javaProject = ProjectUtils.getJavaProject(projectName);
+        if (javaProject == null) {
+            return null;
+        }
+
+        final int methodStart = fullName.indexOf("#");
+        final String typeName;
+        final String methodName;
+        if (methodStart > 0) {
+            typeName = fullName.substring(projectNameEnd + 1, methodStart);
+            methodName = fullName.substring(methodStart + 1);
+        } else {
+            typeName = fullName.substring(projectNameEnd + 1);
+            methodName = null;
+        }
+
+        final IType type = findType(javaProject, typeName, monitor);
+        if (type == null) {
+            return null;
+        }
+
+        if (StringUtils.isEmpty(methodName)) {
+            return new Location(JDTUtils.getFileURI(type.getResource()), TestItemUtils.parseTestItemRange(type));
+        }
+
+        for (final IMethod method : type.getMethods()) {
+            if (methodName.equals(method.getElementName())) {
+                // TODO: handle the override method
+                return new Location(JDTUtils.getFileURI(method.getResource()),
+                        TestItemUtils.parseTestItemRange(method));
+            }
+        }
+
+        return null;
+    }
+
+    protected static final IType findType(final IJavaProject project, String className, IProgressMonitor monitor) {
+        final IType[] result = { null };
+        final String dottedName = className.replace('$', '.'); // for nested classes...
+        try {
+            if (project != null) {
+                result[0] = internalFindType(project, dottedName, new HashSet<IJavaProject>(), monitor);
+            }
+            if (result[0] == null) {
+                final int lastDot = dottedName.lastIndexOf('.');
+                final TypeNameMatchRequestor nameMatchRequestor = new TypeNameMatchRequestor() {
+                    @Override
+                    public void acceptTypeNameMatch(TypeNameMatch match) {
+                        result[0] = match.getType();
+                    }
+                };
+                new SearchEngine().searchAllTypeNames(
+                        lastDot >= 0 ? dottedName.substring(0, lastDot).toCharArray() : null,
+                        SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
+                        (lastDot >= 0 ? dottedName.substring(lastDot + 1) : dottedName).toCharArray(),
+                        SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
+                        IJavaSearchConstants.TYPE,
+                        SearchEngine.createWorkspaceScope(),
+                        nameMatchRequestor,
+                        IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+                        monitor);
+            }
+        } catch (JavaModelException e) {
+            JUnitPlugin.log(e);
+        }
+        
+        return result[0];
+    }
+
+    /**
+     * copied from org.eclipse.jdt.internal.junit.ui.OpenEditorAction.internalFindType()
+     */
+    private static IType internalFindType(IJavaProject project, String className, Set<IJavaProject> visitedProjects,
+            IProgressMonitor monitor) throws JavaModelException {
+        try {
+            if (visitedProjects.contains(project)) {
+                return null;
+            }
+            monitor.beginTask("", 2); //$NON-NLS-1$
+            IType type = project.findType(className, new SubProgressMonitor(monitor, 1));
+            if (type != null) {
+                return type;
+            }
+            //fix for bug 87492: visit required projects explicitly to also find not exported types
+            visitedProjects.add(project);
+            final IJavaModel javaModel = project.getJavaModel();
+            final String[] requiredProjectNames = project.getRequiredProjectNames();
+            final IProgressMonitor reqMonitor = new SubProgressMonitor(monitor, 1);
+            reqMonitor.beginTask("", requiredProjectNames.length); //$NON-NLS-1$
+            for (final String requiredProjectName : requiredProjectNames) {
+                final  IJavaProject requiredProject = javaModel.getJavaProject(requiredProjectName);
+                if (requiredProject.exists()) {
+                    type = internalFindType(requiredProject, className, visitedProjects,
+                            new SubProgressMonitor(reqMonitor, 1));
+                    if (type != null) {
+                        return type;
+                    }
+                }
+            }
+            return null;
+        } finally {
+            monitor.done();
+        }
     }
 
     public static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
