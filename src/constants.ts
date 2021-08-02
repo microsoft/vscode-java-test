@@ -22,6 +22,9 @@ export namespace JavaTestRunnerCommands {
     export const DEBUG_TEST_FROM_EDITOR: string = 'java.test.editor.debug';
     export const RUN_TEST_FROM_JAVA_PROJECT_EXPLORER: string = 'java.test.runFromJavaProjectExplorer';
     export const DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER: string = 'java.test.debugFromJavaProjectExplorer';
+    export const RUN_FROM_TEST_EXPLORER: string = 'java.test.explorer.run';
+    export const DEBUG_FROM_TEST_EXPLORER: string = 'java.test.explorer.debug';
+    export const REFRESH_TEST_EXPLORER: string = 'java.test.refreshExplorer';
     export const JAVA_TEST_GENERATE_TESTS: string = 'java.test.generateTests';
     export const FIND_TEST_LOCATION: string = 'vscode.java.test.findTestLocation';
     export const JAVA_TEST_OPEN_STACKTRACE: string = '_java.test.openStackTrace';
