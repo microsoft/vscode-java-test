@@ -177,7 +177,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     }
                 }
                 if (parameters.size() > 0) {
-                    testName += String.format("(%s)", String.join(",", parameters));
+                    testName += "(" + String.join(",", parameters) + ")";
                 }
             }
             arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
