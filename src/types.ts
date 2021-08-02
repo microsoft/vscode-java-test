@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range } from 'vscode';
+import { Range, TestItem, TestRun, WorkspaceFolder } from 'vscode';
 
-/**
- * The test item data model that is returned from server side
- */
 export interface IJavaTestItem {
     children: IJavaTestItem[];
     uri: string | undefined;
@@ -35,4 +32,13 @@ export enum TestLevel {
     Class = 5,
     Method = 6,
     Invocation = 7,
+}
+
+export interface IRunTestContext {
+    isDebug: boolean;
+    kind: TestKind;
+    projectName: string;
+    testItems: TestItem[];
+    testRun: TestRun;
+    workspaceFolder: WorkspaceFolder;
 }
