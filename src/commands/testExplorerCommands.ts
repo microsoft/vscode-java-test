@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import { DebugConfiguration, TestItem, TestRunRequest } from 'vscode';
 import { runTests, testController } from '../controller/testController';
 import { loadJavaProjects } from '../controller/utils';
