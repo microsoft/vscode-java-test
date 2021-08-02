@@ -1,29 +1,44 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { logger } from '../../logger/logger';
+import { TestItem } from 'vscode';
+import { dataCache } from '../../controller/testItemDataCache';
+import { TestLevel } from '../../types';
 import { BaseRunner } from '../baseRunner/BaseRunner';
-import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
+import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
 import { TestNGRunnerResultAnalyzer } from './TestNGRunnerResultAnalyzer';
 
 export class TestNGRunner extends BaseRunner {
 
     public getRunnerCommandParams(): string[] {
-        return ['testng', ...this.testIds.map((id: string) => {
+        const testMethods: TestItem[] = [];
+        const queue: TestItem[] = [...this.testContext.testItems];
+        while (queue.length) {
+            const item: TestItem = queue.shift()!;
+            const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
+            if (testLevel === undefined) {
+                continue;
+            }
+            if (testLevel === TestLevel.Method) {
+                testMethods.push(item);
+            } else {
+                item.children.forEach((child: TestItem) => {
+                    queue.push(child);
+                });
+            }
+        }
+
+        return ['testng', ...testMethods.map((method: TestItem) => {
             // parse to fullName
-            const index: number = id.indexOf('@');
+            const index: number = method.id.indexOf('@');
             if (index < 0) {
-                logger.error(`Invalid ID: ${id}`);
                 return '';
             }
-            return id.slice(index + 1);
+            return method.id.slice(index + 1);
         }).filter(Boolean)];
     }
 
-    protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
-        if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new TestNGRunnerResultAnalyzer(this.context.projectName);
-        }
-        return this.runnerResultAnalyzer;
+    protected getAnalyzer(): IRunnerResultAnalyzer {
+        return new TestNGRunnerResultAnalyzer(this.testContext);
     }
 }
