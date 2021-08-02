@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { commands, Event, Extension, ExtensionContext, extensions, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
+import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
 import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
 import { createTestController, testController } from './controller/testController';
@@ -88,6 +89,9 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async () => await commands.executeCommand(VSCodeCommands.RUN_TESTS_IN_CURRENT_FILE)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async () => await commands.executeCommand(VSCodeCommands.DEBUG_TESTS_IN_CURRENT_FILE)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, ((uri: Uri, startPosition: number) => generateTests(uri, startPosition))),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER, async () => await refresh()),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (e?.document) {
                 if (!isJavaFile(e.document)) {
