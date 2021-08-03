@@ -109,8 +109,8 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
 
     /**
      * To re-calculate the parameters to the test runner, this is because the argument resolved by Eclipse only supports
-     * run single package/class, but its test runner supports to run multiple test items in a test session, so we update the
-     * parameters here to leverage this capability.
+     * run single package/class, but its test runner supports to run multiple test items in a test session,
+     * so we update the parameters here to leverage this capability.
      * @param programArguments
      * @return
      * @throws CoreException

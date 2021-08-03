@@ -290,7 +290,8 @@ public class TestSearchUtils {
      */
     public static List<JavaTestItem> findTestTypesAndMethods(List<Object> arguments, IProgressMonitor monitor)
             throws CoreException, OperationCanceledException, InterruptedException {
-        // todo: This method is somehow duplicated with findDirectTestChildrenForClass, considering merge them in the future.
+        // todo: This method is somehow duplicated with findDirectTestChildrenForClass,
+        // considering merge them in the future.
         final String uriString = (String) arguments.get(0);
 
         // wait for the LS finishing updating
