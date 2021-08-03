@@ -3,7 +3,6 @@
 
 //@ts-check
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -38,18 +37,6 @@ const config = {
                 loader: 'ts-loader',
             }]
         }]
-    },
-    plugins: [
-        // Copy files to dist folder where the runtime can find them
-        // @ts-ignore
-        new CopyWebpackPlugin({
-            patterns: [
-                {
-                    from: path.join(__dirname, 'out', 'test'),
-                    to: path.join(__dirname, 'dist', 'test')
-                },
-            ]
-        }),
-    ],
+    }
 }
 module.exports = config;

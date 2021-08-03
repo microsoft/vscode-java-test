@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Location, TestItem, TestMessage, TestResultState } from 'vscode';
+import { Location, MarkdownString, TestItem, TestMessage, TestResultState } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { IRunTestContext, TestLevel } from '../../types';
 import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
@@ -82,24 +82,40 @@ export class TestNGRunnerResultAnalyzer implements IRunnerResultAnalyzer {
                 return;
             }
             this.currentTestState = TestResultState.Failed;
+            const testMessages: TestMessage[] = [];
             if (outputData.attributes.message) {
-                const message: TestMessage = new TestMessage(outputData.attributes.message);
+                const message: TestMessage = new TestMessage(outputData.attributes.message.trim());
                 if (item.uri && item.range) {
                     message.location = new Location(item.uri, item.range);
                 }
-                setTestState(this.testContext.testRun, item, this.currentTestState, message);
+                testMessages.push(message);
             }
 
             if (outputData.attributes.trace) {
-                const trace: TestMessage = new TestMessage(outputData.attributes.trace);
-                if (item.uri && item.range) {
-                    trace.location = new Location(item.uri, item.range);
+                const traceString: string = outputData.attributes.trace.trim();
+                const markdownTrace: MarkdownString = new MarkdownString();
+                markdownTrace.isTrusted = true;
+                const traceRegExp: RegExp = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\(([\w-$]+\.java):(\d+)\)/;
+                for (const line of traceString.split(/\r?\n/)) {
+                    const traceResults: RegExpExecArray | null = traceRegExp.exec(line);
+                    if (traceResults && traceResults.length === 6) {
+                        markdownTrace.appendText(traceResults[1]);
+                        markdownTrace.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, this.projectName]))}))`);
+                    } else {
+                        // in case the message contains message like: 'expected: <..> but was: <..>'
+                        markdownTrace.appendText(line.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+                    }
+                    markdownTrace.appendText('\n');
                 }
-                setTestState(this.testContext.testRun, item, this.currentTestState, trace);
+                const testMessage: TestMessage = new TestMessage(markdownTrace);
+                if (item.uri && item.range) {
+                    testMessage.location = new Location(item.uri, item.range);
+                }
+                testMessages.push(testMessage);
             }
 
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
-            setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration);
+            setTestState(this.testContext.testRun, item, this.currentTestState, testMessages, duration);
         } else if (outputData.name === TEST_FINISH) {
             const item: TestItem | undefined = this.getTestItem(data);
             if (!item) {
