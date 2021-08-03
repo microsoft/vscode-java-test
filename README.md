@@ -3,11 +3,11 @@
 > Run and debug Java test cases in Visual Studio Code
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/resources/logo.png" width="128" height="128" alt="">
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/resources/logo.png" width="128" height="128" alt="">
 </p>
 <p align="center">
-  <a href="https://github.com/microsoft/vscode-java-test/actions?query=workflow%3ACI+branch%3Amaster">
-    <img src="https://img.shields.io/github/workflow/status/microsoft/vscode-java-test/CI/master?style=flat-square" alt="">
+  <a href="https://github.com/microsoft/vscode-java-test/actions?query=workflow%3ACI+branch%3Amain">
+    <img src="https://img.shields.io/github/workflow/status/microsoft/vscode-java-test/CI/main?style=flat-square" alt="">
   </a>
   <a href="https://lgtm.com/projects/g/microsoft/vscode-java-test/alerts/?mode=list">
     <img src="https://img.shields.io/lgtm/alerts/g/microsoft/vscode-java-test.svg?style=flat-square" alt="">
@@ -48,7 +48,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ### Run/Debug Test Cases
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/editor-decoration.png" alt="Run/Debug Test Cases"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/demo/editor-decoration.png" alt="Run/Debug Test Cases"/>
 </p>
 
 - The extension will generate shortcuts (the green play button) on the left side of the class and method definition. To run the target test cases, simply click on the green play button. You can also right click on it to see more options.
@@ -58,7 +58,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 ### Test Explorer
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/test_explorer.png" alt="Test Explorer"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/demo/test_explorer.png" alt="Test Explorer"/>
 </p>
 
 - The Test Explorer is the place to show all the test cases in your workspace. You can also run/debug your test cases from here.
@@ -67,7 +67,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 
 ### Customize Test Configurations
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/configuration.png" alt="Customize Test Configurations"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/demo/configuration.png" alt="Customize Test Configurations"/>
 </p>
 
 - Sometimes you may want to customize the configuration to run your test cases. To achieve this, you can add the configuration into your workspace settings under the section: `java.test.config`.
@@ -79,7 +79,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 ### View Test Result
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/test_report.png" alt="View Test Result"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/demo/test_report.png" alt="View Test Result"/>
 </p>
 
 - After running/debugging the test cases, the state of the related test items will be updated in both editor decoration and test explorer.
@@ -89,7 +89,7 @@ The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscja
 ### VS Code Embedded Commands for Testing
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/command_palette.png" alt="VS Code Embedded Commands for Testing"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/demo/command_palette.png" alt="VS Code Embedded Commands for Testing"/>
 </p>
 
 There are other VS Code embedded commands for testing, which can be found by searching `Test:` in the Command Palette.
@@ -104,7 +104,7 @@ There are other VS Code embedded commands for testing, which can be found by sea
 ### VS Code Embedded Settings for Testing
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/master/demo/settings.png" alt="VS Code Embedded Settings for Testing"/>
+  <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/demo/settings.png" alt="VS Code Embedded Settings for Testing"/>
 </p>
 
 There are some other VS Code embedded settings for testing, which can be found by searching `testing` in the Settings view.
@@ -126,10 +126,10 @@ If you meet any problem when using the extension, please refer to the [FAQ](http
 
 ## Contributing and Feedback
 
-If you are interested in providing feedback or contributing directly to the code base, please check the document [Contributing to Java Test Runner](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md), which covers the following parts:
-- [Questions and Feedback](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md#questions-and-feedback)
-- [Reporting Issues](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md#reporting-issues)
-- [Contributing Fixes](https://github.com/Microsoft/vscode-java-test/blob/master/CONTRIBUTING.md#contributing-fixes)
+If you are interested in providing feedback or contributing directly to the code base, please check the document [Contributing to Java Test Runner](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md), which covers the following parts:
+- [Questions and Feedback](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md#questions-and-feedback)
+- [Reporting Issues](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md#reporting-issues)
+- [Contributing Fixes](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md#contributing-fixes)
 
 ## License
 

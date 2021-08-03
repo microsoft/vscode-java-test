@@ -35,8 +35,8 @@ If you are interested in writing code to fix issues, please check the following 
 ### Overview
 The extension has three major modules, which are listed as follow:
 - The extension client written in TypeScript - UI logic mostly
-- [The Java Test Plugin](https://github.com/Microsoft/vscode-java-test/tree/master/java-extension/com.microsoft.java.test.plugin) written in Java - Inspect the Java project 
-- [The Java Test Runner](https://github.com/Microsoft/vscode-java-test/tree/master/java-extension/com.microsoft.java.test.runner) written in Java - An executable jar to running the test cases
+- [The Java Test Plugin](https://github.com/Microsoft/vscode-java-test/tree/main/java-extension/com.microsoft.java.test.plugin) written in Java - Inspect the Java project 
+- [The Java Test Runner](https://github.com/Microsoft/vscode-java-test/tree/main/java-extension/com.microsoft.java.test.runner) written in Java - An executable jar to running the test cases
 
 ### Setup
 1. Fork and clone the repository: `git clone git@github.com:Microsoft/vscode-java-test.git`
@@ -52,7 +52,7 @@ The extension has three major modules, which are listed as follow:
 ### Debugging
 1. Hit `F5` (or run `Launch Extension` in the debug viewlet) to launch the extension in debug mode
     > This will open a new VS Code window as a debug session. Open a Java project folder and let the extension be activated, then you can debug it.
-2. If you want to debug the Java Test Plugin, run [Debug Test Runner Java Plugin (Attach)](https://github.com/microsoft/vscode-java-test/blob/master/.vscode/launch.json) in the debug viewlet.
+2. If you want to debug the Java Test Plugin, run [Debug Test Runner Java Plugin (Attach)](https://github.com/microsoft/vscode-java-test/blob/main/.vscode/launch.json) in the debug viewlet.
 
 > Note: If the Java code is changed by you, please run `npm run build-plugin` before you start debugging, the output jars will be generated in the folder `server/`.
 
