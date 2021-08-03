@@ -4,10 +4,8 @@
 const gulp = require('gulp');
 const cp = require('child_process');
 const tslint = require('gulp-tslint');
-const sass = require('gulp-sass')(require('sass'));
 const path = require('path');
 const fs = require('fs');
-const remoteSrc = require('gulp-remote-src');
 
 const serverDir = path.join(__dirname, 'java-extension');
 const resourceDir = path.join(__dirname, 'resources');
@@ -53,24 +51,6 @@ gulp.task('tslint', (done) => {
 });
 
 gulp.task('lint', gulp.series('tslint'));
-
-// Test report resources
-gulp.task('sass', (done) => {
-    gulp.src(['resources/templates/scss/*.scss'])
-        .pipe(sass())
-        .pipe(gulp.dest('resources/templates/css'));
-    done();
-});
-
-gulp.task('download-resources', (done) => {
-    remoteSrc(['jquery-3.5.1.slim.min.js'], { base: 'https://code.jquery.com/' })
-        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
-    remoteSrc(['bootstrap.bundle.min.js'], { base: 'https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/' })
-        .pipe(gulp.dest(path.join(resourceDir, 'templates', 'js')));
-    done();
-});
-
-gulp.task('build-resources', gulp.series('sass', 'download-resources'));
 
 function isWin() {
     return /^win/.test(process.platform);
