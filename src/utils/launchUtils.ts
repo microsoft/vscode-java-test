@@ -34,7 +34,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
 
     if (testContext.kind === TestKind.TestNG) {
         return {
-            name: 'Launch Java Tests',
+            name: `Launch Java Tests - ${testContext.testItems[0].label}`,
             type: 'java',
             request: 'launch',
             mainClass: 'com.microsoft.java.test.runner.Launcher',
@@ -55,7 +55,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
     }
 
     return {
-        name: 'Launch Java Tests',
+        name: `Launch Java Tests - ${testContext.testItems[0].label}`,
         type: 'java',
         request: 'launch',
         mainClass: launchArguments.mainClass,

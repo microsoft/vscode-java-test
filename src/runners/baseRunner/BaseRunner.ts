@@ -70,7 +70,7 @@ export abstract class BaseRunner implements ITestRunner {
             return;
         }
         return await debug.startDebugging(this.testContext.workspaceFolder, launchConfiguration).then(async (success: boolean) => {
-            if (!success) {
+            if (!success || token.isCancellationRequested) {
                 this.tearDown();
                 return;
             }
