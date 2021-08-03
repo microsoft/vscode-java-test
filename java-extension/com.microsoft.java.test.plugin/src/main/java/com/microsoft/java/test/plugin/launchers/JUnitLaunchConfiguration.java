@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Microsoft Corporation and others.
+ * Copyright (c) 2019-2021 Microsoft Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,11 +11,10 @@
 
 package com.microsoft.java.test.plugin.launchers;
 
+import com.microsoft.java.test.plugin.util.JUnitPlugin;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.internal.core.LaunchConfiguration;
 import org.eclipse.debug.internal.core.LaunchConfigurationInfo;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
@@ -84,26 +83,21 @@ class JUnitLaunchConfigurationInfo extends LaunchConfigurationInfo {
             final Element root = parser.parse(source).getDocumentElement();
             initializeFromXML(root);
         } catch (ParserConfigurationException | SAXException | IOException | CoreException e) {
-            // do nothing
-            throw new CoreException(new Status(IStatus.ERROR, "com.microsoft.java.test.plugin.launchers",
-                    "Failed to load JUnit launch configuration", e));
+            JUnitPlugin.logException("Failed to load JUnit launch configuration.", e);
         }
     }
 }
 
 class TestInfo {
-    public String mainType = "";
     public String testContainer = "";
     public String testKind = "";
-    public String testName = "";
+    public String[] testNames;
     public IProject project;
 
     public Map<String, String> toValueMap() {
         final Map<String, String> valueMap = new HashMap<>();
         valueMap.put("testContainer", testContainer);
-        valueMap.put("testName", testName);
         valueMap.put("testKind", testKind);
-        valueMap.put("mainType", mainType);
         return valueMap;
     }
 }

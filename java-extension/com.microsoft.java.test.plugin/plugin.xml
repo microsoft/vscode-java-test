@@ -4,12 +4,13 @@
   <extension point="org.eclipse.jdt.ls.core.delegateCommandHandler">
     <delegateCommandHandler class="com.microsoft.java.test.plugin.handler.TestDelegateCommandHandler">
       <command id="vscode.java.test.get.testpath" />
-      <command id="vscode.java.test.search.items" />
-      <command id="vscode.java.test.search.items.all" />
-      <command id="vscode.java.test.search.codelens" />
-      <command id="vscode.java.test.search.location" />
       <command id="vscode.java.test.junit.argument" />
       <command id="vscode.java.test.generateTests" />
+      <command id="vscode.java.test.findJavaProjects" />
+      <command id="vscode.java.test.findTestPackagesAndTypes" />
+      <command id="vscode.java.test.findDirectTestChildrenForClass" />
+      <command id="vscode.java.test.findTestTypesAndMethods" />
+      <command id="vscode.java.test.resolvePath" />
     </delegateCommandHandler>
   </extension>
 </plugin>

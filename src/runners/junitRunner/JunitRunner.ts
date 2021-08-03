@@ -2,15 +2,14 @@
 // Licensed under the MIT license.
 
 import { AddressInfo } from 'net';
-import { DebugConfiguration } from 'vscode';
+import { CancellationToken, DebugConfiguration } from 'vscode';
 import { IProgressReporter } from '../../debugger.api';
 import { BaseRunner } from '../baseRunner/BaseRunner';
-import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
+import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
 import { JUnitRunnerResultAnalyzer } from './JUnitRunnerResultAnalyzer';
 
 export class JUnitRunner extends BaseRunner {
-
-    public async run(launchConfiguration: DebugConfiguration, progressReporter?: IProgressReporter): Promise<Set<string>> {
+    public async run(launchConfiguration: DebugConfiguration, token: CancellationToken, progressReporter?: IProgressReporter): Promise<void> {
         if (launchConfiguration.args) {
             // We need to replace the socket port number since the socket is established from the client side.
             // The port number returned from the server side is a fake one.
@@ -22,13 +21,11 @@ export class JUnitRunner extends BaseRunner {
                 args.push('-port', `${(this.server.address() as AddressInfo).port}`);
             }
         }
-        return super.run(launchConfiguration, progressReporter);
+
+        return super.run(launchConfiguration, token, progressReporter);
     }
 
-    protected get testResultAnalyzer(): BaseRunnerResultAnalyzer {
-        if (!this.runnerResultAnalyzer) {
-            this.runnerResultAnalyzer = new JUnitRunnerResultAnalyzer(this.context.projectName);
-        }
-        return this.runnerResultAnalyzer;
+    protected getAnalyzer(): IRunnerResultAnalyzer {
+        return new JUnitRunnerResultAnalyzer(this.testContext);
     }
 }

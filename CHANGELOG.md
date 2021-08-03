@@ -4,6 +4,10 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.31.0
+### Changed
+- Adopted new [VS Code testing API](https://github.com/microsoft/vscode/issues/107467). For more details, please refer to the [README page](https://github.com/microsoft/vscode-java-test/blob/main/README.md).
+
 ## 0.30.1
 ### Fixed
 - [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.30.1)

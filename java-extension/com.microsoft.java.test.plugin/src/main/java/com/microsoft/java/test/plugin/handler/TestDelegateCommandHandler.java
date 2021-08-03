@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017, 2019 Microsoft Corporation and others.
+* Copyright (c) 2017-2021 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -26,12 +26,14 @@ import java.util.List;
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.get.testpath";
-    private static final String SEARCH_TEST_ITEMS = "vscode.java.test.search.items";
-    private static final String SEARCH_TEST_ALL_ITEMS = "vscode.java.test.search.items.all";
-    private static final String SEARCH_TEST_CODE_LENS = "vscode.java.test.search.codelens";
-    private static final String SEARCH_TEST_LOCATION = "vscode.java.test.search.location";
     private static final String RESOLVE_JUNIT_ARGUMENT = "vscode.java.test.junit.argument";
     private static final String GENERATE_TESTS = "vscode.java.test.generateTests";
+    private static final String FIND_JAVA_PROJECT = "vscode.java.test.findJavaProjects";
+    private static final String FIND_PACKAGES_AND_TYPES = "vscode.java.test.findTestPackagesAndTypes";
+    private static final String FIND_DIRECT_CHILDREN_FOR_CLASS = "vscode.java.test.findDirectTestChildrenForClass";
+    private static final String FIND_TYPES_AND_METHODS = "vscode.java.test.findTestTypesAndMethods";
+    private static final String RESOLVE_PATH = "vscode.java.test.resolvePath";
+    private static final String FIND_TEST_LOCATION = "vscode.java.test.findTestLocation";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -42,18 +44,22 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
         switch (commandId) {
             case GET_TEST_SOURCE_PATH:
                 return ProjectTestUtils.listTestSourcePaths(arguments, monitor);
-            case SEARCH_TEST_ITEMS:
-                return TestSearchUtils.searchTestItems(arguments, monitor);
-            case SEARCH_TEST_ALL_ITEMS:
-                return TestSearchUtils.searchAllTestItems(arguments, monitor);
-            case SEARCH_TEST_CODE_LENS:
-                return TestSearchUtils.searchCodeLens(arguments, monitor);
-            case SEARCH_TEST_LOCATION:
-                return TestSearchUtils.searchLocation(arguments, monitor);
             case RESOLVE_JUNIT_ARGUMENT:
                 return JUnitLaunchUtils.resolveLaunchArgument(arguments, monitor);
             case GENERATE_TESTS:
                 return TestGenerationUtils.generateTests(arguments, monitor);
+            case FIND_JAVA_PROJECT:
+                return TestSearchUtils.findJavaProjects(arguments, monitor);
+            case FIND_PACKAGES_AND_TYPES:
+                return TestSearchUtils.findTestPackagesAndTypes(arguments, monitor);
+            case FIND_DIRECT_CHILDREN_FOR_CLASS:
+                return TestSearchUtils.findDirectTestChildrenForClass(arguments, monitor);
+            case FIND_TYPES_AND_METHODS:
+                return TestSearchUtils.findTestTypesAndMethods(arguments, monitor);
+            case RESOLVE_PATH:
+                return TestSearchUtils.resolvePath(arguments, monitor);
+            case FIND_TEST_LOCATION:
+                return TestSearchUtils.findTestLocation(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));

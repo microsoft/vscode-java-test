@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2018 Microsoft Corporation and others.
+* Copyright (c) 2018-2021 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -11,14 +11,12 @@
 
 package com.microsoft.java.test.plugin.searcher;
 
-import com.microsoft.java.test.plugin.model.TestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.model.TestLevel;
-import com.microsoft.java.test.plugin.util.TestItemUtils;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
@@ -49,13 +47,10 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class TestNGTestSearcher extends BaseFrameworkSearcher {
 
@@ -171,25 +166,6 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
         return false;
     }
 
-    @Override
-    public TestItem[] findTestsInContainer(final IJavaElement element, final IProgressMonitor monitor)
-            throws CoreException {
-        final Map<String, TestItem> result = new HashMap<>();
-        final Set<IType> types = new HashSet<>();
-        findTestsInContainer(element, types, monitor);
-        for (final IType type : types) {
-            final TestItem item = TestItemUtils.constructTestItem(type, TestLevel.CLASS, TestKind.TestNG);
-            item.setChildren(
-                    Arrays.stream(type.getMethods())
-                            .map(m -> m.getJavaProject().getProject().getName() + "@" +
-                                    TestItemUtils.parseTestItemFullName(m, TestLevel.METHOD))
-                            .collect(Collectors.toList()));
-            result.put(item.getId(), item);
-        }
-
-        return result.values().toArray(new TestItem[0]);
-    }
-
     /*
      * (non-Javadoc)
      *
@@ -239,6 +215,17 @@ public class TestNGTestSearcher extends BaseFrameworkSearcher {
         } finally {
             pm.done();
         }
+    }
+
+    @Override
+    public Set<IType> findTestItemsInContainer(IJavaElement element, IProgressMonitor monitor) throws CoreException {
+        final Set<IType> types = new HashSet<>();
+        try {
+            this.findTestsInContainer(element, types, monitor);
+        } catch (OperationCanceledException e) {
+            return Collections.emptySet();
+        }
+        return types;
     }
 }
 

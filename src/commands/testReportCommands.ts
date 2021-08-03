@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Position, QuickPickItem, Range, Uri, ViewColumn, window } from 'vscode';
-import { ILocation } from '../../extension.bundle';
-import { JavaTestRunnerCommands } from '../constants/commands';
-import { logger } from '../logger/logger';
-import { resolveStackTraceLocation, searchTestLocation } from '../utils/commandUtils';
+import { commands, Position, Range, Uri, ViewColumn, window } from 'vscode';
+import { JavaLanguageServerCommands } from '../constants';
+import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 
 export async function openStackTrace(trace: string, fullName: string): Promise<void> {
     if (!trace || !fullName) {
@@ -35,29 +33,7 @@ export async function openStackTrace(trace: string, fullName: string): Promise<v
     }
 }
 
-export async function openTestSourceLocation(uri: string, range: string, fullName: string): Promise<void> {
-    if (uri && range) {
-        return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(uri), JSON.parse(range) as Range);
-    } else if (fullName) {
-        const methodEndIndex: number = fullName.indexOf('[');
-        const items: ILocation[] = await searchTestLocation(fullName.slice(fullName.indexOf('@') + 1, methodEndIndex < 0 ? undefined : methodEndIndex));
-        if (items.length === 1) {
-            return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(items[0].uri), items[0].range);
-        } else if (items.length > 1) {
-            const pick: ILocationQuickPick | undefined = await window.showQuickPick(items.map((item: ILocation) => {
-                return { label: fullName, detail: Uri.parse(item.uri).fsPath, location: item };
-            }), { placeHolder: 'Select the file you want to navigate to' });
-            if (pick) {
-                return commands.executeCommand(JavaTestRunnerCommands.OPEN_DOCUMENT, Uri.parse(pick.location.uri), pick.location.range);
-            }
-        } else {
-            logger.error('No test item could be found from Language Server.');
-        }
-    } else {
-        logger.error('Could not open the document, Neither the Uri nor full name is null.');
-    }
-}
-
-interface ILocationQuickPick extends QuickPickItem {
-    location: ILocation;
+async function resolveStackTraceLocation(trace: string, projectNames: string[]): Promise<string> {
+    return await executeJavaLanguageServerCommand<string>(
+        JavaLanguageServerCommands.RESOLVE_STACKTRACE_LOCATION, trace, projectNames) || '';
 }

@@ -1,11 +1,12 @@
 {
+    "enableProposedApi": true,
     "name": "vscode-java-test",
     "displayName": "Java Test Runner",
     "description": "%description%",
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.30.1",
+    "version": "0.31.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -22,7 +23,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.56.0"
+        "vscode": "^1.59.0"
     },
     "categories": [
         "Other"
@@ -39,17 +40,12 @@
         "workspaceContains:build.gradle",
         "workspaceContains:.classpath",
         "onCommand:java.test.editor.run",
-        "onCommand:java.test.editor.debug",
-        "onCommand:java.test.cancel",
-        "onCommand:java.test.show.report",
-        "onCommand:java.test.show.output",
-        "onCommand:java.test.open.log",
-        "onCommand:java.test.config.migrate"
+        "onCommand:java.test.editor.debug"
     ],
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.30.1.jar",
+            "./server/com.microsoft.java.test.plugin-0.31.0.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.1.1200.v20200214-0716.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.0.900.v20200513-0617.jar",
             "./server/org.junit.jupiter.api_5.6.0.v20200203-2009.jar",
@@ -65,18 +61,9 @@
             "./server/org.junit.platform.suite.api_1.6.0.v20200203-2009.jar",
             "./server/org.apiguardian_1.1.0.v20190826-0900.jar"
         ],
-        "views": {
-            "test": [
-                {
-                    "id": "testExplorer",
-                    "name": "Java",
-                    "when": "java:testRunnerActivated"
-                }
-            ]
-        },
         "viewsWelcome": [
             {
-                "view": "testExplorer",
+                "view": "testing",
                 "contents": "%contributes.viewsWelcome.inLightWeightMode%",
                 "when": "java:serverMode == LightWeight"
             },
@@ -94,52 +81,12 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "java.test.relaunch",
-                    "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@10"
-                },
-                {
-                    "command": "java.test.explorer.runAll",
-                    "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@20"
-                },
-                {
-                    "command": "java.test.explorer.debugAll",
-                    "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@30"
-                },
-                {
-                    "command": "java.test.explorer.refresh",
-                    "when": "view == testExplorer && java:serverMode != LightWeight",
-                    "group": "navigation@40"
+                    "command": "java.test.refreshExplorer",
+                    "when": "view == workbench.view.testing",
+                    "group": "zzz@zzz"
                 }
             ],
             "view/item/context": [
-                {
-                    "command": "java.test.explorer.run",
-                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
-                    "group": "testExplorer@0"
-                },
-                {
-                    "command": "java.test.explorer.debug",
-                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
-                    "group": "testExplorer@1"
-                },
-                {
-                    "command": "java.test.explorer.refresh",
-                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
-                    "group": "testExplorer@4"
-                },
-                {
-                    "command": "java.test.explorer.run",
-                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
-                    "group": "inline@0"
-                },
-                {
-                    "command": "java.test.explorer.debug",
-                    "when": "view == testExplorer && viewItem != UNTESTABLE_NODE",
-                    "group": "inline@1"
-                },
                 {
                     "command": "java.test.runFromJavaProjectExplorer",
                     "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
@@ -158,18 +105,6 @@
             ],
             "commandPalette": [
                 {
-                    "command": "java.test.explorer.run",
-                    "when": "false"
-                },
-                {
-                    "command": "java.test.explorer.debug",
-                    "when": "false"
-                },
-                {
-                    "command": "java.test.explorer.refresh",
-                    "when": "false"
-                },
-                {
                     "command": "java.test.runFromJavaProjectExplorer",
                     "when": "false"
                 },
@@ -178,89 +113,25 @@
                     "when": "false"
                 },
                 {
-                    "command": "java.test.config.migrate",
-                    "when": "java:hasDeprecatedTestConfig"
-                },
-                {
-                    "command": "java.test.explorer.runAll",
-                    "when": "java:serverMode != LightWeight"
-                },
-                {
-                    "command": "java.test.explorer.debugAll",
-                    "when": "java:serverMode != LightWeight"
-                },
-                {
                     "command": "java.test.editor.run",
                     "when": "java:serverMode != LightWeight"
                 },
                 {
                     "command": "java.test.editor.debug",
                     "when": "java:serverMode != LightWeight"
-                },
-                {
-                    "command": "java.test.relaunch",
-                    "when": "java:serverMode != LightWeight"
-                },
-                {
-                    "command": "java.test.cancel",
-                    "when": "java:serverMode != LightWeight"
-                },
-                {
-                    "command": "java.test.show.report",
-                    "when": "java:serverMode != LightWeight"
                 }
             ]
         },
         "commands": [
             {
-                "command": "java.test.show.output",
-                "title": "%contributes.commands.java.test.show.output.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.open.log",
-                "title": "%contributes.commands.java.test.open.log.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.run",
-                "title": "%contributes.commands.java.test.explorer.run.title%",
-                "icon": "$(play)",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.debug",
-                "title": "%contributes.commands.java.test.explorer.debug.title%",
-                "icon": "$(debug-alt-small)",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.runAll",
-                "title": "%contributes.commands.java.test.explorer.runAll.title%",
-                "icon": "$(run-all)",
-                "category": "Java"
-            },
-            {
                 "command": "java.test.runFromJavaProjectExplorer",
-                "title": "%contributes.commands.java.test.runFromJavaProjectExplorer%",
+                "title": "%contributes.commands.java.test.runFromJavaProjectExplorer.title%",
                 "icon": "$(play)",
                 "category": "Java"
             },
             {
                 "command": "java.test.debugFromJavaProjectExplorer",
-                "title": "%contributes.commands.java.test.debugFromJavaProjectExplorer%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.debugAll",
-                "title": "%contributes.commands.java.test.explorer.debugAll.title%",
-                "icon": "$(debug-alt)",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.relaunch",
-                "title": "%contributes.commands.java.test.relaunch.title%",
-                "icon": "$(debug-restart)",
+                "title": "%contributes.commands.java.test.debugFromJavaProjectExplorer.title%",
                 "category": "Java"
             },
             {
@@ -274,80 +145,14 @@
                 "category": "Java"
             },
             {
-                "command": "java.test.cancel",
-                "title": "%contributes.commands.java.test.cancel.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.show.report",
-                "title": "%contributes.commands.java.test.show.report.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.explorer.refresh",
-                "title": "%contributes.commands.java.test.explorer.refresh.title%",
-                "icon": "$(refresh)",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.config.migrate",
-                "title": "%contributes.commands.java.test.config.migrate.title%",
+                "command": "java.test.refreshExplorer",
+                "title": "%contributes.commands.java.test.refreshExplorer.title%",
                 "category": "Java"
             }
         ],
         "configuration": {
             "title": "Java Test Runner",
             "properties": {
-                "java.test.report.showAfterExecution": {
-                    "type": "string",
-                    "enum": [
-                        "always",
-                        "onFailure",
-                        "never"
-                    ],
-                    "default": "onFailure",
-                    "description": "%configuration.java.test.report.showAfterExecution.description%",
-                    "scope": "window"
-                },
-                "java.test.report.position": {
-                    "type": "string",
-                    "enum": [
-                        "sideView",
-                        "currentView"
-                    ],
-                    "default": "sideView",
-                    "description": "%configuration.java.test.report.position.description%",
-                    "scope": "window"
-                },
-                "java.test.editor.enableShortcuts": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%configuration.java.test.editor.enableShortcuts.description%",
-                    "scope": "application"
-                },
-                "java.test.log.level": {
-                    "type": "string",
-                    "enum": [
-                        "error",
-                        "info",
-                        "verbose"
-                    ],
-                    "default": "info",
-                    "description": "%configuration.java.test.log.level.description%",
-                    "scope": "application"
-                },
-                "java.test.message.hintForDeprecatedConfig": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%configuration.java.test.message.hintForDeprecatedConfig.description%",
-                    "scope": "application"
-                },
-                "java.test.message.hintForSetingDefaultConfig": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%configuration.java.test.message.hintForSetingDefaultConfig.description%",
-                    "scope": "application"
-                },
                 "java.test.defaultConfig": {
                     "type": "string",
                     "description": "%configuration.java.test.defaultConfig.description%",
@@ -458,8 +263,10 @@
         "test": "npm run compile && node ./dist/test/index.js",
         "lint": "gulp lint",
         "build-plugin": "gulp build-plugin",
-        "build-resources": "gulp build-resources",
-        "vscode:prepublish": "gulp build-resources && webpack --mode production"
+        "vscode:prepublish": "webpack --mode production",
+        "download-api": "vscode-dts dev -f",
+        "postdownload-api": "vscode-dts main -f",
+        "postinstall": "npm run download-api"
     },
     "extensionDependencies": [
         "redhat.java",
@@ -471,37 +278,27 @@
         "@types/lodash": "^4.14.150",
         "@types/mocha": "^2.2.48",
         "@types/node": "^14.14.33",
-        "@types/pug": "^2.0.4",
-        "@types/sinon": "^9.0.11",
         "@types/vscode": "1.56.0",
-        "bootstrap": "^4.6.0",
-        "copy-webpack-plugin": "^6.4.1",
         "gulp": "^4.0.2",
-        "gulp-remote-src": "^0.4.4",
-        "gulp-sass": "^5.0.0",
         "gulp-tslint": "^8.1.4",
         "mocha": "^7.1.2",
-        "pug": "^3.0.1",
-        "pug-loader": "^2.4.0",
-        "sass": "^1.35.1",
-        "sinon": "^9.0.2",
         "ts-loader": "^5.4.5",
         "tslint": "^5.20.1",
         "typescript": "^4.2.4",
         "vscode-test": "^1.3.0",
         "webpack": "^4.46.0",
-        "webpack-cli": "^3.3.11"
+        "webpack-cli": "^3.3.11",
+        "vscode-dts": "^0.3.1"
     },
     "dependencies": {
-        "compare-versions": "^3.6.0",
+        "@types/lru-cache": "^5.1.0",
         "fs-extra": "^7.0.1",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.4.24",
-        "vscode-languageclient": "6.0.0-next.9",
         "lodash": "^4.17.19",
+        "lru-cache": "^6.0.0",
         "vscode-extension-telemetry-wrapper": "0.9.0",
-        "vscode-tas-client": "^0.1.22",
-        "winston": "^3.2.1",
-        "winston-transport": "^4.3.0"
+        "vscode-languageclient": "6.0.0-next.9",
+        "vscode-tas-client": "^0.1.22"
     }
 }

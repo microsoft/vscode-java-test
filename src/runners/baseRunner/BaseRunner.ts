@@ -1,47 +1,34 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as fse from 'fs-extra';
 import { default as getPort } from 'get-port';
 import * as iconv from 'iconv-lite';
 import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
-import * as path from 'path';
-import { debug, DebugConfiguration, DebugSession, Disposable, Uri, workspace } from 'vscode';
-import { LOCAL_HOST } from '../../constants/configs';
+import { CancellationToken, debug, DebugConfiguration, DebugSession, Disposable } from 'vscode';
+import { sendError } from 'vscode-extension-telemetry-wrapper';
+import { Configurations } from '../../constants';
 import { IProgressReporter } from '../../debugger.api';
-import { logger } from '../../logger/logger';
-import { ITestItem, TestLevel } from '../../protocols';
 import { IExecutionConfig } from '../../runConfigs';
-import { testResultManager } from '../../testResultManager';
+import { IRunTestContext } from '../../types';
 import { ITestRunner } from '../ITestRunner';
-import { IRunnerContext, ITestResult, TestStatus } from '../models';
-import { BaseRunnerResultAnalyzer } from './BaseRunnerResultAnalyzer';
+import { IRunnerResultAnalyzer } from './IRunnerResultAnalyzer';
 
 export abstract class BaseRunner implements ITestRunner {
-    protected testIds: string[];
-    protected context: IRunnerContext;
     protected server: Server;
     protected socket: Socket;
-    protected runnerResultAnalyzer: BaseRunnerResultAnalyzer;
+    protected runnerResultAnalyzer: IRunnerResultAnalyzer;
 
     private disposables: Disposable[] = [];
 
-    constructor(
-        protected extensionPath: string) {}
+    constructor(protected testContext: IRunTestContext) {}
 
-    public async setup(context: IRunnerContext): Promise<void> {
-        this.context = context;
+    public async setup(): Promise<void> {
         await this.startSocketServer();
-        const flattenedTestIds: string[] = [];
-        for (const test of context.tests) {
-            this.flattenTestIds(test, flattenedTestIds);
-        }
-        this.testIds = flattenedTestIds;
-        this.updateTestResultsToPending();
+        this.runnerResultAnalyzer = this.getAnalyzer();
     }
 
-    public async run(launchConfiguration: DebugConfiguration, progressReporter?: IProgressReporter): Promise<Set<string>> {
+    public async run(launchConfiguration: DebugConfiguration, token: CancellationToken, progressReporter?: IProgressReporter): Promise<void> {
         let data: string = '';
         this.server.on('connection', (socket: Socket) => {
             this.socket = socket;
@@ -53,7 +40,7 @@ export abstract class BaseRunner implements ITestRunner {
                 data = data.concat(iconv.decode(buffer, launchConfiguration.encoding || 'utf8'));
                 const index: number = data.lastIndexOf(os.EOL);
                 if (index >= 0) {
-                    this.testResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
+                    this.runnerResultAnalyzer.analyzeData(data.substring(0, index + os.EOL.length));
                     data = data.substring(index + os.EOL.length);
                 }
             });
@@ -70,49 +57,49 @@ export abstract class BaseRunner implements ITestRunner {
         // Run from integrated terminal will terminate the debug session immediately after launching,
         // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
-        launchConfiguration.internalConsoleOptions = 'openOnSessionStart';
 
-        launchConfiguration.__progressId = progressReporter?.getId();
+        let debugSession: DebugSession | undefined;
+        this.disposables.push(debug.onDidStartDebugSession((session: DebugSession) => {
+            if (session.name === launchConfiguration.name) {
+                debugSession = session;
+            }
+        }));
 
-        const uri: Uri = Uri.parse(this.context.tests[0].location.uri);
-        logger.verbose(`Launching with the following launch configuration: '${JSON.stringify(launchConfiguration, null, 2)}'\n`);
-
-        return await debug.startDebugging(workspace.getWorkspaceFolder(uri), launchConfiguration).then(async (success: boolean) => {
+        if (token.isCancellationRequested || progressReporter?.isCancelled()) {
+            this.tearDown();
+            return;
+        }
+        return await debug.startDebugging(this.testContext.workspaceFolder, launchConfiguration).then(async (success: boolean) => {
             if (!success) {
                 this.tearDown();
-                return this.testResultAnalyzer.tearDown();
+                return;
             }
 
-            return await new Promise<Set<string>>((resolve: (ids: Set<string>) => void): void => {
+            token.onCancellationRequested(() => {
+                debugSession?.customRequest('disconnect', { restart: false });
+            });
+
+            return await new Promise<void>((resolve: () => void): void => {
                 this.disposables.push(
                     debug.onDidTerminateDebugSession((session: DebugSession): void => {
                         if (launchConfiguration.name === session.name) {
+                            debugSession = undefined;
                             this.tearDown();
                             if (data.length > 0) {
-                                this.testResultAnalyzer.analyzeData(data);
+                                this.runnerResultAnalyzer.analyzeData(data);
                             }
-                            return resolve(this.testResultAnalyzer.tearDown());
+                            return resolve();
                         }
                     }),
                 );
             });
-        }, ((reason: any): any => {
-            logger.error(`${reason}`);
+        }, ((): any => {
             this.tearDown();
-            return this.testResultAnalyzer.tearDown();
+            return;
         }));
     }
 
     public async tearDown(): Promise<void> {
-        for (const id of this.testIds) {
-            const result: ITestResult | undefined = testResultManager.getResultById(id);
-            // In case that unexpected errors terminate the execution
-            if (result && (result.status === TestStatus.Pending || result.status === TestStatus.Running)) {
-                result.status = undefined;
-                testResultManager.storeResult(result);
-            }
-        }
-
         try {
             if (this.socket) {
                 this.socket.removeAllListeners();
@@ -128,29 +115,8 @@ export abstract class BaseRunner implements ITestRunner {
                 disposable.dispose();
             }
         } catch (error) {
-            logger.error('Failed to clean up', error);
+            sendError(error);
         }
-    }
-
-    public get runnerJarFilePath(): Promise<string> {
-        return this.getPath('com.microsoft.java.test.runner.jar');
-    }
-
-    public get runnerLibPath(): Promise<string> {
-        return this.getPath('lib');
-    }
-
-    public get runnerMainClassName(): string {
-        return 'com.microsoft.java.test.runner.Launcher';
-    }
-
-    public get serverPort(): number {
-        const address: AddressInfo = this.server.address() as AddressInfo;
-        if (address) {
-            return address.port;
-        }
-
-        throw new Error('The socket server is not started yet.');
     }
 
     public getApplicationArgs(config?: IExecutionConfig): string[] {
@@ -166,59 +132,19 @@ export abstract class BaseRunner implements ITestRunner {
         return applicationArgs;
     }
 
-    protected abstract get testResultAnalyzer(): BaseRunnerResultAnalyzer;
-
-    protected get runnerDir(): string {
-        return path.join(this.extensionPath, 'server');
+    protected async startSocketServer(): Promise<void> {
+        this.server = createServer();
+        const socketPort: number = await getPort();
+        await new Promise<void>((resolve: () => void): void => {
+            this.server.listen(socketPort, Configurations.LOCAL_HOST, resolve);
+        });
     }
 
     protected getRunnerCommandParams(_config?: IExecutionConfig): string[] {
         return [];
     }
 
-    protected async startSocketServer(): Promise<void> {
-        this.server = createServer();
-        const socketPort: number = await getPort();
-        await new Promise<void>((resolve: () => void): void => {
-            this.server.listen(socketPort, LOCAL_HOST, resolve);
-        });
-    }
-
-    private async getPath(subPath: string): Promise<string> {
-        const fullPath: string = path.join(this.runnerDir, subPath);
-        if (await fse.pathExists(fullPath)) {
-            return fullPath;
-        }
-        throw new Error(`Failed to find path: ${fullPath}`);
-    }
-
-    private updateTestResultsToPending(): void {
-        const runningResults: ITestResult[] = [];
-        for (const id of this.testIds) {
-            runningResults.push({
-                id,
-                status: TestStatus.Pending,
-            });
-        }
-        testResultManager.storeResult(...runningResults);
-    }
-
-    /**
-     * Add all of the method IDs into `flattenedItemIds`. No need to recursively call this method,
-     * since the input `test` is not tree-like
-     */
-    private flattenTestIds(test: ITestItem, flattenedItemIds: string[]): void {
-        if (test.level === TestLevel.Method) {
-            flattenedItemIds.push(test.id);
-        } else if (test.level === TestLevel.Class) {
-            if (test.children) {
-                flattenedItemIds.push(...test.children);
-            } else {
-                // for JUnit 4's @Suite.SuiteClasses
-                flattenedItemIds.push(test.id);
-            }
-        }
-    }
+    protected abstract getAnalyzer(): IRunnerResultAnalyzer;
 }
 
 export interface IJUnitLaunchArguments {

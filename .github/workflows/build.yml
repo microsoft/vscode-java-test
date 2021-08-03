@@ -40,8 +40,8 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
-    - name: Test extension
-      run: DISPLAY=:99 npm test
+    # - name: Test extension
+    #   run: DISPLAY=:99 npm test
 
     - name: Print language server Log if job failed
       if: ${{ failure() }}
@@ -107,8 +107,8 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
-    - name: Test extension
-      run: npm test
+    # - name: Test extension
+    #   run: npm test
 
     - name: Print language server Log if job failed
       if: ${{ failure() }}

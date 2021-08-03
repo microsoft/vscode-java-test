@@ -2,24 +2,15 @@
 // Licensed under the MIT license.
 
 import * as crypto from 'crypto';
-import * as fse from 'fs-extra';
 import * as _ from 'lodash';
-import * as path from 'path';
-import { commands, ConfigurationTarget, QuickPickItem, TextDocument, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { ConfigurationTarget, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
-import { VsCodeCommands } from '../constants/commands';
-import { BUILTIN_CONFIG_NAME, CONFIG_DOCUMENT_URL, CONFIG_SETTING_KEY, DEFAULT_CONFIG_NAME_SETTING_KEY, HINT_FOR_DEFAULT_CONFIG_SETTING_KEY } from '../constants/configs';
-import { LEARN_MORE, NEVER_SHOW, NO, OPEN_SETTING, YES } from '../constants/dialogOptions';
-import { logger } from '../logger/logger';
-import { getBuiltinConfig, IExecutionConfig, ITestConfig } from '../runConfigs';
+import { Configurations, Dialog } from '../constants';
+import { extensionContext } from '../extension';
+import { getBuiltinConfig, IExecutionConfig } from '../runConfigs';
 
-export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined): Promise<IExecutionConfig | undefined> {
-    if (!workspaceFolder) {
-        window.showErrorMessage('Failed to get workspace folder for the test items.');
-        return undefined;
-    }
-
-    const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(CONFIG_SETTING_KEY, {});
+export async function loadRunConfig(workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
+    const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(Configurations.CONFIG_SETTING_KEY, {});
     const configItems: IExecutionConfig[] = [];
     if (!_.isEmpty(configSetting)) {
         if (_.isArray(configSetting)) {
@@ -29,9 +20,9 @@ export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined
         }
     }
 
-    const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(DEFAULT_CONFIG_NAME_SETTING_KEY);
+    const defaultConfigName: string | undefined = workspace.getConfiguration(undefined, workspaceFolder.uri).get<string>(Configurations.DEFAULT_CONFIG_NAME_SETTING_KEY);
     if (defaultConfigName) {
-        if (defaultConfigName === BUILTIN_CONFIG_NAME) {
+        if (defaultConfigName === Configurations.BUILTIN_CONFIG_NAME) {
             sendInfo('', { usingDefaultConfig: 1 });
             return getBuiltinConfig();
         }
@@ -50,49 +41,6 @@ export async function loadRunConfig(workspaceFolder: WorkspaceFolder | undefined
         }
     }
     return await selectQuickPick(configItems, workspaceFolder);
-}
-
-export async function migrateTestConfig(): Promise<void> {
-    const deprecatedConfigs: Uri[] = await workspace.findFiles('**/.vscode/launch.test.json');
-    if (deprecatedConfigs.length === 0) {
-        window.showInformationMessage('No deprecated launch.test.json found in current workspace.');
-        return;
-    }
-    const deprecatedConfigPath: string[] = deprecatedConfigs.map((uri: Uri) => uri.fsPath);
-    const selectedConfig: string[] | undefined = await window.showQuickPick(deprecatedConfigPath, {
-        ignoreFocusOut: true,
-        placeHolder: 'Select the configuration(s) you want to migrate',
-        canPickMany: true,
-    });
-    if (!selectedConfig) {
-        return;
-    }
-    for (const config of selectedConfig) {
-        try {
-            await migrate(config);
-        } catch (error) {
-            await window.showErrorMessage(`Failed to migrate the configuration file: ${config}`);
-        }
-    }
-    const choice: string | undefined = await window.showInformationMessage("Migration finished, would you like to remove the deprecated 'launch.test.json' file(s)?", YES, OPEN_SETTING, LEARN_MORE);
-    if (choice === YES) {
-        for (const config of selectedConfig) {
-            await fse.remove(config);
-        }
-        window.showInformationMessage("Successfully removed the deprecated 'launch.test.json' file(s).");
-    } else if (choice === OPEN_SETTING) {
-        for (const config of selectedConfig) {
-            const settingUri: Uri = Uri.file(path.join(config, '..', 'settings.json'));
-            if (!await fse.pathExists(settingUri.fsPath)) {
-                logger.error(`workspace setting not found: ${settingUri.fsPath}`);
-                continue;
-            }
-            const document: TextDocument = await workspace.openTextDocument(settingUri);
-            await window.showTextDocument(document, { preview: false });
-        }
-    } else if (choice === LEARN_MORE) {
-        commands.executeCommand(VsCodeCommands.VSCODE_OPEN, Uri.parse(CONFIG_DOCUMENT_URL));
-    }
 }
 
 async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
@@ -131,52 +79,25 @@ async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: Wor
 
 async function askPreferenceForConfig(configs: IExecutionConfig[], selectedConfig: IExecutionConfig, workspaceFolderUri: Uri): Promise<void> {
     const workspaceConfiguration: WorkspaceConfiguration = workspace.getConfiguration(undefined, workspaceFolderUri);
-    const showHint: boolean | undefined = workspaceConfiguration.get<boolean>(HINT_FOR_DEFAULT_CONFIG_SETTING_KEY);
+    const showHint: boolean | undefined = extensionContext.globalState.get<boolean>(Configurations.HINT_FOR_DEFAULT_CONFIG_SETTING_KEY);
     if (!showHint) {
         return;
     }
-    const choice: string | undefined = await window.showInformationMessage('Would you like to set this configuration as default?', YES, NO, NEVER_SHOW);
-    if (!choice || choice === NO) {
+    const choice: string | undefined = await window.showInformationMessage('Would you like to set this configuration as default?', Dialog.YES, Dialog.NO, Dialog.NEVER_SHOW);
+    if (!choice || choice === Dialog.NO) {
         return;
-    } else if (choice === NEVER_SHOW) {
-        workspaceConfiguration.update(HINT_FOR_DEFAULT_CONFIG_SETTING_KEY, false, true /* global setting */);
+    } else if (choice === Dialog.NEVER_SHOW) {
+        await extensionContext.globalState.update(Configurations.HINT_FOR_DEFAULT_CONFIG_SETTING_KEY, false);
         return;
     }
     if (selectedConfig.name) {
-        workspaceConfiguration.update(DEFAULT_CONFIG_NAME_SETTING_KEY, selectedConfig.name, ConfigurationTarget.WorkspaceFolder);
+        workspaceConfiguration.update(Configurations.DEFAULT_CONFIG_NAME_SETTING_KEY, selectedConfig.name, ConfigurationTarget.WorkspaceFolder);
     } else {
         const randomName: string = `config-${randomSequence()}`;
         selectedConfig.name = randomName;
-        workspaceConfiguration.update(DEFAULT_CONFIG_NAME_SETTING_KEY, selectedConfig.name, ConfigurationTarget.WorkspaceFolder);
-        workspaceConfiguration.update(CONFIG_SETTING_KEY, configs, ConfigurationTarget.WorkspaceFolder);
+        workspaceConfiguration.update(Configurations.DEFAULT_CONFIG_NAME_SETTING_KEY, selectedConfig.name, ConfigurationTarget.WorkspaceFolder);
+        workspaceConfiguration.update(Configurations.CONFIG_SETTING_KEY, configs, ConfigurationTarget.WorkspaceFolder);
     }
-}
-
-async function migrate(configPath: string): Promise<void> {
-    const workspaceConfig: WorkspaceConfiguration = workspace.getConfiguration(undefined, Uri.file(configPath));
-    const configSetting: IExecutionConfig[] | IExecutionConfig = workspaceConfig.get<IExecutionConfig[] | IExecutionConfig>(CONFIG_SETTING_KEY, {});
-    let configItems: IExecutionConfig[] = [];
-    if (!_.isEmpty(configSetting)) {
-        if (_.isArray(configSetting)) {
-            configItems.push(...configSetting);
-        } else if (_.isPlainObject(configSetting)) {
-            configItems.push(configSetting);
-        }
-    }
-
-    const deprecatedConfig: ITestConfig = await fse.readJSON(configPath);
-    if (deprecatedConfig.debug && deprecatedConfig.debug.items) {
-        for (const item of deprecatedConfig.debug.items) {
-            configItems.push(_.omit(item, ['name', 'projectName', 'preLaunchTask']));
-        }
-    }
-    if (deprecatedConfig.run && deprecatedConfig.run.items) {
-        for (const item of deprecatedConfig.run.items) {
-            configItems.push(_.omit(item, ['name', 'projectName', 'preLaunchTask']));
-        }
-    }
-    configItems = _.uniqWith(configItems, _.isEqual);
-    workspaceConfig.update(CONFIG_SETTING_KEY, configItems, ConfigurationTarget.WorkspaceFolder);
 }
 
 export function randomSequence(): string {

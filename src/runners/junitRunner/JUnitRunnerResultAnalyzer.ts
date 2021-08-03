@@ -1,16 +1,48 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { logger } from '../../logger/logger';
-import { testResultManager } from '../../testResultManager';
-import { BaseRunnerResultAnalyzer } from '../baseRunner/BaseRunnerResultAnalyzer';
-import { ITestResult, TestStatus } from '../models';
+import * as path from 'path';
+import { Location, MarkdownString, Range, TestItem, TestMessage, TestResultState } from 'vscode';
+import { INVOCATION_PREFIX } from '../../constants';
+import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
+import { createTestItem } from '../../controller/utils';
+import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
+import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { findTestLocation, setTestState } from '../utils';
 
-export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
+export class JUnitRunnerResultAnalyzer implements IRunnerResultAnalyzer {
 
-    private currentTestItem: string;
-    private traces: string;
-    private isRecordingTraces: boolean;
+    private testOutputMapping: Map<string, ITestInfo> = new Map();
+    private triggeredTestsMapping: Map<string, TestItem> = new Map();
+    private currentTestState: TestResultState;
+    private currentItem: TestItem | undefined;
+    private currentDuration: number = 0;
+    private traces: MarkdownString;
+    private assertionFailure: TestMessage | undefined;
+    private recordingType: RecordingType;
+    private expectString: string;
+    private actualString: string;
+    private projectName: string;
+    private incompleteTestSuite: ITestInfo[] = [];
+
+    constructor(private testContext: IRunTestContext) {
+        this.projectName = testContext.projectName;
+        const queue: TestItem[] = [...testContext.testItems];
+        while (queue.length) {
+            const item: TestItem = queue.shift()!;
+            const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
+            if (testLevel === undefined || testLevel === TestLevel.Invocation) {
+                continue;
+            } else if (testLevel === TestLevel.Method && item.parent) {
+                this.triggeredTestsMapping.set(item.parent.id, item.parent);
+            } else {
+                item.children.forEach((child: TestItem) => {
+                    queue.push(child);
+                });
+            }
+            this.triggeredTestsMapping.set(item.id, item);
+        }
+     }
 
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
@@ -19,100 +51,136 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
                 continue;
             }
             this.processData(line);
-            logger.verbose(line + '\n');
+            this.testContext.testRun.appendOutput(line + '\r\n');
         }
     }
 
-    protected processData(data: string): void {
-        if (data.startsWith(MessageId.TestStart)) {
-            const testId: string = this.getTestId(data);
-            if (!testId) {
+    public processData(data: string): void {
+        if (data.startsWith(MessageId.TestTree)) {
+            this.enlistToTestMapping(data.substr(MessageId.TestTree.length).trim());
+        } else if (data.startsWith(MessageId.TestStart)) {
+            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestStart.length));
+            if (!item) {
                 return;
             }
-            this.currentTestItem = testId;
-
-            let result: ITestResult;
-            if (this.testIds.has(testId)) {
-                result = Object.assign({}, testResultManager.getResultById(testId), {
-                    id: testId,
-                    status: TestStatus.Running,
-                });
-            } else {
-                // the test has not been executed in current test session.
-                // create a new result object
-                result = {
-                    id: testId,
-                    status: TestStatus.Running,
-                };
-                this.testIds.add(testId);
+            if (item.id !== this.currentItem?.id) {
+                this.initializeCache(item);
             }
+            this.testContext.testRun.started(item);
 
             const start: number = Date.now();
-            if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
-                result.status = TestStatus.Skip;
-            } else if (result.duration === undefined) {
-                result.duration = -start;
-            } else if (result.duration >= 0) {
+            if (this.currentDuration === 0) {
+                this.currentDuration = -start;
+            } else if (this.currentDuration > 0) {
                 // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
-                result.duration -= start;
+                this.currentDuration -= start;
             }
-            testResultManager.storeResult(result);
         } else if (data.startsWith(MessageId.TestEnd)) {
-            const testId: string = this.getTestId(data);
-            if (testId) {
-                const finishedResult: ITestResult | undefined = testResultManager.getResultById(testId);
-                if (!finishedResult) {
-                    return;
-                }
-                if (finishedResult.status === TestStatus.Running) {
-                    if (finishedResult.trace) {
-                        finishedResult.status = TestStatus.Fail;
-                    } else {
-                        finishedResult.status = TestStatus.Pass;
-                    }
-                }
-                updateElapsedTime(finishedResult);
-                testResultManager.storeResult(finishedResult);
-            }
-        } else if (data.startsWith(MessageId.TestFailed) || data.startsWith(MessageId.TestError)) {
-            const testId: string = this.getTestId(data);
-            if (testId) {
-                this.currentTestItem = testId;
-                const failedResult: ITestResult = Object.assign({}, testResultManager.getResultById(testId), {
-                    id: testId,
-                    status: data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1 ? TestStatus.Skip : TestStatus.Fail,
-                });
-                updateElapsedTime(failedResult);
-                testResultManager.storeResult(failedResult);
-                this.testIds.add(testId);
-            }
-        } else if (data.startsWith(MessageId.TraceStart)) {
-            this.traces = '';
-            this.isRecordingTraces = true;
-        } else if (data.startsWith(MessageId.TraceEnd)) {
-            const failedResult: ITestResult | undefined = testResultManager.getResultById(this.currentTestItem);
-            if (!failedResult) {
+            if (!this.currentItem) {
                 return;
             }
-            failedResult.trace = this.traces;
-            this.isRecordingTraces = false;
-            testResultManager.storeResult(failedResult);
-        } else if (this.isRecordingTraces) {
-            this.traces += data + '\n';
+
+            if (this.currentDuration < 0) {
+                const end: number = Date.now();
+                this.currentDuration += end;
+            }
+
+            if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
+                this.currentTestState = TestResultState.Skipped;
+            } else if (this.currentTestState === TestResultState.Running) {
+                this.currentTestState = TestResultState.Passed;
+            }
+            setTestState(this.testContext.testRun, this.currentItem, this.currentTestState, undefined, this.currentDuration);
+        } else if (data.startsWith(MessageId.TestFailed)) {
+            if (data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1) {
+                this.currentTestState = TestResultState.Skipped;
+            } else {
+                this.currentTestState = TestResultState.Failed;
+            }
+        } else if (data.startsWith(MessageId.TestError)) {
+            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestError.length));
+            if (!item) {
+                return;
+            }
+            if (item.id !== this.currentItem?.id) {
+                this.initializeCache(item);
+            }
+            this.currentTestState = TestResultState.Errored;
+        } else if (data.startsWith(MessageId.TraceStart)) {
+            this.traces = new MarkdownString();
+            this.traces.isTrusted = true;
+            this.recordingType = RecordingType.StackTrace;
+        } else if (data.startsWith(MessageId.TraceEnd)) {
+            if (!this.currentItem) {
+                return;
+            }
+
+            const testMessage: TestMessage = new TestMessage(this.traces);
+            this.tryAppendMessage(this.currentItem, testMessage);
+            this.recordingType = RecordingType.None;
+            if (this.currentTestState === TestResultState.Errored) {
+                setTestState(this.testContext.testRun, this.currentItem, this.currentTestState);
+            }
+        } else if (data.startsWith(MessageId.ExpectStart)) {
+            this.recordingType = RecordingType.ExpectMessage;
+        } else if (data.startsWith(MessageId.ExpectEnd)) {
+            this.recordingType = RecordingType.None;
+            this.expectString = this.expectString.replace(/\n$/, '');
+        } else if (data.startsWith(MessageId.ActualStart)) {
+            this.recordingType = RecordingType.ActualMessage;
+        } else if (data.startsWith(MessageId.ActualEnd)) {
+            this.recordingType = RecordingType.None;
+            this.actualString = this.actualString.replace(/\n$/, '');
+            if (!this.assertionFailure && this.expectString && this.actualString) {
+                this.assertionFailure = TestMessage.diff(`Expected [${this.expectString}] but was [${this.actualString}]`, this.expectString, this.actualString);
+            }
+        } else if (this.recordingType === RecordingType.ExpectMessage) {
+            this.expectString += data + '\n';
+        } else if (this.recordingType === RecordingType.ActualMessage) {
+            this.actualString += data + '\n';
+        } else if (this.recordingType === RecordingType.StackTrace) {
+            if (!this.assertionFailure) {
+                const assertionRegExp: RegExp = /expected.*:.*<(.+?)>.*but.*:.*<(.+?)>/mi;
+                const assertionResults: RegExpExecArray | null = assertionRegExp.exec(data);
+                if (assertionResults && assertionResults.length === 3) {
+                    this.assertionFailure = TestMessage.diff(`Expected [${assertionResults[1]}] but was [${assertionResults[2]}]`, assertionResults[1], assertionResults[2]);
+                }
+            }
+            const traceRegExp: RegExp = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\(([\w-$]+\.java):(\d+)\)/;
+            const traceResults: RegExpExecArray | null = traceRegExp.exec(data);
+            if (traceResults && traceResults.length === 6) {
+                this.traces.appendText(traceResults[1]);
+                this.traces.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, this.projectName]))}))`);
+                if (this.assertionFailure && this.currentItem && path.basename(this.currentItem.uri?.fsPath || '') === traceResults[4]) {
+                    const lineNum: number = parseInt(traceResults[5], 10);
+                    if (this.currentItem.uri) {
+                        this.assertionFailure.location = new Location(this.currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
+                    }
+                    setTestState(this.testContext.testRun, this.currentItem, TestResultState.Failed, this.assertionFailure);
+                }
+            } else {
+                // in case the message contains message like: 'expected: <..> but was: <..>'
+                this.traces.appendText(data.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+            }
+            this.traces.appendText('\n');
         }
+    }
+
+    protected getTestItem(message: string): TestItem | undefined {
+        const index: string = message.substring(0, message.indexOf(',')).trim();
+        return this.testOutputMapping.get(index)?.testItem;
     }
 
     protected getTestId(message: string): string {
         /**
          * The following regex expression is used to parse the test runner's output, which match the following components:
-         * '\d+,'                                - index from the test runner
          * '(?:@AssumptionFailure: |@Ignore: )?' - indicate if the case is ignored due to assumption failure or disabled
          * '(.*?)'                               - test method name
-         * '(?:\[\d+\])?'                        - execution index, it will appear for the JUnit4's parameterized test
+         * '(?:\[\d+.*?\])?'                        - execution index, it will appear for the JUnit4's parameterized test
          * '\(([^)]*)\)[^(]*$'                   - class fully qualified name which wrapped by the last paired brackets, see:
          *                                         https://github.com/microsoft/vscode-java-test/issues/1075
          */
-        const regexp: RegExp = /\d+,(?:@AssumptionFailure: |@Ignore: )?(.*?)(?:\[\d+\])?\(([^)]*)\)[^(]*$/;
+        const regexp: RegExp = /(?:@AssumptionFailure: |@Ignore: )?(.*?)(?:\[\d+.*?\])?\(([^)]*)\)[^(]*$/;
         const matchResults: RegExpExecArray | null = regexp.exec(message);
         if (matchResults && matchResults.length === 3) {
             return `${this.projectName}@${matchResults[2]}#${matchResults[1]}`;
@@ -121,28 +189,160 @@ export class JUnitRunnerResultAnalyzer extends BaseRunnerResultAnalyzer {
         // In case the output is class level, i.e.: `%ERROR 2,a.class.FullyQualifiedName`
         const indexOfSpliter: number = message.lastIndexOf(',');
         if (indexOfSpliter > -1) {
-            return `${this.projectName}@${message.slice(indexOfSpliter + 1)}#<TestError>`;
+            return `${this.projectName}@${message.slice(indexOfSpliter + 1)}`;
         }
 
-        logger.error(`Failed to parse the message: ${message}`);
-        return '';
+        return `${this.projectName}@${message}`;
     }
-}
 
-function updateElapsedTime(result: ITestResult): void {
-    if (result.duration && result.duration < 0) {
-        const end: number = Date.now();
-        result.duration += end;
+    protected initializeCache(item: TestItem): void {
+        this.currentTestState = TestResultState.Running;
+        this.currentItem = item;
+        this.currentDuration = 0;
+        this.assertionFailure = undefined;
+        this.expectString = '';
+        this.actualString = '';
+        this.recordingType = RecordingType.None;
+    }
+
+    private enlistToTestMapping(message: string): void {
+        const regExp: RegExp = /([^\\,]|\\\,?)+/gm;
+        // See MessageId.TestTree's comment for its format
+        const result: RegExpMatchArray | null = message.match(regExp);
+        if (result && result.length > 6) {
+            // for now, skip the param test for JUnit 4
+            if (/^\[\d+.*?\]$/.test(result[1])) {
+                return;
+            }
+            const index: string = result[0];
+            const testId: string = this.getTestId(result[1]);
+            const isSuite: boolean = result[2] === 'true';
+            const testCount: number = parseInt(result[3], 10);
+            const isDynamic: boolean = result[4] === 'true';
+            const parentIndex: string = result[5];
+            const displayName: string = result[6].replace(/\\,/g, ',');
+
+            let testItem: TestItem | undefined;
+            if (isDynamic) {
+                const parentInfo: ITestInfo | undefined = this.testOutputMapping.get(parentIndex);
+                const parent: TestItem | undefined = parentInfo?.testItem;
+                if (parent) {
+                    const parentData: ITestItemData | undefined = dataCache.get(parent);
+                    if (parentData?.testLevel === TestLevel.Method) {
+                        testItem = createTestItem({
+                            children: [],
+                            uri: parent.uri?.toString(),
+                            range: parent.range,
+                            jdtHandler: parentData.jdtHandler,
+                            fullName: parentData.fullName,
+                            label: displayName,
+                            id: `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
+                            projectName: parentData.projectName,
+                            testKind: parentData.testKind,
+                            testLevel: TestLevel.Invocation,
+                        }, parent);
+                    }
+                }
+            } else {
+                testItem = this.triggeredTestsMapping.get(testId);
+
+                if (this.incompleteTestSuite.length) {
+                    const suiteIdx: number = this.incompleteTestSuite.length - 1;
+                    const parentSuite: ITestInfo = this.incompleteTestSuite[suiteIdx];
+                    parentSuite.testCount--;
+                    if (parentSuite.testCount <= 0) {
+                        this.incompleteTestSuite.pop();
+                    }
+                    if (!testItem && parentSuite.testItem) {
+                        const itemData: IJavaTestItem | undefined = {
+                            children: [],
+                            uri: undefined,
+                            range: undefined,
+                            jdtHandler: '',
+                            fullName: testId.substr(testId.indexOf('@') + 1),
+                            label: displayName,
+                            id: `${INVOCATION_PREFIX}${testId}`,
+                            projectName: this.projectName,
+                            testKind: this.testContext.kind,
+                            testLevel: TestLevel.Invocation,
+                        };
+                        testItem = createTestItem(itemData, parentSuite.testItem);
+                    }
+                }
+
+                if (isSuite && testCount > 0) {
+                    this.incompleteTestSuite.push({
+                        testId,
+                        testCount,
+                        testItem,
+                    });
+                }
+
+                if (testItem && dataCache.get(testItem)?.testKind === TestKind.JUnit5 && testItem.label !== displayName) {
+                    testItem.description = displayName;
+                }
+            }
+
+            this.testOutputMapping.set(index, {
+                testId,
+                testCount,
+                testItem,
+            });
+        }
+    }
+
+    private async tryAppendMessage(item: TestItem, testMessage: TestMessage): Promise<void> {
+        if (item.uri && item.range) {
+            testMessage.location = new Location(item.uri, item.range);
+        } else {
+            let id: string = item.id;
+            if (id.startsWith(INVOCATION_PREFIX)) {
+                id = id.substring(INVOCATION_PREFIX.length);
+            }
+            const location: Location | undefined = await findTestLocation(id);
+            testMessage.location = location;
+        }
+        setTestState(this.testContext.testRun, item, TestResultState.Failed, testMessage);
     }
 }
 
 enum MessageId {
+    /**
+     * Notification about a test inside the test suite.
+     * TEST_TREE + testId + "," + testName + "," + isSuite + "," + testCount + "," + isDynamicTest +
+     * "," + parentId + "," + displayName + "," + parameterTypes + "," + uniqueId
+     * isSuite = "true" or "false"
+     * isDynamicTest = "true" or "false"
+     * parentId = the unique id of its parent if it is a dynamic test, otherwise can be "-1"
+     * displayName = the display name of the test
+     * parameterTypes = comma-separated list of method parameter types if applicable, otherwise an
+     * empty string
+     * uniqueId = the unique ID of the test provided by JUnit launcher, otherwise an empty string
+     */
+    TestTree = '%TSTTREE',
     TestStart = '%TESTS',
     TestEnd = '%TESTE',
     TestFailed = '%FAILED',
     TestError = '%ERROR',
+    ExpectStart = '%EXPECTS',
+    ExpectEnd = '%EXPECTE',
+    ActualStart = '%ACTUALS',
+    ActualEnd = '%ACTUALE',
     TraceStart = '%TRACES',
     TraceEnd = '%TRACEE',
     IGNORE_TEST_PREFIX = '@Ignore: ',
     ASSUMPTION_FAILED_TEST_PREFIX = '@AssumptionFailure: ',
+}
+
+interface ITestInfo {
+    testId: string;
+    testCount: number;
+    testItem: TestItem | undefined;
+}
+
+enum RecordingType {
+    None,
+    StackTrace,
+    ExpectMessage,
+    ActualMessage,
 }
