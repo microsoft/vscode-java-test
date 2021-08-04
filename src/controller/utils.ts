@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
+import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { CancellationToken, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
@@ -143,30 +144,44 @@ export async function updateItemForDocumentWithDebounce(uri: Uri, testTypes?: IJ
  */
 export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
     testTypes = testTypes ?? await findTestTypesAndMethods(uri.toString());
-    if (testTypes.length === 0) {
-        return [];
-    }
 
-    const belongingPackage: TestItem | undefined = findBelongingPackageItem(testTypes[0])
-        || await resolveBelongingPackage(uri);
+    let belongingPackage: TestItem | undefined;
+    if (testTypes.length === 0) {
+        belongingPackage = await resolveBelongingPackage(uri);
+    } else {
+        belongingPackage = findBelongingPackageItem(testTypes[0]) || await resolveBelongingPackage(uri);
+    }
     if (!belongingPackage) {
         sendError(new Error('Failed to find the belonging package'));
         return [];
     }
 
     const tests: TestItem[] = [];
-    for (const testType of testTypes) {
-        // here we do not directly call synchronizeItemsRecursively() because testTypes here are just part of the
-        // children of the belonging package, we don't want to delete other children unexpectedly.
-        let testTypeItem: TestItem | undefined = belongingPackage.children.get(testType.id);
-        if (!testTypeItem) {
-            testTypeItem = createTestItem(testType, belongingPackage);
-            testTypeItem.canResolveChildren = true;
-        } else {
-            updateTestItem(testTypeItem, testType);
+    if (testTypes.length === 0) {
+        // Remove the children with the same uri when no test items is found
+        belongingPackage.children.forEach((typeItem: TestItem) => {
+            if (path.relative(typeItem.uri?.fsPath || '', uri.fsPath) === '') {
+                belongingPackage!.children.delete(typeItem.id);
+            }
+        });
+    } else {
+        for (const testType of testTypes) {
+            // here we do not directly call synchronizeItemsRecursively() because testTypes here are just part of the
+            // children of the belonging package, we don't want to delete other children unexpectedly.
+            let testTypeItem: TestItem | undefined = belongingPackage.children.get(testType.id);
+            if (!testTypeItem) {
+                testTypeItem = createTestItem(testType, belongingPackage);
+                testTypeItem.canResolveChildren = true;
+            } else {
+                updateTestItem(testTypeItem, testType);
+            }
+            tests.push(testTypeItem);
+            synchronizeItemsRecursively(testTypeItem, testType.children);
         }
-        tests.push(testTypeItem);
-        synchronizeItemsRecursively(testTypeItem, testType.children);
+    }
+
+    if (belongingPackage.children.size === 0) {
+        belongingPackage.parent?.children.delete(belongingPackage.id);
     }
 
     return tests;
