@@ -82,26 +82,23 @@ public class TestSearchUtils {
             // todo: handle non-file scheme
             return Collections.emptyList();
         }
-        final List<IJavaProject> javaProjects = new LinkedList<>();
+        final List<JavaTestItem> resultList = new LinkedList<>();
         for (final IJavaProject project : ProjectUtils.getJavaProjects()) {
             if (monitor != null && monitor.isCanceled()) {
                 return Collections.emptyList();
             }
+
             if (project.getProject().equals(JavaLanguageServerPlugin.getProjectsManager().getDefaultProject())) {
                 continue;
             }
-            javaProjects.add(project);
-        }
 
-        final List<JavaTestItem> resultList = new LinkedList<>();
-        for (final IJavaProject project : javaProjects) {
             try {
                 resultList.add(TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, TestKind.None));
             } catch (JavaModelException e) {
                 JUnitPlugin.logError("Failed to parse project item: " + project.getElementName());
             }
         }
-        
+
         return resultList;
     }
 
