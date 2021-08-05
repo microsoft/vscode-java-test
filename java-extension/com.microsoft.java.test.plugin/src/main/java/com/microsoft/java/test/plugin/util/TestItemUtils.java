@@ -15,7 +15,9 @@ import com.microsoft.java.test.plugin.model.JavaTestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.ISourceRange;
@@ -24,6 +26,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.hover.JavaElementLabels;
 import org.eclipse.lsp4j.Range;
 
@@ -35,7 +38,15 @@ public class TestItemUtils {
     public static JavaTestItem constructJavaTestItem(IJavaElement element, TestLevel level, TestKind kind)
             throws JavaModelException {
         final String displayName;
-        if (element instanceof IPackageFragment && ((IPackageFragment) element).isDefaultPackage()) {
+        if (element instanceof IJavaProject) {
+            final IJavaProject javaProject = (IJavaProject) element;
+            final IProject project = javaProject.getProject();
+            if (ProjectUtils.isVisibleProject(project)) {
+                displayName = project.getName();
+            } else {
+                displayName = ProjectUtils.getProjectRealFolder(project).lastSegment();
+            }
+        } else if (element instanceof IPackageFragment && ((IPackageFragment) element).isDefaultPackage()) {
             displayName = DEFAULT_PACKAGE_NAME;
         } else {
             displayName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT);
