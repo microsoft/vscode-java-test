@@ -2,14 +2,14 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
 import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
 import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
-import { createTestController, testController } from './controller/testController';
+import { createTestController, testController, watchers } from './controller/testController';
 import { updateItemForDocument, updateItemForDocumentWithDebounce } from './controller/utils';
 import { IProgressProvider } from './debugger.api';
 import { initExpService } from './experimentationService';
@@ -30,6 +30,9 @@ export async function deactivate(): Promise<void> {
     disposeCodeActionProvider();
     await disposeTelemetryWrapper();
     testController?.dispose();
+    for (const disposable of watchers) {
+        disposable.dispose();
+    }
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
@@ -115,6 +118,17 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 return;
             }
             await updateItemForDocumentWithDebounce(e.document.uri);
+        }),
+        workspace.onDidChangeWorkspaceFolders(async (e: WorkspaceFoldersChangeEvent) => {
+            for (const deletedFolder of e.removed) {
+                testSourceProvider.delete(deletedFolder.uri);
+            }
+            // workaround to wait for Java Language Server to accept the workspace folder change event,
+            // otherwise we cannot find the projects in the new workspace folder.
+            // TODO: this event should be notified by onDidProjectsImport, we need to fix upstream
+            setTimeout(() => {
+                createTestController();
+            }, 1000);
         }),
     );
 

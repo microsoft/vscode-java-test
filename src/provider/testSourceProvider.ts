@@ -51,6 +51,10 @@ class TestSourcePathProvider {
         this.testSourceMapping.clear();
     }
 
+    public delete(workspaceUri: Uri): boolean {
+        return this.testSourceMapping.delete(workspaceUri);
+    }
+
     private async getTestPaths(workspaceFolder: WorkspaceFolder): Promise<ITestSourcePath[]> {
         let testPaths: ITestSourcePath[] | undefined = this.testSourceMapping.get(workspaceFolder.uri);
         if (!testPaths) {

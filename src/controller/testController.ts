@@ -6,7 +6,7 @@ import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, R
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { INVOCATION_PREFIX } from '../constants';
 import { IProgressReporter } from '../debugger.api';
-import { extensionContext, isStandardServerReady, progressProvider } from '../extension';
+import { isStandardServerReady, progressProvider } from '../extension';
 import { testSourceProvider } from '../provider/testSourceProvider';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
@@ -19,6 +19,7 @@ import { dataCache, ITestItemData } from './testItemDataCache';
 import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 
 export let testController: TestController | undefined;
+export const watchers: Disposable[] = [];
 
 export function createTestController(): void {
     if (!isStandardServerReady()) {
@@ -67,11 +68,15 @@ async function startWatchingWorkspace(): Promise<void> {
         return;
     }
 
+    for (const disposable of watchers) {
+        disposable.dispose();
+    }
+
     for (const workspaceFolder of workspace.workspaceFolders) {
         const patterns: RelativePattern[] = await testSourceProvider.getTestSourcePattern(workspaceFolder);
         for (const pattern of patterns) {
             const watcher: FileSystemWatcher = workspace.createFileSystemWatcher(pattern);
-            extensionContext.subscriptions.push(
+            watchers.push(
                 watcher,
                 watcher.onDidCreate(async (uri: Uri) => {
                     const testTypes: IJavaTestItem[] = await findTestTypesAndMethods(uri.toString());

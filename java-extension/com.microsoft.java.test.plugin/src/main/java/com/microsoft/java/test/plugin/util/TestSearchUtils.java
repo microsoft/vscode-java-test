@@ -62,6 +62,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -76,12 +77,14 @@ public class TestSearchUtils {
             return Collections.emptyList();
         }
         final String workspaceFolderUri = (String) arguments.get(0);
-        final IPath workspaceFolderPath = ResourceUtils.filePathFromURI(workspaceFolderUri);
+        final IPath workspaceFolderPath = ResourceUtils.canonicalFilePathFromURI(workspaceFolderUri);
         if (workspaceFolderPath == null) {
             JUnitPlugin.logError("Failed to parse workspace folder path from uri: " + workspaceFolderUri);
             // todo: handle non-file scheme
             return Collections.emptyList();
         }
+
+        final String invisibleProjectName = ProjectUtils.getWorkspaceInvisibleProjectName(workspaceFolderPath);
         final List<JavaTestItem> resultList = new LinkedList<>();
         for (final IJavaProject project : ProjectUtils.getJavaProjects()) {
             if (monitor != null && monitor.isCanceled()) {
@@ -89,6 +92,15 @@ public class TestSearchUtils {
             }
 
             if (project.getProject().equals(JavaLanguageServerPlugin.getProjectsManager().getDefaultProject())) {
+                continue;
+            }
+
+            // Ignore all the projects that's not contained in the workspace folder, except
+            // for the invisible project. This is to make sure in a multi-roots workspace, an
+            // out-of-date invisible project won't be listed in the result.
+            if ((!ResourceUtils.isContainedIn(project.getProject().getLocation(),
+                    Collections.singletonList(workspaceFolderPath)) && !Objects.equals(project.getProject().getName(),
+                    invisibleProjectName))) {
                 continue;
             }
 
