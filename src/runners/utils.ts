@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Location, TestItem, TestMessage, TestResultState, TestRun, Uri } from 'vscode';
+import { Location, TestItem, TestMessage, TestRun, Uri } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants';
 import { asRange } from '../controller/utils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
@@ -35,4 +35,20 @@ export function setTestState(testRun: TestRun, item: TestItem, result: TestResul
         default:
             break;
     }
+}
+
+// Copied from the proposed part of the API
+export enum TestResultState {
+    // Test will be run, but is not currently running.
+    Queued = 1,
+    // Test is currently running
+    Running = 2,
+    // Test run has passed
+    Passed = 3,
+    // Test run has failed (on an assertion)
+    Failed = 4,
+    // Test run has been skipped
+    Skipped = 5,
+    // Test run failed for some other reason (compilation error, timeout, etc)
+    Errored = 6,
 }

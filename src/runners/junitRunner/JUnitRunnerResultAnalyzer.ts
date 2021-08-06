@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { Location, MarkdownString, Range, TestItem, TestMessage, TestResultState } from 'vscode';
+import { Location, MarkdownString, Range, TestItem, TestMessage } from 'vscode';
 import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { createTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
 import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
-import { findTestLocation, setTestState } from '../utils';
+import { findTestLocation, setTestState, TestResultState } from '../utils';
 
 export class JUnitRunnerResultAnalyzer implements IRunnerResultAnalyzer {
 
