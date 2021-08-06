@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Location, MarkdownString, TestItem, TestMessage, TestResultState } from 'vscode';
+import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { IRunTestContext, TestLevel } from '../../types';
 import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
-import { setTestState } from '../utils';
+import { setTestState, TestResultState } from '../utils';
 
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';
