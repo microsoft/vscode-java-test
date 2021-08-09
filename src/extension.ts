@@ -100,7 +100,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (e?.document) {
-                if (!isJavaFile(e.document)) {
+                if (!isJavaFile(e.document) || !isStandardServerReady()) {
                     return;
                 }
 
@@ -111,9 +111,10 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             }
         }),
         workspace.onDidChangeTextDocument(async (e: TextDocumentChangeEvent) => {
-            if (!isJavaFile(e.document)) {
+            if (!isJavaFile(e.document) || !isStandardServerReady()) {
                 return;
             }
+
             if (!await testSourceProvider.isOnTestSourcePath(e.document.uri)) {
                 return;
             }
@@ -135,9 +136,9 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     if (isStandardServerReady()) {
         registerTestCodeActionProvider();
         createTestController();
+        await showTestItemsInCurrentFile();
     }
 
-    await showTestItemsInCurrentFile();
 }
 
 async function showTestItemsInCurrentFile(): Promise<void> {

@@ -6,9 +6,9 @@ const cp = require('child_process');
 const tslint = require('gulp-tslint');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const serverDir = path.join(__dirname, 'java-extension');
-const resourceDir = path.join(__dirname, 'resources');
 
 // Build required jar files.
 gulp.task('build-plugin', (done) => {
@@ -77,6 +77,7 @@ function updateVersion() {
         });
 
         fs.writeFileSync('./package.json', JSON.stringify(packageJsonData, null, 4));
+        fs.appendFileSync('./package.json', os.EOL);
     }
 }
 
