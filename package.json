@@ -1,6 +1,6 @@
 {
     "name": "vscode-java-test",
-    "displayName": "Java Test Runner",
+    "displayName": "Test Runner for Java",
     "description": "%description%",
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
@@ -152,7 +152,7 @@
             }
         ],
         "configuration": {
-            "title": "Java Test Runner",
+            "title": "Test Runner for Java",
             "properties": {
                 "java.test.defaultConfig": {
                     "type": "string",
