@@ -18,7 +18,7 @@ export async function runTestsFromTestExplorer(testItem: TestItem, launchConfigu
     do {
         pathToRoot.push(testItem.id);
         testItem = testItem.parent!;
-    } while (testItem.parent);
+    } while (testItem);
     let currentItem: TestItem | undefined = testController?.items.get(pathToRoot.pop()!);
     if (!currentItem) {
         return;
