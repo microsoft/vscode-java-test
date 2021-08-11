@@ -4,6 +4,7 @@
 import { DebugConfiguration, TestItem, TestRunRequest } from 'vscode';
 import { runTests, testController } from '../controller/testController';
 import { loadJavaProjects } from '../controller/utils';
+import { showTestItemsInCurrentFile } from '../extension';
 
 /**
  * This function is used to exposed as a command, which other extensions can trigger
@@ -41,4 +42,5 @@ export async function refresh(): Promise<void> {
     });
 
     await loadJavaProjects();
+    await showTestItemsInCurrentFile();
 }
