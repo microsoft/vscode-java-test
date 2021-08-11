@@ -99,26 +99,14 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
-            if (e?.document) {
-                if (!isJavaFile(e.document) || !isStandardServerReady()) {
-                    return;
-                }
-
-                if (!await testSourceProvider.isOnTestSourcePath(e.document.uri)) {
-                    return;
-                }
-                await updateItemForDocumentWithDebounce(e.document.uri);
+            if (await isTestJavaFile(e?.document)) {
+                await updateItemForDocumentWithDebounce(e!.document.uri);
             }
         }),
         workspace.onDidChangeTextDocument(async (e: TextDocumentChangeEvent) => {
-            if (!isJavaFile(e.document) || !isStandardServerReady()) {
-                return;
+            if (await isTestJavaFile(e.document)) {
+                await updateItemForDocumentWithDebounce(e.document.uri);
             }
-
-            if (!await testSourceProvider.isOnTestSourcePath(e.document.uri)) {
-                return;
-            }
-            await updateItemForDocumentWithDebounce(e.document.uri);
         }),
         workspace.onDidChangeWorkspaceFolders(async (e: WorkspaceFoldersChangeEvent) => {
             for (const deletedFolder of e.removed) {
@@ -141,12 +129,27 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
 }
 
-async function showTestItemsInCurrentFile(): Promise<void> {
-    if (window.activeTextEditor && isJavaFile(window.activeTextEditor.document) &&
-            await testSourceProvider.isOnTestSourcePath(window.activeTextEditor.document.uri)) {
+async function isTestJavaFile(document: TextDocument | undefined): Promise<boolean> {
+    if (!isStandardServerReady()) {
+        return false;
+    }
+
+    if (!document?.uri || !isJavaFile(document)) {
+        return false;
+    }
+
+    if (!await testSourceProvider.isOnTestSourcePath(document.uri)) {
+        return false;
+    }
+
+    return true;
+}
+
+export async function showTestItemsInCurrentFile(): Promise<void> {
+    if (await isTestJavaFile(window.activeTextEditor?.document)) {
         // we didn't call the debounced version to avoid first call takes a long time and expand too much
         // for the debounce window. (cpu resources are limited during activation)
-        await updateItemForDocument(window.activeTextEditor.document.uri);
+        await updateItemForDocument(window.activeTextEditor!.document.uri);
     }
 }
 
