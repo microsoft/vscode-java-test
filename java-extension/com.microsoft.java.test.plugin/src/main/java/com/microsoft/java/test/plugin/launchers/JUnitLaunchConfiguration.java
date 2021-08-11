@@ -75,6 +75,9 @@ class JUnitLaunchConfigurationInfo extends LaunchConfigurationInfo {
     public JUnitLaunchConfigurationInfo(TestInfo testInfo) throws CoreException {
         try {
             final StrSubstitutor sub = new StrSubstitutor(testInfo.toValueMap());
+            // here we just simply set the mainType (which is a fake configuration), the purpose is to leverage
+            // JUnitLaunchConfiguration to get the classpath/modulepath, the real parameter will be resolved in
+            // JUnitLaunchConfigurationDelegate.parseParameters() separately.
             final String launchXml = sub.replace(JUnitLaunchConfigurationTemplate.JUNIT_TEMPLATE);
             final DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             parser.setErrorHandler(new DefaultHandler());
@@ -89,15 +92,14 @@ class JUnitLaunchConfigurationInfo extends LaunchConfigurationInfo {
 }
 
 class TestInfo {
-    public String testContainer = "";
     public String testKind = "";
-    public String[] testNames;
+    public String mainType = "";
     public IProject project;
 
     public Map<String, String> toValueMap() {
         final Map<String, String> valueMap = new HashMap<>();
-        valueMap.put("testContainer", testContainer);
         valueMap.put("testKind", testKind);
+        valueMap.put("mainType", mainType);
         return valueMap;
     }
 }

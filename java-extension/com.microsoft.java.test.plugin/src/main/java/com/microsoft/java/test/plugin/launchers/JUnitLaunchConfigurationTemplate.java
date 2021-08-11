@@ -20,9 +20,7 @@ public class JUnitLaunchConfigurationTemplate {
           "</listAttribute>\n" +
           "<listAttribute key=\"org.eclipse.debug.core.MAPPED_RESOURCE_TYPES\">\n" +
           "</listAttribute>\n" +
-          "<stringAttribute key=\"org.eclipse.jdt.junit.CONTAINER\" value=\"${testContainer}\"/>\n" +
           "<booleanAttribute key=\"org.eclipse.jdt.junit.KEEPRUNNING_ATTR\" value=\"false\"/>\n" +
-          "<stringAttribute key=\"org.eclipse.jdt.junit.TESTNAME\" value=\"${testName}\"/>\n" +
           "<stringAttribute key=\"org.eclipse.jdt.junit.TEST_KIND\" value=\"${testKind}\"/>\n" +
           "<stringAttribute key=\"org.eclipse.jdt.launching.MAIN_TYPE\" value=\"${mainType}\"/>\n" +
           "<stringAttribute key=\"org.eclipse.jdt.launching.VM_ARGUMENTS\" value=\"-ea\"/>\n" +
