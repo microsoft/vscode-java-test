@@ -17,7 +17,7 @@ import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -26,6 +26,7 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
@@ -73,7 +74,14 @@ public class JUnitLaunchUtils {
             throw new RuntimeException("Failed to get the project: " + args.projectName);
         }
         info.project = javaProject.getProject();
-        info.testContainer = StringEscapeUtils.escapeXml(javaProject.getHandleIdentifier());
+        if (ArrayUtils.isNotEmpty(args.testNames)) {
+            if (args.testLevel == TestLevel.CLASS) {
+                info.mainType = args.testNames[0].substring(args.testNames[0].indexOf("@") + 1);
+            } else if (args.testLevel == TestLevel.METHOD) {
+                final IMethod method = (IMethod) JavaCore.create(args.testNames[0]);
+                info.mainType = method.getDeclaringType().getFullyQualifiedName();
+            }
+        }
 
         final ILaunchConfiguration configuration = new JUnitLaunchConfiguration("JUnit Launch Configuration", info);
         final JUnitLaunchConfigurationDelegate delegate = new JUnitLaunchConfigurationDelegate(args);
