@@ -7,7 +7,7 @@
     <version>0.31.2</version>
     <packaging>pom</packaging>
     <properties>
-        <base.name>Java Test Runner</base.name>
+        <base.name>Test Runner for Java</base.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <tycho-version>1.7.0</tycho-version>
     </properties>

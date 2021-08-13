@@ -1,4 +1,4 @@
-# Java Test Runner
+# Test Runner for Java
 
 > Run and debug Java test cases in Visual Studio Code
 
@@ -30,7 +30,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 
 > Note: JUnit 3 styled tests are not supported in this extension (i.e. extends `junit.framework.TestCase`).
 
-The [Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test) works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
+The [Test Runner for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test) works with [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) and [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) to provide the following features:
 
 - Run/Debug test cases
 - Customize test configurations
@@ -126,7 +126,7 @@ If you meet any problem when using the extension, please refer to the [FAQ](http
 
 ## Contributing and Feedback
 
-If you are interested in providing feedback or contributing directly to the code base, please check the document [Contributing to Java Test Runner](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md), which covers the following parts:
+If you are interested in providing feedback or contributing directly to the code base, please check the document [Contributing to Test Runner for Java](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md), which covers the following parts:
 - [Questions and Feedback](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md#questions-and-feedback)
 - [Reporting Issues](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md#reporting-issues)
 - [Contributing Fixes](https://github.com/Microsoft/vscode-java-test/blob/main/CONTRIBUTING.md#contributing-fixes)

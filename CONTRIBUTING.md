@@ -1,6 +1,6 @@
-# Contributing to Java Test Runner
+# Contributing to Test Runner for Java
 
-Thank you for your interest in contributing to Java Test Runner!
+Thank you for your interest in contributing to Test Runner for Java!
 
 There are many ways in which you can contribute, beyond writing code. Please read the following document to check how you can get involved.
 
@@ -36,7 +36,7 @@ If you are interested in writing code to fix issues, please check the following 
 The extension has three major modules, which are listed as follow:
 - The extension client written in TypeScript - UI logic mostly
 - [The Java Test Plugin](https://github.com/Microsoft/vscode-java-test/tree/main/java-extension/com.microsoft.java.test.plugin) written in Java - Inspect the Java project 
-- [The Java Test Runner](https://github.com/Microsoft/vscode-java-test/tree/main/java-extension/com.microsoft.java.test.runner) written in Java - An executable jar to running the test cases
+- [The Test Runner](https://github.com/Microsoft/vscode-java-test/tree/main/java-extension/com.microsoft.java.test.runner) written in Java - An executable jar to running the test cases
 
 ### Setup
 1. Fork and clone the repository: `git clone git@github.com:Microsoft/vscode-java-test.git`
@@ -56,9 +56,9 @@ The extension has three major modules, which are listed as follow:
 
 > Note: If the Java code is changed by you, please run `npm run build-plugin` before you start debugging, the output jars will be generated in the folder `server/`.
 
-### Debugging the Java Test Runner
-- The Java Test Runner is a normal Maven project, you can open it with whatever the development tools you prefer, for example, VS Code
-- The Java Test Runner is an executable jar, the main class is `com.microsoft.java.test.runner.Launcher`
+### Debugging the Test Runner
+- The Test Runner is a normal Maven project, you can open it with whatever the development tools you prefer, for example, VS Code
+- The Test Runner is an executable jar, the main class is `com.microsoft.java.test.runner.Launcher`
 
 ### Build Your Own Private Build
 If you want to build your own private build, run `npx vsce@latest package` after `npm run build-plugin`.
