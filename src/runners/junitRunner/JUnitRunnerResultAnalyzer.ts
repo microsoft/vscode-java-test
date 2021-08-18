@@ -6,7 +6,7 @@ import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { createTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
-import { RunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
@@ -42,7 +42,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             this.triggeredTestsMapping.set(item.id, item);
         }
-     }
+    }
 
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
@@ -146,8 +146,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                     this.assertionFailure = TestMessage.diff(`Expected [${assertionResults[1]}] but was [${assertionResults[2]}]`, assertionResults[1], assertionResults[2]);
                 }
             }
-            
-            this.processStackTrace(data, this.traces, this.assertionFailure, this.currentItem, this.projectName)
+
+            this.processStackTrace(data, this.traces, this.assertionFailure, this.currentItem, this.projectName);
         }
     }
 

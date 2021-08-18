@@ -12,7 +12,7 @@ import { IProgressReporter } from '../../debugger.api';
 import { IExecutionConfig } from '../../runConfigs';
 import { IRunTestContext } from '../../types';
 import { ITestRunner } from '../ITestRunner';
-import { RunnerResultAnalyzer } from './IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from './RunnerResultAnalyzer';
 
 export abstract class BaseRunner implements ITestRunner {
     protected server: Server;

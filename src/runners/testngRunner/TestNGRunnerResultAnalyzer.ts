@@ -4,7 +4,7 @@
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { IRunTestContext, TestLevel } from '../../types';
-import { RunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { setTestState, TestResultState } from '../utils';
 
 const TEST_START: string = 'testStarted';
@@ -99,7 +99,6 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
                 this.processStackTrace(data, markdownTrace, testMessage, this.currentItem, this.projectName);
 
-                
                 if (item.uri && item.range) {
                     testMessage.location = new Location(item.uri, item.range);
                 }
@@ -156,7 +155,7 @@ enum TestOutputType {
     Error,
 }
 
-interface ITestNGAttributes  {
+interface ITestNGAttributes {
     name: string;
     duration: string;
     location: string;

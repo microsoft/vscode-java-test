@@ -5,7 +5,7 @@ import { TestItem } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { TestLevel } from '../../types';
 import { BaseRunner } from '../baseRunner/BaseRunner';
-import { RunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { TestNGRunnerResultAnalyzer } from './TestNGRunnerResultAnalyzer';
 
 export class TestNGRunner extends BaseRunner {

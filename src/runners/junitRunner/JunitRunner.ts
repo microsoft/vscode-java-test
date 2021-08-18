@@ -5,7 +5,7 @@ import { AddressInfo } from 'net';
 import { CancellationToken, DebugConfiguration } from 'vscode';
 import { IProgressReporter } from '../../debugger.api';
 import { BaseRunner } from '../baseRunner/BaseRunner';
-import { RunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { JUnitRunnerResultAnalyzer } from './JUnitRunnerResultAnalyzer';
 
 export class JUnitRunner extends BaseRunner {
