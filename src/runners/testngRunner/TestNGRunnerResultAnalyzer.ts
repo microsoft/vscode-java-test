@@ -4,14 +4,14 @@
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { IRunTestContext, TestLevel } from '../../types';
-import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
 import { setTestState, TestResultState } from '../utils';
 
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';
 const TEST_FINISH: string = 'testFinished';
 
-export class TestNGRunnerResultAnalyzer implements IRunnerResultAnalyzer {
+export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/;
 
@@ -20,7 +20,8 @@ export class TestNGRunnerResultAnalyzer implements IRunnerResultAnalyzer {
     private currentItem: TestItem | undefined;
     private projectName: string;
 
-    constructor(private testContext: IRunTestContext) {
+    constructor(protected testContext: IRunTestContext) {
+        super(testContext);
         this.projectName = testContext.projectName;
         const queue: TestItem[] = [...testContext.testItems];
         while (queue.length) {
@@ -40,7 +41,7 @@ export class TestNGRunnerResultAnalyzer implements IRunnerResultAnalyzer {
     }
 
     public analyzeData(data: string): void {
-        const lines: string[] = data.split(/\r?\n/);
+        const lines: string[] = this.unescape(data).split(/\r?\n/);
         for (const line of lines) {
             if (!line) {
                 continue;
@@ -92,22 +93,13 @@ export class TestNGRunnerResultAnalyzer implements IRunnerResultAnalyzer {
             }
 
             if (outputData.attributes.trace) {
-                const traceString: string = outputData.attributes.trace.trim();
                 const markdownTrace: MarkdownString = new MarkdownString();
                 markdownTrace.isTrusted = true;
-                const traceRegExp: RegExp = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\(([\w-$]+\.java):(\d+)\)/;
-                for (const line of traceString.split(/\r?\n/)) {
-                    const traceResults: RegExpExecArray | null = traceRegExp.exec(line);
-                    if (traceResults && traceResults.length === 6) {
-                        markdownTrace.appendText(traceResults[1]);
-                        markdownTrace.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, this.projectName]))}))`);
-                    } else {
-                        // in case the message contains message like: 'expected: <..> but was: <..>'
-                        markdownTrace.appendText(line.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-                    }
-                    markdownTrace.appendText('\n');
-                }
                 const testMessage: TestMessage = new TestMessage(markdownTrace);
+
+                this.processStackTrace(data, markdownTrace, testMessage, this.currentItem, this.projectName);
+
+                
                 if (item.uri && item.range) {
                     testMessage.location = new Location(item.uri, item.range);
                 }
