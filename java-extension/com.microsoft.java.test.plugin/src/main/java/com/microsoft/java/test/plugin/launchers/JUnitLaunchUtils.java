@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class JUnitLaunchUtils {
@@ -74,12 +75,15 @@ public class JUnitLaunchUtils {
             throw new RuntimeException("Failed to get the project: " + args.projectName);
         }
         info.project = javaProject.getProject();
-        if (ArrayUtils.isNotEmpty(args.testNames)) {
-            if (args.testLevel == TestLevel.CLASS) {
-                info.mainType = args.testNames[0].substring(args.testNames[0].indexOf("@") + 1);
-            } else if (args.testLevel == TestLevel.METHOD) {
-                final IMethod method = (IMethod) JavaCore.create(args.testNames[0]);
-                info.mainType = method.getDeclaringType().getFullyQualifiedName();
+        // TestNG's argument will be resolved at client side
+        if (!Objects.equals(info.testKind, TESTNG_LOADER)) {
+            if (ArrayUtils.isNotEmpty(args.testNames)) {
+                if (args.testLevel == TestLevel.CLASS) {
+                    info.mainType = args.testNames[0].substring(args.testNames[0].indexOf("@") + 1);
+                } else if (args.testLevel == TestLevel.METHOD) {
+                    final IMethod method = (IMethod) JavaCore.create(args.testNames[0]);
+                    info.mainType = method.getDeclaringType().getFullyQualifiedName();
+                }
             }
         }
 
