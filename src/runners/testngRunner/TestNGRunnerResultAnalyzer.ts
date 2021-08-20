@@ -13,7 +13,7 @@ const TEST_FINISH: string = 'testFinished';
 
 export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
-    private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/;
+    private readonly regex: RegExp = /@@<TestRunner-({[\s\S]*?})-TestRunner>/g;
 
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
     private currentTestState: TestResultState;
@@ -41,31 +41,26 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     public analyzeData(data: string): void {
-        const lines: string[] = this.unescape(data).split(/\r?\n/);
-        for (const line of lines) {
-            if (!line) {
-                continue;
-            }
-            const match: RegExpExecArray | null = this.regex.exec(line);
-            if (match) {
-                // Message from Test Runner executable
-                try {
-                    this.processData(match[1]);
-                } catch (error) {
-                    this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${line}\n`);
-                }
-            } else {
-                this.testContext.testRun.appendOutput(line + '\r\n');
+        let match: RegExpExecArray | null;
+        // tslint:disable-next-line: no-conditional-assignment
+        while ((match = this.regex.exec(data)) !== null) {
+            try {
+               this.processData(match[1]);
+            } catch (error) {
+                this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${match[1]}\n`);
             }
         }
     }
 
     public processData(data: string): void {
         const outputData: ITestNGOutputData = JSON.parse(data) as ITestNGOutputData;
-        if (outputData.name.toLocaleLowerCase() === 'error') {
-            this.testContext.testRun.appendOutput(`[ERROR] ${this.unescape(data)}\r\n`);
-        } else {
-            this.testContext.testRun.appendOutput(`${this.unescape(data)}\r\n`);
+
+        for (const line of this.unescape(data).split(/\r?\n/)) {
+            if (outputData.name.toLocaleLowerCase() === 'error') {
+                this.testContext.testRun.appendOutput(`[ERROR] ${line}\r\n`);
+            } else {
+                this.testContext.testRun.appendOutput(`${line}\r\n`);
+            }
         }
 
         const id: string = `${this.projectName}@${outputData.attributes.name}`;
@@ -84,25 +79,15 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             this.currentTestState = TestResultState.Failed;
             const testMessages: TestMessage[] = [];
-            if (outputData.attributes.message) {
-                const message: TestMessage = new TestMessage(outputData.attributes.message.trim());
-                if (item.uri && item.range) {
-                    message.location = new Location(item.uri, item.range);
-                }
-                testMessages.push(message);
-            }
 
             if (outputData.attributes.trace) {
                 const markdownTrace: MarkdownString = new MarkdownString();
                 markdownTrace.isTrusted = true;
                 const testMessage: TestMessage = new TestMessage(markdownTrace);
 
-                this.processStackTrace(data, markdownTrace, testMessage, this.currentItem, this.projectName);
-
-                if (item.uri && item.range) {
-                    testMessage.location = new Location(item.uri, item.range);
+                for (const line of outputData.attributes.trace.split(/\r?\n/)) {
+                    this.processStackTrace(line, markdownTrace, testMessage, this.currentItem, this.projectName);
                 }
-                testMessages.push(testMessage);
             }
 
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
