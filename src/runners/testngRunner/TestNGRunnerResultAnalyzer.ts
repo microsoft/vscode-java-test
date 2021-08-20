@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
+import { MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { IRunTestContext, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
