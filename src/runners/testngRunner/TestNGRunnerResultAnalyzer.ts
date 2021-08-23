@@ -100,7 +100,7 @@ export class TestNGRunnerResultAnalyzer implements IRunnerResultAnalyzer {
                     const traceResults: RegExpExecArray | null = traceRegExp.exec(line);
                     if (traceResults && traceResults.length === 6) {
                         markdownTrace.appendText(traceResults[1]);
-                        markdownTrace.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, this.projectName]))}))`);
+                        markdownTrace.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([line, this.projectName]))}))`);
                     } else {
                         // in case the message contains message like: 'expected: <..> but was: <..>'
                         markdownTrace.appendText(line.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
