@@ -4,6 +4,10 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.31.3
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.31.3)
+
 ## 0.31.2
 ### Changed
 - Changed the extension name to `Test Runner for Java`. [PR#1272](https://github.com/microsoft/vscode-java-test/pull/1272)
