@@ -78,20 +78,19 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 return;
             }
             this.currentTestState = TestResultState.Failed;
-            const testMessages: TestMessage[] = [];
 
+            const traces: MarkdownString = new MarkdownString();
             if (outputData.attributes.trace) {
-                const markdownTrace: MarkdownString = new MarkdownString();
-                markdownTrace.isTrusted = true;
-                const testMessage: TestMessage = new TestMessage(markdownTrace);
-
                 for (const line of outputData.attributes.trace.split(/\r?\n/)) {
-                    this.processStackTrace(line, markdownTrace, testMessage, this.currentItem, this.projectName);
+                    traces.isTrusted = true;
+                    const testMessage: TestMessage = new TestMessage(line);
+
+                    this.processStackTrace(line, traces, testMessage, this.currentItem, this.projectName);
                 }
             }
 
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
-            setTestState(this.testContext.testRun, item, this.currentTestState, testMessages, duration);
+            this.finishFailureMessage(this.currentItem, new TestMessage(traces), duration);
         } else if (outputData.name === TEST_FINISH) {
             const item: TestItem | undefined = this.getTestItem(data);
             if (!item) {
