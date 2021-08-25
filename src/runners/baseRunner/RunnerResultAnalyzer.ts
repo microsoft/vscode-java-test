@@ -21,7 +21,6 @@ export abstract class RunnerResultAnalyzer {
             traces.appendText(traceResults[1]);
             traces.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, projectName]))}))`);
             if (testMessage && currentItem && path.basename(currentItem.uri?.fsPath || '') === traceResults[4]) {
-                testMessage.message = data.trim();
                 const lineNum: number = parseInt(traceResults[5], 10);
                 if (currentItem.uri) {
                     testMessage.location = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
