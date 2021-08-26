@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { MarkdownString, TestItem, TestMessage } from 'vscode';
+import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
 import { IRunTestContext, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
@@ -83,13 +83,17 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             if (outputData.attributes.trace) {
                 const markdownTrace: MarkdownString = new MarkdownString();
                 markdownTrace.isTrusted = true;
-                const testMessage: TestMessage = new TestMessage(markdownTrace);
 
                 for (const line of outputData.attributes.trace.split(/\r?\n/)) {
-                    this.processStackTrace(line, markdownTrace, testMessage, this.currentItem, this.projectName);
+                    this.processStackTrace(line, markdownTrace, undefined, this.currentItem, this.projectName);
                 }
+            
+                const testMessage: TestMessage = new TestMessage(markdownTrace);
+                if (item.uri && item.range) {
+                    testMessage.location = new Location(item.uri, item.range);
+                }
+                testMessages.push(testMessage);
             }
-
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
             setTestState(this.testContext.testRun, item, this.currentTestState, testMessages, duration);
         } else if (outputData.name === TEST_FINISH) {
