@@ -87,7 +87,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 for (const line of outputData.attributes.trace.split(/\r?\n/)) {
                     this.processStackTrace(line, markdownTrace, undefined, this.currentItem, this.projectName);
                 }
-            
+
                 const testMessage: TestMessage = new TestMessage(markdownTrace);
                 if (item.uri && item.range) {
                     testMessage.location = new Location(item.uri, item.range);
