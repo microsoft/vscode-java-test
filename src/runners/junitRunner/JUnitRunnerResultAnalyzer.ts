@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { MarkdownString, TestItem, TestMessage } from 'vscode';
+import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { createTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
-import { setTestState, TestResultState } from '../utils';
+import { findTestLocation, setTestState, TestResultState } from '../utils';
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
@@ -17,7 +17,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     private currentItem: TestItem | undefined;
     private currentDuration: number = 0;
     private traces: MarkdownString;
-    private testMessage: TestMessage | undefined;
+    private assertionFailure: TestMessage | undefined;
     private recordingType: RecordingType;
     private expectString: string;
     private actualString: string;
@@ -116,7 +116,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
 
             const testMessage: TestMessage = new TestMessage(this.traces);
-            this.finishFailureMessage(this.currentItem, testMessage);
+            this.tryAppendMessage(this.currentItem, testMessage);
             this.recordingType = RecordingType.None;
             if (this.currentTestState === TestResultState.Errored) {
                 setTestState(this.testContext.testRun, this.currentItem, this.currentTestState);
@@ -131,28 +131,23 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         } else if (data.startsWith(MessageId.ActualEnd)) {
             this.recordingType = RecordingType.None;
             this.actualString = this.actualString.replace(/\n$/, '');
-            if (!this.testMessage && this.expectString && this.actualString) {
-                this.testMessage = TestMessage.diff(`Expected [${this.expectString}] but was [${this.actualString}]`, this.expectString, this.actualString);
+            if (!this.assertionFailure && this.expectString && this.actualString) {
+                this.assertionFailure = TestMessage.diff(`Expected [${this.expectString}] but was [${this.actualString}]`, this.expectString, this.actualString);
             }
         } else if (this.recordingType === RecordingType.ExpectMessage) {
             this.expectString += data + '\n';
         } else if (this.recordingType === RecordingType.ActualMessage) {
             this.actualString += data + '\n';
         } else if (this.recordingType === RecordingType.StackTrace) {
-            if (!this.testMessage) {
+            if (!this.assertionFailure) {
                 const assertionRegExp: RegExp = /expected.*:.*<(.+?)>.*but.*:.*<(.+?)>/mi;
                 const assertionResults: RegExpExecArray | null = assertionRegExp.exec(data);
                 if (assertionResults && assertionResults.length === 3) {
-                    this.testMessage = TestMessage.diff(`Expected [${assertionResults[1]}] but was [${assertionResults[2]}]`, assertionResults[1], assertionResults[2]);
-                } else {
-                    const markdownTrace: MarkdownString = new MarkdownString();
-                    markdownTrace.isTrusted = true;
-                    this.testMessage = new TestMessage(data);
+                    this.assertionFailure = TestMessage.diff(`Expected [${assertionResults[1]}] but was [${assertionResults[2]}]`, assertionResults[1], assertionResults[2]);
                 }
             }
 
-            this.processStackTrace(data, this.traces, this.testMessage, this.currentItem, this.projectName);
-            this.testMessage = undefined;
+            this.processStackTrace(data, this.traces, this.assertionFailure, this.currentItem, this.projectName);
         }
     }
 
@@ -189,7 +184,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         this.currentTestState = TestResultState.Running;
         this.currentItem = item;
         this.currentDuration = 0;
-        this.testMessage = undefined;
+        this.assertionFailure = undefined;
         this.expectString = '';
         this.actualString = '';
         this.recordingType = RecordingType.None;
@@ -279,6 +274,20 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 testItem,
             });
         }
+    }
+
+    private async tryAppendMessage(item: TestItem, testMessage: TestMessage): Promise<void> {
+        if (item.uri && item.range) {
+            testMessage.location = new Location(item.uri, item.range);
+        } else {
+            let id: string = item.id;
+            if (id.startsWith(INVOCATION_PREFIX)) {
+                id = id.substring(INVOCATION_PREFIX.length);
+            }
+            const location: Location | undefined = await findTestLocation(id);
+            testMessage.location = location;
+        }
+        setTestState(this.testContext.testRun, item, TestResultState.Failed, testMessage);
     }
 }
 
