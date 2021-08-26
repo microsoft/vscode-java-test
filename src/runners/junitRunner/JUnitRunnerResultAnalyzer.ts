@@ -152,6 +152,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
 
             this.processStackTrace(data, this.traces, this.testMessage, this.currentItem, this.projectName);
+            this.testMessage = undefined;
         }
     }
 

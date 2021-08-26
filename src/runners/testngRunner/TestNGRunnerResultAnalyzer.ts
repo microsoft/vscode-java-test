@@ -80,10 +80,11 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.currentTestState = TestResultState.Failed;
 
             const traces: MarkdownString = new MarkdownString();
-            traces.isTrusted = true;
-            const testMessage: TestMessage = new TestMessage(outputData.attributes.message);
             if (outputData.attributes.trace) {
                 for (const line of outputData.attributes.trace.split(/\r?\n/)) {
+                    traces.isTrusted = true;
+                    const testMessage: TestMessage = new TestMessage(line);
+
                     this.processStackTrace(line, traces, testMessage, this.currentItem, this.projectName);
                 }
             }
