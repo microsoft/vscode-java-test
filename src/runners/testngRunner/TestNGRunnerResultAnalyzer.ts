@@ -55,13 +55,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
     public processData(data: string): void {
         const outputData: ITestNGOutputData = JSON.parse(data) as ITestNGOutputData;
 
-        for (const line of this.unescape(data).split(/\r?\n/)) {
-            if (outputData.name.toLocaleLowerCase() === 'error') {
-                this.testContext.testRun.appendOutput(`[ERROR] ${line}\r\n`);
-            } else {
-                this.testContext.testRun.appendOutput(`${line}\r\n`);
-            }
-        }
+        this.testContext.testRun.appendOutput(this.unescape(data).replace(/\r?\n/g, "\r\n"));
 
         const id: string = `${this.projectName}@${outputData.attributes.name}`;
         if (outputData.name === TEST_START) {
