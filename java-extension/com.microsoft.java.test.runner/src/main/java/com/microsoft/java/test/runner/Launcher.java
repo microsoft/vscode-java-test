@@ -57,10 +57,10 @@ public class Launcher {
             launcher.execute(params);
         } catch (final ParameterException e) {
             exitStatus = EXIT_WITH_INVALID_INPUT_CODE;
-            TestOutputStream.instance().println(new TestMessageItem("Invalid Parameter.", e));
+            logError("Invalid Parameter.", e);
         } catch (final Throwable e) {
             exitStatus = EXIT_WITH_UNKNOWN_EXCEPTION;
-            TestOutputStream.instance().println(new TestMessageItem("Exception happens in the Test Runner.", e));
+            logError("Exception occured while running tests.", e);
         } finally {
             TestOutputStream.instance().close();
             try {
@@ -72,5 +72,11 @@ public class Launcher {
             }
             System.exit(exitStatus);
         }
+    }
+
+    private static void logError(String message, Throwable ex) {
+        System.err.println(message);
+        ex.printStackTrace();
+        TestOutputStream.instance().println(new TestMessageItem(message, ex));
     }
 }

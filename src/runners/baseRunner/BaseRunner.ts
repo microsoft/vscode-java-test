@@ -12,12 +12,12 @@ import { IProgressReporter } from '../../debugger.api';
 import { IExecutionConfig } from '../../runConfigs';
 import { IRunTestContext } from '../../types';
 import { ITestRunner } from '../ITestRunner';
-import { IRunnerResultAnalyzer } from './IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from './RunnerResultAnalyzer';
 
 export abstract class BaseRunner implements ITestRunner {
     protected server: Server;
     protected socket: Socket;
-    protected runnerResultAnalyzer: IRunnerResultAnalyzer;
+    protected runnerResultAnalyzer: RunnerResultAnalyzer;
 
     private disposables: Disposable[] = [];
 
@@ -144,7 +144,7 @@ export abstract class BaseRunner implements ITestRunner {
         return [];
     }
 
-    protected abstract getAnalyzer(): IRunnerResultAnalyzer;
+    protected abstract getAnalyzer(): RunnerResultAnalyzer;
 }
 
 export interface IJUnitLaunchArguments {

@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as path from 'path';
-import { Location, MarkdownString, Range, TestItem, TestMessage } from 'vscode';
+import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { createTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
-import { IRunnerResultAnalyzer } from '../baseRunner/IRunnerResultAnalyzer';
+import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
 
-export class JUnitRunnerResultAnalyzer implements IRunnerResultAnalyzer {
+export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     private testOutputMapping: Map<string, ITestInfo> = new Map();
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
@@ -25,7 +24,8 @@ export class JUnitRunnerResultAnalyzer implements IRunnerResultAnalyzer {
     private projectName: string;
     private incompleteTestSuite: ITestInfo[] = [];
 
-    constructor(private testContext: IRunTestContext) {
+    constructor(protected testContext: IRunTestContext) {
+        super(testContext);
         this.projectName = testContext.projectName;
         const queue: TestItem[] = [...testContext.testItems];
         while (queue.length) {
@@ -42,7 +42,7 @@ export class JUnitRunnerResultAnalyzer implements IRunnerResultAnalyzer {
             }
             this.triggeredTestsMapping.set(item.id, item);
         }
-     }
+    }
 
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
@@ -146,23 +146,8 @@ export class JUnitRunnerResultAnalyzer implements IRunnerResultAnalyzer {
                     this.assertionFailure = TestMessage.diff(`Expected [${assertionResults[1]}] but was [${assertionResults[2]}]`, assertionResults[1], assertionResults[2]);
                 }
             }
-            const traceRegExp: RegExp = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\(([\w-$]+\.java):(\d+)\)/;
-            const traceResults: RegExpExecArray | null = traceRegExp.exec(data);
-            if (traceResults && traceResults.length === 6) {
-                this.traces.appendText(traceResults[1]);
-                this.traces.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, this.projectName]))}))`);
-                if (this.assertionFailure && this.currentItem && path.basename(this.currentItem.uri?.fsPath || '') === traceResults[4]) {
-                    const lineNum: number = parseInt(traceResults[5], 10);
-                    if (this.currentItem.uri) {
-                        this.assertionFailure.location = new Location(this.currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
-                    }
-                    setTestState(this.testContext.testRun, this.currentItem, TestResultState.Failed, this.assertionFailure);
-                }
-            } else {
-                // in case the message contains message like: 'expected: <..> but was: <..>'
-                this.traces.appendText(data.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-            }
-            this.traces.appendText('\n');
+
+            this.processStackTrace(data, this.traces, this.assertionFailure, this.currentItem, this.projectName);
         }
     }
 
