@@ -33,7 +33,6 @@ export namespace JavaTestRunnerCommands {
 export namespace VSCodeCommands {
     export const RUN_TESTS_IN_CURRENT_FILE: string = 'testing.runCurrentFile';
     export const DEBUG_TESTS_IN_CURRENT_FILE: string = 'testing.debugCurrentFile';
-    export const REFRESH_TESTS: string = 'testing.refreshTests';
 }
 
 export namespace Configurations {
