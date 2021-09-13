@@ -49,7 +49,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
             context.subscriptions.push(onDidClasspathUpdate(async () => {
                 testSourceProvider.clear();
-                commands.executeCommand(VSCodeCommands.REFRESH_TESTS);
+                commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
             }));
         }
 
@@ -74,7 +74,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             const onDidProjectsImport: Event<Uri[]> = extensionApi.onDidProjectsImport;
             context.subscriptions.push(onDidProjectsImport(async () => {
                 testSourceProvider.clear();
-                commands.executeCommand(VSCodeCommands.REFRESH_TESTS);
+                commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
             }));
         }
     }
