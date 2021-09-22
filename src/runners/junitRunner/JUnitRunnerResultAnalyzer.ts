@@ -161,11 +161,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
          * The following regex expression is used to parse the test runner's output, which match the following components:
          * '(?:@AssumptionFailure: |@Ignore: )?' - indicate if the case is ignored due to assumption failure or disabled
          * '(.*?)'                               - test method name
-         * '(?:\[\d+.*?\])?'                        - execution index, it will appear for the JUnit4's parameterized test
          * '\(([^)]*)\)[^(]*$'                   - class fully qualified name which wrapped by the last paired brackets, see:
          *                                         https://github.com/microsoft/vscode-java-test/issues/1075
          */
-        const regexp: RegExp = /(?:@AssumptionFailure: |@Ignore: )?(.*?)(?:\[\d+.*?\])?\(([^)]*)\)[^(]*$/;
+        const regexp: RegExp = /(?:@AssumptionFailure: |@Ignore: )?(.*?)\(([^)]*)\)[^(]*$/;
         const matchResults: RegExpExecArray | null = regexp.exec(message);
         if (matchResults && matchResults.length === 3) {
             return `${this.projectName}@${matchResults[2]}#${matchResults[1]}`;
@@ -195,10 +194,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         // See MessageId.TestTree's comment for its format
         const result: RegExpMatchArray | null = message.match(regExp);
         if (result && result.length > 6) {
-            // for now, skip the param test for JUnit 4
-            if (/^\[\d+.*?\]$/.test(result[1])) {
-                return;
-            }
             const index: string = result[0];
             const testId: string = this.getTestId(result[1]);
             const isSuite: boolean = result[2] === 'true';
@@ -220,7 +215,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             range: parent.range,
                             jdtHandler: parentData.jdtHandler,
                             fullName: parentData.fullName,
-                            label: displayName,
+                            label: this.getTestMethodName(displayName),
                             id: `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
                             projectName: parentData.projectName,
                             testKind: parentData.testKind,
@@ -245,7 +240,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             range: undefined,
                             jdtHandler: '',
                             fullName: testId.substr(testId.indexOf('@') + 1),
-                            label: displayName,
+                            label: this.getTestMethodName(displayName),
                             id: `${INVOCATION_PREFIX}${testId}`,
                             projectName: this.projectName,
                             testKind: this.testContext.kind,
@@ -283,11 +278,25 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             let id: string = item.id;
             if (id.startsWith(INVOCATION_PREFIX)) {
                 id = id.substring(INVOCATION_PREFIX.length);
+                if (this.testContext.kind === TestKind.JUnit) {
+                    // change test[0] -> test
+                    // to fix: https://github.com/microsoft/vscode-java-test/issues/1296
+                    id = id.substring(0, id.lastIndexOf('['));
+                }
             }
             const location: Location | undefined = await findTestLocation(id);
             testMessage.location = location;
         }
         setTestState(this.testContext.testRun, item, TestResultState.Failed, testMessage);
+    }
+
+    // See: org.eclipse.jdt.internal.junit.model.TestCaseElement#getTestMethodName()
+    private getTestMethodName(testName: string): string {
+        const index: number = testName.lastIndexOf('(');
+        if (index > 0) {
+            return testName.substring(0, index);
+        }
+        return testName;
     }
 }
 
