@@ -9,7 +9,7 @@ tsconfig.json
 tslint.json
 package-lock.json
 java-extension/**
-gulpfile.js
+scripts/**
 resources/templates/scss/**
 dist/**/test
 webpack.*.js
