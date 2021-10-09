@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { INVOCATION_PREFIX } from '../constants';
 import { IProgressReporter } from '../debugger.api';
@@ -20,6 +20,7 @@ import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypes
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
+export const runnableTag: TestTag = new TestTag('RunnableItem');
 
 export function createTestController(): void {
     if (!isStandardServerReady()) {
@@ -32,8 +33,8 @@ export function createTestController(): void {
         await loadChildren(item);
     };
 
-    testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true);
-    testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true);
+    testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, runnableTag);
+    testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
 
     startWatchingWorkspace();
 }

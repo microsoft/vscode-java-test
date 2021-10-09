@@ -10,7 +10,7 @@ import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants'
 import { IJavaTestItem, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
-import { testController } from './testController';
+import { runnableTag, testController } from './testController';
 import { dataCache } from './testItemDataCache';
 
 /**
@@ -99,6 +99,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
     );
     item.range = asRange(metaInfo.range);
     if (metaInfo.testLevel !== TestLevel.Invocation) {
+        item.tags = [runnableTag];
         dataCache.set(item, {
             jdtHandler: metaInfo.jdtHandler,
             fullName: metaInfo.fullName,
