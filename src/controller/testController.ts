@@ -195,8 +195,10 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             return resolve();
                         });
                         option.progressReporter?.report('Resolving launch configuration...');
+                        // This normalization fixes issues with upper case vs. lower case drive letters on Windows. See #878.
+                        const uri = items[0].uri?.fsPath? Uri.file(items[0].uri?.fsPath!) : items[0].uri!;
                         // TODO: improve the config experience
-                        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(items[0].uri!);
+                        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(uri);
                         if (!workspaceFolder) {
                             window.showErrorMessage(`Failed to get workspace folder from test item: ${items[0].label}.`);
                             continue;
