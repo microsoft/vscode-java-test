@@ -272,7 +272,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     private async tryAppendMessage(item: TestItem, testMessage: TestMessage): Promise<void> {
-        if (item.uri && item.range) {
+        if (this.testMessageLocation) {
+            testMessage.location = this.testMessageLocation;
+            this.testMessageLocation = undefined;
+        } else if (item.uri && item.range) {
             testMessage.location = new Location(item.uri, item.range);
         } else {
             let id: string = item.id;

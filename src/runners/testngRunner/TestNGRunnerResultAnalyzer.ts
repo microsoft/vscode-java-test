@@ -83,7 +83,10 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 }
 
                 const testMessage: TestMessage = new TestMessage(markdownTrace);
-                if (item.uri && item.range) {
+                if (this.testMessageLocation) {
+                    testMessage.location = this.testMessageLocation;
+                    this.testMessageLocation = undefined;
+                } else if (item.uri && item.range) {
                     testMessage.location = new Location(item.uri, item.range);
                 }
                 testMessages.push(testMessage);
