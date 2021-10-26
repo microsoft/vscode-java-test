@@ -25,21 +25,11 @@
             "projectName": "com.microsoft.java.test.plugin",
         },
         {
-            "name": "Launch Tests (webpack) - Maven JUnit",
+            "name": "Launch Tests",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": ["${workspaceFolder}/test/test-projects/junit", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/dist/test/maven-junit-suite" ],
-            "sourceMaps": true,
-            "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
-            "preLaunchTask": "npm: compile"
-        },
-        {
-            "name": "Launch Tests (webpack) - Gradle Modular",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": ["${workspaceFolder}/test/test-projects/modular-gradle", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/dist/test/gradle-modular-suite" ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/out/test/suite" ],
             "sourceMaps": true,
             "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
             "preLaunchTask": "npm: compile"
