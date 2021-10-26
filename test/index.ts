@@ -24,7 +24,7 @@ async function main(): Promise<void> {
 
         // The folder containing the Extension Manifest package.json
         // Passed to `--extensionDevelopmentPath`
-        const extensionDevelopmentPath: string = path.resolve(__dirname, '..');
+        const extensionDevelopmentPath: string = path.resolve(__dirname, '..', '..');
 
         // Run general test
         await runTests({
