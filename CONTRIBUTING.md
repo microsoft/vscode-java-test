@@ -43,10 +43,9 @@ The extension has three major modules, which are listed as follow:
 2. `cd vscode-java-test`
 3. Install the node dependencies: `npm install`
 4. Build the Java modules: `npm run build-plugin`
-5. Build the test report resources: `npm run build-resources`
-6. Open the directory `vscode-java-test` in VS Code
-7. Install the [Eclipse PDE Support extension](https://marketplace.visualstudio.com/items?itemName=yaozheng.vscode-pde) in your VS Code
-8. Open a Java file and wait until 👍 shows in the right-bottom of the status bar
+5. Open the directory `vscode-java-test` in VS Code
+6. Install the [Eclipse PDE Support extension](https://marketplace.visualstudio.com/items?itemName=yaozheng.vscode-pde) in your VS Code
+7. Open a Java file and wait until 👍 shows in the right-bottom of the status bar
     > Note: Sometimes, if you find the code navigation is not working in the Java code, please reload your VS Code.
 
 ### Debugging
@@ -63,5 +62,5 @@ The extension has three major modules, which are listed as follow:
 ### Build Your Own Private Build
 If you want to build your own private build, run `npx vsce@latest package` after `npm run build-plugin`.
 
-### Check Linting Errors:
-Run `npm run linting` to check linting errors.
+### Check Lint Errors:
+Run `npm run lint` to check lint errors.
