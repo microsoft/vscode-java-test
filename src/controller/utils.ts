@@ -4,28 +4,28 @@
 import * as _ from 'lodash';
 import * as path from 'path';
 import { performance } from 'perf_hooks';
-import { CancellationToken, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, Range, TestController, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants';
 import { IJavaTestItem, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
-import { runnableTag, testController } from './testController';
 import { dataCache } from './testItemDataCache';
+import { runnableTag } from './types';
 
 /**
  * Load the Java projects, which are the root nodes of the test explorer
  */
-export async function loadJavaProjects(): Promise<void> {
+export async function loadJavaProjects(testController: TestController): Promise<void> {
     for (const workspaceFolder of workspace.workspaceFolders || [] ) {
         const testProjects: IJavaTestItem[] = await getJavaProjects(workspaceFolder);
         for (const project of testProjects) {
             if (testController?.items.get(project.id)) {
                 continue;
             }
-            const projectItem: TestItem = createTestItem(project);
+            const projectItem: TestItem = createTestItem(testController, project);
             projectItem.canResolveChildren = true;
-            testController?.items.add(projectItem);
+            testController.items.add(projectItem);
         }
     }
 }
@@ -35,7 +35,7 @@ export async function loadJavaProjects(): Promise<void> {
  * - If an existing child is not contained in the childrenData parameter, it will be deleted
  * - If a child does not exist, create it, otherwise, update it as well as its metadata.
  */
-export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJavaTestItem[] | undefined): void {
+export function synchronizeItemsRecursively(testController: TestController, parent: TestItem, childrenData: IJavaTestItem[] | undefined): void {
     if (childrenData) {
         // remove the out-of-date children
         parent.children.forEach((child: TestItem) => {
@@ -50,21 +50,21 @@ export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJav
         });
         // update/create children
         for (const child of childrenData) {
-            const childItem: TestItem = updateOrCreateTestItem(parent, child);
+            const childItem: TestItem = updateOrCreateTestItem(testController, parent, child);
             if (child.testLevel <= TestLevel.Class) {
                 childItem.canResolveChildren = true;
             }
-            synchronizeItemsRecursively(childItem, child.children);
+            synchronizeItemsRecursively(testController, childItem, child.children);
         }
     }
 }
 
-function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestItem): TestItem {
+function updateOrCreateTestItem(testController: TestController, parent: TestItem, childData: IJavaTestItem): TestItem {
     let childItem: TestItem | undefined = parent.children.get(childData.id);
     if (childItem) {
         updateTestItem(childItem, childData);
     } else {
-        childItem = createTestItem(childData, parent);
+        childItem = createTestItem(testController, childData, parent);
     }
     return childItem;
 }
@@ -88,7 +88,7 @@ function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
  * @param parent The parent node of the test item (if it has)
  * @returns The created test item
  */
-export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): TestItem {
+export function createTestItem(testController: TestController, metaInfo: IJavaTestItem, parent?: TestItem): TestItem {
     if (!testController) {
         throw new Error('Failed to create test item. The test controller is not initialized.');
     }
@@ -120,7 +120,7 @@ let updateNodeForDocumentTimeout: NodeJS.Timer;
  * @param uri uri of the document
  * @param testTypes test metadata
  */
-export async function updateItemForDocumentWithDebounce(uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
+export async function updateItemForDocumentWithDebounce(testController: TestController, uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
     if (updateNodeForDocumentTimeout) {
         clearTimeout(updateNodeForDocumentTimeout);
     }
@@ -128,7 +128,7 @@ export async function updateItemForDocumentWithDebounce(uri: Uri, testTypes?: IJ
     return new Promise<TestItem[]>((resolve: (items: TestItem[]) => void): void => {
         updateNodeForDocumentTimeout = setTimeout(async () => {
             const startTime: number = performance.now();
-            const result: TestItem[] = await updateItemForDocument(uri, testTypes);
+            const result: TestItem[] = await updateItemForDocument(testController, uri, testTypes);
             const executionTime: number = performance.now() - startTime;
             const movingAverage: MovingAverage = lruCache.get(uri) || new MovingAverage();
             movingAverage.update(executionTime);
@@ -143,14 +143,14 @@ export async function updateItemForDocumentWithDebounce(uri: Uri, testTypes?: IJ
  * @param uri uri of the document
  * @param testTypes test metadata
  */
-export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
+export async function updateItemForDocument(testController: TestController, uri: Uri, testTypes?: IJavaTestItem[]): Promise<TestItem[]> {
     testTypes = testTypes ?? await findTestTypesAndMethods(uri.toString());
 
     let belongingPackage: TestItem | undefined;
     if (testTypes.length === 0) {
-        belongingPackage = await resolveBelongingPackage(uri);
+        belongingPackage = await resolveBelongingPackage(testController, uri);
     } else {
-        belongingPackage = findBelongingPackageItem(testTypes[0]) || await resolveBelongingPackage(uri);
+        belongingPackage = findBelongingPackageItem(testController, testTypes[0]) || await resolveBelongingPackage(testController, uri);
     }
     if (!belongingPackage) {
         sendError(new Error('Failed to find the belonging package'));
@@ -171,13 +171,13 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
             // children of the belonging package, we don't want to delete other children unexpectedly.
             let testTypeItem: TestItem | undefined = belongingPackage.children.get(testType.id);
             if (!testTypeItem) {
-                testTypeItem = createTestItem(testType, belongingPackage);
+                testTypeItem = createTestItem(testController, testType, belongingPackage);
                 testTypeItem.canResolveChildren = true;
             } else {
                 updateTestItem(testTypeItem, testType);
             }
             tests.push(testTypeItem);
-            synchronizeItemsRecursively(testTypeItem, testType.children);
+            synchronizeItemsRecursively(testController, testTypeItem, testType.children);
         }
     }
 
@@ -191,13 +191,13 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
 /**
  * Give a test item for a type, find its belonging package item according to its id.
  */
-function findBelongingPackageItem(testType: IJavaTestItem): TestItem | undefined {
+function findBelongingPackageItem(testController: TestController, testType: IJavaTestItem): TestItem | undefined {
     const indexOfProjectSeparator: number = testType.id.indexOf('@');
     if (indexOfProjectSeparator < 0) {
         return undefined;
     }
     const projectId: string = testType.id.substring(0, indexOfProjectSeparator);
-    const projectItem: TestItem | undefined = testController?.items.get(projectId);
+    const projectItem: TestItem | undefined = testController.items.get(projectId);
     if (!projectItem) {
         return undefined;
     }
@@ -210,7 +210,7 @@ function findBelongingPackageItem(testType: IJavaTestItem): TestItem | undefined
 /**
  * Give a document uri, resolve its belonging package item.
  */
-async function resolveBelongingPackage(uri: Uri): Promise<TestItem | undefined> {
+async function resolveBelongingPackage(testController: TestController, uri: Uri): Promise<TestItem | undefined> {
     const pathsData: IJavaTestItem[] = await resolvePath(uri.toString());
     if (_.isEmpty(pathsData) || pathsData.length < 2) {
         return undefined;
@@ -221,9 +221,9 @@ async function resolveBelongingPackage(uri: Uri): Promise<TestItem | undefined> 
         return undefined;
     }
 
-    let belongingProject: TestItem | undefined = testController?.items.get(projectData.id);
+    let belongingProject: TestItem | undefined = testController.items.get(projectData.id);
     if (!belongingProject) {
-        belongingProject = createTestItem(projectData);
+        belongingProject = createTestItem(testController, projectData);
         testController?.items.add(belongingProject);
         belongingProject.canResolveChildren = true;
     }
@@ -235,7 +235,7 @@ async function resolveBelongingPackage(uri: Uri): Promise<TestItem | undefined> 
 
     let belongingPackage: TestItem | undefined = belongingProject.children.get(packageData.id);
     if (!belongingPackage) {
-        belongingPackage = createTestItem(packageData, belongingProject);
+        belongingPackage = createTestItem(testController, packageData, belongingProject);
         belongingPackage.canResolveChildren = true;
     }
     return belongingPackage;

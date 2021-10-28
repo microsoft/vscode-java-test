@@ -5,14 +5,15 @@ import * as path from 'path';
 import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
-import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
-import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
+import { IProjectsExplorerTestRunner } from './commands/projectExplorerCommands';
+import { ITestsExplorerTestRunner } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
 import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
-import { createTestController, testController, watchers } from './controller/testController';
-import { updateItemForDocument, updateItemForDocumentWithDebounce } from './controller/utils';
+import { ITestController } from './controller/types';
+import { updateItemForDocumentWithDebounce } from './controller/utils';
 import { IProgressProvider } from './debugger.api';
 import { initExpService } from './experimentationService';
+import inversifyContainer from './inversify.config';
 import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
 import { testSourceProvider } from './provider/testSourceProvider';
 
@@ -29,13 +30,10 @@ export async function activate(context: ExtensionContext): Promise<void> {
 export async function deactivate(): Promise<void> {
     disposeCodeActionProvider();
     await disposeTelemetryWrapper();
-    testController?.dispose();
-    for (const disposable of watchers) {
-        disposable.dispose();
-    }
 }
 
 async function doActivate(_operationId: string, context: ExtensionContext): Promise<void> {
+    const testController: ITestController = inversifyContainer.get<ITestController>(ITestController);
     const javaLanguageSupport: Extension<any> | undefined = extensions.getExtension(ExtensionName.JAVA_LANGUAGE_SUPPORT);
     if (javaLanguageSupport?.isActive) {
         const extensionApi: any = javaLanguageSupport.exports;
@@ -64,8 +62,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 if (mode === LanguageServerMode.Standard) {
                     testSourceProvider.clear();
                     registerTestCodeActionProvider();
-                    createTestController();
-                    await showTestItemsInCurrentFile();
+                    testController.refresh();
                 }
             }));
         }
@@ -88,24 +85,28 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
 
+    // tslint:disable-next-line: typedef
+    const a = inversifyContainer.get<IProjectsExplorerTestRunner>(IProjectsExplorerTestRunner)
+
     context.subscriptions.push(
+        testController,
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_OPEN_STACKTRACE, openStackTrace),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_EDITOR, async () => await commands.executeCommand(VSCodeCommands.RUN_TESTS_IN_CURRENT_FILE)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_EDITOR, async () => await commands.executeCommand(VSCodeCommands.DEBUG_TESTS_IN_CURRENT_FILE)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, ((uri: Uri, startPosition: number) => generateTests(uri, startPosition))),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER, async () => await refresh()),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await inversifyContainer.get<ITestsExplorerTestRunner>(ITestsExplorerTestRunner).runTests(node, launchConfiguration, false)),
+        // instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER, async () => await testController.refresh()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await a.runTests(node, false /* isDebug */)),
+        // instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (await isTestJavaFile(e?.document)) {
-                await updateItemForDocumentWithDebounce(e!.document.uri);
+                await updateItemForDocumentWithDebounce(testController.getControllerImpl(), e!.document.uri);
             }
         }),
         workspace.onDidChangeTextDocument(async (e: TextDocumentChangeEvent) => {
             if (await isTestJavaFile(e.document)) {
-                await updateItemForDocumentWithDebounce(e.document.uri);
+                await updateItemForDocumentWithDebounce(testController.getControllerImpl(), e.document.uri);
             }
         }),
         workspace.onDidChangeWorkspaceFolders(async (e: WorkspaceFoldersChangeEvent) => {
@@ -116,20 +117,18 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             // otherwise we cannot find the projects in the new workspace folder.
             // TODO: this event should be notified by onDidProjectsImport, we need to fix upstream
             setTimeout(() => {
-                createTestController();
+                testController.refresh();
             }, 1000);
         }),
     );
 
     if (isStandardServerReady()) {
         registerTestCodeActionProvider();
-        createTestController();
-        await showTestItemsInCurrentFile();
+        testController.refresh();
     }
-
 }
 
-async function isTestJavaFile(document: TextDocument | undefined): Promise<boolean> {
+export async function isTestJavaFile(document: TextDocument | undefined): Promise<boolean> {
     if (!isStandardServerReady()) {
         return false;
     }
@@ -143,14 +142,6 @@ async function isTestJavaFile(document: TextDocument | undefined): Promise<boole
     }
 
     return true;
-}
-
-export async function showTestItemsInCurrentFile(): Promise<void> {
-    if (await isTestJavaFile(window.activeTextEditor?.document)) {
-        // we didn't call the debounced version to avoid first call takes a long time and expand too much
-        // for the debounce window. (cpu resources are limited during activation)
-        await updateItemForDocument(window.activeTextEditor!.document.uri);
-    }
 }
 
 export function isStandardServerReady(): boolean {
@@ -176,6 +167,6 @@ const enum LanguageServerMode {
 
 export let progressProvider: IProgressProvider | undefined;
 
-function isJavaFile(document: TextDocument): boolean {
+export function isJavaFile(document: TextDocument): boolean {
     return path.extname(document.fileName) === '.java';
 }

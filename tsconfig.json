@@ -1,11 +1,15 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es6",
-        "outDir": "out",
         "lib": [
             "es6"
         ],
+        "types": ["reflect-metadata"],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "outDir": "out",
         "sourceMap": true,
         "rootDir": ".",
         "noUnusedLocals": true,

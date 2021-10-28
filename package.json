@@ -293,8 +293,10 @@
         "fs-extra": "^7.0.1",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.4.24",
+        "inversify": "^6.0.1",
         "lodash": "^4.17.19",
         "lru-cache": "^6.0.0",
+        "reflect-metadata": "^0.1.13",
         "vscode-extension-telemetry-wrapper": "0.10.0",
         "vscode-languageclient": "6.0.0-next.9",
         "vscode-tas-client": "^0.1.22"

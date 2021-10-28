@@ -1,15 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { inject } from 'inversify';
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
+import { ITestController } from '../../controller/types';
 import { createTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
+
+    @inject(ITestController) private readonly testController: ITestController;
 
     private testOutputMapping: Map<string, ITestInfo> = new Map();
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
@@ -209,7 +213,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 if (parent) {
                     const parentData: ITestItemData | undefined = dataCache.get(parent);
                     if (parentData?.testLevel === TestLevel.Method) {
-                        testItem = createTestItem({
+                        testItem = createTestItem(this.testController.getControllerImpl(), {
                             children: [],
                             uri: parent.uri?.toString(),
                             range: parent.range,
@@ -246,7 +250,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             testKind: this.testContext.kind,
                             testLevel: TestLevel.Invocation,
                         };
-                        testItem = createTestItem(itemData, parentSuite.testItem);
+                        testItem = createTestItem(this.testController.getControllerImpl(), itemData, parentSuite.testItem);
                     }
                 }
 
