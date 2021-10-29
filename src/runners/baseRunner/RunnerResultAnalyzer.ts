@@ -22,7 +22,7 @@ export abstract class RunnerResultAnalyzer {
             traces.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, projectName]))}))`);
             if (currentItem && path.basename(currentItem.uri?.fsPath || '') === traceResults[4]) {
                 const lineNum: number = parseInt(traceResults[5], 10);
-                if (!this.testMessageLocation && currentItem.uri) {
+                if (currentItem.uri) {
                     this.testMessageLocation = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
                 }
                 if (assertionFailure) {
