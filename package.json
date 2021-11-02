@@ -209,6 +209,11 @@
                             },
                             "description": "%configuration.java.test.config.sourcePaths.description%",
                             "default": []
+                        },
+                        "preLaunchTask": {
+                            "type": "string",
+                            "description": "%configuration.java.test.config.preLaunchTask.description%",
+                            "default": ""
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -248,6 +253,11 @@
                                 "description": "%configuration.java.test.config.env.description%",
                                 "default": {}
                             },
+                            "envFile": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.envFile.description%",
+                                "default": "${workspaceFolder}/.env"
+                            },
                             "sourcePaths": {
                                 "type": "array",
                                 "items": {
@@ -255,6 +265,11 @@
                                 },
                                 "description": "%configuration.java.test.config.sourcePaths.description%",
                                 "default": []
+                            },
+                            "preLaunchTask": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.preLaunchTask.description%",
+                                "default": ""
                             }
                         }
                     },

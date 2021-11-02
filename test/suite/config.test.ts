@@ -48,10 +48,12 @@ suite('JUnit Runner Analyzer Tests', () => {
             envFile: "${workspaceFolder}/.env",
             sourcePaths: [
                 "/a/b/c.jar"
-            ]
+            ],
+            preLaunchTask: "test",
         });
         assert.strictEqual(configuration.env.test, "test");
         assert.strictEqual(configuration.envFile, "${workspaceFolder}/.env");
         assert.strictEqual(configuration.sourcePaths?.[0], "/a/b/c.jar");
+        assert.strictEqual(configuration.preLaunchTask, "test");
     });
 });

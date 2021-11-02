@@ -45,6 +45,11 @@ export interface IExecutionConfig {
      * @since 0.22.4
      */
     sourcePaths?: string[];
+    /**
+     * The label of a task specified in tasks.json.
+     * @since 0.33.0
+     */
+     preLaunchTask?: string;
 }
 
 export function getBuiltinConfig(): IExecutionConfig {
