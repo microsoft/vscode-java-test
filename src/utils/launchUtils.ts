@@ -42,6 +42,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             envFile: config?.envFile,
             noDebug: !testContext.isDebug,
             sourcePaths: config?.sourcePaths,
+            preLaunchTask: config?.preLaunchTask,
         };
     }
 
@@ -60,6 +61,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         envFile: config?.envFile,
         noDebug: !testContext.isDebug,
         sourcePaths: config?.sourcePaths,
+        preLaunchTask: config?.preLaunchTask,
     };
 }
 
