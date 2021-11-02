@@ -13,6 +13,7 @@
     "configuration.java.test.config.vmArgs.description": "Specify the extra options and system properties for the JVM",
     "configuration.java.test.config.args.description": "Specify the command line arguments which will be passed to the test runner",
     "configuration.java.test.config.env.description": "Specify the extra environment variables when running the tests",
+    "configuration.java.test.config.envFile.description": "Specify the absolute path to a file containing environment variable definitions.",
     "configuration.java.test.config.sourcePaths.description": "Specify extra source paths when debugging the tests",
     "contributes.viewsWelcome.inLightWeightMode": "No test cases are listed because the Java Language Server is currently running in [LightWeight Mode](https://aka.ms/vscode-java-lightweight). To show test cases, click on the button to switch to Standard Mode.\n[Switch to Standard Mode](command:java.server.mode.switch?%5B%22Standard%22,true%5D)",
     "contributes.viewsWelcome.noProjectWithProjectManagerInstalled": "No folder opened in Visual Studio Code. You can [open a Java project](command:_java.project.open), or create a new Java project by clicking the button below.\n[Create Java Project](command:java.project.create)",

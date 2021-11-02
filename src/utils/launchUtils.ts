@@ -16,20 +16,10 @@ import { executeJavaLanguageServerCommand } from './commandUtils';
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, testContext: IRunTestContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const launchArguments: IJUnitLaunchArguments = await getLaunchArguments(testContext);
 
-    let env: {} = {};
-    if (config && config.env) {
-        env = config.env;
-    }
-
     if (config && config.vmArgs) {
         launchArguments.vmArguments.push(...config.vmArgs.filter(Boolean));
     } else if (config && config.vmargs) {
         launchArguments.vmArguments.push(...config.vmargs.filter(Boolean));
-    }
-
-    const moreEntries: {[key: string]: any} = {};
-    if (config && config.sourcePaths) {
-        moreEntries['sourcePaths'] = config.sourcePaths;
     }
 
     if (testContext.kind === TestKind.TestNG) {
@@ -48,9 +38,10 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             modulePaths: launchArguments.modulepath,
             args: runner.getApplicationArgs(config),
             vmArgs: launchArguments.vmArguments,
-            env,
+            env: config?.env,
+            envFile: config?.envFile,
             noDebug: !testContext.isDebug,
-            ...moreEntries,
+            sourcePaths: config?.sourcePaths,
         };
     }
 
@@ -65,9 +56,10 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         modulePaths: launchArguments.modulepath,
         args: launchArguments.programArguments,
         vmArgs: launchArguments.vmArguments,
-        env,
+        env: config?.env,
+        envFile: config?.envFile,
         noDebug: !testContext.isDebug,
-        ...moreEntries,
+        sourcePaths: config?.sourcePaths,
     };
 }
 

@@ -5,10 +5,10 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { IRunTestContext, TestKind, TestLevel } from '../../src/types';
-import { MarkdownString, Range, TestController, TestItem, TestMessage, TestRunRequest, tests, Uri, workspace } from 'vscode';
+import { IRunTestContext, TestKind } from '../../src/types';
+import { MarkdownString, TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunnerResultAnalyzer } from '../../src/runners/junitRunner/JUnitRunnerResultAnalyzer';
-import { dataCache } from '../../src/controller/testItemDataCache';
+import { generateTestItem } from './utils';
 
 // tslint:disable: only-arrow-functions
 // tslint:disable: no-object-literal-type-assertion
@@ -126,25 +126,3 @@ java.lang.RuntimeException
         assert.strictEqual(testMessage.location?.range.start.line, 14);
     });
 });
-
-function generateTestItem(testController: TestController, id: string, testKind: TestKind): TestItem {
-    if (!id) {
-        throw new Error('id cannot be null');
-    }
-
-    const projectName = id.substring(0, id.indexOf('@'));
-    const fullName = id.substring(id.indexOf('@') + 1);
-    const label = id.substring(id.indexOf('#') + 1);
-
-    const testItem = testController.createTestItem(id, label, Uri.file('/mock/test/TestAnnotation.java'));
-    testItem.range = new Range(0, 0, 0, 0);
-    dataCache.set(testItem, {
-        jdtHandler: '',
-        fullName,
-        projectName,
-        testLevel: TestLevel.Method,
-        testKind,
-    });
-
-    return testItem;
-}

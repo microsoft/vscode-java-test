@@ -197,6 +197,11 @@
                             "description": "%configuration.java.test.config.env.description%",
                             "default": {}
                         },
+                        "envFile": {
+                            "type": "string",
+                            "description": "%configuration.java.test.config.envFile.description%",
+                            "default": "${workspaceFolder}/.env"
+                        },
                         "sourcePaths": {
                             "type": "array",
                             "items": {

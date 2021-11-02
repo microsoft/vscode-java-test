@@ -40,6 +40,9 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
+    - name: prepublish
+      run: npm run vscode:prepublish
+
     - name: Test extension
       run: DISPLAY=:99 npm test
 
@@ -73,6 +76,9 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
+    - name: prepublish
+      run: npm run vscode:prepublish
+
     - name: Test extension
       run: npm test
 
@@ -105,6 +111,9 @@ jobs:
 
     - name: Build OSGi bundle
       run: npm run build-plugin
+
+    - name: prepublish
+      run: npm run vscode:prepublish
 
     - name: Test extension
       run: npm test

@@ -33,6 +33,7 @@ async function main(): Promise<void> {
             extensionTestsPath: path.resolve(__dirname, 'suite'),
             launchArgs: [
                 '--disable-workspace-trust',
+                path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit'),
             ],
         });
 
