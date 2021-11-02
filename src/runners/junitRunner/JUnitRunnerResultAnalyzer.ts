@@ -116,7 +116,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
 
             const testMessage: TestMessage = new TestMessage(this.traces);
-            this.tryAppendMessage(this.currentItem, testMessage);
+            this.tryAppendMessage(this.currentItem, testMessage, this.currentTestState);
             this.recordingType = RecordingType.None;
             if (this.currentTestState === TestResultState.Errored) {
                 setTestState(this.testContext.testRun, this.currentItem, this.currentTestState);
@@ -271,8 +271,11 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         }
     }
 
-    private async tryAppendMessage(item: TestItem, testMessage: TestMessage): Promise<void> {
-        if (item.uri && item.range) {
+    private async tryAppendMessage(item: TestItem, testMessage: TestMessage, testState: TestResultState): Promise<void> {
+        if (this.testMessageLocation) {
+            testMessage.location = this.testMessageLocation;
+            this.testMessageLocation = undefined;
+        } else if (item.uri && item.range) {
             testMessage.location = new Location(item.uri, item.range);
         } else {
             let id: string = item.id;
@@ -287,7 +290,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const location: Location | undefined = await findTestLocation(id);
             testMessage.location = location;
         }
-        setTestState(this.testContext.testRun, item, TestResultState.Failed, testMessage);
+        setTestState(this.testContext.testRun, item, testState, testMessage);
     }
 
     // See: org.eclipse.jdt.internal.junit.model.TestCaseElement#getTestMethodName()

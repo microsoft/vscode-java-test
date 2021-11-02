@@ -11,6 +11,7 @@ export abstract class RunnerResultAnalyzer {
 
     public abstract analyzeData(data: string): void;
     public abstract processData(data: string): void;
+    protected testMessageLocation: Location | undefined;
 
     protected processStackTrace(data: string, traces: MarkdownString, assertionFailure: TestMessage | undefined, currentItem: TestItem | undefined, projectName: string): void {
         const traceRegExp: RegExp = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\(([\w-$]+\.java):(\d+)\)/;
@@ -19,12 +20,15 @@ export abstract class RunnerResultAnalyzer {
         if (traceResults && traceResults.length === 6) {
             traces.appendText(traceResults[1]);
             traces.appendMarkdown(`${(traceResults[2] || '') + traceResults[3]}([${traceResults[4]}:${traceResults[5]}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, projectName]))}))`);
-            if (assertionFailure && currentItem && path.basename(currentItem.uri?.fsPath || '') === traceResults[4]) {
+            if (currentItem && path.basename(currentItem.uri?.fsPath || '') === traceResults[4]) {
                 const lineNum: number = parseInt(traceResults[5], 10);
                 if (currentItem.uri) {
-                    assertionFailure.location = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
+                    this.testMessageLocation = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
                 }
-                setTestState(this.testContext.testRun, currentItem, TestResultState.Failed, assertionFailure);
+                if (assertionFailure) {
+                    assertionFailure.location = this.testMessageLocation;
+                    setTestState(this.testContext.testRun, currentItem, TestResultState.Failed, assertionFailure);
+                }
             }
         } else {
             // in case the message contains message like: 'expected: <..> but was: <..>'

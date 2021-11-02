@@ -87,6 +87,44 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
         assert.ok((testMessage.message as MarkdownString).value.includes('junit4.TestAnnotation.shouldFail([TestAnnotation.java:15](command:_java.test.openStackTrace?%5B%22at%20junit4.TestAnnotation.shouldFail(TestAnnotation.java%3A15)%22%2C%22junit%22%5D))'));
     });
+
+    test("test message location should be inside the test case", () => {
+        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldFail', TestKind.JUnit);
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const erroredSpy = sinon.spy(testRun, 'errored');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE1,shouldFail(junit4.TestAnnotation),false,1,false,-1,shouldFail(junit4.TestAnnotation),,
+%TESTS  1,shouldFail(junit4.TestAnnotation)
+%ERROR  1,shouldFail(junit4.TestAnnotation)
+%TRACES 
+java.lang.RuntimeException
+        at junit4.TestAnnotation.fail2(TestAnnotation.java:23)
+        at junit4.TestAnnotation.fail(TestAnnotation.java:19)
+        at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+%TRACEE 
+%TESTE  1,shouldFail(junit4.TestAnnotation)
+%RUNTIME16`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(erroredSpy, testItem, sinon.match.any);
+        const testMessage = erroredSpy.getCall(0).args[1] as TestMessage;
+        assert.strictEqual(testMessage.location?.range.start.line, 14);
+    });
 });
 
 function generateTestItem(testController: TestController, id: string, testKind: TestKind): TestItem {
@@ -98,7 +136,7 @@ function generateTestItem(testController: TestController, id: string, testKind: 
     const fullName = id.substring(id.indexOf('@') + 1);
     const label = id.substring(id.indexOf('#') + 1);
 
-    const testItem = testController.createTestItem(id, label, Uri.file('/mock/test'));
+    const testItem = testController.createTestItem(id, label, Uri.file('/mock/test/TestAnnotation.java'));
     testItem.range = new Range(0, 0, 0, 0);
     dataCache.set(testItem, {
         jdtHandler: '',
