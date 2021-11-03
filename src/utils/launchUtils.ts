@@ -31,6 +31,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             projectName: launchArguments.projectName,
             cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
             classPaths: [
+                ...config?.classPaths || [],
                 ...launchArguments.classpath,
                 path.join(extensionContext.extensionPath, 'server', 'com.microsoft.java.test.runner.jar'),
                 path.join(extensionContext.extensionPath, 'server', 'lib'),
@@ -53,7 +54,10 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         mainClass: launchArguments.mainClass,
         projectName: launchArguments.projectName,
         cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
-        classPaths: launchArguments.classpath,
+        classPaths: [
+            ...config?.classPaths || [],
+            ...launchArguments.classpath,
+        ],
         modulePaths: launchArguments.modulepath,
         args: launchArguments.programArguments,
         vmArgs: launchArguments.vmArguments,

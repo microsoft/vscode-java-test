@@ -176,6 +176,30 @@
                             "description": "%configuration.java.test.config.workingDirectory.description%",
                             "default": "${workspaceFolder}"
                         },
+                        "classPaths": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "$Auto",
+                                    "$Runtime",
+                                    "$Test",
+                                    "!<path>"
+                                  ],
+                                  "enumDescriptions": [
+                                    "%configuration.java.test.config.classPaths.auto.description%",
+                                    "%configuration.java.test.config.classPaths.runtime.description%",
+                                    "%configuration.java.test.config.classPaths.test.description%",
+                                    "%configuration.java.test.config.classPaths.exclude.description%"
+                                  ]
+                                },
+                                "string"
+                              ]
+                            },
+                            "description": "%configuration.java.test.config.classPaths.description%",
+                            "default": []
+                        },
                         "vmArgs": {
                             "type": "array",
                             "items": {
@@ -231,6 +255,30 @@
                                 "type": "string",
                                 "description": "%configuration.java.test.config.workingDirectory.description%",
                                 "default": "${workspaceFolder}"
+                            },
+                            "classPaths": {
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "enum": [
+                                        "$Auto",
+                                        "$Runtime",
+                                        "$Test",
+                                        "!<path>"
+                                      ],
+                                      "enumDescriptions": [
+                                        "%configuration.java.test.config.classPaths.auto.description%",
+                                        "%configuration.java.test.config.classPaths.runtime.description%",
+                                        "%configuration.java.test.config.classPaths.test.description%",
+                                        "%configuration.java.test.config.classPaths.exclude.description%"
+                                      ]
+                                    },
+                                    "string"
+                                  ]
+                                },
+                                "description": "%configuration.java.test.config.classPaths.description%",
+                                "default": []
                             },
                             "vmargs": {
                                 "type": "array",

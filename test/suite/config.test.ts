@@ -42,6 +42,10 @@ suite('JUnit Runner Analyzer Tests', () => {
         };
         const junitRunner =  new JUnitRunner(runnerContext);
         const configuration = await resolveLaunchConfigurationForRunner(junitRunner, runnerContext, {
+            classPaths: [
+                "/a/b/c.jar",
+                "/foo/bar.jar"
+            ],
             env: {
                 test: "test",
             },
@@ -55,5 +59,7 @@ suite('JUnit Runner Analyzer Tests', () => {
         assert.strictEqual(configuration.envFile, "${workspaceFolder}/.env");
         assert.strictEqual(configuration.sourcePaths?.[0], "/a/b/c.jar");
         assert.strictEqual(configuration.preLaunchTask, "test");
+        assert.strictEqual(configuration.classPaths[0], "/a/b/c.jar");
+        assert.strictEqual(configuration.classPaths[1], "/foo/bar.jar");
     });
 });

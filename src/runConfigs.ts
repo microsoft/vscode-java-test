@@ -15,6 +15,11 @@ export interface IExecutionConfig {
      */
     workingDirectory?: string;
     /**
+     * The classpath defined in this setting will be appended to the resolved classpath.
+     * @since 0.33.0
+     */
+     classPaths?: string[]
+    /**
      * The command line arguments which will be passed to the test runner.
      * @since 0.14.0
      */
