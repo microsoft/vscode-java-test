@@ -46,6 +46,9 @@ suite('JUnit Runner Analyzer Tests', () => {
                 "/a/b/c.jar",
                 "/foo/bar.jar"
             ],
+            modulePaths: [
+                "/test/module.jar",
+            ],
             env: {
                 test: "test",
             },
@@ -57,8 +60,9 @@ suite('JUnit Runner Analyzer Tests', () => {
         });
         assert.strictEqual(configuration.env.test, "test");
         assert.strictEqual(configuration.envFile, "${workspaceFolder}/.env");
-        assert.strictEqual(configuration.sourcePaths?.[0], "/a/b/c.jar");
+        assert.strictEqual(configuration.sourcePaths[0], "/a/b/c.jar");
         assert.strictEqual(configuration.preLaunchTask, "test");
+        assert.strictEqual(configuration.modulePaths[0], "/test/module.jar");
         assert.strictEqual(configuration.classPaths[0], "/a/b/c.jar");
         assert.strictEqual(configuration.classPaths[1], "/foo/bar.jar");
     });
