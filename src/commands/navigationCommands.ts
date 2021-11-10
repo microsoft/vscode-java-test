@@ -57,7 +57,10 @@ async function searchTests(uri: string): Promise<ITestFindResult[]> {
         JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri, true) || [];
 }
 
-interface ITestFindResult {
+/**
+ * export only for test purpose
+ */
+export interface ITestFindResult {
     simpleName: string;
     fullyQualifiedName: string;
     uri: string;
