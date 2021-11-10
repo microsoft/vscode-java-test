@@ -15,6 +15,7 @@ export namespace JavaTestRunnerDelegateCommands {
     export const FIND_DIRECT_CHILDREN_FOR_CLASS: string = 'vscode.java.test.findDirectTestChildrenForClass';
     export const FIND_TEST_TYPES_AND_METHODS: string = 'vscode.java.test.findTestTypesAndMethods';
     export const RESOLVE_PATH: string = 'vscode.java.test.resolvePath';
+    export const NAVIGATE_TO_TEST_OR_TARGET: string = 'vscode.java.test.navigateToTestOrTarget';
 }
 
 export namespace JavaTestRunnerCommands {
@@ -27,6 +28,7 @@ export namespace JavaTestRunnerCommands {
     export const REFRESH_TEST_EXPLORER: string = 'java.test.refreshExplorer';
     export const JAVA_TEST_GENERATE_TESTS: string = 'java.test.generateTests';
     export const FIND_TEST_LOCATION: string = 'vscode.java.test.findTestLocation';
+    export const GO_TO_TEST: string = 'java.test.goToTest';
     export const JAVA_TEST_OPEN_STACKTRACE: string = '_java.test.openStackTrace';
 }
 

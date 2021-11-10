@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.handler;
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 import com.microsoft.java.test.plugin.util.TestGenerationUtils;
+import com.microsoft.java.test.plugin.util.TestNavigationUtils;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -34,6 +35,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String FIND_TYPES_AND_METHODS = "vscode.java.test.findTestTypesAndMethods";
     private static final String RESOLVE_PATH = "vscode.java.test.resolvePath";
     private static final String FIND_TEST_LOCATION = "vscode.java.test.findTestLocation";
+    private static final String NAVIGATE_TO_TEST_OR_TARGET = "vscode.java.test.navigateToTestOrTarget";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -60,6 +62,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return TestSearchUtils.resolvePath(arguments, monitor);
             case FIND_TEST_LOCATION:
                 return TestSearchUtils.findTestLocation(arguments, monitor);
+            case NAVIGATE_TO_TEST_OR_TARGET:
+                return TestNavigationUtils.findTestOrTarget(arguments, monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));
