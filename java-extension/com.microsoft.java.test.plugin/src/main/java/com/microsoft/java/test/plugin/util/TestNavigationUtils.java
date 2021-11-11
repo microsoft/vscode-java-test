@@ -29,8 +29,12 @@ import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Utils for test navigation features
@@ -43,7 +47,7 @@ public class TestNavigationUtils {
      * @return the search result for test navigation
      * @throws JavaModelException
      */
-    public static List<TestFindResult> findTestOrTarget(List<Object> arguments, IProgressMonitor monitor)
+    public static Collection<TestFindResult> findTestOrTarget(List<Object> arguments, IProgressMonitor monitor)
             throws JavaModelException {
         if (arguments == null || arguments.size() < 2) {
             throw new IllegalArgumentException("Wrong arguments passed to findTestOrTarget().");
@@ -60,7 +64,7 @@ public class TestNavigationUtils {
         final IJavaProject javaProject = unit.getJavaProject();
         final IJavaSearchScope scope = goToTest ? getSearchScopeForTest(javaProject) :
                 getSearchScopeForTarget(javaProject);
-        final List<TestFindResult> results = new LinkedList<>();
+        final Set<TestFindResult> results = new HashSet<>();
         searchEngine.searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
@@ -68,7 +72,7 @@ public class TestNavigationUtils {
             SearchPattern.R_PREFIX_MATCH,
             IJavaSearchConstants.CLASS,
             scope,
-            new TestNavigationNameRequestor(results, javaProject),
+            new TestNavigationNameRequestor(results, javaProject, typeName),
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
             monitor
         );
@@ -100,12 +104,14 @@ public class TestNavigationUtils {
     }
 
     static final class TestNavigationNameRequestor extends TypeNameRequestor {
-        private final List<TestFindResult> results;
+        private final Set<TestFindResult> results;
         private final IJavaProject javaProject;
+        private final String typeName;
 
-        private TestNavigationNameRequestor(List<TestFindResult> results, IJavaProject javaProject) {
+        private TestNavigationNameRequestor(Set<TestFindResult> results, IJavaProject javaProject, String typeName) {
             this.results = results;
             this.javaProject = javaProject;
+            this.typeName = typeName;
         }
 
         @Override
@@ -122,13 +128,25 @@ public class TestNavigationUtils {
                 return;
             }
             final String uri = file.getLocation().toFile().toURI().toString();
-            final String simpleName = String.valueOf(simpleTypeName);
-            String fullyQualifiedName = String.valueOf(packageName) + ".";
-            for (final char[] enclosingTypeName : enclosingTypeNames) {
-                fullyQualifiedName += String.valueOf(enclosingTypeName) + "$";
+            final String simpleName;
+            if (enclosingTypeNames.length == 0) {
+                simpleName = String.valueOf(simpleTypeName);
+            } else {
+                // All the nested classes are ignored.
+                simpleName = String.valueOf(enclosingTypeNames[0]);
             }
-            fullyQualifiedName += simpleName;
-            results.add(new TestFindResult(simpleName, fullyQualifiedName, uri));
+            final String fullyQualifiedName = String.valueOf(packageName) + "." + simpleName;
+            int relevance;
+            if (Objects.equals(simpleName, this.typeName + "Test") || Objects.equals(simpleName, this.typeName + "Tests")) {
+                // mark this as most relevance
+                relevance = Integer.MIN_VALUE;
+            } else {
+                relevance = simpleName.indexOf(this.typeName);
+                if (relevance < 0) {
+                    relevance = 1000;
+                }
+            }
+            results.add(new TestFindResult(simpleName, fullyQualifiedName, uri, relevance));
         }
     }
 
@@ -136,11 +154,43 @@ public class TestNavigationUtils {
         public String simpleName;
         public String fullyQualifiedName;
         public String uri;
+        public int relevance;
 
-        public TestFindResult(String simpleName, String fullyQualifiedName, String uri) {
+        public TestFindResult(String simpleName, String fullyQualifiedName, String uri, int relevance) {
             this.simpleName = simpleName;
             this.fullyQualifiedName = fullyQualifiedName;
             this.uri = uri;
+            this.relevance = relevance;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((uri == null) ? 0 : uri.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final TestFindResult other = (TestFindResult) obj;
+            if (uri == null) {
+                if (other.uri != null) {
+                    return false;
+                }
+            } else if (!uri.equals(other.uri)) {
+                return false;
+            }
+            return true;
         }
     }
 }

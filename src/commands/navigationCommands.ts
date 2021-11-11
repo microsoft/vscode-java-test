@@ -33,23 +33,30 @@ export async function goToTest(): Promise<void> {
     } else if (results.length === 1) {
         window.showTextDocument(Uri.parse(results[0].uri));
     } else {
-        const items: IResultItem[] = results.sort((a: ITestFindResult, b: ITestFindResult) => {
-            return a.simpleName.localeCompare(b.simpleName);
-        }).map((r: ITestFindResult) => {
-            return {
-                label: r.simpleName,
-                detail: r.fullyQualifiedName,
-                uri: r.uri,
-            };
-        });
-        window.showQuickPick(items, {
-            placeHolder: 'Choose a test class to open',
-        }).then((choice: IResultItem | undefined) => {
-            if (choice) {
-                window.showTextDocument(Uri.parse(choice.uri));
-            }
-        });
+        goToTestFallback(results);
     }
+}
+
+function goToTestFallback(results: ITestFindResult[]): void {
+    const items: IResultItem[] = results.sort((a: ITestFindResult, b: ITestFindResult) => {
+        if (a.relevance === b.relevance) {
+            return a.simpleName.localeCompare(b.simpleName);
+        }
+        return a.relevance - b.relevance;
+    }).map((r: ITestFindResult) => {
+        return {
+            label: r.simpleName,
+            detail: r.fullyQualifiedName,
+            uri: r.uri,
+        };
+    });
+    window.showQuickPick(items, {
+        placeHolder: 'Choose a test class to open',
+    }).then((choice: IResultItem | undefined) => {
+        if (choice) {
+            window.showTextDocument(Uri.parse(choice.uri));
+        }
+    });
 }
 
 async function searchTests(uri: string): Promise<ITestFindResult[]> {
@@ -64,6 +71,7 @@ export interface ITestFindResult {
     simpleName: string;
     fullyQualifiedName: string;
     uri: string;
+    relevance: number;
 }
 
 interface IResultItem extends QuickPickItem {
