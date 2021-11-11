@@ -160,7 +160,7 @@ export function isJavaIdentifier(identifier: string): boolean {
     return identifierRegExp.test(identifier);
 }
 
-interface IOption extends QuickPickItem {
+export interface IOption extends QuickPickItem {
     value: string;
     isAdvanced?: boolean;
 }

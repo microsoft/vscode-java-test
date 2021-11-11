@@ -27,6 +27,9 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.JDTUtils.LocationType;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
+import org.eclipse.lsp4j.Location;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +50,7 @@ public class TestNavigationUtils {
      * @return the search result for test navigation
      * @throws JavaModelException
      */
-    public static Collection<TestFindResult> findTestOrTarget(List<Object> arguments, IProgressMonitor monitor)
+    public static TestNavigationResult findTestOrTarget(List<Object> arguments, IProgressMonitor monitor)
             throws JavaModelException {
         if (arguments == null || arguments.size() < 2) {
             throw new IllegalArgumentException("Wrong arguments passed to findTestOrTarget().");
@@ -59,12 +62,20 @@ public class TestNavigationUtils {
             return null;
         }
         final boolean goToTest = (boolean) arguments.get(1);
-        final String typeName = getPrimaryTypeName(unit);
+        final IType primaryType = unit.findPrimaryType();
+        final String typeName;
+        Location location = null;
+        if (primaryType != null) {
+            typeName = primaryType.getElementName();
+            location = JDTUtils.toLocation(primaryType, LocationType.NAME_RANGE);
+        } else {
+            typeName = unit.getElementName().substring(0, unit.getElementName().lastIndexOf(".java"));
+        }
         final SearchEngine searchEngine = new SearchEngine();
         final IJavaProject javaProject = unit.getJavaProject();
-        final IJavaSearchScope scope = goToTest ? getSearchScopeForTest(javaProject) :
-                getSearchScopeForTarget(javaProject);
-        final Set<TestFindResult> results = new HashSet<>();
+        final IJavaSearchScope scope = goToTest ? getSearchScopeForTest() :
+                getSearchScopeForTarget();
+        final Set<TestNavigationItem> items = new HashSet<>();
         searchEngine.searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
@@ -72,43 +83,39 @@ public class TestNavigationUtils {
             SearchPattern.R_PREFIX_MATCH,
             IJavaSearchConstants.CLASS,
             scope,
-            new TestNavigationNameRequestor(results, javaProject, typeName),
+            new TestNavigationNameRequestor(items, javaProject, typeName),
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
             monitor
         );
 
-        return results;
+        return new TestNavigationResult(items, location);
     }
 
-    private static String getPrimaryTypeName(ICompilationUnit unit) {
-        final IType primaryType = unit.findPrimaryType();
-        if (primaryType != null) {
-            return primaryType.getElementName();
-        }
-
-        return unit.getElementName().substring(0, unit.getElementName().lastIndexOf(".java"));
-    }
-
-    private static IJavaSearchScope getSearchScopeForTarget(IJavaProject javaProject) {
+    private static IJavaSearchScope getSearchScopeForTarget() {
         // TODO: unimplemented
         return null;
     }
 
-    private static IJavaSearchScope getSearchScopeForTest(IJavaProject javaProject) throws JavaModelException {
-        final List<IClasspathEntry> testEntries = ProjectTestUtils.getTestEntries(javaProject);
+    private static IJavaSearchScope getSearchScopeForTest() throws JavaModelException {
         final List<IJavaElement> javaElements = new LinkedList<>();
-        for (final IClasspathEntry entry : testEntries) {
-            javaElements.addAll(Arrays.asList(javaProject.findPackageFragmentRoots(entry)));
+        final IJavaProject[] javaProjects = ProjectUtils.getJavaProjects();
+        for (final IJavaProject project : javaProjects) {
+            final List<IClasspathEntry> testEntries = ProjectTestUtils.getTestEntries(project);
+            for (final IClasspathEntry entry : testEntries) {
+                javaElements.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
+            }
         }
+
         return SearchEngine.createJavaSearchScope(javaElements.toArray(new IJavaElement[0]));
     }
 
     static final class TestNavigationNameRequestor extends TypeNameRequestor {
-        private final Set<TestFindResult> results;
+        private final Set<TestNavigationItem> results;
         private final IJavaProject javaProject;
         private final String typeName;
 
-        private TestNavigationNameRequestor(Set<TestFindResult> results, IJavaProject javaProject, String typeName) {
+        private TestNavigationNameRequestor(Set<TestNavigationItem> results, IJavaProject javaProject,
+                String typeName) {
             this.results = results;
             this.javaProject = javaProject;
             this.typeName = typeName;
@@ -137,7 +144,8 @@ public class TestNavigationUtils {
             }
             final String fullyQualifiedName = String.valueOf(packageName) + "." + simpleName;
             int relevance;
-            if (Objects.equals(simpleName, this.typeName + "Test") || Objects.equals(simpleName, this.typeName + "Tests")) {
+            if (Objects.equals(simpleName, this.typeName + "Test") ||
+                    Objects.equals(simpleName, this.typeName + "Tests")) {
                 // mark this as most relevance
                 relevance = Integer.MIN_VALUE;
             } else {
@@ -146,21 +154,40 @@ public class TestNavigationUtils {
                     relevance = 1000;
                 }
             }
-            results.add(new TestFindResult(simpleName, fullyQualifiedName, uri, relevance));
+            final boolean outOfBelongingProject;
+            if (Objects.equals(this.javaProject.getElementName(), fullPath.segment(0))) {
+                outOfBelongingProject = false;
+            } else {
+                outOfBelongingProject = true;
+            }
+            results.add(new TestNavigationItem(simpleName, fullyQualifiedName, uri, relevance, outOfBelongingProject));
         }
     }
 
-    static final class TestFindResult {
+    static final class TestNavigationResult {
+        public Collection<TestNavigationItem> items;
+        public Location location;
+
+        public TestNavigationResult(Collection<TestNavigationItem> items, Location location) {
+            this.items = items;
+            this.location = location;
+        }
+    }
+
+    static final class TestNavigationItem {
         public String simpleName;
         public String fullyQualifiedName;
         public String uri;
         public int relevance;
+        public boolean outOfBelongingProject;
 
-        public TestFindResult(String simpleName, String fullyQualifiedName, String uri, int relevance) {
+        public TestNavigationItem(String simpleName, String fullyQualifiedName, String uri,
+                int relevance, boolean outOfBelongingProject) {
             this.simpleName = simpleName;
             this.fullyQualifiedName = fullyQualifiedName;
             this.uri = uri;
             this.relevance = relevance;
+            this.outOfBelongingProject = outOfBelongingProject;
         }
 
         @Override
@@ -182,7 +209,7 @@ public class TestNavigationUtils {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final TestFindResult other = (TestFindResult) obj;
+            final TestNavigationItem other = (TestNavigationItem) obj;
             if (uri == null) {
                 if (other.uri != null) {
                     return false;

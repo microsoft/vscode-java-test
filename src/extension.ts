@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
-import { goToTest } from './commands/navigationCommands';
+import { goToTest } from './commands/navigation/navigationCommands';
 import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
 import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
