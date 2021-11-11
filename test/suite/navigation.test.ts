@@ -24,10 +24,10 @@ suite('Test Navigation Tests', () => {
         const filePath: string = path.join(PROJECT_PATH, 'src', 'main', 'java', 'junit', 'App.java');
         await window.showTextDocument(Uri.file(filePath));
         const uri: Uri = window.activeTextEditor!.document.uri;
-        const searchResult = await executeJavaLanguageServerCommand<ITestNavigationResult[]>(
-            JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri.toString(), true) || [];
-        assert.strictEqual(searchResult.length, 1);
-        assert.strictEqual(searchResult[0].simpleName, 'AppTest');
-        assert.strictEqual(searchResult[0].fullyQualifiedName, 'junit5.AppTest');
+        const searchResult = await executeJavaLanguageServerCommand<ITestNavigationResult>(
+            JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri.toString(), true);
+        assert.strictEqual(searchResult?.items.length, 1);
+        assert.strictEqual(searchResult?.items[0].simpleName, 'AppTest');
+        assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit5.AppTest');
     });
 });
