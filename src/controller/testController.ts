@@ -213,6 +213,9 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             testRun: run,
                             workspaceFolder,
                         };
+                        sendInfo(operationId, {
+                            testFramework: TestKind[testContext.kind],
+                        });
                         const runner: BaseRunner | undefined = getRunnerByContext(testContext);
                         if (!runner) {
                             window.showErrorMessage(`Failed to get suitable runner for the test kind: ${testContext.kind}.`);
