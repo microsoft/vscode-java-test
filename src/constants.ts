@@ -30,11 +30,15 @@ export namespace JavaTestRunnerCommands {
     export const FIND_TEST_LOCATION: string = 'vscode.java.test.findTestLocation';
     export const GO_TO_TEST: string = 'java.test.goToTest';
     export const JAVA_TEST_OPEN_STACKTRACE: string = '_java.test.openStackTrace';
+    export const ASK_CLIENT_FOR_CHOICE: string = '_java.test.askClientForChoice';
+    export const ASK_CLIENT_FOR_INPUT: string = '_java.test.askClientForInput'
+    export const ADVANCED_ASK_CLIENT_FOR_CHOICE: string = '_java.test.advancedAskClientForChoice';
 }
 
 export namespace VSCodeCommands {
     export const RUN_TESTS_IN_CURRENT_FILE: string = 'testing.runCurrentFile';
     export const DEBUG_TESTS_IN_CURRENT_FILE: string = 'testing.debugCurrentFile';
+    export const WORKBENCH_ACTION_QUICK_OPEN: string = 'workbench.action.quickOpen';
 }
 
 export namespace Configurations {

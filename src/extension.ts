@@ -5,7 +5,7 @@ import * as path from 'path';
 import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { goToTest } from './commands/navigation/navigationCommands';
-import { generateTests, registerAdvanceAskForChoice, registerAskForChoiceCommand, registerAskForInputCommand } from './commands/generationCommands';
+import { generateTests } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
 import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
@@ -16,6 +16,7 @@ import { IProgressProvider } from './debugger.api';
 import { initExpService } from './experimentationService';
 import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
 import { testSourceProvider } from './provider/testSourceProvider';
+import { registerAskForChoiceCommand, registerAdvanceAskForChoice, registerAskForInputCommand } from './commands/askForOptionCommands';
 
 export let extensionContext: ExtensionContext;
 

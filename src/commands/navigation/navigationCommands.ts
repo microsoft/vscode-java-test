@@ -3,12 +3,16 @@
 
 import * as path from 'path';
 import { commands, extensions, Location, Range, Uri, window } from 'vscode';
-import { JavaTestRunnerCommands, JavaTestRunnerDelegateCommands } from '../../constants';
+import { JavaTestRunnerCommands, JavaTestRunnerDelegateCommands, VSCodeCommands } from '../../constants';
 import { testSourceProvider } from '../../provider/testSourceProvider';
 import { SymbolTree } from '../../references-view';
 import { executeJavaLanguageServerCommand } from '../../utils/commandUtils';
-import { IOption } from '../generationCommands';
+import { IOption } from '../askForOptionCommands';
 import { TestNavigationInput } from './testNavigationInput';
+
+const GENERATE_TESTS: string = 'Generate tests...';
+const SEARCH_TEST_FILES: string = 'Search test files...';
+const REFERENCES_VIEW_EXTENSION: string = 'ms-vscode.references-view';
 
 export async function goToTest(): Promise<void> {
     if (!window.activeTextEditor) {
@@ -21,15 +25,15 @@ export async function goToTest(): Promise<void> {
     const result: ITestNavigationResult | undefined = await searchTests(uri.toString());
     if (!result?.items?.length) {
         window.showQuickPick([
-            'Generate tests...',
-            'Search test files...',
+            GENERATE_TESTS,
+            SEARCH_TEST_FILES,
         ], {
             placeHolder: 'No tests found for current source file'
         }).then((choice: string | undefined) => {
-            if (choice === 'Search test files...') {
+            if (choice === SEARCH_TEST_FILES) {
                 const fileName: string = path.basename(window.activeTextEditor!.document.fileName);
-                commands.executeCommand('workbench.action.quickOpen', fileName.substring(0, fileName.lastIndexOf('.')));
-            } else if (choice === 'Generate tests...') {
+                commands.executeCommand(VSCodeCommands.WORKBENCH_ACTION_QUICK_OPEN, fileName.substring(0, fileName.lastIndexOf('.')));
+            } else if (choice === GENERATE_TESTS) {
                 commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, uri, 0);
             }
         });
@@ -42,7 +46,7 @@ export async function goToTest(): Promise<void> {
             }
             return a.relevance - b.relevance;
         });
-        const api: SymbolTree | undefined = await extensions.getExtension<SymbolTree>('ms-vscode.references-view')?.activate();
+        const api: SymbolTree | undefined = await extensions.getExtension<SymbolTree>(REFERENCES_VIEW_EXTENSION)?.activate();
         if (api) {
             const input: TestNavigationInput = new TestNavigationInput(
                 'Related Tests',
@@ -71,7 +75,7 @@ async function goToTestFallback(results: ITestNavigationItem[]): Promise<void> {
         };
     });
     const choice: string[] | undefined = await commands.executeCommand(
-        '_java.test.advancedAskClientForChoice',
+        JavaTestRunnerCommands.ADVANCED_ASK_CLIENT_FOR_CHOICE,
         'Choose a test class to open',
         items,
         'tests in other projects',
