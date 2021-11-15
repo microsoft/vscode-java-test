@@ -41,10 +41,16 @@ export async function goToTest(): Promise<void> {
         window.showTextDocument(Uri.parse(result.items[0].uri));
     } else {
         const sortedResults: ITestNavigationItem[] = result.items.sort((a: ITestNavigationItem, b: ITestNavigationItem) => {
-            if (a.relevance === b.relevance) {
-                return a.simpleName.localeCompare(b.simpleName);
+            if (a.outOfBelongingProject && !b.outOfBelongingProject) {
+                return Number.MAX_SAFE_INTEGER;
+            } else if (!a.outOfBelongingProject && b.outOfBelongingProject) {
+                return Number.MIN_SAFE_INTEGER;
+            } else {
+                if (a.relevance === b.relevance) {
+                    return a.simpleName.localeCompare(b.simpleName);
+                }
+                return a.relevance - b.relevance;
             }
-            return a.relevance - b.relevance;
         });
         const api: SymbolTree | undefined = await extensions.getExtension<SymbolTree>(REFERENCES_VIEW_EXTENSION)?.activate();
         if (api) {

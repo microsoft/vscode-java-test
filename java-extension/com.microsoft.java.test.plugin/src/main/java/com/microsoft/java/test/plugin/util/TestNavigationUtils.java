@@ -151,7 +151,8 @@ public class TestNavigationUtils {
             } else {
                 relevance = simpleName.indexOf(this.typeName);
                 if (relevance < 0) {
-                    relevance = 1000;
+                    // todo: better relevance calculation
+                    relevance = Integer.MAX_VALUE;
                 }
             }
             final boolean outOfBelongingProject;
