@@ -65,6 +65,11 @@ public final class ProjectTestUtils {
     }
 
     public static List<IClasspathEntry> getTestEntries(IJavaProject project) throws JavaModelException {
+        return getClasspathEntries(project, true);
+    }
+
+    public static List<IClasspathEntry> getClasspathEntries(IJavaProject project, boolean isTest)
+            throws JavaModelException {
         // Ignore default project
         if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
             return Collections.emptyList();
@@ -76,7 +81,7 @@ public final class ProjectTestUtils {
                 continue;
             }
     
-            if (isTestEntry(entry)) {
+            if (isTest == isTestEntry(entry)) {
                 entries.add(entry);
                 continue;
             }

@@ -30,4 +30,15 @@ suite('Test Navigation Tests', () => {
         assert.strictEqual(searchResult?.items[0].simpleName, 'AppTest');
         assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit5.AppTest');
     });
+
+    test('test go to test target', async () => {
+        const filePath: string = path.join(PROJECT_PATH, 'src', 'test', 'java', 'junit5', 'AppTest.java');
+        await window.showTextDocument(Uri.file(filePath));
+        const uri: Uri = window.activeTextEditor!.document.uri;
+        const searchResult = await executeJavaLanguageServerCommand<ITestNavigationResult>(
+            JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri.toString(), false);
+        assert.strictEqual(searchResult?.items.length, 1);
+        assert.strictEqual(searchResult?.items[0].simpleName, 'App');
+        assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit.App');
+    });
 });

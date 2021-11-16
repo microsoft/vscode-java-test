@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
-import { goToTest } from './commands/navigation/navigationCommands';
+import { navigateToTestOrTarget } from './commands/navigation/navigationCommands';
 import { generateTests } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
 import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
@@ -100,7 +100,8 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER, async () => await refresh()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST, async () => await goToTest()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST, async () => await navigateToTestOrTarget(true)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST_TARGET, async () => await navigateToTestOrTarget(false)),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (await isTestJavaFile(e?.document)) {
                 await updateItemForDocumentWithDebounce(e!.document.uri);
