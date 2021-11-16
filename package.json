@@ -120,10 +120,26 @@
                 {
                     "command": "java.test.editor.debug",
                     "when": "java:serverMode != LightWeight"
+                },
+                {
+                    "command": "java.test.goToTest",
+                    "when": "java:testRunnerActivated && resourceExtname == .java"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "java.test.goToTest",
+                    "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]main[/|\\\\]java[/|\\\\].*\\.java/",
+                    "group": "navigation@100"
                 }
             ]
         },
         "commands": [
+            {
+                "command": "java.test.goToTest",
+                "title": "%contributes.commands.java.test.goToTest.title%",
+                "category": "Java"
+            },
             {
                 "command": "java.test.runFromJavaProjectExplorer",
                 "title": "%contributes.commands.java.test.runFromJavaProjectExplorer.title%",
@@ -179,23 +195,23 @@
                         "classPaths": {
                             "type": "array",
                             "items": {
-                              "anyOf": [
-                                {
-                                  "enum": [
-                                    "$Auto",
-                                    "$Runtime",
-                                    "$Test",
-                                    "!<path>"
-                                  ],
-                                  "enumDescriptions": [
-                                    "%configuration.java.test.config.classPaths.auto.description%",
-                                    "%configuration.java.test.config.classPaths.runtime.description%",
-                                    "%configuration.java.test.config.classPaths.test.description%",
-                                    "%configuration.java.test.config.classPaths.exclude.description%"
-                                  ]
-                                },
-                                "string"
-                              ]
+                                "anyOf": [
+                                    {
+                                        "enum": [
+                                            "$Auto",
+                                            "$Runtime",
+                                            "$Test",
+                                            "!<path>"
+                                        ],
+                                        "enumDescriptions": [
+                                            "%configuration.java.test.config.classPaths.auto.description%",
+                                            "%configuration.java.test.config.classPaths.runtime.description%",
+                                            "%configuration.java.test.config.classPaths.test.description%",
+                                            "%configuration.java.test.config.classPaths.exclude.description%"
+                                        ]
+                                    },
+                                    "string"
+                                ]
                             },
                             "description": "%configuration.java.test.config.classPaths.description%",
                             "default": []
@@ -203,23 +219,23 @@
                         "modulePaths": {
                             "type": "array",
                             "items": {
-                              "anyOf": [
-                                {
-                                  "enum": [
-                                    "$Auto",
-                                    "$Runtime",
-                                    "$Test",
-                                    "!<path>"
-                                  ],
-                                  "enumDescriptions": [
-                                    "%configuration.java.test.config.modulePaths.auto.description%",
-                                    "%configuration.java.test.config.modulePaths.runtime.description%",
-                                    "%configuration.java.test.config.modulePaths.test.description%",
-                                    "%configuration.java.test.config.modulePaths.exclude.description%"
-                                  ]
-                                },
-                                "string"
-                              ]
+                                "anyOf": [
+                                    {
+                                        "enum": [
+                                            "$Auto",
+                                            "$Runtime",
+                                            "$Test",
+                                            "!<path>"
+                                        ],
+                                        "enumDescriptions": [
+                                            "%configuration.java.test.config.modulePaths.auto.description%",
+                                            "%configuration.java.test.config.modulePaths.runtime.description%",
+                                            "%configuration.java.test.config.modulePaths.test.description%",
+                                            "%configuration.java.test.config.modulePaths.exclude.description%"
+                                        ]
+                                    },
+                                    "string"
+                                ]
                             },
                             "description": "%configuration.java.test.config.modulePaths.description%",
                             "default": []
@@ -283,23 +299,23 @@
                             "classPaths": {
                                 "type": "array",
                                 "items": {
-                                  "anyOf": [
-                                    {
-                                      "enum": [
-                                        "$Auto",
-                                        "$Runtime",
-                                        "$Test",
-                                        "!<path>"
-                                      ],
-                                      "enumDescriptions": [
-                                        "%configuration.java.test.config.classPaths.auto.description%",
-                                        "%configuration.java.test.config.classPaths.runtime.description%",
-                                        "%configuration.java.test.config.classPaths.test.description%",
-                                        "%configuration.java.test.config.classPaths.exclude.description%"
-                                      ]
-                                    },
-                                    "string"
-                                  ]
+                                    "anyOf": [
+                                        {
+                                            "enum": [
+                                                "$Auto",
+                                                "$Runtime",
+                                                "$Test",
+                                                "!<path>"
+                                            ],
+                                            "enumDescriptions": [
+                                                "%configuration.java.test.config.classPaths.auto.description%",
+                                                "%configuration.java.test.config.classPaths.runtime.description%",
+                                                "%configuration.java.test.config.classPaths.test.description%",
+                                                "%configuration.java.test.config.classPaths.exclude.description%"
+                                            ]
+                                        },
+                                        "string"
+                                    ]
                                 },
                                 "description": "%configuration.java.test.config.classPaths.description%",
                                 "default": []
@@ -307,23 +323,23 @@
                             "modulePaths": {
                                 "type": "array",
                                 "items": {
-                                  "anyOf": [
-                                    {
-                                      "enum": [
-                                        "$Auto",
-                                        "$Runtime",
-                                        "$Test",
-                                        "!<path>"
-                                      ],
-                                      "enumDescriptions": [
-                                        "%configuration.java.test.config.modulePaths.auto.description%",
-                                        "%configuration.java.test.config.modulePaths.runtime.description%",
-                                        "%configuration.java.test.config.modulePaths.test.description%",
-                                        "%configuration.java.test.config.modulePaths.exclude.description%"
-                                      ]
-                                    },
-                                    "string"
-                                  ]
+                                    "anyOf": [
+                                        {
+                                            "enum": [
+                                                "$Auto",
+                                                "$Runtime",
+                                                "$Test",
+                                                "!<path>"
+                                            ],
+                                            "enumDescriptions": [
+                                                "%configuration.java.test.config.modulePaths.auto.description%",
+                                                "%configuration.java.test.config.modulePaths.runtime.description%",
+                                                "%configuration.java.test.config.modulePaths.test.description%",
+                                                "%configuration.java.test.config.modulePaths.exclude.description%"
+                                            ]
+                                        },
+                                        "string"
+                                    ]
                                 },
                                 "description": "%configuration.java.test.config.modulePaths.description%",
                                 "default": []

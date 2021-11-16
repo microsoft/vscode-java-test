@@ -12,6 +12,7 @@
       <command id="vscode.java.test.findTestTypesAndMethods" />
       <command id="vscode.java.test.resolvePath" />
       <command id="vscode.java.test.findTestLocation" />
+      <command id="vscode.java.test.navigateToTestOrTarget" />
     </delegateCommandHandler>
   </extension>
 </plugin>
