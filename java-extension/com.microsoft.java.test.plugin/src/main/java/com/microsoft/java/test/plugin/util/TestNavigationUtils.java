@@ -100,7 +100,8 @@ public class TestNavigationUtils {
         final List<IJavaElement> javaElements = new LinkedList<>();
         final IJavaProject[] javaProjects = ProjectUtils.getJavaProjects();
         for (final IJavaProject project : javaProjects) {
-            final List<IClasspathEntry> testEntries = ProjectTestUtils.getClasspathEntries(project, isTest);
+            final List<IClasspathEntry> testEntries = isTest ? ProjectTestUtils.getTestEntries(project) :
+                    ProjectTestUtils.getSourceEntries(project);
             for (final IClasspathEntry entry : testEntries) {
                 javaElements.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
             }

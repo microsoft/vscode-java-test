@@ -68,7 +68,11 @@ public final class ProjectTestUtils {
         return getClasspathEntries(project, true);
     }
 
-    public static List<IClasspathEntry> getClasspathEntries(IJavaProject project, boolean isTest)
+    public static List<IClasspathEntry> getSourceEntries(IJavaProject project) throws JavaModelException {
+        return getClasspathEntries(project, false);
+    }
+
+    private static List<IClasspathEntry> getClasspathEntries(IJavaProject project, boolean isTest)
             throws JavaModelException {
         // Ignore default project
         if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
