@@ -124,12 +124,21 @@
                 {
                     "command": "java.test.goToTest",
                     "when": "java:testRunnerActivated && resourceExtname == .java"
+                },
+                {
+                    "command": "java.test.goToTestTarget",
+                    "when": "java:testRunnerActivated && resourceExtname == .java"
                 }
             ],
             "editor/context": [
                 {
                     "command": "java.test.goToTest",
                     "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]main[/|\\\\]java[/|\\\\].*\\.java/",
+                    "group": "navigation@100"
+                },
+                {
+                    "command": "java.test.goToTestTarget",
+                    "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]test[/|\\\\]java[/|\\\\].*\\.java/",
                     "group": "navigation@100"
                 }
             ]
@@ -138,6 +147,11 @@
             {
                 "command": "java.test.goToTest",
                 "title": "%contributes.commands.java.test.goToTest.title%",
+                "category": "Java"
+            },
+            {
+                "command": "java.test.goToTestTarget",
+                "title": "%contributes.commands.java.test.goToTestTarget.title%",
                 "category": "Java"
             },
             {

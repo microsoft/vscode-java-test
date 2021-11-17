@@ -61,7 +61,6 @@ public class TestNavigationUtils {
             JUnitPlugin.logError("Failed to resolve compilation unit from " + typeUri);
             return null;
         }
-        final boolean goToTest = (boolean) arguments.get(1);
         final IType primaryType = unit.findPrimaryType();
         final String typeName;
         Location location = null;
@@ -72,18 +71,19 @@ public class TestNavigationUtils {
             typeName = unit.getElementName().substring(0, unit.getElementName().lastIndexOf(".java"));
         }
         final SearchEngine searchEngine = new SearchEngine();
+        final boolean goToTest = (boolean) arguments.get(1);
+        final String nameToSearch = goToTest ? typeName : guessTestTargetName(typeName);
+        final IJavaSearchScope scope = getSearchScope(goToTest);
         final IJavaProject javaProject = unit.getJavaProject();
-        final IJavaSearchScope scope = goToTest ? getSearchScopeForTest() :
-                getSearchScopeForTarget();
         final Set<TestNavigationItem> items = new HashSet<>();
         searchEngine.searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
-            ("*" + typeName + "*").toCharArray(),
-            SearchPattern.R_PREFIX_MATCH,
+            ("*" + nameToSearch + "*").toCharArray(),
+            SearchPattern.R_PATTERN_MATCH,
             IJavaSearchConstants.CLASS,
             scope,
-            new TestNavigationNameRequestor(items, javaProject, typeName),
+            new TestNavigationNameRequestor(items, javaProject, nameToSearch, typeName, goToTest),
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
             monitor
         );
@@ -91,34 +91,50 @@ public class TestNavigationUtils {
         return new TestNavigationResult(items, location);
     }
 
-    private static IJavaSearchScope getSearchScopeForTarget() {
-        // TODO: unimplemented
-        return null;
-    }
-
-    private static IJavaSearchScope getSearchScopeForTest() throws JavaModelException {
+    /**
+     * Return the search scope that contains all source package fragment roots.
+     * @param isTest Whether containing test source or not
+     * @throws JavaModelException
+     */
+    private static IJavaSearchScope getSearchScope(boolean isTest) throws JavaModelException {
         final List<IJavaElement> javaElements = new LinkedList<>();
         final IJavaProject[] javaProjects = ProjectUtils.getJavaProjects();
         for (final IJavaProject project : javaProjects) {
-            final List<IClasspathEntry> testEntries = ProjectTestUtils.getTestEntries(project);
+            final List<IClasspathEntry> testEntries = isTest ? ProjectTestUtils.getTestEntries(project) :
+                    ProjectTestUtils.getSourceEntries(project);
             for (final IClasspathEntry entry : testEntries) {
                 javaElements.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
             }
         }
 
-        return SearchEngine.createJavaSearchScope(javaElements.toArray(new IJavaElement[0]));
+        return SearchEngine.createJavaSearchScope(
+            !isTest /*excludeTestCode*/,
+            javaElements.toArray(new IJavaElement[0]),
+            true /*includeReferencedProjects*/
+        );
+    }
+
+    /**
+     * Remove all the "Test" and "Tests" (case sensitive) in the input string.
+     */
+    private static String guessTestTargetName(String testTypeName) {
+        return testTypeName.replaceAll("Tests?", "");
     }
 
     static final class TestNavigationNameRequestor extends TypeNameRequestor {
         private final Set<TestNavigationItem> results;
         private final IJavaProject javaProject;
-        private final String typeName;
+        private final String typeNameToSearch;
+        private final String from;
+        private final boolean isTest;
 
         private TestNavigationNameRequestor(Set<TestNavigationItem> results, IJavaProject javaProject,
-                String typeName) {
+                String typeNameToSearch, String from, boolean isTest) {
             this.results = results;
             this.javaProject = javaProject;
-            this.typeName = typeName;
+            this.typeNameToSearch = typeNameToSearch;
+            this.from = from;
+            this.isTest = isTest;
         }
 
         @Override
@@ -142,26 +158,34 @@ public class TestNavigationUtils {
                 // All the nested classes are ignored.
                 simpleName = String.valueOf(enclosingTypeNames[0]);
             }
+            // for invisible project and Eclipse project, all the package root are both test and source,
+            // so the search result might be itself.
+            if (Objects.equals(simpleName, from)) {
+                return;
+            }
+
+            if (!isTest && (simpleName.endsWith("Test") || simpleName.endsWith("Tests"))) {
+                return;
+            }
             final String fullyQualifiedName = String.valueOf(packageName) + "." + simpleName;
-            int relevance;
-            if (Objects.equals(simpleName, this.typeName + "Test") ||
-                    Objects.equals(simpleName, this.typeName + "Tests")) {
-                // mark this as most relevance
-                relevance = Integer.MIN_VALUE;
+            final int relevance = calculateRelevance(simpleName);
+            final boolean outOfBelongingProject = !Objects.equals(this.javaProject.getElementName(),
+                    fullPath.segment(0));
+            results.add(new TestNavigationItem(simpleName, fullyQualifiedName, uri, relevance, outOfBelongingProject));
+        }
+
+        // todo: better relevance calculation
+        private int calculateRelevance(String simpleName) {
+            if (isTest && (Objects.equals(simpleName, this.typeNameToSearch + "Test") ||
+                    Objects.equals(simpleName, this.typeNameToSearch + "Tests"))) {
+                return Integer.MIN_VALUE;
             } else {
-                relevance = simpleName.indexOf(this.typeName);
+                int relevance = simpleName.indexOf(this.typeNameToSearch);
                 if (relevance < 0) {
-                    // todo: better relevance calculation
                     relevance = Integer.MAX_VALUE;
                 }
+                return relevance;
             }
-            final boolean outOfBelongingProject;
-            if (Objects.equals(this.javaProject.getElementName(), fullPath.segment(0))) {
-                outOfBelongingProject = false;
-            } else {
-                outOfBelongingProject = true;
-            }
-            results.add(new TestNavigationItem(simpleName, fullyQualifiedName, uri, relevance, outOfBelongingProject));
         }
     }
 

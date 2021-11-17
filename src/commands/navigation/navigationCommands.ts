@@ -4,33 +4,30 @@
 import * as path from 'path';
 import { commands, extensions, Location, Range, Uri, window } from 'vscode';
 import { JavaTestRunnerCommands, JavaTestRunnerDelegateCommands, VSCodeCommands } from '../../constants';
-import { testSourceProvider } from '../../provider/testSourceProvider';
 import { SymbolTree } from '../../references-view';
 import { executeJavaLanguageServerCommand } from '../../utils/commandUtils';
 import { IOption } from '../askForOptionCommands';
 import { TestNavigationInput } from './testNavigationInput';
 
 const GENERATE_TESTS: string = 'Generate tests...';
-const SEARCH_TEST_FILES: string = 'Search test files...';
+const SEARCH_FILES: string = 'Search files...';
 const REFERENCES_VIEW_EXTENSION: string = 'ms-vscode.references-view';
 
-export async function goToTest(): Promise<void> {
+export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
     if (!window.activeTextEditor) {
         return;
     }
     const uri: Uri = window.activeTextEditor.document.uri;
-    if (await testSourceProvider.isOnTestSourcePath(uri)) {
-        return;
-    }
-    const result: ITestNavigationResult | undefined = await searchTests(uri.toString());
+    const result: ITestNavigationResult | undefined = await searchTestOrTarget(uri.toString(), gotoTest);
     if (!result?.items?.length) {
-        window.showQuickPick([
-            GENERATE_TESTS,
-            SEARCH_TEST_FILES,
-        ], {
-            placeHolder: 'No tests found for current source file'
+        const items: string[] = [SEARCH_FILES];
+        if (gotoTest) {
+            items.unshift(GENERATE_TESTS);
+        }
+        window.showQuickPick(items, {
+            placeHolder: `${gotoTest ? 'Tests' : 'Test Targets'} not found for current file`,
         }).then((choice: string | undefined) => {
-            if (choice === SEARCH_TEST_FILES) {
+            if (choice === SEARCH_FILES) {
                 const fileName: string = path.basename(window.activeTextEditor!.document.fileName);
                 commands.executeCommand(VSCodeCommands.WORKBENCH_ACTION_QUICK_OPEN, fileName.substring(0, fileName.lastIndexOf('.')));
             } else if (choice === GENERATE_TESTS) {
@@ -54,8 +51,9 @@ export async function goToTest(): Promise<void> {
         });
         const api: SymbolTree | undefined = await extensions.getExtension<SymbolTree>(REFERENCES_VIEW_EXTENSION)?.activate();
         if (api) {
+            const title: string = gotoTest ? 'Tests' : 'Test Targets';
             const input: TestNavigationInput = new TestNavigationInput(
-                'Related Tests',
+                title,
                 new Location(uri, new Range(
                     result.location.range.start.line,
                     result.location.range.start.character,
@@ -66,12 +64,12 @@ export async function goToTest(): Promise<void> {
             );
             api.setInput(input);
         } else {
-            goToTestFallback(sortedResults);
+            fallbackForNavigation(sortedResults);
         }
     }
 }
 
-async function goToTestFallback(results: ITestNavigationItem[]): Promise<void> {
+async function fallbackForNavigation(results: ITestNavigationItem[]): Promise<void> {
     const items: IOption[] = results.map((r: ITestNavigationItem) => {
         return {
             label: r.simpleName,
@@ -82,9 +80,9 @@ async function goToTestFallback(results: ITestNavigationItem[]): Promise<void> {
     });
     const choice: string[] | undefined = await commands.executeCommand(
         JavaTestRunnerCommands.ADVANCED_ASK_CLIENT_FOR_CHOICE,
-        'Choose a test class to open',
+        'Choose a class to open',
         items,
-        'tests in other projects',
+        'Classes in other projects',
         false,
     );
     if (choice?.length) {
@@ -92,9 +90,9 @@ async function goToTestFallback(results: ITestNavigationItem[]): Promise<void> {
     }
 }
 
-async function searchTests(uri: string): Promise<ITestNavigationResult | undefined> {
+async function searchTestOrTarget(uri: string, gotoTest: boolean): Promise<ITestNavigationResult | undefined> {
     return await executeJavaLanguageServerCommand<ITestNavigationResult | undefined>(
-        JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri, true);
+        JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri, gotoTest);
 }
 
 export interface ITestNavigationResult {
