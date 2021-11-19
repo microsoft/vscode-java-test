@@ -126,7 +126,7 @@
                     "when": "java:testRunnerActivated && resourceExtname == .java"
                 },
                 {
-                    "command": "java.test.goToTestTarget",
+                    "command": "java.test.goToTestSubject",
                     "when": "java:testRunnerActivated && resourceExtname == .java"
                 }
             ],
@@ -137,7 +137,7 @@
                     "group": "navigation@100"
                 },
                 {
-                    "command": "java.test.goToTestTarget",
+                    "command": "java.test.goToTestSubject",
                     "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]test[/|\\\\]java[/|\\\\].*\\.java/",
                     "group": "navigation@100"
                 }
@@ -150,8 +150,8 @@
                 "category": "Java"
             },
             {
-                "command": "java.test.goToTestTarget",
-                "title": "%contributes.commands.java.test.goToTestTarget.title%",
+                "command": "java.test.goToTestSubject",
+                "title": "%contributes.commands.java.test.goToTestSubject.title%",
                 "category": "Java"
             },
             {

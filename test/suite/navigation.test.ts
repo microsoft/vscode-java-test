@@ -31,7 +31,7 @@ suite('Test Navigation Tests', () => {
         assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit5.AppTest');
     });
 
-    test('test go to test target', async () => {
+    test('test go to test subject', async () => {
         const filePath: string = path.join(PROJECT_PATH, 'src', 'test', 'java', 'junit5', 'AppTest.java');
         await window.showTextDocument(Uri.file(filePath));
         const uri: Uri = window.activeTextEditor!.document.uri;

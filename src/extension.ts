@@ -101,7 +101,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST, async () => await navigateToTestOrTarget(true)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST_TARGET, async () => await navigateToTestOrTarget(false)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST_SUBJECT, async () => await navigateToTestOrTarget(false)),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (await isTestJavaFile(e?.document)) {
                 await updateItemForDocumentWithDebounce(e!.document.uri);

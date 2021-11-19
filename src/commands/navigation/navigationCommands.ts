@@ -25,10 +25,13 @@ export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
             items.unshift(GENERATE_TESTS);
         }
         window.showQuickPick(items, {
-            placeHolder: `${gotoTest ? 'Tests' : 'Test Targets'} not found for current file`,
+            placeHolder: `${gotoTest ? 'Tests' : 'Test subjects'} not found for current file`,
         }).then((choice: string | undefined) => {
             if (choice === SEARCH_FILES) {
-                const fileName: string = path.basename(window.activeTextEditor!.document.fileName);
+                let fileName: string = path.basename(window.activeTextEditor!.document.fileName);
+                if (!gotoTest) {
+                    fileName = fileName.replace(/Tests?/g, '');
+                }
                 commands.executeCommand(VSCodeCommands.WORKBENCH_ACTION_QUICK_OPEN, fileName.substring(0, fileName.lastIndexOf('.')));
             } else if (choice === GENERATE_TESTS) {
                 commands.executeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, uri, 0);
@@ -51,7 +54,7 @@ export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
         });
         const api: SymbolTree | undefined = await extensions.getExtension<SymbolTree>(REFERENCES_VIEW_EXTENSION)?.activate();
         if (api) {
-            const title: string = gotoTest ? 'Tests' : 'Test Targets';
+            const title: string = gotoTest ? 'Tests' : 'Test Subjects';
             const input: TestNavigationInput = new TestNavigationInput(
                 title,
                 new Location(uri, new Range(

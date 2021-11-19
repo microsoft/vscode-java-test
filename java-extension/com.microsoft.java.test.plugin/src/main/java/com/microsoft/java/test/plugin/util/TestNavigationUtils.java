@@ -44,7 +44,7 @@ import java.util.Set;
  */
 public class TestNavigationUtils {
     /**
-     * find test or test target according to the given java source file uri.
+     * find test or test subject according to the given java source file uri.
      * @param arguments arguments
      * @param monitor monitor
      * @return the search result for test navigation
@@ -72,7 +72,7 @@ public class TestNavigationUtils {
         }
         final SearchEngine searchEngine = new SearchEngine();
         final boolean goToTest = (boolean) arguments.get(1);
-        final String nameToSearch = goToTest ? typeName : guessTestTargetName(typeName);
+        final String nameToSearch = goToTest ? typeName : guessTestSubjectName(typeName);
         final IJavaSearchScope scope = getSearchScope(goToTest);
         final IJavaProject javaProject = unit.getJavaProject();
         final Set<TestNavigationItem> items = new HashSet<>();
@@ -117,7 +117,7 @@ public class TestNavigationUtils {
     /**
      * Remove all the "Test" and "Tests" (case sensitive) in the input string.
      */
-    private static String guessTestTargetName(String testTypeName) {
+    private static String guessTestSubjectName(String testTypeName) {
         return testTypeName.replaceAll("Tests?", "");
     }
 
