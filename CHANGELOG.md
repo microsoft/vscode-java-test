@@ -4,6 +4,20 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.33.0
+
+### Added
+- Add more options in the setting `java.test.config`:
+  - classPaths [#1140](https://github.com/microsoft/vscode-java-test/issues/1140)
+  - envFile [#1214](https://github.com/microsoft/vscode-java-test/issues/1214)
+  - modulePaths [#1101](https://github.com/microsoft/vscode-java-test/issues/1101)
+  - preLaunchTask [#1201](https://github.com/microsoft/vscode-java-test/issues/1201)
+
+  More details, please see our [document](https://github.com/microsoft/vscode-java-test/wiki/Run-with-Configuration#property-details).
+- Support jumping between tests and corresponding test subjects [#660](https://github.com/microsoft/vscode-java-test/issues/660)
+
+### Changed
+- Show the test messages at where they happen [#1266](https://github.com/microsoft/vscode-java-test/issues/1266)
 ## 0.32.0
 ### Changed
 - Improve the experience of displaying the JUnit 4's parameterized tests [#1296](https://github.com/microsoft/vscode-java-test/issues/1296)
