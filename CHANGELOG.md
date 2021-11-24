@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Show the test messages at where they happen [#1266](https://github.com/microsoft/vscode-java-test/issues/1266)
+
 ## 0.32.0
 ### Changed
 - Improve the experience of displaying the JUnit 4's parameterized tests [#1296](https://github.com/microsoft/vscode-java-test/issues/1296)
