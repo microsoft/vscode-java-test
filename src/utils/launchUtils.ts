@@ -33,8 +33,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             classPaths: [
                 ...config?.classPaths || [],
                 ...launchArguments.classpath || [],
-                path.join(extensionContext.extensionPath, 'server', 'com.microsoft.java.test.runner.jar'),
-                path.join(extensionContext.extensionPath, 'server', 'lib'),
+                path.join(extensionContext.extensionPath, 'server', 'com.microsoft.java.test.runner-jar-with-dependencies.jar'),
             ],
             modulePaths: [
                 ...config?.modulePaths || [],
