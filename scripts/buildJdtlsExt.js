@@ -23,7 +23,7 @@ const bundleList = [
     'org.junit.platform.runner',
     'org.junit.platform.suite.api',
     'org.apiguardian',
-]
+];
 cp.execSync(`${mvnw()} clean verify`, { cwd: serverDir, stdio: [0, 1, 2] });
 copy(path.join(serverDir, 'com.microsoft.java.test.plugin/target'), path.resolve('server'), (file) => path.extname(file) === '.jar');
 copy(path.join(serverDir, 'com.microsoft.java.test.runner/target'), path.resolve('server'), (file) => file.endsWith('jar-with-dependencies.jar'));
