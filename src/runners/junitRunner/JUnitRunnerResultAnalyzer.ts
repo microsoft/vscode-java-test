@@ -109,6 +109,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         } else if (data.startsWith(MessageId.TraceStart)) {
             this.traces = new MarkdownString();
             this.traces.isTrusted = true;
+            this.traces.supportHtml = true;
             this.recordingType = RecordingType.StackTrace;
         } else if (data.startsWith(MessageId.TraceEnd)) {
             if (!this.currentItem) {
