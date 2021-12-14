@@ -31,9 +31,9 @@ export abstract class RunnerResultAnalyzer {
                 }
             }
         } else {
-            // in case the message contains message like: 'expected: <..> but was: <..>'
-            traces.appendText(data.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+            // '<' & '>' will be escaped when displaying the test message, so replacing them to '[' & ']'.
+            traces.appendText(data.replace(/</g, '[').replace(/>/g, ']'));
         }
-        traces.appendText('\n');
+        traces.appendMarkdown('<br/>');
     }
 }
