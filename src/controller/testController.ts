@@ -273,6 +273,7 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
    }
    removeTestInvocations(testItems);
    testItems = await expandTests(testItems, TestLevel.Class, token);
+   // @ts-expect-error
    const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
    testItems = _.differenceBy(testItems, excludingItems, 'id');
    return testItems;
