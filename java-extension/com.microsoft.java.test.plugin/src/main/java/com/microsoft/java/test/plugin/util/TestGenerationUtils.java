@@ -563,7 +563,9 @@ public class TestGenerationUtils {
                 .map(annotation -> new Option(annotation, "@" + annotation, 
                         capitalize(getSuggestedMethodNameByAnnotation(annotation)) + " Method"))
                 .collect(Collectors.toList());
-        methodList.add(0, new Option("Test", "@Test", "Test Method"));
+        final Option testMethod = new Option("Test", "@Test", "Test Method");
+        testMethod.picked = true;
+        methodList.add(0, testMethod);
         return (List<String>) JUnitPlugin.askClientForChoice("Select methods to generate",
                 methodList, true /*pickMany*/);
     }
