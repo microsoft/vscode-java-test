@@ -16,6 +16,7 @@ public class Option {
     public String label;
     public String description;
     public boolean isAdvanced;
+    public boolean picked;
 
     public Option(String label) {
         this.label = label;
