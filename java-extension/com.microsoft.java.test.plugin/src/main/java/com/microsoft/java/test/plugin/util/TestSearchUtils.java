@@ -104,9 +104,19 @@ public class TestSearchUtils {
                 continue;
             }
 
+            final TestKind testKind;
+            final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(project);
+            if (testKinds.isEmpty()) {
+                testKind = TestKind.None;
+            } else {
+                testKind = testKinds.get(0);
+            }
+
             try {
-                resultList.add(TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, TestKind.None));
-            } catch (JavaModelException e) {
+                final JavaTestItem item = TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, testKind);
+                item.setNatureIds(project.getProject().getDescription().getNatureIds());
+                resultList.add(item);
+            } catch (CoreException e) {
                 JUnitPlugin.logError("Failed to parse project item: " + project.getElementName());
             }
         }
@@ -423,13 +433,21 @@ public class TestSearchUtils {
             if (project == null) {
                 return Collections.emptyList();
             }
-            result.add(TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, TestKind.None));
+
+            final TestKind testKind;
+            final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(project);
+            if (testKinds.isEmpty()) {
+                return Collections.emptyList();
+            } else {
+                testKind = testKinds.get(0);
+            }
+            result.add(TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, testKind));
 
             final IPackageFragment packageFragment = (IPackageFragment) unit.getParent();
             if (packageFragment == null || !(packageFragment instanceof IPackageFragment)) {
                 return Collections.emptyList();
             }
-            result.add(TestItemUtils.constructJavaTestItem(packageFragment, TestLevel.PACKAGE, TestKind.None));
+            result.add(TestItemUtils.constructJavaTestItem(packageFragment, TestLevel.PACKAGE, testKind));
         }
 
         return result;

@@ -14,6 +14,10 @@ export interface IJavaTestItem {
     projectName: string;
     testKind: TestKind;
     testLevel: TestLevel;
+    /**
+     * Optional fields for projects
+     */
+    natureIds?: string[];
 }
 
 export enum TestKind {
@@ -41,4 +45,11 @@ export interface IRunTestContext {
     testItems: TestItem[];
     testRun: TestRun;
     workspaceFolder: WorkspaceFolder;
+}
+
+export enum ProjectType {
+    Gradle,
+    Maven,
+    UnmanagedFolder,
+    Other,
 }
