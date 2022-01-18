@@ -30,6 +30,7 @@ export namespace JavaTestRunnerCommands {
     export const FIND_TEST_LOCATION: string = 'vscode.java.test.findTestLocation';
     export const GO_TO_TEST: string = 'java.test.goToTest';
     export const GO_TO_TEST_SUBJECT: string = 'java.test.goToTestSubject';
+    export const ENABLE_TESTS: string = '_java.test.enableTests';
     export const JAVA_TEST_OPEN_STACKTRACE: string = '_java.test.openStackTrace';
     export const ASK_CLIENT_FOR_CHOICE: string = '_java.test.askClientForChoice';
     export const ASK_CLIENT_FOR_INPUT: string = '_java.test.askClientForInput';

@@ -17,6 +17,7 @@ import { initExpService } from './experimentationService';
 import { disposeCodeActionProvider, registerTestCodeActionProvider } from './provider/codeActionProvider';
 import { testSourceProvider } from './provider/testSourceProvider';
 import { registerAskForChoiceCommand, registerAdvanceAskForChoice, registerAskForInputCommand } from './commands/askForOptionCommands';
+import { enableTests } from './commands/testDependenciesCommands';
 
 export let extensionContext: ExtensionContext;
 
@@ -50,8 +51,11 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         if (extensionApi.onDidClasspathUpdate) {
             const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
             context.subscriptions.push(onDidClasspathUpdate(async () => {
-                testSourceProvider.clear();
-                commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
+                // workaround: wait more time to make sure Language Server has updated all caches
+                setTimeout(() => {
+                    testSourceProvider.clear();
+                    commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
+                }, 1000 /*ms*/);
             }));
         }
 
@@ -102,6 +106,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST, async () => await navigateToTestOrTarget(true)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST_SUBJECT, async () => await navigateToTestOrTarget(false)),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.ENABLE_TESTS, async () => await enableTests()),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (await isTestJavaFile(e?.document)) {
                 await updateItemForDocumentWithDebounce(e!.document.uri);

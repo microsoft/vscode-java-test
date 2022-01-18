@@ -37,6 +37,11 @@ public class JavaTestItem {
 
     private String jdtHandler;
 
+    /**
+     * Optional field for project item.
+     */
+    private String[] natureIds;
+
     public JavaTestItem() {}
 
     public JavaTestItem(String displayName, String fullName, String project, String uri,
@@ -130,6 +135,14 @@ public class JavaTestItem {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public String[] getNatureIds() {
+        return natureIds;
+    }
+
+    public void setNatureIds(String[] natureIds) {
+        this.natureIds = natureIds;
     }
 
     public void addChild(JavaTestItem child) {

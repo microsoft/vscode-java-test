@@ -16,6 +16,7 @@ import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
@@ -38,13 +39,16 @@ public class TestItemUtils {
     public static JavaTestItem constructJavaTestItem(IJavaElement element, TestLevel level, TestKind kind)
             throws JavaModelException {
         final String displayName;
+        String uri = null;
         if (element instanceof IJavaProject) {
             final IJavaProject javaProject = (IJavaProject) element;
             final IProject project = javaProject.getProject();
             if (ProjectUtils.isVisibleProject(project)) {
                 displayName = project.getName();
             } else {
-                displayName = ProjectUtils.getProjectRealFolder(project).lastSegment();
+                final IPath realPath = ProjectUtils.getProjectRealFolder(project);
+                displayName = realPath.lastSegment();
+                uri = realPath.toFile().toURI().toString();
             }
         } else if (element instanceof IPackageFragment && ((IPackageFragment) element).isDefaultPackage()) {
             displayName = DEFAULT_PACKAGE_NAME;
@@ -52,7 +56,9 @@ public class TestItemUtils {
             displayName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT);
         }
         final String fullName = parseFullName(element, level);
-        final String uri = JDTUtils.getFileURI(element.getResource());
+        if (uri == null) {
+            uri = JDTUtils.getFileURI(element.getResource());
+        }
         Range range = null;
         if (level == TestLevel.CLASS || level == TestLevel.METHOD) {
             range = parseTestItemRange(element);

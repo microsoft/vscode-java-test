@@ -3,11 +3,12 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
+import * as fse from 'fs-extra';
 import { performance } from 'perf_hooks';
-import { CancellationToken, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, commands, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants';
-import { IJavaTestItem, TestLevel } from '../types';
+import { IJavaTestItem, ProjectType, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
 import { runnableTag, testController } from './testController';
@@ -17,17 +18,62 @@ import { dataCache } from './testItemDataCache';
  * Load the Java projects, which are the root nodes of the test explorer
  */
 export async function loadJavaProjects(): Promise<void> {
+    let testProjects: IJavaTestItem[] = [];
     for (const workspaceFolder of workspace.workspaceFolders || [] ) {
-        const testProjects: IJavaTestItem[] = await getJavaProjects(workspaceFolder);
-        for (const project of testProjects) {
-            if (testController?.items.get(project.id)) {
-                continue;
-            }
-            const projectItem: TestItem = createTestItem(project);
-            projectItem.canResolveChildren = true;
-            testController?.items.add(projectItem);
+        testProjects.push(...await getJavaProjects(workspaceFolder));
+    }
+
+    if (testProjects.length === 1 && testProjects[0].testKind === TestKind.None &&
+                await getProjectType(testProjects[0]) === ProjectType.UnmanagedFolder) {
+        commands.executeCommand('setContext', 'java:needSetupTests', true);
+        return;
+    }
+
+    testProjects = testProjects.filter((project: IJavaTestItem) => {
+        return project.testKind !== TestKind.None;
+    });
+
+    for (const project of testProjects) {
+        if (testController?.items.get(project.id)) {
+            continue;
+        }
+
+        const projectItem: TestItem = createTestItem(project);
+        projectItem.canResolveChildren = true;
+        testController?.items.add(projectItem);
+    }
+}
+
+export async function getProjectType(item: IJavaTestItem): Promise<ProjectType> {
+    if (item.testLevel !== TestLevel.Project) {
+        throw new Error('The test item is not a project');
+    }
+
+    if (!item.natureIds) {
+        return ProjectType.Other;
+    }
+
+    const hasClasspathFile: boolean = await fse.pathExists(path.join(Uri.parse(item.uri!).fsPath, '.classpath'));
+    let hasJavaNature: boolean = false;
+    for (const id of item.natureIds) {
+        if (id.includes('maven2Nature')) {
+            return ProjectType.Maven;
+        }
+
+        if (id.includes('gradleprojectnature')) {
+            return ProjectType.Gradle;
+        }
+
+        if (id.includes('javanature')) {
+            hasJavaNature = true;
         }
     }
+
+    if (hasJavaNature && !hasClasspathFile) {
+        return ProjectType.UnmanagedFolder;
+    }
+
+    return ProjectType.Other;
 }
 
 /**

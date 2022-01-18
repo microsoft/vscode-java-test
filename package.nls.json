@@ -29,6 +29,5 @@
     "configuration.java.test.config.sourcePaths.description": "Specify extra source paths when debugging the tests",
     "configuration.java.test.config.preLaunchTask.description": "Specify the label of a task specified in tasks.json (in the workspace's .vscode folder). The task will be launched before the start of testing.",
     "contributes.viewsWelcome.inLightWeightMode": "No test cases are listed because the Java Language Server is currently running in [LightWeight Mode](https://aka.ms/vscode-java-lightweight). To show test cases, click on the button to switch to Standard Mode.\n[Switch to Standard Mode](command:java.server.mode.switch?%5B%22Standard%22,true%5D)",
-    "contributes.viewsWelcome.noProjectWithProjectManagerInstalled": "No folder opened in Visual Studio Code. You can [open a Java project](command:_java.project.open), or create a new Java project by clicking the button below.\n[Create Java Project](command:java.project.create)",
-    "contributes.viewsWelcome.noProjectWithOutProjectManagerInstalled": "No folder opened in Visual Studio Code."
+    "contributes.viewsWelcome.enableTests": "Click below button to configure a test framework for your project.\n[Enable Java Tests](command:_java.test.enableTests)"
 }

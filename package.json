@@ -69,14 +69,9 @@
                 "when": "java:serverMode == LightWeight"
             },
             {
-                "view": "testExplorer",
-                "contents": "%contributes.viewsWelcome.noProjectWithProjectManagerInstalled%",
-                "when": "workspaceFolderCount == 0 && java:projectManagerActivated && java:serverMode != LightWeight"
-            },
-            {
-                "view": "testExplorer",
-                "contents": "%contributes.viewsWelcome.noProjectWithOutProjectManagerInstalled%",
-                "when": "workspaceFolderCount == 0 && !java:projectManagerActivated && java:serverMode != LightWeight"
+                "view": "testing",
+                "contents": "Click below button to configure a test framework for your project.\n[Enable Java Tests](command:_java.test.enableTests)",
+                "when": "java:needSetupTests"
             }
         ],
         "menus": {
