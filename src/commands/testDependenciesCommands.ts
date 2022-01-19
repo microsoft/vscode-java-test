@@ -15,7 +15,7 @@ import { URL } from 'url';
 import { ClientRequest, IncomingMessage } from 'http';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 
-export async function enableTests(): Promise<void> {
+export async function enableTests(testKind?: TestKind): Promise<void> {
     const project: IJavaTestItem | undefined = await getTargetProject();
     if (!project) {
         return;
@@ -24,7 +24,7 @@ export async function enableTests(): Promise<void> {
     const projectType: ProjectType = await getProjectType(project);
     switch (projectType) {
         case ProjectType.UnmanagedFolder:
-            await setupUnmanagedFolder(Uri.parse(project.uri!));
+            await setupUnmanagedFolder(Uri.parse(project.uri!), testKind);
             return;
         default:
             // currently other typed projects are not supported.
@@ -52,8 +52,8 @@ async function getTargetProject(): Promise<IJavaTestItem | undefined> {
     return testProjects[0];
 }
 
-async function setupUnmanagedFolder(projectUri: Uri): Promise<void> {
-    const testKind: TestKind | undefined = await getTestKind();
+async function setupUnmanagedFolder(projectUri: Uri, testKind?: TestKind): Promise<void> {
+    testKind ??= await getTestKind();
     if (testKind === undefined) {
         return;
     }
@@ -68,7 +68,7 @@ async function setupUnmanagedFolder(projectUri: Uri): Promise<void> {
             location: ProgressLocation.Notification,
             cancellable: true
         }, async (progress: Progress<{message?: string; increment?: number}>, token: CancellationToken) => {
-            const metadata: IArtifactMetadata[] = getJarIds(testKind);
+            const metadata: IArtifactMetadata[] = getJarIds(testKind!);
             for (const jar of metadata) {
                 if (token.isCancellationRequested) {
                     throw new Error('User cancelled');

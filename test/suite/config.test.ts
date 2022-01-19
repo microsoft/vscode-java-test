@@ -3,7 +3,7 @@
 
 'use strict';
 
-import assert = require('assert');
+import * as assert from 'assert';
 import { TestController, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunner } from '../../src/runners/junitRunner/JunitRunner';
 import { IRunTestContext, TestKind } from '../../src/types';
