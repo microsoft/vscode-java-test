@@ -25,11 +25,21 @@
             "projectName": "com.microsoft.java.test.plugin",
         },
         {
-            "name": "Launch Tests",
+            "name": "Launch Tests (maven-junit)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": ["${workspaceFolder}/test/test-projects/junit", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/out/test/suite" ],
+            "sourceMaps": true,
+            "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
+            "preLaunchTask": "npm: compile"
+        },
+        {
+            "name": "Launch Tests (unmanaged-folder)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": ["${workspaceFolder}/test/test-projects/simple", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/out/test/unmanaged-folder-suite" ],
             "sourceMaps": true,
             "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
             "preLaunchTask": "npm: compile"

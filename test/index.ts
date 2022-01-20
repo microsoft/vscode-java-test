@@ -26,7 +26,7 @@ async function main(): Promise<void> {
         // Passed to `--extensionDevelopmentPath`
         const extensionDevelopmentPath: string = path.resolve(__dirname, '..', '..');
 
-        // Run general test
+        // Run maven test
         await runTests({
             vscodeExecutablePath,
             extensionDevelopmentPath,
@@ -34,6 +34,17 @@ async function main(): Promise<void> {
             launchArgs: [
                 '--disable-workspace-trust',
                 path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit'),
+            ],
+        });
+
+        // Run unmanaged folder test
+        await runTests({
+            vscodeExecutablePath,
+            extensionDevelopmentPath,
+            extensionTestsPath: path.resolve(__dirname, 'unmanaged-folder-suite'),
+            launchArgs: [
+                '--disable-workspace-trust',
+                path.join(__dirname, '..', '..', 'test', 'test-projects', 'simple'),
             ],
         });
 

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import assert = require('assert');
+import * as assert from 'assert';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { ITestNavigationResult } from '../../src/commands/navigation/navigationCommands';
