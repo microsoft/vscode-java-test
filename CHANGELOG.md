@@ -4,6 +4,13 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.34.0
+### Added
+- Support enabling tests for unmanaged folder project when there is no test framework found on the project's classpath. You can find the feature in the `Testing` explorer. [#1344](https://github.com/microsoft/vscode-java-test/issues/1344)
+
+### Changed
+- The `@Test` method will be selected by default when using `Generating Tests...` source action. [#1350](https://github.com/microsoft/vscode-java-test/issues/1350)
+
 ## 0.33.1
 ### Fixed
 - Reduce the line spacing in test messages [PR#1345](https://github.com/microsoft/vscode-java-test/pull/1345)
