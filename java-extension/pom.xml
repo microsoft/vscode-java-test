@@ -65,11 +65,6 @@
             </snapshots>
         </repository>
         <repository>
-            <id>LSP4J</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/lsp4j/updates/releases/0.8.0/</url>
-        </repository>
-        <repository>
             <id>JDT.LS</id>
             <layout>p2</layout>
             <url>https://download.eclipse.org/jdtls/snapshots/repository/latest/</url>
@@ -77,7 +72,7 @@
         <repository>
             <id>JBOSS.TOOLS</id>
             <layout>p2</layout>
-            <url>https://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.0-2018-05-16_00-46-30-H11</url>
+            <url>https://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.3-2019-11-08_11-04-22-H22</url>
         </repository>
         <repository>
             <id>orbit</id>
