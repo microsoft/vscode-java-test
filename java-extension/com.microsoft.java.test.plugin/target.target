@@ -10,20 +10,19 @@
             <unit id="org.eclipse.equinox.sdk.feature.group" version="0.0.0"/>
             <unit id="org.eclipse.jdt.source.feature.group" version="0.0.0"/>
             <unit id="org.eclipse.sdk.feature.group" version="0.0.0"/>
-            <repository location="http://download.eclipse.org/releases/2020-06/"/>
+            <repository location="https://download.eclipse.org/releases/2020-06/"/>
         </location>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.eclipse.jdt.ls.core" version="0.0.0"/>
-            <repository location="http://download.eclipse.org/jdtls/snapshots/repository/latest/"/>
+            <repository location="https://download.eclipse.org/jdtls/snapshots/repository/latest/"/>
         </location>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-            <unit id="org.jboss.tools.maven.apt.feature.feature.group" version="1.5.0.201805160042"/>
-            <repository location="http://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.0-2018-05-16_00-46-30-H11"/>
+            <unit id="org.jboss.tools.maven.apt.feature.feature.group" version="0.0.0"/>
+            <repository location="https://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.3-2019-11-08_11-04-22-H22/"/>
         </location>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-            <unit id="com.ibm.icu.base" version="58.2.0.v20170418-1837"/>
             <unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
-            <repository location="http://download.eclipse.org/tools/orbit/R-builds/R20170516192513/repository"/>
+            <repository location="https://download.eclipse.org/tools/orbit/R-builds/R20200529191137/repository/"/>
         </location>
     </locations>
 </target>
