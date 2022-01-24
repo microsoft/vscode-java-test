@@ -159,6 +159,10 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
                 groupId: 'com.beust',
                 artifactId: 'jcommander',
                 defaultVersion: '1.81',
+            }, {
+                groupId: 'org.slf4j',
+                artifactId: 'slf4j-api',
+                defaultVersion: '1.7.33',
             }];
         default:
             return [];
@@ -255,9 +259,11 @@ async function updateProjectSettings(projectUri: Uri, libFolder: string): Promis
     let referencedLibraries: any = configuration.get('project.referencedLibraries');
     if (_.isArray(referencedLibraries)) {
         referencedLibraries.push(testDependencies);
+        referencedLibraries = Array.from(new Set(referencedLibraries));
     } else if (_.isObject(referencedLibraries)) {
         referencedLibraries = referencedLibraries as {include: string[]};
         referencedLibraries.include.push(testDependencies);
+        referencedLibraries.include = Array.from(new Set(referencedLibraries.include));
         if (!referencedLibraries.exclude && !referencedLibraries.sources) {
             referencedLibraries = referencedLibraries.include;
         }
