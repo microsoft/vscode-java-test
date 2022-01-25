@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - The `@Test` method will be selected by default when using `Generating Tests...` source action. [#1350](https://github.com/microsoft/vscode-java-test/issues/1350)
 
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-java-test/issues?q=is%3Aissue+is%3Aclosed+label%3Abug+milestone%3A0.34.0)
+
 ## 0.33.1
 ### Fixed
 - Reduce the line spacing in test messages [PR#1345](https://github.com/microsoft/vscode-java-test/pull/1345)
