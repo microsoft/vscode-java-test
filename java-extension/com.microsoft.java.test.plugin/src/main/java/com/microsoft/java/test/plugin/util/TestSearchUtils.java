@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.core.search.TypeNameMatchRequestor;
+import org.eclipse.jdt.internal.corext.refactoring.structure.ASTNodeSearchUtil;
 import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
@@ -271,12 +272,12 @@ public class TestSearchUtils {
                 continue;
             }
 
-            final ASTNode node = root.findDeclaringNode(type.getKey());
-            if (!(node instanceof TypeDeclaration)) {
+            final TypeDeclaration typeDeclaration = ASTNodeSearchUtil.getTypeDeclarationNode(type, root);
+            if (typeDeclaration == null) {
                 continue;
             }
 
-            final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+            final ITypeBinding binding = typeDeclaration.resolveBinding();
             if (binding == null) {
                 continue;
             }
@@ -344,12 +345,12 @@ public class TestSearchUtils {
             Collections.emptyList();
         }
 
-        final ASTNode node = root.findDeclaringNode(primaryType.getKey());
-        if (!(node instanceof TypeDeclaration)) {
+        final TypeDeclaration typeDeclaration = ASTNodeSearchUtil.getTypeDeclarationNode(primaryType, root);
+        if (typeDeclaration == null) {
             return Collections.emptyList();
         }
 
-        final ITypeBinding binding = ((TypeDeclaration) node).resolveBinding();
+        final ITypeBinding binding = typeDeclaration.resolveBinding();
         if (binding == null) {
             return Collections.emptyList();
         }
