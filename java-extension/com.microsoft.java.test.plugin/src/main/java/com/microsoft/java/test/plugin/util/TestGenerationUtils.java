@@ -408,8 +408,8 @@ public class TestGenerationUtils {
 
     private static String getDefaultTestFullyQualifiedName(ITypeBinding typeBinding, IJavaProject project,
             IClasspathEntry testEntry) throws JavaModelException {
-        final String defaultName = typeBinding.getBinaryName() + "Test";
-        final String attemptName = typeBinding.getBinaryName() + "Tests";
+        final String defaultName = getClassName(typeBinding) + "Test";
+        final String attemptName = getClassName(typeBinding) + "Tests";
         try {
             ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
             if (testCompilationUnit.exists()) {
@@ -442,6 +442,17 @@ public class TestGenerationUtils {
         }
 
         return defaultName;
+    }
+
+    private static String getClassName(ITypeBinding typeBinding) {
+        final String qualifiedName = typeBinding.getQualifiedName();
+        final String packageName = typeBinding.getPackage().getName();
+        if (packageName.isEmpty()) {
+            return qualifiedName.replace(".", "_");
+        } else {
+            final String typeName = qualifiedName.substring(packageName.length() + 1);
+            return packageName + "." + typeName.replace(".", "_");
+        }
     }
 
     private static ICompilationUnit getTestCompilationUnit(IJavaProject javaProject, IClasspathEntry testEntry,
