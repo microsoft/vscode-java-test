@@ -444,14 +444,20 @@ public class TestGenerationUtils {
         return defaultName;
     }
 
+    /**
+     * Replace the '$' in the type name to '_'.
+     * See: https://github.com/microsoft/vscode-java-test/issues/1367
+     * @param typeBinding type binding
+     * @return the class name
+     */
     private static String getClassName(ITypeBinding typeBinding) {
-        final String qualifiedName = typeBinding.getQualifiedName();
+        final String binaryName = typeBinding.getBinaryName();
         final String packageName = typeBinding.getPackage().getName();
         if (packageName.isEmpty()) {
-            return qualifiedName.replace(".", "_");
+            return binaryName.replace("$", "_");
         } else {
-            final String typeName = qualifiedName.substring(packageName.length() + 1);
-            return packageName + "." + typeName.replace(".", "_");
+            final String typeName = binaryName.substring(packageName.length() + 1);
+            return packageName + "." + typeName.replace("$", "_");
         }
     }
 
