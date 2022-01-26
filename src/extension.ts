@@ -26,7 +26,6 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'), { firstParty: true });
     await initExpService(context);
     await instrumentOperation('activation', doActivate)(context);
-    await commands.executeCommand('setContext', Context.ACTIVATION_CONTEXT_KEY, true);
 }
 
 export async function deactivate(): Promise<void> {
@@ -62,16 +61,10 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         if (extensionApi.onDidServerModeChange) {
             const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
             context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
-                if (serverMode === mode) {
-                    return;
-                }
                 serverMode = mode;
-                // Only re-initialize the component when its lightweight -> standard
                 if (mode === LanguageServerMode.Standard) {
                     testSourceProvider.clear();
-                    registerTestCodeActionProvider();
-                    createTestController();
-                    await showTestItemsInCurrentFile();
+                    registerComponents(context);
                 }
             }));
         }
@@ -89,7 +82,9 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
     if (javaDebugger?.isActive) {
         progressProvider = javaDebugger.exports?.progressProvider;
     }
+}
 
+function registerComponents(context: ExtensionContext): void {
     registerAskForChoiceCommand(context);
     registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
@@ -130,19 +125,13 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
         }),
     );
 
-    if (isStandardServerReady()) {
-        registerTestCodeActionProvider();
-        createTestController();
-        await showTestItemsInCurrentFile();
-    }
-
+    registerTestCodeActionProvider();
+    createTestController();
+    showTestItemsInCurrentFile();
+    commands.executeCommand('setContext', Context.ACTIVATION_CONTEXT_KEY, true);
 }
 
 async function isTestJavaFile(document: TextDocument | undefined): Promise<boolean> {
-    if (!isStandardServerReady()) {
-        return false;
-    }
-
     if (!document?.uri || !isJavaFile(document)) {
         return false;
     }
