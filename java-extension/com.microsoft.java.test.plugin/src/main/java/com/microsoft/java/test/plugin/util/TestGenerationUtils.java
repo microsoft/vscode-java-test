@@ -408,8 +408,8 @@ public class TestGenerationUtils {
 
     private static String getDefaultTestFullyQualifiedName(ITypeBinding typeBinding, IJavaProject project,
             IClasspathEntry testEntry) throws JavaModelException {
-        final String defaultName = typeBinding.getBinaryName() + "Test";
-        final String attemptName = typeBinding.getBinaryName() + "Tests";
+        final String defaultName = getClassName(typeBinding) + "Test";
+        final String attemptName = getClassName(typeBinding) + "Tests";
         try {
             ICompilationUnit testCompilationUnit = getTestCompilationUnit(project, testEntry, attemptName);
             if (testCompilationUnit.exists()) {
@@ -442,6 +442,23 @@ public class TestGenerationUtils {
         }
 
         return defaultName;
+    }
+
+    /**
+     * Replace the '$' in the type name to '_'.
+     * See: https://github.com/microsoft/vscode-java-test/issues/1367
+     * @param typeBinding type binding
+     * @return the class name
+     */
+    private static String getClassName(ITypeBinding typeBinding) {
+        final String binaryName = typeBinding.getBinaryName();
+        final String packageName = typeBinding.getPackage().getName();
+        if (packageName.isEmpty()) {
+            return binaryName.replace("$", "_");
+        } else {
+            final String typeName = binaryName.substring(packageName.length() + 1);
+            return packageName + "." + typeName.replace("$", "_");
+        }
     }
 
     private static ICompilationUnit getTestCompilationUnit(IJavaProject javaProject, IClasspathEntry testEntry,
