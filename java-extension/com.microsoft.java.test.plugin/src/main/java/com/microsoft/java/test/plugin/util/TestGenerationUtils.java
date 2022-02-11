@@ -15,6 +15,7 @@ import com.microsoft.java.test.plugin.model.Option;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.provider.TestKindProvider;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -64,6 +65,7 @@ import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.CodeGenerationUtils;
 import org.eclipse.jdt.ls.core.internal.text.correction.SourceAssistProcessor;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.text.edits.InsertEdit;
@@ -606,8 +608,22 @@ public class TestGenerationUtils {
         }
 
         if (javaTestProjects.size() == 0) {
-            JavaLanguageServerPlugin.getInstance().getClientConnection().showNotificationMessage(MessageType.Error,
-                "No test library found in your workspace, please add a test library to your project classpath first.");
+            final IProject project = javaProject.getProject();
+            final String msg = "No test library found in your workspace, please add a test library to" +
+                    " your project classpath first.";
+            if (project.isAccessible() && !ProjectUtils.isVisibleProject(project) &&
+                    !project.equals(JavaLanguageServerPlugin.getProjectsManager().getDefaultProject())) {
+                JavaLanguageServerPlugin.getInstance().getClientConnection().sendActionableNotification(
+                    MessageType.Error,
+                    msg,
+                    null,
+                    Arrays.asList(new Command("Enable tests", "_java.test.enableTests"))
+                );
+            } else {
+                JavaLanguageServerPlugin.getInstance().getClientConnection()
+                    .showNotificationMessage(MessageType.Error, msg);
+            }
+            
             return null;
         }
         final Object result = JUnitPlugin.askClientForChoice("Select a project where tests are generated in",

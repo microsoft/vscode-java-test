@@ -158,11 +158,11 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             }, {
                 groupId: 'com.beust',
                 artifactId: 'jcommander',
-                defaultVersion: '1.81',
+                defaultVersion: '1.82',
             }, {
                 groupId: 'org.slf4j',
                 artifactId: 'slf4j-api',
-                defaultVersion: '1.7.33',
+                defaultVersion: '1.7.35',
             }];
         default:
             return [];
