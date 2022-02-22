@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
@@ -499,14 +500,32 @@ public class TestSearchUtils {
             return new Location(JDTUtils.getFileURI(type.getResource()), TestItemUtils.parseTestItemRange(type));
         }
 
-        for (final IMethod method : type.getMethods()) {
-            if (methodName.equals(method.getElementName())) {
-                // TODO: handle the override method
+        IMethod method = findMethod(type, methodName);
+        if (method != null) {
+            return new Location(JDTUtils.getFileURI(method.getResource()),
+                    TestItemUtils.parseTestItemRange(method));
+        }
+
+        final ITypeHierarchy typeHierarchy = type.newSupertypeHierarchy(null);
+        final IType[] supertypes = typeHierarchy.getAllSupertypes(type);
+        for (final IType supertype : supertypes) {
+            method = findMethod(supertype, methodName);
+            if (method != null) {
                 return new Location(JDTUtils.getFileURI(method.getResource()),
-                        TestItemUtils.parseTestItemRange(method));
+                    TestItemUtils.parseTestItemRange(method));
             }
         }
 
+        return null;
+    }
+
+    protected static final IMethod findMethod(IType type, String methodName) throws JavaModelException {
+        for (final IMethod method : type.getMethods()) {
+            if (methodName.equals(method.getElementName())) {
+                // TODO: handle the override method
+                return method;
+            }
+        }
         return null;
     }
 

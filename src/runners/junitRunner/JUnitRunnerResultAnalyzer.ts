@@ -285,7 +285,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 if (this.testContext.kind === TestKind.JUnit) {
                     // change test[0] -> test
                     // to fix: https://github.com/microsoft/vscode-java-test/issues/1296
-                    id = id.substring(0, id.lastIndexOf('['));
+                    const indexOfParameterizedTest: number = id.lastIndexOf('[');
+                    if (indexOfParameterizedTest > -1) {
+                        id = id.substring(0, id.lastIndexOf('['));
+                    }
                 }
             }
             const location: Location | undefined = await findTestLocation(id);
