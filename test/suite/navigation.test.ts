@@ -5,9 +5,10 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { Uri, window } from 'vscode';
+import { Location, Uri, window } from 'vscode';
 import { ITestNavigationResult } from '../../src/commands/navigation/navigationCommands';
 import { JavaTestRunnerDelegateCommands } from '../../src/constants';
+import { findTestLocation } from '../../src/runners/utils';
 import { executeJavaLanguageServerCommand } from '../../src/utils/commandUtils';
 import { setupTestEnv } from "./utils";
 
@@ -40,5 +41,10 @@ suite('Test Navigation Tests', () => {
         assert.strictEqual(searchResult?.items.length, 1);
         assert.strictEqual(searchResult?.items[0].simpleName, 'App');
         assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit.App');
+    });
+
+    test('test find inherited test method location', async () => {
+        const location: Location | undefined = await findTestLocation("junit@junit4.ExtendedTest#test");
+        assert.ok(location?.uri.fsPath.endsWith("BaseTest.java"));
     });
 });
