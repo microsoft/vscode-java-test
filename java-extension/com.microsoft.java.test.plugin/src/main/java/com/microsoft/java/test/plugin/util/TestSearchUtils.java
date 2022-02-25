@@ -516,7 +516,7 @@ public class TestSearchUtils {
             }
         }
 
-        return null;
+        return new Location(JDTUtils.getFileURI(type.getResource()), TestItemUtils.parseTestItemRange(type));
     }
 
     protected static final IMethod findMethod(IType type, String methodName) throws JavaModelException {
