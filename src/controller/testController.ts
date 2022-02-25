@@ -328,6 +328,9 @@ function removeTestInvocations(testItems: TestItem[]): void {
  * in the returned array, all the classes are in one group and each method is a group.
  */
 function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
+    if (testItems.length <= 1) {
+        return [testItems];
+    }
     // tslint:disable-next-line: typedef
     const classMapping: Map<string, TestItem> = testItems.reduce((map, i) => {
         const testLevel: TestLevel | undefined = dataCache.get(i)?.testLevel;
