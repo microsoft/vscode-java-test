@@ -57,7 +57,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     public processData(data: string): void {
         if (data.startsWith(MessageId.TestTree)) {
-            this.enlistToTestMapping(data.substr(MessageId.TestTree.length).trim());
+            this.enlistToTestMapping(data.substring(MessageId.TestTree.length).trim());
         } else if (data.startsWith(MessageId.TestStart)) {
             const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestStart.length));
             if (!item) {
@@ -98,9 +98,14 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 this.currentTestState = TestResultState.Failed;
             }
         } else if (data.startsWith(MessageId.TestError)) {
-            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestError.length));
+            let item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestError.length));
             if (!item) {
-                return;
+                if (this.testContext.testItems.length === 1) {
+                    item = this.testContext.testItems[0];
+                } else {
+                    // todo: Report error when we cannot find the target test item?
+                    return;
+                }
             }
             if (item.id !== this.currentItem?.id) {
                 this.initializeCache(item);
