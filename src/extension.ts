@@ -20,6 +20,7 @@ import { registerAskForChoiceCommand, registerAdvanceAskForChoice, registerAskFo
 import { enableTests } from './commands/testDependenciesCommands';
 
 export let extensionContext: ExtensionContext;
+let componentsRegistered: boolean = false;
 
 export async function activate(context: ExtensionContext): Promise<void> {
     extensionContext = context;
@@ -47,17 +48,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
         serverMode = extensionApi.serverMode;
 
-        if (extensionApi.onDidClasspathUpdate) {
-            const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
-            context.subscriptions.push(onDidClasspathUpdate(async () => {
-                // workaround: wait more time to make sure Language Server has updated all caches
-                setTimeout(() => {
-                    testSourceProvider.clear();
-                    commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
-                }, 1000 /*ms*/);
-            }));
-        }
-
         if (extensionApi.onDidServerModeChange) {
             const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
             context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
@@ -69,12 +59,29 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             }));
         }
 
+        if (extensionApi.onDidClasspathUpdate) {
+            const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
+            context.subscriptions.push(onDidClasspathUpdate(async () => {
+                // workaround: wait more time to make sure Language Server has updated all caches
+                setTimeout(() => {
+                    testSourceProvider.clear();
+                    commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
+                }, 1000 /*ms*/);
+            }));
+        }
+
         if (extensionApi.onDidProjectsImport) {
             const onDidProjectsImport: Event<Uri[]> = extensionApi.onDidProjectsImport;
             context.subscriptions.push(onDidProjectsImport(async () => {
                 testSourceProvider.clear();
                 commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
             }));
+        }
+
+        // in case the extension missed JDT.LS' ready event
+        if (serverMode === LanguageServerMode.Standard && extensionApi.status === 'Started') {
+            testSourceProvider.clear();
+            registerComponents(context);
         }
     }
 
@@ -85,6 +92,10 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 }
 
 function registerComponents(context: ExtensionContext): void {
+    if (componentsRegistered) {
+        return;
+    }
+    componentsRegistered = true;
     registerAskForChoiceCommand(context);
     registerAdvanceAskForChoice(context);
     registerAskForInputCommand(context);
