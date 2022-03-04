@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## 0.34.2
+### Changed
+- Adopt VS Code's refresh tests API. [#1348](https://github.com/microsoft/vscode-java-test/issues/1348)
+
 ### Fixed
 - Extension might not be activated since 0.34.1. [#1381](https://github.com/microsoft/vscode-java-test/issues/1381)
 
