@@ -22,7 +22,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.63.0"
+        "vscode": "^1.65.0"
     },
     "categories": [
         "Testing"
@@ -75,13 +75,6 @@
             }
         ],
         "menus": {
-            "view/title": [
-                {
-                    "command": "java.test.refreshExplorer",
-                    "when": "view == workbench.view.testing",
-                    "group": "zzz@zzz"
-                }
-            ],
             "view/item/context": [
                 {
                     "command": "java.test.runFromJavaProjectExplorer",
@@ -419,7 +412,7 @@
         "@types/mocha": "^9.1.0",
         "@types/node": "^14.18.11",
         "@types/sinon": "^10.0.11",
-        "@types/vscode": "1.63.0",
+        "@types/vscode": "1.65.0",
         "glob": "^7.2.0",
         "mocha": "^9.2.0",
         "sinon": "^11.1.2",
