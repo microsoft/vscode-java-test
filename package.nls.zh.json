@@ -4,7 +4,7 @@
     "contributes.commands.java.test.editor.debug.title": "调试测试用例",
     "contributes.commands.java.test.runFromJavaProjectExplorer.title": "运行测试",
     "contributes.commands.java.test.debugFromJavaProjectExplorer.title": "调试测试",
-    "contributes.commands.java.test.refreshExplorer.title": "刷新",
+    "contributes.commands.java.test.refreshExplorer.title": "刷新测试",
     "contributes.commands.java.test.goToTest.title": "转到测试",
     "contributes.commands.java.test.goToTestSubject.title": "转到被测试代码",
     "configuration.java.test.defaultConfig.description": "设定默认测试配置项的名称",
