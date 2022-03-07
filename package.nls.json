@@ -4,7 +4,6 @@
     "contributes.commands.java.test.editor.debug.title": "Debug Tests",
     "contributes.commands.java.test.runFromJavaProjectExplorer.title": "Run Tests",
     "contributes.commands.java.test.debugFromJavaProjectExplorer.title": "Debug Tests",
-    "contributes.commands.java.test.refreshExplorer.title": "Refresh Tests",
     "contributes.commands.java.test.goToTest.title": "Go to Test",
     "contributes.commands.java.test.goToTestSubject.title": "Go to Test Subject",
     "configuration.java.test.defaultConfig.description": "Specify the name of the default test configuration",
