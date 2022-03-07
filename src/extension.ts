@@ -7,7 +7,7 @@ import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentO
 import { navigateToTestOrTarget } from './commands/navigation/navigationCommands';
 import { generateTests } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
-import { refresh, runTestsFromTestExplorer } from './commands/testExplorerCommands';
+import { refreshExplorer, runTestsFromTestExplorer } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
 import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
 import { createTestController, testController, watchers } from './controller/testController';
@@ -65,7 +65,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 // workaround: wait more time to make sure Language Server has updated all caches
                 setTimeout(() => {
                     testSourceProvider.clear();
-                    commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
+                    refreshExplorer();
                 }, 1000 /*ms*/);
             }));
         }
@@ -74,7 +74,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             const onDidProjectsImport: Event<Uri[]> = extensionApi.onDidProjectsImport;
             context.subscriptions.push(onDidProjectsImport(async () => {
                 testSourceProvider.clear();
-                commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
+                refreshExplorer();
             }));
         }
 
@@ -107,7 +107,6 @@ function registerComponents(context: ExtensionContext): void {
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.JAVA_TEST_GENERATE_TESTS, ((uri: Uri, startPosition: number) => generateTests(uri, startPosition))),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_FROM_TEST_EXPLORER, async (node: TestItem, launchConfiguration: DebugConfiguration) => await runTestsFromTestExplorer(node, launchConfiguration, false)),
-        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER, async () => await refresh()),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.RUN_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, false /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.DEBUG_TEST_FROM_JAVA_PROJECT_EXPLORER, async (node: any) => await runTestsFromJavaProjectExplorer(node, true /* isDebug */)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST, async () => await navigateToTestOrTarget(true)),

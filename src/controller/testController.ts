@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { CancellationToken, commands, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
-import { INVOCATION_PREFIX, JavaTestRunnerCommands } from '../constants';
+import { refreshExplorer } from '../commands/testExplorerCommands';
+import { INVOCATION_PREFIX } from '../constants';
 import { IProgressReporter } from '../debugger.api';
 import { isStandardServerReady, progressProvider } from '../extension';
 import { testSourceProvider } from '../provider/testSourceProvider';
@@ -37,7 +38,7 @@ export function createTestController(): void {
     testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
 
     testController.refreshHandler = () => {
-        commands.executeCommand(JavaTestRunnerCommands.REFRESH_TEST_EXPLORER);
+        refreshExplorer();
     }
 
     startWatchingWorkspace();

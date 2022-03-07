@@ -162,11 +162,6 @@
                 "command": "java.test.editor.debug",
                 "title": "%contributes.commands.java.test.editor.debug.title%",
                 "category": "Java"
-            },
-            {
-                "command": "java.test.refreshExplorer",
-                "title": "%contributes.commands.java.test.refreshExplorer.title%",
-                "category": "Java"
             }
         ],
         "configuration": {
