@@ -38,7 +38,7 @@ export async function runTestsFromTestExplorer(testItem: TestItem, launchConfigu
 }
 
 export async function refreshExplorer(): Promise<void> {
-    sendInfo('', { refreshJavaTest: 1 });
+    sendInfo('', { name: 'refreshTests' });
     testController?.items.forEach((root: TestItem) => {
         testController?.items.delete(root.id);
     });
