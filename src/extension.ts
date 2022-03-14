@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
-import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
+import { addReplacementRule, dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { navigateToTestOrTarget } from './commands/navigation/navigationCommands';
 import { generateTests } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
@@ -25,6 +25,7 @@ let componentsRegistered: boolean = false;
 export async function activate(context: ExtensionContext): Promise<void> {
     extensionContext = context;
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'), { firstParty: true });
+    addTelemetryDisallowedPattern();
     await initExpService(context);
     await instrumentOperation('activation', doActivate)(context);
 }
@@ -186,4 +187,8 @@ export let progressProvider: IProgressProvider | undefined;
 
 function isJavaFile(document: TextDocument): boolean {
     return path.extname(document.fileName) === '.java';
+}
+
+function addTelemetryDisallowedPattern() {
+    addReplacementRule(/path must include project and resource name: \/.*/gi, 'Path must include project and resource name: /<REDACT>');
 }

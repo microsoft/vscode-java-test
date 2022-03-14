@@ -4,7 +4,7 @@
 import * as LRUCache from 'lru-cache';
 import { Uri } from 'vscode';
 
-export const lruCache: LRUCache<Uri, MovingAverage> = new LRUCache<Uri, MovingAverage>(32);
+export const lruCache: LRUCache<Uri, MovingAverage> = new LRUCache<Uri, MovingAverage>({max: 32});
 
 // See: https://github.com/microsoft/vscode/blob/94c9ea46838a9a619aeafb7e8afd1170c967bb55/src/vs/base/common/numbers.ts
 export class MovingAverage {

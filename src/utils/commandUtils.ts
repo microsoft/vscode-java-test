@@ -12,8 +12,7 @@ export async function executeJavaLanguageServerCommand<T>(...rest: any[]): Promi
         if (isCancelledError(error)) {
             return;
         }
-        const parsedError: Error = new Error(`Failed to execute: ${rest[0]}, ${extractErrorMsg(error)}.`);
-        sendError(parsedError);
+        sendError(error);
         throw error;
     }
 }
@@ -21,10 +20,4 @@ export async function executeJavaLanguageServerCommand<T>(...rest: any[]): Promi
 function isCancelledError(error: any): boolean {
     // See: https://microsoft.github.io/language-server-protocol/specifications/specification-current/#responseMessage
     return error.code === -32800;
-}
-
-function extractErrorMsg(e: Error): string {
-    let msg: string = e.toString();
-    msg = msg.replace(/path must include project and resource name: \/.*/gi, 'Path must include project and resource name: /<REDACT>')
-    return msg;
 }
