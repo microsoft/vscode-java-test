@@ -189,6 +189,6 @@ function isJavaFile(document: TextDocument): boolean {
     return path.extname(document.fileName) === '.java';
 }
 
-function addTelemetryDisallowedPattern() {
+function addTelemetryDisallowedPattern(): void {
     addReplacementRule(/path must include project and resource name: \/.*/gi, 'Path must include project and resource name: /<REDACT>');
 }
