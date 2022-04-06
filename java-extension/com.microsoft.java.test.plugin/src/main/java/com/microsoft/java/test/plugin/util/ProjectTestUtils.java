@@ -136,6 +136,11 @@ public final class ProjectTestUtils {
 
     private static String parseTestSourcePathString(IClasspathEntry entry, IJavaProject project) {
         final IPath relativePath = entry.getPath().makeRelativeTo(project.getPath());
+        // Eclipse project that source files stored directly at project root
+        if (relativePath.isEmpty()) {
+            return project.getProject().getLocation().toOSString();
+        }
+
         return project.getProject().getFolder(relativePath).getLocation().toOSString();
     }
 
