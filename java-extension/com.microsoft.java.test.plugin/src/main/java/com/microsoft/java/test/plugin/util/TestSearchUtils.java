@@ -380,8 +380,12 @@ public class TestSearchUtils {
         for (final IMethodBinding methodBinding : typeBinding.getDeclaredMethods()) {
             for (final TestFrameworkSearcher searcher : searchers) {
                 if (searcher.isTestMethod(methodBinding)) {
+                    IJavaElement element = methodBinding.getJavaElement();
+                    if (element == null) {
+                        continue;
+                    }
                     final JavaTestItem methodItem = TestItemUtils.constructJavaTestItem(
-                        (IMethod) methodBinding.getJavaElement(),
+                        (IMethod) element,
                         TestLevel.METHOD,
                         searcher.getTestKind()
                     );
