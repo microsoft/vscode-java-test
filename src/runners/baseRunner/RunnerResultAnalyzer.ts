@@ -49,7 +49,11 @@ export abstract class RunnerResultAnalyzer {
                 if (currentItem && path.basename(currentItem.uri?.fsPath || '') === sourceName) {
                     const lineNum: number = parseInt(lineNumLiteral, 10);
                     if (currentItem.uri) {
-                        this.testMessageLocation = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
+                        if (!currentItem.range || (currentItem.range.start.line < lineNum && currentItem.range.end.line > lineNum)) {
+                            this.testMessageLocation = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
+                        } else {
+                            this.testMessageLocation = new Location(currentItem.uri, new Range(currentItem.range.start.line, 0, currentItem.range.start.line, 0));
+                        }
                     }
                     if (assertionFailure) {
                         assertionFailure.location = this.testMessageLocation;

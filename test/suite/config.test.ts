@@ -29,7 +29,7 @@ suite('JUnit Runner Analyzer Tests', () => {
     });
 
     test("test launch configuration", async () => {
-        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldPass', TestKind.JUnit, '=junit/src\\/test\\/java=/optional=/true=/=/maven.pomderived=/true=/=/test=/true=/<junit4{TestAnnotation.java[TestAnnotation~shouldPass');
+        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldPass', TestKind.JUnit, undefined, '=junit/src\\/test\\/java=/optional=/true=/=/maven.pomderived=/true=/=/test=/true=/<junit4{TestAnnotation.java[TestAnnotation~shouldPass');
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const runnerContext: IRunTestContext = {

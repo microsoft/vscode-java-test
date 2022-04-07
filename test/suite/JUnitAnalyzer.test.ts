@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { IRunTestContext, TestKind } from '../../src/types';
-import { MarkdownString, TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
+import { MarkdownString, Range, TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunnerResultAnalyzer } from '../../src/runners/junitRunner/JUnitRunnerResultAnalyzer';
 import { generateTestItem } from './utils';
 
@@ -88,8 +88,71 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         assert.ok((testMessage.message as MarkdownString).value.includes('junit4.TestAnnotation.shouldFail([TestAnnotation.java:15](command:_java.test.openStackTrace?%5B%22at%20junit4.TestAnnotation.shouldFail(TestAnnotation.java%3A15)%22%2C%22junit%22%5D))'));
     });
 
-    test("test message location should be inside the test case", () => {
-        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldFail', TestKind.JUnit);
+    test("test stacktrace should be simplified", () => {
+        const testItem = generateTestItem(testController, 'junit@App#name', TestKind.JUnit);
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const failedSpy = sinon.spy(testRun, 'failed');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE1,name(App),false,1,false,-1,name(App),,
+%TESTS  1,name(App)
+%FAILED 1,name(App)
+%TRACES 
+java.lang.AssertionError: expected:<1> but was:<2>
+        at org.junit.Assert.fail(Assert.java:89)
+        at org.junit.Assert.failNotEquals(Assert.java:835)
+        at org.junit.Assert.assertEquals(Assert.java:647)
+        at org.junit.Assert.assertEquals(Assert.java:633)
+        at App.name(App.java:10)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+        at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+        at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+        at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+        at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+        at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+        at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+        at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+        at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+        at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+        at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+        at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+        at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+        at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+        at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+        at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+        at org.eclipse.jdt.internal.junit4.runner.JUnit4TestReference.run(JUnit4TestReference.java:89)
+        at org.eclipse.jdt.internal.junit.runner.TestExecution.run(TestExecution.java:40)
+        at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:529)
+        at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:756)
+        at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.run(RemoteTestRunner.java:452)
+        at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:210)
+%TRACEE 
+%TESTE  1,name(App)
+%RUNTIME58`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(failedSpy, testItem, sinon.match.any, sinon.match.number);
+        const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
+        const stringLiteral = (testMessage.message as MarkdownString).value;
+        assert.ok(stringLiteral.split('<br/>').length === 3);
+    });
+
+    test("test message location should be inside the test case when it's covered", () => {
+        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldFail', TestKind.JUnit, new Range(10, 0, 16, 0));
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');
@@ -124,5 +187,43 @@ java.lang.RuntimeException
         sinon.assert.calledWith(erroredSpy, testItem, sinon.match.any);
         const testMessage = erroredSpy.getCall(0).args[1] as TestMessage;
         assert.strictEqual(testMessage.location?.range.start.line, 14);
+    });
+
+    test("test message location should at the test header when it's out of the test", () => {
+        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldFail', TestKind.JUnit, new Range(8, 0, 10, 0));
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const erroredSpy = sinon.spy(testRun, 'errored');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE1,shouldFail(junit4.TestAnnotation),false,1,false,-1,shouldFail(junit4.TestAnnotation),,
+%TESTS  1,shouldFail(junit4.TestAnnotation)
+%ERROR  1,shouldFail(junit4.TestAnnotation)
+%TRACES 
+java.lang.RuntimeException
+        at junit4.TestAnnotation.fail2(TestAnnotation.java:23)
+        at junit4.TestAnnotation.fail(TestAnnotation.java:19)
+        at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+%TRACEE 
+%TESTE  1,shouldFail(junit4.TestAnnotation)
+%RUNTIME16`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(erroredSpy, testItem, sinon.match.any);
+        const testMessage = erroredSpy.getCall(0).args[1] as TestMessage;
+        assert.strictEqual(testMessage.location?.range.start.line, 8);
     });
 });

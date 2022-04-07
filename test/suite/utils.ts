@@ -9,7 +9,7 @@ import { TestController, TestItem, Uri, Range, extensions, commands, workspace }
 import { dataCache } from "../../src/controller/testItemDataCache";
 import { TestKind, TestLevel } from "../../src/types";
 
-export function generateTestItem(testController: TestController, id: string, testKind: TestKind, jdtHandler?: string): TestItem {
+export function generateTestItem(testController: TestController, id: string, testKind: TestKind, range?: Range, jdtHandler?: string): TestItem {
     if (!id) {
         throw new Error('id cannot be null');
     }
@@ -19,7 +19,7 @@ export function generateTestItem(testController: TestController, id: string, tes
     const label = id.substring(id.indexOf('#') + 1);
 
     const testItem = testController.createTestItem(id, label, Uri.file('/mock/test/TestAnnotation.java'));
-    testItem.range = new Range(0, 0, 0, 0);
+    testItem.range = range || new Range(0, 0, 0, 0);
     dataCache.set(testItem, {
         jdtHandler: jdtHandler || '',
         fullName,
