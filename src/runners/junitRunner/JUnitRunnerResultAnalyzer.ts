@@ -195,6 +195,24 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         this.recordingType = RecordingType.None;
     }
 
+    protected getStacktraceFilter(): string[] {
+        return [
+            'org.eclipse.jdt.internal.junit.runner.',
+            'org.eclipse.jdt.internal.junit4.runner.',
+            'org.eclipse.jdt.internal.junit5.runner.',
+            'org.eclipse.jdt.internal.junit.ui.',
+            'junit.framework.TestCase',
+            'junit.framework.TestResult',
+            'junit.framework.TestResult$1',
+            'junit.framework.TestSuite',
+            'junit.framework.Assert',
+            'org.junit.',
+            'java.lang.reflect.Method.invoke',
+            'sun.reflect.',
+            'jdk.internal.reflect.',
+        ];
+    }
+
     private enlistToTestMapping(message: string): void {
         const regExp: RegExp = /([^\\,]|\\\,?)+/gm;
         // See MessageId.TestTree's comment for its format
