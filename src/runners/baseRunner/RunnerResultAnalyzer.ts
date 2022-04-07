@@ -31,8 +31,8 @@ export abstract class RunnerResultAnalyzer {
             }
 
             const location: string = traceResults[4];
-            let sourceName: string | undefined = undefined;
-            let lineNumLiteral: string | undefined = undefined;
+            let sourceName: string | undefined;
+            let lineNumLiteral: string | undefined;
             const locationResult: RegExpExecArray | null = /([\w-$]+\.java):(\d+)/.exec(location);
             if (locationResult) {
                 sourceName = locationResult[1];
@@ -44,7 +44,6 @@ export abstract class RunnerResultAnalyzer {
             } else {
                 const atLiteral: string = traceResults[1];
                 const optionalModuleName: string = traceResults[2] || '';
-    
                 traces.appendText(atLiteral);
                 traces.appendMarkdown(`${optionalModuleName + fullyQualifiedName}([${sourceName}:${lineNumLiteral}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([data, projectName]))}))`);
                 if (currentItem && path.basename(currentItem.uri?.fsPath || '') === sourceName) {
@@ -66,7 +65,7 @@ export abstract class RunnerResultAnalyzer {
     }
 
     private isExcluded(stacktrace: string): boolean {
-        return this.getStacktraceFilter().some(s => {
+        return this.getStacktraceFilter().some((s: string) => {
             return stacktrace.includes(s);
         });
     }
