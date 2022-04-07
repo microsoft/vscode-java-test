@@ -129,6 +129,20 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
         this.currentTestState = TestResultState.Queued;
         this.currentItem = undefined;
     }
+
+    protected getStacktraceFilter(): string[] {
+        return [
+            'com.microsoft.java.test.runner.',
+            'org.testng.internal.',
+            'org.testng.TestRunner',
+            'org.testng.SuiteRunner',
+            'org.testng.TestNG',
+            'org.testng.Assert',
+            'java.lang.reflect.Method.invoke',
+            'sun.reflect.',
+            'jdk.internal.reflect.',
+        ];
+    }
 }
 
 interface ITestNGOutputData {
