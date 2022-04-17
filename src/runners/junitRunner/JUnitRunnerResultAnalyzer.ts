@@ -226,6 +226,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const parentIndex: string = result[5];
             const displayName: string = result[6].replace(/\\,/g, ',');
 
+            const uniqueId: string | undefined = this.testContext.kind === TestKind.JUnit5 ?
+                result[8]?.replace(/\\,/g, ',') : undefined;
+
             let testItem: TestItem | undefined;
             if (isDynamic) {
                 const parentInfo: ITestInfo | undefined = this.testOutputMapping.get(parentIndex);
@@ -240,10 +243,13 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             jdtHandler: parentData.jdtHandler,
                             fullName: parentData.fullName,
                             label: this.getTestMethodName(displayName),
-                            id: `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
+                            // prefer uniqueId, as it does not change when re-running only a single invocation:
+                            id: uniqueId ? `${INVOCATION_PREFIX}${uniqueId}`
+                                : `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
                             projectName: parentData.projectName,
                             testKind: parentData.testKind,
                             testLevel: TestLevel.Invocation,
+                            uniqueId
                         }, parent);
                     }
                 }

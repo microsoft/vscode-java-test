@@ -181,6 +181,11 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                 }
             }
             arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
+
+            if (this.args.uniqueId != null && !this.args.uniqueId.isBlank()) {
+                arguments.add("-uniqueId");
+                arguments.add(this.args.uniqueId);
+            }
         }
     }
 

@@ -204,5 +204,6 @@ public class JUnitLaunchUtils {
         public TestLevel testLevel;
         public TestKind testKind;
         public String[] testNames;
+        public String uniqueId;
     }
 }

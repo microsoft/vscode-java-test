@@ -15,6 +15,12 @@ export interface IJavaTestItem {
     testKind: TestKind;
     testLevel: TestLevel;
     /**
+     * Identifies a single invocation of a parameterized test.
+     * Invocations for which a re-run is possible store their own uniqueId which is provided as part of the result.
+     * Methods may store it in order to specify a certain parameter-set to be used when running again.
+     */
+    uniqueId?: string;
+    /**
      * Optional fields for projects
      */
     natureIds?: string[];

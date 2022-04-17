@@ -81,11 +81,17 @@ async function getLaunchArguments(testContext: IRunTestContext): Promise<IJUnitL
         sendError(error);
         throw error;
     }
+
+    // optional uniqueId in case we are re-running only a single invocation:
+    const uniqueId: string | undefined = testContext.testItems.length === 1 ?
+        dataCache.get(testContext.testItems[0])?.uniqueId : undefined;
+
     return await resolveJUnitLaunchArguments(
         testContext.projectName,
         testLevel,
         testContext.kind,
         getTestNames(testContext),
+        uniqueId
     );
 }
 
@@ -107,13 +113,14 @@ function getTestNames(testContext: IRunTestContext): string[] {
     }).filter(Boolean) as string[];
 }
 
-async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestLevel, testKind: TestKind, testNames: string[]): Promise<IJUnitLaunchArguments> {
+async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestLevel, testKind: TestKind, testNames: string[], uniqueId: string | undefined): Promise<IJUnitLaunchArguments> {
     const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             projectName,
             testLevel,
             testKind,
             testNames,
+            uniqueId
         }),
     );
 

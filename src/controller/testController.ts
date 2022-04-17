@@ -249,14 +249,14 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
  * Set all the test item to queued state
  */
 function enqueueTestMethods(testItems: TestItem[], run: TestRun): void {
-   const queuedTests: TestItem[] = [...testItems];
-   while (queuedTests.length) {
-       const queuedTest: TestItem = queuedTests.shift()!;
-       run.enqueued(queuedTest);
-       queuedTest.children.forEach((child: TestItem) => {
-           queuedTests.push(child);
-       });
-   }
+    const queuedTests: TestItem[] = [...testItems];
+    while (queuedTests.length) {
+        const queuedTest: TestItem = queuedTests.shift()!;
+        run.enqueued(queuedTest);
+        queuedTest.children.forEach((child: TestItem) => {
+            queuedTests.push(child);
+        });
+    }
 }
 
 /**
@@ -265,23 +265,47 @@ function enqueueTestMethods(testItems: TestItem[], run: TestRun): void {
  * @returns
  */
 async function getIncludedItems(request: TestRunRequest, token?: CancellationToken): Promise<TestItem[]> {
-   let testItems: TestItem[] = [];
-   if (request.include) {
-       testItems.push(...request.include);
-   } else {
-       testController?.items.forEach((item: TestItem) => {
-           testItems.push(item);
-       });
-   }
-   if (testItems.length === 0) {
-       return [];
-   }
-   removeTestInvocations(testItems);
-   testItems = await expandTests(testItems, TestLevel.Class, token);
-   // @ts-expect-error
-   const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
-   testItems = _.differenceBy(testItems, excludingItems, 'id');
-   return testItems;
+    let testItems: TestItem[] = [];
+    if (request.include) {
+        testItems.push(...request.include);
+    } else {
+        testController?.items.forEach((item: TestItem) => {
+            testItems.push(item);
+        });
+    }
+    if (testItems.length === 0) {
+        return [];
+    }
+    handleInvocationRerun(testItems);
+    removeTestInvocations(testItems);
+    testItems = await expandTests(testItems, TestLevel.Class, token);
+    // @ts-expect-error
+    const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
+    testItems = _.differenceBy(testItems, excludingItems, 'id');
+    return testItems;
+}
+
+function handleInvocationRerun(testItems: TestItem[]): void {
+
+    // always remove uniqueIds from non-invocation items, since they would have been set for a past run
+    testItems.forEach((item: TestItem) => {
+        if (dataCache.get(item) && dataCache.get(item)!.testLevel !== TestLevel.Invocation) {
+            dataCache.get(item)!.uniqueId = undefined;
+        }
+    });
+
+    if (testItems.length === 1 && dataCache.get(testItems[0])?.testLevel === TestLevel.Invocation) {
+        // if a single invocation is to be rerun,
+        // we run the parent method, but with restriction to the single invocation parameter-set
+        const invocation: TestItem = testItems[0];
+        if (!invocation.parent || !dataCache.get(invocation.parent)) {
+            sendError(new Error('Trying to re-run a single test invocation, but could not find a corresponding Method-level parent item with data.'));
+            testItems.length = 0;
+            return;
+        }
+        dataCache.get(invocation.parent)!.uniqueId = dataCache.get(invocation)!.uniqueId;
+        testItems[0] = invocation.parent;
+    }
 }
 
 /**

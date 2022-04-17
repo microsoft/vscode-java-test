@@ -144,7 +144,9 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
         metaInfo.uri ? Uri.parse(metaInfo.uri) : undefined,
     );
     item.range = asRange(metaInfo.range);
-    if (metaInfo.testLevel !== TestLevel.Invocation) {
+    if (metaInfo.testLevel !== TestLevel.Invocation
+        // invocations of JUnit5 parameterized tests can be run again using their uniqueId:
+        || (metaInfo.testKind === TestKind.JUnit5 && metaInfo.uniqueId)) {
         item.tags = [runnableTag];
         dataCache.set(item, {
             jdtHandler: metaInfo.jdtHandler,
@@ -152,6 +154,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
             projectName: metaInfo.projectName,
             testLevel: metaInfo.testLevel,
             testKind: metaInfo.testKind,
+            uniqueId: metaInfo.uniqueId
         });
     }
     if (parent) {
