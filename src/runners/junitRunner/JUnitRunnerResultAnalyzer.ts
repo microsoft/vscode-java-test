@@ -225,7 +225,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const isDynamic: boolean = result[4] === 'true';
             const parentIndex: string = result[5];
             const displayName: string = result[6].replace(/\\,/g, ',');
-
             const uniqueId: string | undefined = this.testContext.kind === TestKind.JUnit5 ?
                 result[8]?.replace(/\\,/g, ',') : undefined;
 

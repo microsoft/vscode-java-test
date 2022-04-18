@@ -296,8 +296,9 @@ function handleInvocationRerun(testItems: TestItem[]): boolean {
 
     // always remove uniqueIds from non-invocation items, since they would have been set for a past run
     testItems.forEach((item: TestItem) => {
-        if (dataCache.get(item) && dataCache.get(item)!.testLevel !== TestLevel.Invocation) {
-            dataCache.get(item)!.uniqueId = undefined;
+        const itemData: ITestItemData | undefined = dataCache.get(item);
+        if (itemData && itemData.testLevel !== TestLevel.Invocation) {
+            itemData.uniqueId = undefined;
         }
     });
 
@@ -306,7 +307,7 @@ function handleInvocationRerun(testItems: TestItem[]): boolean {
         // we run the parent method, but with restriction to the single invocation parameter-set
         const invocation: TestItem = testItems[0];
         if (!invocation.parent || !dataCache.get(invocation.parent)) {
-            sendError(new Error('Trying to re-run a single test invocation, but could not find a corresponding Method-level parent item with data.'));
+            sendError(new Error('Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.'));
             testItems.length = 0;
             return isInvocationRerun;
         }
