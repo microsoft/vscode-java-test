@@ -4,7 +4,7 @@
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
-import { createTestItem } from '../../controller/utils';
+import { createTestItem, updateOrCreateTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
@@ -236,7 +236,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 if (parent) {
                     const parentData: ITestItemData | undefined = dataCache.get(parent);
                     if (parentData?.testLevel === TestLevel.Method) {
-                        testItem = createTestItem({
+                        testItem = updateOrCreateTestItem(parent, {
                             children: [],
                             uri: parent.uri?.toString(),
                             range: parent.range,
@@ -250,7 +250,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             testKind: parentData.testKind,
                             testLevel: TestLevel.Invocation,
                             uniqueId
-                        }, parent);
+                        });
                     }
                 }
             } else {

@@ -276,8 +276,9 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
     if (testItems.length === 0) {
         return [];
     }
-    handleInvocationRerun(testItems);
-    removeTestInvocations(testItems);
+    if (!handleInvocationRerun(testItems)) { // a single invocation re-run will just update the item
+        removeTestInvocations(testItems);
+    }
     testItems = await expandTests(testItems, TestLevel.Class, token);
     // @ts-expect-error
     const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
@@ -285,7 +286,13 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
     return testItems;
 }
 
-function handleInvocationRerun(testItems: TestItem[]): void {
+/**
+ * Check and preparation in case a single invocation of a parameterized test shall be re-run.
+ * @param testItems
+ * @returns true if a single invocation shall be re-run, otherwise false
+ */
+function handleInvocationRerun(testItems: TestItem[]): boolean {
+    let isInvocationRerun: boolean = false;
 
     // always remove uniqueIds from non-invocation items, since they would have been set for a past run
     testItems.forEach((item: TestItem) => {
@@ -301,11 +308,13 @@ function handleInvocationRerun(testItems: TestItem[]): void {
         if (!invocation.parent || !dataCache.get(invocation.parent)) {
             sendError(new Error('Trying to re-run a single test invocation, but could not find a corresponding Method-level parent item with data.'));
             testItems.length = 0;
-            return;
+            return isInvocationRerun;
         }
         dataCache.get(invocation.parent)!.uniqueId = dataCache.get(invocation)!.uniqueId;
         testItems[0] = invocation.parent;
+        isInvocationRerun = true;
     }
+    return isInvocationRerun;
 }
 
 /**

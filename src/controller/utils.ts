@@ -105,7 +105,7 @@ export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJav
     }
 }
 
-function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestItem): TestItem {
+export function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestItem): TestItem {
     let childItem: TestItem | undefined = parent.children.get(childData.id);
     if (childItem) {
         updateTestItem(childItem, childData);
