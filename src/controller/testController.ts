@@ -302,12 +302,27 @@ function handleInvocationRerun(testItems: TestItem[]): boolean {
         }
     });
 
-    if (testItems.length === 1 && dataCache.get(testItems[0])?.testLevel === TestLevel.Invocation) {
+    // the test-explorer supports selecting multiple items,
+    // but when re-running an invocation only selecting a single item is supported
+    const numInvocations: number = testItems.filter((item: TestItem) => dataCache.get(item)?.testLevel === TestLevel.Invocation).length;
+    if (numInvocations > 0) {
+        if (numInvocations < testItems.length) {
+            window.showErrorMessage('When re-running an invocation of a parameterized test, no other tests must be selected. Please select either a single invocation or no invocations at all.');
+            testItems.length = 0;
+            return isInvocationRerun;
+        }
+        if (numInvocations > 1) {
+            window.showErrorMessage('Re-running multiple invocations of a parameterized test is not supported, please select only one invocation at a time.');
+            testItems.length = 0;
+            return isInvocationRerun;
+        }
         // if a single invocation is to be rerun,
         // we run the parent method, but with restriction to the single invocation parameter-set
         const invocation: TestItem = testItems[0];
         if (!invocation.parent || !dataCache.get(invocation.parent)) {
-            sendError(new Error('Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.'));
+            const errMsg: string = 'Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.';
+            sendError(new Error(errMsg));
+            window.showErrorMessage(errMsg);
             testItems.length = 0;
             return isInvocationRerun;
         }
