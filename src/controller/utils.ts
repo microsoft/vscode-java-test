@@ -117,6 +117,7 @@ export function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestIte
 
 function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
     testItem.range = asRange(metaInfo.range);
+    testItem.label = metaInfo.label;
     if (metaInfo.testLevel !== TestLevel.Invocation) {
         dataCache.set(testItem, {
             jdtHandler: metaInfo.jdtHandler,
