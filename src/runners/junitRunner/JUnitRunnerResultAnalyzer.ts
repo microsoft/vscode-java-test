@@ -4,7 +4,7 @@
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
-import { createTestItem } from '../../controller/utils';
+import { createTestItem, updateOrCreateTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
@@ -225,6 +225,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const isDynamic: boolean = result[4] === 'true';
             const parentIndex: string = result[5];
             const displayName: string = result[6].replace(/\\,/g, ',');
+            const uniqueId: string | undefined = this.testContext.kind === TestKind.JUnit5 ?
+                result[8]?.replace(/\\,/g, ',') : undefined;
 
             let testItem: TestItem | undefined;
             if (isDynamic) {
@@ -233,18 +235,21 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 if (parent) {
                     const parentData: ITestItemData | undefined = dataCache.get(parent);
                     if (parentData?.testLevel === TestLevel.Method) {
-                        testItem = createTestItem({
+                        testItem = updateOrCreateTestItem(parent, {
                             children: [],
                             uri: parent.uri?.toString(),
                             range: parent.range,
                             jdtHandler: parentData.jdtHandler,
                             fullName: parentData.fullName,
                             label: this.getTestMethodName(displayName),
-                            id: `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
+                            // prefer uniqueId, as it does not change when re-running only a single invocation:
+                            id: uniqueId ? `${INVOCATION_PREFIX}${uniqueId}`
+                                : `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
                             projectName: parentData.projectName,
                             testKind: parentData.testKind,
                             testLevel: TestLevel.Invocation,
-                        }, parent);
+                            uniqueId
+                        });
                     }
                 }
             } else {

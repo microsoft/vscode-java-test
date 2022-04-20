@@ -249,14 +249,14 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
  * Set all the test item to queued state
  */
 function enqueueTestMethods(testItems: TestItem[], run: TestRun): void {
-   const queuedTests: TestItem[] = [...testItems];
-   while (queuedTests.length) {
-       const queuedTest: TestItem = queuedTests.shift()!;
-       run.enqueued(queuedTest);
-       queuedTest.children.forEach((child: TestItem) => {
-           queuedTests.push(child);
-       });
-   }
+    const queuedTests: TestItem[] = [...testItems];
+    while (queuedTests.length) {
+        const queuedTest: TestItem = queuedTests.shift()!;
+        run.enqueued(queuedTest);
+        queuedTest.children.forEach((child: TestItem) => {
+            queuedTests.push(child);
+        });
+    }
 }
 
 /**
@@ -265,23 +265,90 @@ function enqueueTestMethods(testItems: TestItem[], run: TestRun): void {
  * @returns
  */
 async function getIncludedItems(request: TestRunRequest, token?: CancellationToken): Promise<TestItem[]> {
-   let testItems: TestItem[] = [];
-   if (request.include) {
-       testItems.push(...request.include);
-   } else {
-       testController?.items.forEach((item: TestItem) => {
-           testItems.push(item);
-       });
-   }
-   if (testItems.length === 0) {
-       return [];
-   }
-   removeTestInvocations(testItems);
-   testItems = await expandTests(testItems, TestLevel.Class, token);
-   // @ts-expect-error
-   const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
-   testItems = _.differenceBy(testItems, excludingItems, 'id');
-   return testItems;
+    let testItems: TestItem[] = [];
+    if (request.include) {
+        testItems.push(...request.include);
+    } else {
+        testController?.items.forEach((item: TestItem) => {
+            testItems.push(item);
+        });
+    }
+    if (testItems.length === 0) {
+        return [];
+    }
+    testItems = handleInvocations(testItems);
+    testItems = await expandTests(testItems, TestLevel.Class, token);
+    // @ts-expect-error
+    const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
+    testItems = _.differenceBy(testItems, excludingItems, 'id');
+    return testItems;
+}
+
+/**
+ * Check and preparation in case a single invocation of a parameterized test is re-run.
+ * If a test is run completely, existing invocations are removed.
+ * @param testItems
+ * @returns prepared testItems
+ */
+function handleInvocations(testItems: TestItem[]): TestItem[] {
+
+    // always remove uniqueIds from non-invocation items, since they would have been set for a past run
+    testItems.forEach((item: TestItem) => {
+        const itemData: ITestItemData | undefined = dataCache.get(item);
+        if (itemData && itemData.testLevel !== TestLevel.Invocation) {
+            itemData.uniqueId = undefined;
+        }
+    });
+
+    if (filterInvocations(testItems)
+        .some((invocation: TestItem) => !invocation.parent || !dataCache.get(invocation.parent))) { // sanity-checks
+        const errMsg: string = 'Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.';
+        sendError(new Error(errMsg));
+        window.showErrorMessage(errMsg);
+        return [];
+    }
+
+    // remove invocations if they are already included in selected higher-level tests
+    testItems = testItems.filter((item: TestItem) => !(isInvocation(item) && isAncestorIncluded(item, testItems)));
+
+    const invocations: TestItem[] = filterInvocations(testItems);
+    if (invocations.length > _.uniq(invocations.map((item: TestItem) => item.parent)).length) {
+        window.showErrorMessage('Re-running multiple invocations of a parameterized test is not supported, please select only one invocation at a time.');
+        return [];
+    }
+
+    // if a single invocation is to be re-run,
+    // we run the parent method instead, but with restriction to the single invocation parameter-set
+    testItems = testItems.map((item: TestItem) => {
+        if (isInvocation(item)) {
+            dataCache.get(item.parent!)!.uniqueId = dataCache.get(item)!.uniqueId;
+            return item.parent!;
+        }
+        return item;
+    })
+
+    removeNonRerunTestInvocations(testItems);
+    return testItems;
+}
+
+function filterInvocations(testItems: TestItem[]): TestItem[] {
+    return testItems.filter((item: TestItem) => isInvocation(item));
+}
+
+function isInvocation(item: TestItem): boolean {
+    return dataCache.get(item)?.testLevel === TestLevel.Invocation;
+}
+
+function isAncestorIncluded(item: TestItem, potentialAncestors: TestItem[]): boolean {
+    // walk up the tree and check whether any ancestor is part of the selected test items
+    let parent: TestItem | undefined = item.parent;
+    while (parent !== undefined) {
+        if (potentialAncestors.includes(parent)) {
+            return true;
+        }
+        parent = parent.parent;
+    }
+    return false;
 }
 
 /**
@@ -311,12 +378,16 @@ async function expandTests(testItems: TestItem[], targetLevel: TestLevel, token?
 }
 
 /**
- * Remove the test invocations since they might be changed
+ * Remove the test invocations since they might be changed, except for methods where only a single invocation is re-run.
  */
-function removeTestInvocations(testItems: TestItem[]): void {
+function removeNonRerunTestInvocations(testItems: TestItem[]): void {
+    const rerunMethods: TestItem[] = testItems.filter((item: TestItem) => dataCache.get(item)?.uniqueId !== undefined);
     const queue: TestItem[] = [...testItems];
     while (queue.length) {
         const item: TestItem = queue.shift()!;
+        if (rerunMethods.includes(item)) {
+            continue;
+        }
         if (item.id.startsWith(INVOCATION_PREFIX)) {
             item.parent?.children.delete(item.id);
             continue;

@@ -33,4 +33,5 @@ export interface ITestItemData {
     projectName: string;
     testLevel: TestLevel;
     testKind: TestKind;
+    uniqueId?: string;
 }

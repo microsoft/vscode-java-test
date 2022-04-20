@@ -17,6 +17,7 @@ import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
 import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -181,6 +182,11 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                 }
             }
             arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
+
+            if (StringUtils.isNotBlank(this.args.uniqueId)) {
+                arguments.add("-uniqueId");
+                arguments.add(this.args.uniqueId);
+            }
         }
     }
 
