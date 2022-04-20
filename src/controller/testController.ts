@@ -276,9 +276,7 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
     if (testItems.length === 0) {
         return [];
     }
-    if (!handleInvocationRerun(testItems)) { // a single invocation re-run will just update the item
-        removeTestInvocations(testItems);
-    }
+    testItems = handleInvocations(testItems);
     testItems = await expandTests(testItems, TestLevel.Class, token);
     // @ts-expect-error
     const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
@@ -287,12 +285,12 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
 }
 
 /**
- * Check and preparation in case a single invocation of a parameterized test shall be re-run.
+ * Check and preparation in case a single invocation of a parameterized test is re-run.
+ * If a test is run completely, existing invocations are removed.
  * @param testItems
- * @returns true if a single invocation shall be re-run, otherwise false
+ * @returns prepared testItems
  */
-function handleInvocationRerun(testItems: TestItem[]): boolean {
-    let isInvocationRerun: boolean = false;
+function handleInvocations(testItems: TestItem[]): TestItem[] {
 
     // always remove uniqueIds from non-invocation items, since they would have been set for a past run
     testItems.forEach((item: TestItem) => {
@@ -302,35 +300,55 @@ function handleInvocationRerun(testItems: TestItem[]): boolean {
         }
     });
 
-    // the test-explorer supports selecting multiple items,
-    // but when re-running an invocation only selecting a single item is supported
-    const numInvocations: number = testItems.filter((item: TestItem) => dataCache.get(item)?.testLevel === TestLevel.Invocation).length;
-    if (numInvocations > 0) {
-        if (numInvocations < testItems.length) {
-            window.showErrorMessage('When re-running an invocation of a parameterized test, no other tests must be selected. Please select either a single invocation or no invocations at all.');
-            testItems.length = 0;
-            return isInvocationRerun;
-        }
-        if (numInvocations > 1) {
-            window.showErrorMessage('Re-running multiple invocations of a parameterized test is not supported, please select only one invocation at a time.');
-            testItems.length = 0;
-            return isInvocationRerun;
-        }
-        // if a single invocation is to be rerun,
-        // we run the parent method, but with restriction to the single invocation parameter-set
-        const invocation: TestItem = testItems[0];
-        if (!invocation.parent || !dataCache.get(invocation.parent)) {
-            const errMsg: string = 'Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.';
-            sendError(new Error(errMsg));
-            window.showErrorMessage(errMsg);
-            testItems.length = 0;
-            return isInvocationRerun;
-        }
-        dataCache.get(invocation.parent)!.uniqueId = dataCache.get(invocation)!.uniqueId;
-        testItems[0] = invocation.parent;
-        isInvocationRerun = true;
+    if (filterInvocations(testItems)
+        .some((invocation: TestItem) => !invocation.parent || !dataCache.get(invocation.parent))) { // sanity-checks
+        const errMsg: string = 'Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.';
+        sendError(new Error(errMsg));
+        window.showErrorMessage(errMsg);
+        return [];
     }
-    return isInvocationRerun;
+
+    // remove invocations if they are already included in selected higher-level tests
+    testItems = testItems.filter((item: TestItem) => !(isInvocation(item) && isAncestorIncluded(item, testItems)));
+
+    const invocations: TestItem[] = filterInvocations(testItems);
+    if (invocations.length > _.uniq(invocations.map((item: TestItem) => item.parent)).length) {
+        window.showErrorMessage('Re-running multiple invocations of a parameterized test is not supported, please select only one invocation at a time.');
+        return [];
+    }
+
+    // if a single invocation is to be re-run,
+    // we run the parent method instead, but with restriction to the single invocation parameter-set
+    testItems = testItems.map((item: TestItem) => {
+        if (isInvocation(item)) {
+            dataCache.get(item.parent!)!.uniqueId = dataCache.get(item)!.uniqueId;
+            return item.parent!;
+        }
+        return item;
+    })
+
+    removeNonRerunTestInvocations(testItems);
+    return testItems;
+}
+
+function filterInvocations(testItems: TestItem[]): TestItem[] {
+    return testItems.filter((item: TestItem) => isInvocation(item));
+}
+
+function isInvocation(item: TestItem): boolean {
+    return dataCache.get(item)?.testLevel === TestLevel.Invocation;
+}
+
+function isAncestorIncluded(item: TestItem, potentialAncestors: TestItem[]): boolean {
+    // walk up the tree and check whether any ancestor is part of the selected test items
+    let parent: TestItem | undefined = item.parent;
+    while (parent !== undefined) {
+        if (potentialAncestors.includes(parent)) {
+            return true;
+        }
+        parent = parent.parent;
+    }
+    return false;
 }
 
 /**
@@ -360,12 +378,16 @@ async function expandTests(testItems: TestItem[], targetLevel: TestLevel, token?
 }
 
 /**
- * Remove the test invocations since they might be changed
+ * Remove the test invocations since they might be changed, except for methods where only a single invocation is re-run.
  */
-function removeTestInvocations(testItems: TestItem[]): void {
+function removeNonRerunTestInvocations(testItems: TestItem[]): void {
+    const rerunMethods: TestItem[] = testItems.filter((item: TestItem) => dataCache.get(item)?.uniqueId !== undefined);
     const queue: TestItem[] = [...testItems];
     while (queue.length) {
         const item: TestItem = queue.shift()!;
+        if (rerunMethods.includes(item)) {
+            continue;
+        }
         if (item.id.startsWith(INVOCATION_PREFIX)) {
             item.parent?.children.delete(item.id);
             continue;
