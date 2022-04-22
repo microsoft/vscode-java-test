@@ -446,11 +446,15 @@ function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
 
     const testMethods: TestItem[][] = [];
 
-    for (const [key, value] of testMapping) {
-        if (key.children.size === value.size) {
-            classMapping.set(key.id, key);
+    for (const [clazz, methods] of testMapping) {
+        // if all methods of a class are selected, prefer running the class instead, to execute them together
+        if (clazz.children.size === methods.size
+            // but do not run the whole class when a method is restricted to a single invocation,
+            // since restricting class items to single invocations is not supported
+            && !([...methods].some((m: TestItem) => dataCache.get(m)?.uniqueId))) {
+            classMapping.set(clazz.id, clazz);
         } else {
-            for (const method of value.values()) {
+            for (const method of methods.values()) {
                 testMethods.push([method]);
             }
         }
