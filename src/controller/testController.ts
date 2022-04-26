@@ -292,14 +292,6 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
  */
 function handleInvocations(testItems: TestItem[]): TestItem[] {
 
-    // always remove uniqueIds from non-invocation items, since they would have been set for a past run
-    testItems.forEach((item: TestItem) => {
-        const itemData: ITestItemData | undefined = dataCache.get(item);
-        if (itemData && itemData.testLevel !== TestLevel.Invocation) {
-            itemData.uniqueId = undefined;
-        }
-    });
-
     if (filterInvocations(testItems)
         .some((invocation: TestItem) => !invocation.parent || !dataCache.get(invocation.parent))) { // sanity-checks
         const errMsg: string = 'Trying to re-run a single test invocation, but could not find a corresponding method-level parent item with data.';
@@ -311,11 +303,21 @@ function handleInvocations(testItems: TestItem[]): TestItem[] {
     // remove invocations if they are already included in selected higher-level tests
     testItems = testItems.filter((item: TestItem) => !(isInvocation(item) && isAncestorIncluded(item, testItems)));
 
+    testItems = mergeInvocations(testItems);
+
     const invocations: TestItem[] = filterInvocations(testItems);
     if (invocations.length > _.uniq(invocations.map((item: TestItem) => item.parent)).length) {
         window.showErrorMessage('Re-running multiple invocations of a parameterized test is not supported, please select only one invocation at a time.');
         return [];
     }
+
+    // always remove uniqueIds from all non-invocation items, since they would have been set for a past run
+    testItems.forEach((item: TestItem) => {
+        const itemData: ITestItemData | undefined = dataCache.get(item);
+        if (itemData && itemData.testLevel !== TestLevel.Invocation) {
+            itemData.uniqueId = undefined;
+        }
+    });
 
     // if a single invocation is to be re-run,
     // we run the parent method instead, but with restriction to the single invocation parameter-set
@@ -349,6 +351,18 @@ function isAncestorIncluded(item: TestItem, potentialAncestors: TestItem[]): boo
         parent = parent.parent;
     }
     return false;
+}
+
+function mergeInvocations(testItems: TestItem[]): TestItem[] {
+    // if all invocations of a method are selected, replace by single parent method run
+    const invocationsPerMethod: Map<TestItem, Set<TestItem>> = filterInvocations(testItems) /* tslint:disable: typedef */
+        .reduce((map, inv) => map.set(inv.parent!,
+            map.has(inv.parent!) ? new Set([...map.get(inv.parent!)!, inv]) : new Set([inv])),
+            new Map());
+    const invocationsToMerge: TestItem[] = _.flatten([...invocationsPerMethod.entries()]
+        .filter(([method, invs]) => method.children.size === invs.size)
+        .map(([, invs]) => [...invs])); /* tslint:enable: typedef */
+    return _.uniq(testItems.map((item: TestItem) => invocationsToMerge.includes(item) ? item.parent! : item));
 }
 
 /**
