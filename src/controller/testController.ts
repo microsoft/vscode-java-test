@@ -290,7 +290,7 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
  * @param testItems
  * @returns prepared testItems
  */
-function handleInvocations(testItems: TestItem[]): TestItem[] {
+export function handleInvocations(testItems: TestItem[]): TestItem[] { // export for unit test
 
     if (filterInvocations(testItems)
         .some((invocation: TestItem) => !invocation.parent || !dataCache.get(invocation.parent))) { // sanity-checks
