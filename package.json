@@ -402,30 +402,30 @@
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/glob": "^7.2.0",
-        "@types/lodash": "^4.14.179",
-        "@types/lru-cache": "^7.4.0",
-        "@types/mocha": "^9.1.0",
-        "@types/node": "^14.18.12",
+        "@types/lodash": "^4.14.182",
+        "@types/lru-cache": "^7.6.1",
+        "@types/mocha": "^9.1.1",
+        "@types/node": "^14.18.16",
         "@types/sinon": "^10.0.11",
         "@types/vscode": "1.65.0",
         "glob": "^7.2.0",
         "mocha": "^9.2.2",
         "sinon": "^11.1.2",
-        "ts-loader": "^9.2.8",
+        "ts-loader": "^9.3.0",
         "tslint": "^6.1.3",
-        "typescript": "^4.6.2",
+        "typescript": "^4.6.4",
         "vscode-test": "^1.6.1",
-        "webpack": "^5.70.0",
+        "webpack": "^5.72.0",
         "webpack-cli": "^4.9.2"
     },
     "dependencies": {
-        "fs-extra": "^10.0.1",
+        "fs-extra": "^10.1.0",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.6.3",
         "lodash": "^4.17.21",
-        "lru-cache": "^7.4.4",
+        "lru-cache": "^7.9.0",
         "vscode-extension-telemetry-wrapper": "^0.12.0",
         "vscode-languageclient": "6.0.0-next.9",
-        "vscode-tas-client": "^0.1.31"
+        "vscode-tas-client": "^0.1.47"
     }
 }
