@@ -47,7 +47,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             return;
         }
 
-        if (extensionApi.serverMode == LanguageServerMode.LightWeight) {
+        if (extensionApi.serverMode === LanguageServerMode.LightWeight) {
             if (extensionApi.onDidServerModeChange) {
                 const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
                 context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
