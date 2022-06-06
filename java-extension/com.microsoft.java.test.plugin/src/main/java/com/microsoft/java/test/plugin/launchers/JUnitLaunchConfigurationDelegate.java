@@ -170,10 +170,13 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     if (obj instanceof SingleVariableDeclaration) {
                         final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
                                 .getType().resolveBinding();
-                        if (paramTypeBinding.isParameterizedType()) {
-                            parameters.add(paramTypeBinding.getBinaryName());
-                        } else {
+                        if (paramTypeBinding == null) {
+                            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                                    "Cannot set set argument for method" + methodDeclaration.toString(), null));
+                        } else if (paramTypeBinding.isPrimitive()) {
                             parameters.add(paramTypeBinding.getQualifiedName());
+                        } else {
+                            parameters.add(paramTypeBinding.getBinaryName());
                         }
                     }
                 }

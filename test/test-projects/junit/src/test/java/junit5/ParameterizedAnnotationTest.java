@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -41,5 +42,16 @@ public class ParameterizedAnnotationTest {
 
     static Stream<List<Integer>> palindromeProvider() {
         return Stream.of(Collections.singletonList(1), Collections.singletonList(1));
+    }
+
+    class User {}
+
+    static Stream<Arguments> users(){
+        return Stream.of(Arguments.of(new ParameterizedAnnotationTest().new User()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("users")
+    public void testCheckUser(User user){
     }
 }
