@@ -7,7 +7,7 @@ import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telem
 import { refreshExplorer } from '../commands/testExplorerCommands';
 import { INVOCATION_PREFIX } from '../constants';
 import { IProgressReporter } from '../debugger.api';
-import { isStandardServerReady, progressProvider } from '../extension';
+import { progressProvider } from '../extension';
 import { testSourceProvider } from '../provider/testSourceProvider';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
@@ -24,9 +24,6 @@ export const watchers: Disposable[] = [];
 export const runnableTag: TestTag = new TestTag('RunnableItem');
 
 export function createTestController(): void {
-    if (!isStandardServerReady()) {
-        return;
-    }
     testController?.dispose();
     testController = tests.createTestController('javaTestController', 'Java Test');
 
