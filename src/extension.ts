@@ -47,17 +47,19 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
             return;
         }
 
-        serverMode = extensionApi.serverMode;
-
-        if (extensionApi.onDidServerModeChange) {
-            const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
-            context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
-                serverMode = mode;
-                if (mode === LanguageServerMode.Standard) {
-                    testSourceProvider.clear();
-                    registerComponents(context);
-                }
-            }));
+        if (extensionApi.serverMode === LanguageServerMode.LightWeight) {
+            if (extensionApi.onDidServerModeChange) {
+                const onDidServerModeChange: Event<string> = extensionApi.onDidServerModeChange;
+                context.subscriptions.push(onDidServerModeChange(async (mode: string) => {
+                    if (mode === LanguageServerMode.Standard) {
+                        testSourceProvider.clear();
+                        registerComponents(context);
+                    }
+                }));
+            }
+        } else {
+            await extensionApi.serverReady();
+            registerComponents(context);
         }
 
         if (extensionApi.onDidClasspathUpdate) {
@@ -77,12 +79,6 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 testSourceProvider.clear();
                 refreshExplorer();
             }));
-        }
-
-        // in case the extension missed JDT.LS' ready event
-        if (serverMode === LanguageServerMode.Standard && extensionApi.status === 'Started') {
-            testSourceProvider.clear();
-            registerComponents(context);
         }
     }
 
@@ -161,21 +157,6 @@ export async function showTestItemsInCurrentFile(): Promise<void> {
         await updateItemForDocument(window.activeTextEditor!.document.uri);
     }
 }
-
-export function isStandardServerReady(): boolean {
-    // undefined serverMode indicates an older version language server
-    if (serverMode === undefined) {
-        return true;
-    }
-
-    if (serverMode !== LanguageServerMode.Standard) {
-        return false;
-    }
-
-    return true;
-}
-
-let serverMode: string | undefined;
 
 const enum LanguageServerMode {
     LightWeight = 'LightWeight',
