@@ -48,6 +48,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +57,8 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
 
     private Argument args;
 
-    private static final Set<String> testNameArgs = Set.of("-test", "-classNames", "-packageNameFile", "-testNameFile");
+    private static final Set<String> testNameArgs = new HashSet<>(
+        Arrays.asList("-test", "-classNames", "-packageNameFile", "-testNameFile"));
 
     public JUnitLaunchConfigurationDelegate(Argument args) {
         super();
