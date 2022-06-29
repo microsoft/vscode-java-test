@@ -226,4 +226,60 @@ java.lang.RuntimeException
         const testMessage = erroredSpy.getCall(0).args[1] as TestMessage;
         assert.strictEqual(testMessage.location?.range.start.line, 8);
     });
+
+    test("test diff with line separators", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.TestAnnotation#shouldFail2', TestKind.JUnit5, new Range(8, 0, 10, 0));
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const failedSpy = sinon.spy(testRun, 'failed');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE2,junit5.TestAnnotation,true,1,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
+%TSTTREE3,shouldFail2(junit5.TestAnnotation),false,1,false,2,shouldFail2(),,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[method:shouldFail2()]
+%TESTS  3,shouldFail2(junit5.TestAnnotation)
+
+%FAILED 3,shouldFail2(junit5.TestAnnotation)
+%EXPECTS
+hello
+world
+%EXPECTE
+%ACTUALS
+hello
+
+world
+%ACTUALE
+
+%TRACES
+org.junit.ComparisonFailure: expected:<hello
+[]world> but was:<hello
+[
+]world>
+        at org.junit.Assert.assertEquals(Assert.java:117)
+        at org.junit.Assert.assertEquals(Assert.java:146)
+        at junit5.TestAnnotation.shouldFail2(TestAnnotation.java:15)
+
+%TRACEE
+
+%TESTE  3,shouldFail2(junit5.TestAnnotation)
+
+%RUNTIME99`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(failedSpy, testItem, sinon.match.any);
+        const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
+        assert.strictEqual(testMessage.actualOutput, 'hello\n\nworld');
+        assert.strictEqual(testMessage.expectedOutput, 'hello\nworld');
+        assert.strictEqual(testMessage.location?.range.start.line, 8);
+    });
 });
