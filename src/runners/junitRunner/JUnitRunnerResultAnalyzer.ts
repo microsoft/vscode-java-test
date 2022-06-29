@@ -47,9 +47,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
         for (const line of lines) {
-            if (!line) {
-                continue;
-            }
             this.processData(line);
             this.testContext.testRun.appendOutput(line + '\r\n');
         }
