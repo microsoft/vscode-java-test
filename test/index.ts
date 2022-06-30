@@ -4,20 +4,20 @@
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
-import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
+import { downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 
 async function main(): Promise<void> {
     try {
         const vscodeExecutablePath = await downloadAndUnzipVSCode();
-        const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
+        const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
 
         // Resolve redhat.java dependency
-        cp.spawnSync(cliPath, ['--install-extension', 'redhat.java'], {
+        cp.spawnSync(cli, [...args, '--install-extension', 'redhat.java'], {
             encoding: 'utf-8',
             stdio: 'inherit',
         });
 
-        cp.spawnSync(cliPath, ['--install-extension', 'vscjava.vscode-java-debug'], {
+        cp.spawnSync(cli, [...args, '--install-extension', 'vscjava.vscode-java-debug'], {
             encoding: 'utf-8',
             stdio: 'inherit',
         });
