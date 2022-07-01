@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { DebugConfiguration, TestItem } from 'vscode';
-import { sendError } from 'vscode-extension-telemetry-wrapper';
+import { sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { dataCache } from '../controller/testItemDataCache';
 import { extensionContext } from '../extension';
@@ -85,6 +85,10 @@ async function getLaunchArguments(testContext: IRunTestContext): Promise<IJUnitL
     // optional uniqueId in case we are re-running only a single invocation:
     const uniqueId: string | undefined = testContext.testItems.length === 1 ?
         dataCache.get(testContext.testItems[0])?.uniqueId : undefined;
+
+    if (uniqueId) {
+        sendInfo('', { runJunitInvocation: 'true' });
+    }
 
     return await resolveJUnitLaunchArguments(
         testContext.projectName,
