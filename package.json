@@ -405,7 +405,7 @@
         "@types/lodash": "^4.14.182",
         "@types/lru-cache": "^7.10.10",
         "@types/mocha": "^9.1.1",
-        "@types/node": "^14.18.21",
+        "@types/node": "16.x",
         "@types/sinon": "^10.0.12",
         "@types/vscode": "1.69.0",
         "@vscode/test-electron": "^2.1.5",
