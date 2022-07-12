@@ -284,9 +284,13 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                     });
                 }
 
-                if (testItem && dataCache.get(testItem)?.testKind === TestKind.JUnit5 &&
-                        this.getLabelWithoutCodicon(testItem.label) !== displayName) {
-                    testItem.description = displayName;
+                if (testItem) {
+                    if (dataCache.get(testItem)?.testKind === TestKind.JUnit5 &&
+                            this.getLabelWithoutCodicon(testItem.label) !== displayName) {
+                        testItem.description = displayName;
+                    } else {
+                        testItem.description = '';
+                    }
                 }
             }
 

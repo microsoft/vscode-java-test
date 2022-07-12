@@ -282,4 +282,58 @@ org.junit.ComparisonFailure: expected:<hello
         assert.strictEqual(testMessage.expectedOutput, 'hello\nworld');
         assert.strictEqual(testMessage.location?.range.start.line, 8);
     });
+
+    test("test JUnit 5's display name", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.TestAnnotation#test', TestKind.JUnit5, new Range(8, 0, 10, 0));
+        let testRunRequest = new TestRunRequest([testItem], []);
+        let testRun = testController.createTestRun(testRunRequest);
+        let testRunnerOutput = `%TESTC  1 v2
+%TSTTREE2,junit5.TestAnnotation,true,1,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
+%TSTTREE3,test(junit5.TestAnnotation),false,1,false,2,hi,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[method:test()]
+%TESTS  3,test(junit5.TestAnnotation)
+
+%TESTE  3,test(junit5.TestAnnotation)
+
+%RUNTIME86`;
+
+        let runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        let analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        assert.strictEqual(testItem.description, 'hi');
+
+        // Remove the @DisplayName annotation
+        testRunRequest = new TestRunRequest([testItem], []);
+        testRun = testController.createTestRun(testRunRequest);
+        testRunnerOutput = `%TESTC  1 v2
+%TSTTREE2,junit5.TestAnnotation,true,1,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
+%TSTTREE3,test(junit5.TestAnnotation),false,1,false,2,test(),,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[method:test()]
+%TESTS  3,test(junit5.TestAnnotation)
+
+%TESTE  3,test(junit5.TestAnnotation)
+
+%RUNTIME81`;
+
+        runnerContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        assert.strictEqual(testItem.description, '');
+    });
 });

@@ -16,7 +16,7 @@ export function generateTestItem(testController: TestController, id: string, tes
 
     const projectName = id.substring(0, id.indexOf('@'));
     const fullName = id.substring(id.indexOf('@') + 1);
-    const label = id.substring(id.indexOf('#') + 1);
+    const label = id.substring(id.indexOf('#') + 1) + '()';
 
     const testItem = testController.createTestItem(id, label, Uri.file('/mock/test/TestAnnotation.java'));
     testItem.range = range || new Range(0, 0, 0, 0);
