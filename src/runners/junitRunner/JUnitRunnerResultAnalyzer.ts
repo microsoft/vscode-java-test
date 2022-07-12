@@ -284,7 +284,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                     });
                 }
 
-                if (testItem && dataCache.get(testItem)?.testKind === TestKind.JUnit5 && testItem.label !== displayName) {
+                if (testItem && dataCache.get(testItem)?.testKind === TestKind.JUnit5 &&
+                        this.getLabelWithoutCodicon(testItem.label) !== displayName) {
                     testItem.description = displayName;
                 }
             }
@@ -329,6 +330,17 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             return testName.substring(0, index);
         }
         return testName;
+    }
+
+    /**
+     * Get the test item label without the codicon prefix.
+     */
+    private getLabelWithoutCodicon(name: string): string {
+        const result: RegExpMatchArray | null = name.match(/(?:\$\(.+\) )?(.*)/);
+        if (result?.length === 2) {
+            return result[1];
+        }
+        return name;
     }
 }
 
