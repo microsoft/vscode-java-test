@@ -117,7 +117,7 @@ export function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestIte
 
 function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
     testItem.range = asRange(metaInfo.range);
-    testItem.label = metaInfo.label;
+    testItem.label = `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`;
     if (metaInfo.testLevel !== TestLevel.Invocation) {
         dataCache.set(testItem, {
             jdtHandler: metaInfo.jdtHandler,
@@ -141,7 +141,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
     }
     const item: TestItem = testController.createTestItem(
         metaInfo.id,
-        metaInfo.label,
+        `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`,
         metaInfo.uri ? Uri.parse(metaInfo.uri) : undefined,
     );
     item.range = asRange(metaInfo.range);
@@ -162,6 +162,24 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
         parent.children.add(item);
     }
     return item;
+}
+
+/**
+ * Get codicon label based on the test level.
+ */
+function getCodiconLabel(testLevel: TestLevel): string {
+    switch (testLevel) {
+        case TestLevel.Project:
+            return '$(project)';
+        case TestLevel.Package:
+            return '$(symbol-namespace)';
+        case TestLevel.Class:
+            return '$(symbol-class)';
+        case TestLevel.Method:
+            return '$(symbol-method)';
+        default:
+            return '';
+    }
 }
 
 let updateNodeForDocumentTimeout: NodeJS.Timer;
