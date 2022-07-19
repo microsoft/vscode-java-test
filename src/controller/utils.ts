@@ -158,6 +158,11 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
             uniqueId: metaInfo.uniqueId
         });
     }
+
+    if (metaInfo.testLevel === TestLevel.Invocation) {
+        item.sortText = metaInfo.id;
+    }
+
     if (parent) {
         parent.children.add(item);
     }
