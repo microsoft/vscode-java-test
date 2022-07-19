@@ -154,7 +154,7 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             return [{
                 groupId: 'org.testng',
                 artifactId: 'testng',
-                defaultVersion: '7.5',
+                defaultVersion: '7.6.1',
             }, {
                 groupId: 'com.beust',
                 artifactId: 'jcommander',
@@ -162,7 +162,7 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             }, {
                 groupId: 'org.slf4j',
                 artifactId: 'slf4j-api',
-                defaultVersion: '1.7.35',
+                defaultVersion: '1.7.36',
             }];
         default:
             return [];
