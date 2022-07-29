@@ -13,6 +13,7 @@ package com.microsoft.java.test.runner.testng;
 
 import com.microsoft.java.test.runner.common.TestRunnerMessageHelper;
 
+import org.testng.IConfigurationListener;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
 import org.testng.ITestContext;
@@ -22,7 +23,9 @@ import org.testng.ITestResult;
 
 import java.util.Collection;
 
-public class TestNGListener implements ISuiteListener, ITestListener, ITestNGListener {
+public class TestNGListener
+        implements ISuiteListener, ITestListener, ITestNGListener, IConfigurationListener {
+    private ITestResult lastConfigFailure = null;
 
     @Override
     public void onTestStart(ITestResult result) {
@@ -46,6 +49,13 @@ public class TestNGListener implements ISuiteListener, ITestListener, ITestNGLis
     public void onTestSkipped(ITestResult result) {
         final Throwable throwable = result.getThrowable();
         if (throwable != null) {
+            onTestFailure(result);
+            return;
+        } else if (this.lastConfigFailure != null) {
+            result.setThrowable(this.lastConfigFailure.getThrowable());
+            result.setStatus(this.lastConfigFailure.getStatus());
+            this.lastConfigFailure = null;
+
             onTestFailure(result);
             return;
         }
@@ -83,4 +93,14 @@ public class TestNGListener implements ISuiteListener, ITestListener, ITestNGLis
         return null;
     }
 
+    @Override
+    public void onConfigurationSuccess(ITestResult itr) {}
+
+    @Override
+    public void onConfigurationFailure(ITestResult result) {
+        this.lastConfigFailure = result;
+    }
+
+    @Override
+    public void onConfigurationSkip(ITestResult result) {}
 }
