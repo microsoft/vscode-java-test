@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const fse = require('fs-extra');
 
+fse.removeSync('server');
 const serverDir = path.resolve('java-extension');
 const bundleList = [
     'org.eclipse.jdt.junit4.runtime_',
