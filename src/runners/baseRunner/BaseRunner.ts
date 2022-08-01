@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { default as getPort } from 'get-port';
+import getPort from 'get-port';
 import * as iconv from 'iconv-lite';
 import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
