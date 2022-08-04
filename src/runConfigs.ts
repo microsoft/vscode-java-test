@@ -70,6 +70,19 @@ export interface IExecutionConfig {
      * @since 0.33.0
      */
      preLaunchTask?: string;
+
+     /**
+      * The configurations for test filters.
+      * @since 0.37.0
+      */
+      filters?: {
+        /**
+         * The test tags which will be included or excluded when running tests.
+         * This field will only take effect on JUnit 5 tests.
+         * @since 0.37.0
+         */
+        tags?: string[]
+     }
 }
 
 export function getBuiltinConfig(): IExecutionConfig {

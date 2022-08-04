@@ -284,6 +284,21 @@
                             "type": "string",
                             "description": "%configuration.java.test.config.preLaunchTask.description%",
                             "default": ""
+                        },
+                        "filters": {
+                            "type": "object",
+                            "description": "%configuration.java.test.config.filters.description%",
+                            "default": {},
+                            "properties": {
+                                "tags": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
+                                    "default": []
+                                }
+                            }
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -388,6 +403,21 @@
                                 "type": "string",
                                 "description": "%configuration.java.test.config.preLaunchTask.description%",
                                 "default": ""
+                            },
+                            "filters": {
+                                "type": "object",
+                                "description": "%configuration.java.test.config.filters.description%",
+                                "default": {},
+                                "properties": {
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
+                                        "default": []
+                                    }
+                                }
                             }
                         }
                     },
@@ -435,7 +465,7 @@
         "lodash": "^4.17.21",
         "lru-cache": "^7.13.1",
         "reflect-metadata": "^0.1.13",
-        "vscode-extension-telemetry-wrapper": "^0.13.1",
+        "vscode-extension-telemetry-wrapper": "^0.13.2",
         "vscode-languageclient": "6.0.0-next.9",
         "vscode-tas-client": "^0.1.47"
     }
