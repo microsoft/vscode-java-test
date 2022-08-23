@@ -11,7 +11,7 @@ import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants'
 import { IJavaTestItem, ProjectType, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
-import { runnableTag, testController } from './testController';
+import { testController } from './testController';
 import { dataCache } from './testItemDataCache';
 import inversifyContainer from '../inversify.config';
 import { ITestTagStore } from './testTagStore';

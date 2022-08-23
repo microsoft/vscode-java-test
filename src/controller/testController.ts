@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
-import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
 import { INVOCATION_PREFIX } from '../constants';
