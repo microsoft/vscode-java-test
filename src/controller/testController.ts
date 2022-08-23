@@ -8,6 +8,7 @@ import { refreshExplorer } from '../commands/testExplorerCommands';
 import { INVOCATION_PREFIX } from '../constants';
 import { IProgressReporter } from '../debugger.api';
 import { progressProvider } from '../extension';
+import inversifyContainer from '../inversify.config';
 import { testSourceProvider } from '../provider/testSourceProvider';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
@@ -17,22 +18,35 @@ import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, ITestItemData } from './testItemDataCache';
+import { ITestTagStore } from './testTagStore';
 import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
-export const runnableTag: TestTag = new TestTag('RunnableItem');
 
 export function createTestController(): void {
     testController?.dispose();
-    testController = tests.createTestController('javaTestController', 'Java Test');
+    testController = tests.createTestController('java', 'Java Test');
 
     testController.resolveHandler = async (item: TestItem) => {
         await loadChildren(item);
     };
 
-    testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, runnableTag);
-    testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
+    testController.createRunProfile(
+        'Run Tests',
+        TestRunProfileKind.Run,
+        runHandler,
+        true,
+        inversifyContainer.get<ITestTagStore>(ITestTagStore).getRunnableTag()
+    );
+
+    testController.createRunProfile(
+        'Debug Tests',
+        TestRunProfileKind.Debug,
+        runHandler,
+        true,
+        inversifyContainer.get<ITestTagStore>(ITestTagStore).getRunnableTag()
+    );
 
     testController.refreshHandler = () => {
         refreshExplorer();
