@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021 Microsoft Corporation and others.
+ * Copyright (c) 2021-2022 Microsoft Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.util;
 import com.microsoft.java.test.plugin.model.JavaTestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
+import com.microsoft.java.test.plugin.model.builder.JavaTestItemBuilder;
 import com.microsoft.java.test.plugin.provider.TestKindProvider;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 
@@ -115,7 +116,10 @@ public class TestSearchUtils {
             }
 
             try {
-                final JavaTestItem item = TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, testKind);
+                final JavaTestItem item = new JavaTestItemBuilder().setJavaElement(project)
+                        .setLevel(TestLevel.PROJECT)
+                        .setKind(testKind)
+                        .build();
                 item.setNatureIds(project.getProject().getDescription().getNatureIds());
                 resultList.add(item);
             } catch (CoreException e) {
@@ -171,8 +175,10 @@ public class TestSearchUtils {
             for (final IType type : testTypes) {
                 JavaTestItem classItem = testItemMapping.get(type.getHandleIdentifier());
                 if (classItem == null) {
-                    classItem = TestItemUtils.constructJavaTestItem(
-                            type, TestLevel.CLASS, kind);
+                    classItem = new JavaTestItemBuilder().setJavaElement(type)
+                            .setLevel(TestLevel.CLASS)
+                            .setKind(kind)
+                            .build();
                     testItemMapping.put(classItem.getJdtHandler(), classItem);
                 } else {
                     // 1. We suppose a class can only use one test framework
@@ -189,8 +195,10 @@ public class TestSearchUtils {
                     final String packageIdentifier = packageFragment.getHandleIdentifier();
                     JavaTestItem packageItem = testItemMapping.get(packageIdentifier);
                     if (packageItem == null) {
-                        packageItem = TestItemUtils.constructJavaTestItem(
-                                packageFragment, TestLevel.PACKAGE, TestKind.None);
+                        packageItem = new JavaTestItemBuilder().setJavaElement(packageFragment)
+                                .setLevel(TestLevel.PACKAGE)
+                                .setKind(TestKind.None)
+                                .build();
                         testItemMapping.put(packageIdentifier, packageItem);
                     }
                     if (packageItem.getChildren() == null || !packageItem.getChildren().contains(classItem)) {
@@ -200,8 +208,10 @@ public class TestSearchUtils {
                     final String declaringTypeIdentifier = declaringType.getHandleIdentifier();
                     JavaTestItem declaringTypeItem = testItemMapping.get(declaringTypeIdentifier);
                     if (declaringTypeItem == null) {
-                        declaringTypeItem = TestItemUtils.constructJavaTestItem(
-                                declaringType, TestLevel.CLASS, kind);
+                        declaringTypeItem = new JavaTestItemBuilder().setJavaElement(declaringType)
+                                .setLevel(TestLevel.CLASS)
+                                .setKind(kind)
+                                .build();
                         testItemMapping.put(declaringTypeIdentifier, declaringTypeItem);
                     }
                     if (declaringTypeItem.getChildren() == null ||
@@ -262,7 +272,11 @@ public class TestSearchUtils {
                 for (final TestKind kind: testKinds) {
                     final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
                     if (searcher.isTestClass(type)) {
-                        result.add(TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, kind));
+                        final JavaTestItem typeItem = new JavaTestItemBuilder().setJavaElement(type)
+                                .setLevel(TestLevel.CLASS)
+                                .setKind(kind)
+                                .build();
+                        result.add(typeItem);
                         break;
                     }
                 }
@@ -288,11 +302,12 @@ public class TestSearchUtils {
                 for (final TestKind kind: testKinds) {
                     final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
                     if (searcher.isTestMethod(methodBinding)) {
-                        result.add(TestItemUtils.constructJavaTestItem(
-                            (IMethod) methodBinding.getJavaElement(),
-                            TestLevel.METHOD,
-                            kind
-                        ));
+                        final JavaTestItem item = new JavaTestItemBuilder()
+                            .setJavaElement(methodBinding.getJavaElement())
+                            .setLevel(TestLevel.METHOD)
+                            .setKind(kind)
+                            .build();
+                        result.add(item);
                     }
                 }
             }
@@ -384,11 +399,10 @@ public class TestSearchUtils {
                     if (element == null) {
                         continue;
                     }
-                    final JavaTestItem methodItem = TestItemUtils.constructJavaTestItem(
-                        (IMethod) element,
-                        TestLevel.METHOD,
-                        searcher.getTestKind()
-                    );
+                    final JavaTestItem methodItem = new JavaTestItemBuilder().setJavaElement(element)
+                            .setLevel(TestLevel.METHOD)
+                            .setKind(searcher.getTestKind())
+                            .build();
                     testMethods.add(methodItem);
                     break;
                 }
@@ -397,15 +411,24 @@ public class TestSearchUtils {
 
         JavaTestItem classItem = null;
         if (testMethods.size() > 0) {
-            classItem = TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, testMethods.get(0).getTestKind());
+            classItem = new JavaTestItemBuilder().setJavaElement(type)
+                    .setLevel(TestLevel.CLASS)
+                    .setKind(testMethods.get(0).getTestKind())
+                    .build();
             classItem.setChildren(testMethods);
         } else {
             if (TestFrameworkUtils.JUNIT4_TEST_SEARCHER.isTestClass(type)) {
                 // to handle @RunWith classes
-                classItem = TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, TestKind.JUnit);
+                classItem = new JavaTestItemBuilder().setJavaElement(type)
+                        .setLevel(TestLevel.CLASS)
+                        .setKind(TestKind.JUnit)
+                        .build();
             } else if (TestFrameworkUtils.JUNIT5_TEST_SEARCHER.isTestClass(type)) {
                 // to handle @Nested and @Testable classes
-                classItem = TestItemUtils.constructJavaTestItem(type, TestLevel.CLASS, TestKind.JUnit5);
+                classItem = new JavaTestItemBuilder().setJavaElement(type)
+                    .setLevel(TestLevel.CLASS)
+                    .setKind(TestKind.JUnit5)
+                    .build();
             }
         }
 
@@ -447,13 +470,21 @@ public class TestSearchUtils {
             } else {
                 testKind = testKinds.get(0);
             }
-            result.add(TestItemUtils.constructJavaTestItem(project, TestLevel.PROJECT, testKind));
+            final JavaTestItem projectItem = new JavaTestItemBuilder().setJavaElement(project)
+                    .setLevel(TestLevel.PROJECT)
+                    .setKind(testKind)
+                    .build();
+            result.add(projectItem);
 
             final IPackageFragment packageFragment = (IPackageFragment) unit.getParent();
             if (packageFragment == null || !(packageFragment instanceof IPackageFragment)) {
                 return Collections.emptyList();
             }
-            result.add(TestItemUtils.constructJavaTestItem(packageFragment, TestLevel.PACKAGE, testKind));
+            final JavaTestItem packageItem = new JavaTestItemBuilder().setJavaElement(packageFragment)
+                    .setLevel(TestLevel.PACKAGE)
+                    .setKind(testKind)
+                    .build();
+            result.add(packageItem);
         }
 
         return result;
@@ -616,7 +647,7 @@ public class TestSearchUtils {
             return null;
         }
 
-        final ASTParser parser = ASTParser.newParser(AST.JLS14);
+        final ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
         parser.setSource(unit);
         parser.setFocalPosition(0);
         parser.setResolveBindings(true);
