@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { commands, extensions, Location, Range, Uri, window } from 'vscode';
+import { commands, Extension, extensions, Location, Range, Uri, window } from 'vscode';
 import { JavaTestRunnerCommands, JavaTestRunnerDelegateCommands, VSCodeCommands } from '../../constants';
 import { SymbolTree } from '../../references-view';
 import { executeJavaLanguageServerCommand } from '../../utils/commandUtils';
@@ -11,7 +11,8 @@ import { TestNavigationInput } from './testNavigationInput';
 
 const GENERATE_TESTS: string = 'Generate tests...';
 const SEARCH_FILES: string = 'Search files...';
-const REFERENCES_VIEW_EXTENSION: string = 'ms-vscode.references-view';
+const REFERENCES_VIEW_EXTENSION: string = 'vscode.references-view';
+const DEPRECATED_REFERENCES_VIEW_EXTENSION: string = 'ms-vscode.references-view';
 
 export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
     if (!window.activeTextEditor) {
@@ -52,7 +53,9 @@ export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
                 return a.relevance - b.relevance;
             }
         });
-        const api: SymbolTree | undefined = await extensions.getExtension<SymbolTree>(REFERENCES_VIEW_EXTENSION)?.activate();
+        const referencesViewExt: Extension<SymbolTree> | undefined = extensions.getExtension<SymbolTree>(REFERENCES_VIEW_EXTENSION)
+            ?? extensions.getExtension<SymbolTree>(DEPRECATED_REFERENCES_VIEW_EXTENSION);
+        const api: SymbolTree | undefined = await referencesViewExt?.activate();
         if (api) {
             const title: string = gotoTest ? 'Tests' : 'Test Subjects';
             const input: TestNavigationInput = new TestNavigationInput(
