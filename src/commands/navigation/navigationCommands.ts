@@ -11,7 +11,7 @@ import { TestNavigationInput } from './testNavigationInput';
 
 const GENERATE_TESTS: string = 'Generate tests...';
 const SEARCH_FILES: string = 'Search files...';
-const REFERENCES_VIEW_EXTENSION: string = 'ms-vscode.references-view';
+const REFERENCES_VIEW_EXTENSION: string = 'vscode.references-view';
 
 export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
     if (!window.activeTextEditor) {
