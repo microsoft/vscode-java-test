@@ -9,6 +9,7 @@ import { IJUnitLaunchArguments } from "../../src/runners/baseRunner/BaseRunner";
 import { TestKind, TestLevel } from "../../src/types";
 import { executeJavaLanguageServerCommand } from "../../src/utils/commandUtils";
 import { setupTestEnv } from "./utils";
+import { exportedForTesting } from "../../src/utils/launchUtils";
 
 // tslint:disable: only-arrow-functions
 // tslint:disable: no-object-literal-type-assertion
@@ -76,5 +77,31 @@ suite('LaunchUtils Tests', () => {
             argument?.programArguments[argument?.programArguments.length - 1],
             'junit5.ParameterizedAnnotationTest:testCheckUser(junit5.ParameterizedAnnotationTest$User)'
         );
+    });
+
+    test('test parseTags()', () => {
+        const { parseTags } = exportedForTesting;
+        const config = {
+            filters: {
+                tags: [
+                    "foo",
+                    "!bar",
+                    "develop",
+                    "!production"
+                ]
+            }
+        };
+        const tags: string[] = parseTags(config);
+        const expected: string[] = [
+            "--include-tag",
+            "foo",
+            "--exclude-tag",
+            "bar",
+            "--include-tag",
+            "develop",
+            "--exclude-tag",
+            "production"
+        ]
+        assert.ok(tags.length === expected.length && tags.every((tag, idx) => tag === expected[idx]));
     });
 });

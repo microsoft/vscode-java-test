@@ -64,7 +64,10 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             ...config?.modulePaths || [],
             ...launchArguments.modulepath || [],
         ],
-        args: launchArguments.programArguments,
+        args: [
+            ...launchArguments.programArguments,
+            ...(testContext.kind === TestKind.JUnit5 ? parseTags(config) : [])
+        ],
         vmArgs: launchArguments.vmArguments,
         env: config?.env,
         envFile: config?.envFile,
@@ -135,4 +138,41 @@ async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestL
     }
 
     return argument;
+}
+
+/**
+ * Parse the tags from the test configuration.
+ */
+function parseTags(config: IExecutionConfig | undefined): string[] {
+    const tags: string[] = []
+    if (config?.filters?.tags) {
+        for (let tag of config.filters.tags) {
+            tag = tag.trim();
+            const isExcluded: boolean = tag.startsWith('!');
+            if (isExcluded) {
+                tag = tag.slice(1);
+            }
+            if (tag.length === 0) {
+                continue;
+            }
+
+            if (isExcluded) {
+                tags.push('--exclude-tag');
+            } else {
+                tags.push('--include-tag');
+            }
+            tags.push(tag);
+        }
+    }
+    if (tags.length) {
+        sendInfo('', {
+            testFilters: 'tags'
+        });
+    }
+    return tags;
+}
+
+// tslint:disable-next-line: typedef
+export const exportedForTesting = {
+    parseTags
 }
