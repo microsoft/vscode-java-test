@@ -150,7 +150,7 @@ function parseTags(config: IExecutionConfig | undefined): string[] {
             tag = tag.trim();
             const isExcluded: boolean = tag.startsWith('!');
             if (isExcluded) {
-                tag = tag = tag.slice(1);
+                tag = tag.slice(1);
             }
             if (tag.length === 0) {
                 continue;
