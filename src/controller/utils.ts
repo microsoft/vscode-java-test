@@ -11,10 +11,8 @@ import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants'
 import { IJavaTestItem, ProjectType, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
-import { testController } from './testController';
+import { runnableTag, testController } from './testController';
 import { dataCache } from './testItemDataCache';
-import inversifyContainer from '../inversify.config';
-import { ITestTagStore } from './testTagStore';
 
 /**
  * Load the Java projects, which are the root nodes of the test explorer
@@ -150,7 +148,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
     if (metaInfo.testLevel !== TestLevel.Invocation
         // invocations of JUnit5 parameterized tests can be run again using their uniqueId:
         || (metaInfo.testKind === TestKind.JUnit5 && metaInfo.uniqueId)) {
-        item.tags = [inversifyContainer.get<ITestTagStore>(ITestTagStore).getRunnableTag()];
+        item.tags = [runnableTag];
         dataCache.set(item, {
             jdtHandler: metaInfo.jdtHandler,
             fullName: metaInfo.fullName,
