@@ -27,8 +27,9 @@
     "configuration.java.test.config.envFile.description": "环境变量文件绝对路径。",
     "configuration.java.test.config.sourcePaths.description": "设定调试测试用例时的源代码路径。",
     "configuration.java.test.config.preLaunchTask.description": "在 tasks.json（在工作空间的.vscode文件夹中）中某个任务的名称。该任务会在启动测试之前被执行。",
+    "configuration.java.test.config.testKind.description": "指定该测试配置项的目标测试框架。可选的值有 `junit`，`testng`。",
     "configuration.java.test.config.filters.description": "测试过滤配置项。",
-    "configuration.java.test.config.filters.tags.description": "指定要包含或排除的标记。\n\n带有`!`前缀的标记将会被**排除**。 \n\n注意：该选项**仅**会对 JUnit 5 生效。",
+    "configuration.java.test.config.filters.tags.description": "指定要包含或排除的标记。\n\n带有`!`前缀的标记将会被**排除**。 \n\n注意：该选项**仅**会对 JUnit 5 生效，您需要显式地将 `testKind` 设置为 `junit`。",
     "contributes.viewsWelcome.inLightWeightMode": "由于 Java 语言服务正运行在 [LightWeight 模式](https://aka.ms/vscode-java-lightweight)下，因此测试用例将不会展示在该视图中。如果您需要展示测试用例，可以点击下方按钮将 Java 语言服务切换至 Standard 模式。\n[切换至 Standard 模式](command:java.server.mode.switch?%5B%22Standard%22,true%5D)",
     "contributes.viewsWelcome.enableTests": "点击下方按钮为你的项目添加一个测试框架\n[启用 Java 测试](command:_java.test.enableTests)"
 }
