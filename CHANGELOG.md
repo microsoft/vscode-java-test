@@ -4,6 +4,17 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.37.0
+### Added
+- Support filtering tests by JUnit 5 tags via setting `java.test.config`. [#1092](https://github.com/microsoft/vscode-java-test/issues/1092)
+
+### Changed
+- Scan two levels of directories for activation indicators. [#1460](https://github.com/microsoft/vscode-java-test/issues/1460)
+
+### Fixed
+- Add proper error reporting for old testNG. [PR#1459](https://github.com/microsoft/vscode-java-test/pull/1459), contributed by [@gayanper](https://github.com/gayanper)
+- Update the reference view extension id. [#1475](https://github.com/microsoft/vscode-java-test/issues/1475)
+
 ## 0.36.0
 ### Added
 - Add codicons for test items in Testing explorer. [PR#1408](https://github.com/microsoft/vscode-java-test/pull/1449)
@@ -21,7 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 0.35.0
 ### Added
-- Support to re-run single JUnit 5 parameterized test invocation. [#1408](https://github.com/microsoft/vscode-java-test/issues/1408, contributed by [@fladdimir](https://github.com/fladdimir))
+- Support to re-run single JUnit 5 parameterized test invocation. [#1408](https://github.com/microsoft/vscode-java-test/issues/1408), contributed by [@fladdimir](https://github.com/fladdimir)
 
 ### Changed
 - Simplify the stacktrace in test messages. [#1281](https://github.com/microsoft/vscode-java-test/issues/1281)
