@@ -144,7 +144,11 @@ async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestL
  * Parse the tags from the test configuration.
  */
 function parseTags(config: IExecutionConfig | undefined): string[] {
-    const tags: string[] = []
+    const tags: string[] = [];
+    if (config?.testKind !== 'junit') {
+        return tags;
+    }
+
     if (config?.filters?.tags) {
         for (let tag of config.filters.tags) {
             tag = tag.trim();

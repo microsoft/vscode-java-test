@@ -285,6 +285,15 @@
                             "description": "%configuration.java.test.config.preLaunchTask.description%",
                             "default": ""
                         },
+                        "testKind": {
+                            "type": "string",
+                            "markdownDescription": "%configuration.java.test.config.testKind.description%",
+                            "enum": [
+                                "junit",
+                                "testng"
+                            ],
+                            "default": "junit"
+                        },
                         "filters": {
                             "type": "object",
                             "description": "%configuration.java.test.config.filters.description%",
@@ -403,6 +412,15 @@
                                 "type": "string",
                                 "description": "%configuration.java.test.config.preLaunchTask.description%",
                                 "default": ""
+                            },
+                            "testKind": {
+                                "type": "string",
+                                "markdownDescription": "%configuration.java.test.config.testKind.description%",
+                                "enum": [
+                                    "junit",
+                                    "testng"
+                                ],
+                                "default": "junit"
                             },
                             "filters": {
                                 "type": "object",
