@@ -82,6 +82,7 @@ suite('LaunchUtils Tests', () => {
     test('test parseTags()', () => {
         const { parseTags } = exportedForTesting;
         const config = {
+            testKind: 'junit',
             filters: {
                 tags: [
                     "foo",
@@ -103,5 +104,17 @@ suite('LaunchUtils Tests', () => {
             "production"
         ]
         assert.ok(tags.length === expected.length && tags.every((tag, idx) => tag === expected[idx]));
+    });
+
+    test('test parseTags() when testKind is not set', () => {
+        const { parseTags } = exportedForTesting;
+        const config = {
+            filters: {
+                tags: [
+                    "foo",
+                ]
+            }
+        };
+        assert.ok(parseTags(config).length === 0);
     });
 });

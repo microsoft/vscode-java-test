@@ -72,13 +72,20 @@ export interface IExecutionConfig {
      preLaunchTask?: string;
 
      /**
+      * the test framework kind of this test configuration.
+      * @since 0.37.0
+      */
+     testKind?: string;
+
+     /**
       * The configurations for test filters.
       * @since 0.37.0
       */
       filters?: {
         /**
          * The test tags which will be included or excluded when running tests.
-         * This field will only take effect on JUnit 5 tests.
+         * This field will only take effect on JUnit 5 tests and user needs to
+         * explicitly set `testKind` to `junit`.
          * @since 0.37.0
          */
         tags?: string[]
