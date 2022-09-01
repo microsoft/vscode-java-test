@@ -53,9 +53,9 @@
     </build>
     <repositories>
         <repository>
-            <id>202109</id>
+            <id>202209</id>
             <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/2021-09/202109151000/</url>
+            <url>https://download.eclipse.org/releases/2022-09/202209021000</url>
         </repository>
         <repository>
             <id>oss.sonatype.org</id>
