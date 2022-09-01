@@ -55,21 +55,23 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.37.0.jar",
-            "./server/org.eclipse.jdt.junit4.runtime_1.2.0.v20210326-1251.jar",
-            "./server/org.eclipse.jdt.junit5.runtime_1.0.1300.v20210320-1132.jar",
-            "./server/org.junit.jupiter.api_5.7.1.v20210222-1948.jar",
-            "./server/org.junit.jupiter.engine_5.7.1.v20210222-1948.jar",
-            "./server/org.junit.jupiter.migrationsupport_5.7.1.v20210222-1948.jar",
-            "./server/org.junit.jupiter.params_5.7.1.v20210222-1948.jar",
-            "./server/org.junit.vintage.engine_5.7.1.v20210222-1948.jar",
+            "./server/junit-jupiter-api_5.9.0.jar",
+            "./server/junit-jupiter-engine_5.9.0.jar",
+            "./server/junit-jupiter-migrationsupport_5.9.0.jar",
+            "./server/junit-jupiter-params_5.9.0.jar",
+            "./server/junit-platform-commons_1.9.0.jar",
+            "./server/junit-platform-engine_1.9.0.jar",
+            "./server/junit-platform-launcher_1.9.0.jar",
+            "./server/junit-platform-runner_1.9.0.jar",
+            "./server/junit-platform-suite-api_1.9.0.jar",
+            "./server/junit-platform-suite-commons_1.9.0.jar",
+            "./server/junit-platform-suite-engine_1.9.0.jar",
+            "./server/junit-vintage-engine_5.9.0.jar",
+            "./server/org.apiguardian.api_1.1.2.jar",
+            "./server/org.eclipse.jdt.junit4.runtime_1.3.0.v20220609-1843.jar",
+            "./server/org.eclipse.jdt.junit5.runtime_1.1.0.v20220715-1030.jar",
             "./server/org.opentest4j_1.2.0.v20190826-0900.jar",
-            "./server/org.junit.platform.commons_1.7.1.v20210222-1948.jar",
-            "./server/org.junit.platform.engine_1.7.1.v20210222-1948.jar",
-            "./server/org.junit.platform.launcher_1.7.1.v20210222-1948.jar",
-            "./server/org.junit.platform.runner_1.7.1.v20210222-1948.jar",
-            "./server/org.junit.platform.suite.api_1.7.1.v20210222-1948.jar",
-            "./server/org.apiguardian_1.1.0.v20190826-0900.jar"
+            "./server/com.microsoft.java.test.plugin-0.37.0.jar"
         ],
         "viewsWelcome": [
             {
