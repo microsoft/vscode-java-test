@@ -226,7 +226,9 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
         belongingPackage = findBelongingPackageItem(testTypes[0]) || await resolveBelongingPackage(uri);
     }
     if (!belongingPackage) {
-        sendError(new Error('Failed to find the belonging package'));
+        if (testTypes.length > 0) {
+            sendError(new Error('Failed to find the belonging package'));
+        }
         return [];
     }
 
