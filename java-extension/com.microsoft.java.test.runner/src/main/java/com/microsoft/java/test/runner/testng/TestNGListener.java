@@ -21,8 +21,6 @@ import org.testng.ITestListener;
 import org.testng.ITestNGListener;
 import org.testng.ITestResult;
 
-import java.util.Collection;
-
 public class TestNGListener
         implements ISuiteListener, ITestListener, ITestNGListener, IConfigurationListener {
     private ITestResult lastConfigFailure = null;
@@ -81,16 +79,6 @@ public class TestNGListener
 
     @Override
     public void onFinish(ISuite suite) {
-        final ITestContext context = getFirst(suite.getResults().values()).getTestContext(); // Can only be one
-        TestRunnerMessageHelper.testRunFinished(context.getAllTestMethods().length, context.getFailedTests().size(),
-                context.getSkippedTests().size());
-    }
-
-    private static <T> T getFirst(Collection<T> collection) {
-        for (final T entry : collection) {
-            return entry;
-        }
-        return null;
     }
 
     @Override
