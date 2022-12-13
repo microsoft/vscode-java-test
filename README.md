@@ -26,7 +26,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 
 - JUnit 4 (v4.8.0+)
 - JUnit 5 (v5.1.0+)
-- TestNG (v6.8.0+)
+- TestNG (v6.9.13.3+)
 
 > Note: JUnit 3 styled tests are not supported in this extension (i.e. extends `junit.framework.TestCase`).
 
