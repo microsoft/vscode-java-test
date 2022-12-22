@@ -160,7 +160,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
     }
 
     if (metaInfo.testLevel === TestLevel.Invocation) {
-        item.sortText = metaInfo.sortText;
+        item.sortText = metaInfo.sortText ?? metaInfo.id;
     }
 
     if (parent) {
