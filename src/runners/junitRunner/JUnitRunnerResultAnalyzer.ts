@@ -245,7 +245,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             projectName: parentData.projectName,
                             testKind: parentData.testKind,
                             testLevel: TestLevel.Invocation,
-                            uniqueId
+                            uniqueId,
+                            // We will just create a string padded with the character "a" to provide easy sorting.
+                            sortText: ''.padStart(parent.children.size + 1, 'a')
                         });
                     }
                 }

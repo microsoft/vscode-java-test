@@ -15,6 +15,10 @@ export interface IJavaTestItem {
     testKind: TestKind;
     testLevel: TestLevel;
     /**
+     * Provides a hint to the UI on how to sort tests.
+     */
+    sortText?: string;
+    /**
      * Identifies a single invocation of a parameterized test.
      * Invocations for which a re-run is possible store their own uniqueId which is provided as part of the result.
      * Methods may store it in order to specify a certain parameter-set to be used when running again.
