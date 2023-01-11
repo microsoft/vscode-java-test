@@ -5,11 +5,13 @@
 
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import { TestController, TestItem, Uri, Range, extensions, commands, workspace } from "vscode";
+import { commands, extensions, Range, TestController, TestItem, Uri, workspace } from "vscode";
 import { dataCache } from "../../src/controller/testItemDataCache";
 import { TestKind, TestLevel } from "../../src/types";
 
-export function generateTestItem(testController: TestController, id: string, testKind: TestKind, range?: Range, jdtHandler?: string): TestItem {
+export function generateTestItem(testController: TestController, id: string, testKind: TestKind,
+    range?: Range, jdtHandler?: string, uri: string = '/mock/test/TestAnnotation.java'): TestItem {
+
     if (!id) {
         throw new Error('id cannot be null');
     }
@@ -18,7 +20,7 @@ export function generateTestItem(testController: TestController, id: string, tes
     const fullName = id.substring(id.indexOf('@') + 1);
     const label = id.substring(id.indexOf('#') + 1) + '()';
 
-    const testItem = testController.createTestItem(id, label, Uri.file('/mock/test/TestAnnotation.java'));
+    const testItem = testController.createTestItem(id, label, Uri.file(uri));
     testItem.range = range || new Range(0, 0, 0, 0);
     dataCache.set(testItem, {
         jdtHandler: jdtHandler || '',
