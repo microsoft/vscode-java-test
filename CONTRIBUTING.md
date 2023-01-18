@@ -60,7 +60,7 @@ The extension has three major modules, which are listed as follow:
 - The Test Runner is an executable jar, the main class is `com.microsoft.java.test.runner.Launcher`
 
 ### Build Your Own Private Build
-If you want to build your own private build, run `npx vsce@latest package` after `npm run build-plugin`.
+If you want to build your own private build, run `npx @vscode/vsce@latest package` after `npm run build-plugin`.
 
 ### Check Lint Errors:
 Run `npm run lint` to check lint errors.
