@@ -336,4 +336,64 @@ org.junit.ComparisonFailure: expected:<hello
 
         assert.strictEqual(testItem.description, '');
     });
+
+    test("test diff is not duplicated when failing assertion is extracted", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.TestWithExtractedEqualityAssertion#test', TestKind.JUnit5, new Range(2, 0, 2, 0), undefined, 'TestWithExtractedEqualityAssertion.java');
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const failedSpy = sinon.spy(testRun, 'failed');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE2,junit5.TestWithExtractedEqualityAssertion,true,1,false,1,TestWithExtractedEqualityAssertion,,[engine:junit-jupiter]/[class:junit5.TestWithExtractedEqualityAssertion]
+%TSTTREE3,test(junit5.TestWithExtractedEqualityAssertion),false,1,false,2,test(),,[engine:junit-jupiter]/[class:junit5.TestWithExtractedEqualityAssertion]/[method:test()]
+%TESTS  3,test(junit5.TestWithExtractedEqualityAssertion)
+%FAILED 3,test(junit5.TestWithExtractedEqualityAssertion)
+%EXPECTS
+1
+%EXPECTE
+%ACTUALS
+2
+%ACTUALE
+%TRACES
+org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
+    at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:55)
+    at org.junit.jupiter.api.AssertionUtils.failNotEqual(AssertionUtils.java:62)
+    at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+    at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+    at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:510)
+    at junit5.TestWithExtractedEqualityAssertion.extracted2(TestWithExtractedEqualityAssertion.java:18)
+    at junit5.TestWithExtractedEqualityAssertion.extracted1(TestWithExtractedEqualityAssertion.java:14)
+    at junit5.TestWithExtractedEqualityAssertion.test(TestWithExtractedEqualityAssertion.java:10)
+    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:210)
+%TRACEE
+%TESTE  3,test(junit5.TestWithExtractedEqualityAssertion)
+%RUNTIME55`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(failedSpy, testItem, sinon.match.any);
+
+        const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
+        assert.strictEqual(testMessage.expectedOutput, '1');
+        assert.strictEqual(testMessage.actualOutput, '2');
+        assert.strictEqual(testMessage.location?.range.start.line, 2);
+
+        const testMessages = failedSpy.getCalls().map(call => call.args[1] as TestMessage).filter(v => v.actualOutput || v.expectedOutput);
+
+        assert.strictEqual(testMessages.length, 1, "not more than one diff-message");
+        // assert.strictEqual(testMessages[0].location?.range.start, 10); // todo
+    });
+
+
 });
