@@ -107,13 +107,17 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             if (!this.tracingItem) {
                 return;
             }
-            const testMessage: TestMessage = new TestMessage(this.traces);
             const currentResultState: TestResultState = this.getCurrentState(this.tracingItem).resultState;
-            this.tryAppendMessage(this.tracingItem, testMessage, currentResultState);
-            this.recordingType = RecordingType.None;
+            if (this.assertionFailure) {
+                this.tryAppendMessage(this.tracingItem, this.assertionFailure, currentResultState);
+            }
+            if (this.traces?.value) {
+                this.tryAppendMessage(this.tracingItem, new TestMessage(this.traces), currentResultState);
+            }
             if (currentResultState === TestResultState.Errored) {
                 setTestState(this.testContext.testRun, this.tracingItem, currentResultState);
             }
+            this.recordingType = RecordingType.None;
         } else if (data.startsWith(MessageId.ExpectStart)) {
             this.recordingType = RecordingType.ExpectMessage;
         } else if (data.startsWith(MessageId.ExpectEnd)) {
@@ -139,8 +143,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                     this.assertionFailure = TestMessage.diff(`Expected [${assertionResults[1]}] but was [${assertionResults[2]}]`, assertionResults[1], assertionResults[2]);
                 }
             }
-
-            this.processStackTrace(data, this.traces, this.assertionFailure, this.tracingItem, this.projectName);
+            this.processStackTrace(data, this.traces, this.tracingItem, this.projectName);
         }
     }
 
@@ -218,6 +221,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         this.expectString = '';
         this.actualString = '';
         this.recordingType = RecordingType.None;
+        this.testMessageLocation = undefined;
     }
 
     protected getStacktraceFilter(): string[] {
@@ -335,7 +339,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     private async tryAppendMessage(item: TestItem, testMessage: TestMessage, testState: TestResultState): Promise<void> {
         if (this.testMessageLocation) {
             testMessage.location = this.testMessageLocation;
-            this.testMessageLocation = undefined;
         } else if (item.uri && item.range) {
             testMessage.location = new Location(item.uri, item.range);
         } else {

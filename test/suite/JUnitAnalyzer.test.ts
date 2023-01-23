@@ -5,9 +5,9 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { IRunTestContext, TestKind } from '../../src/types';
 import { MarkdownString, Range, TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunnerResultAnalyzer } from '../../src/runners/junitRunner/JUnitRunnerResultAnalyzer';
+import { IRunTestContext, TestKind } from '../../src/types';
 import { generateTestItem } from './utils';
 
 // tslint:disable: only-arrow-functions
@@ -146,7 +146,7 @@ java.lang.AssertionError: expected:<1> but was:<2>
         analyzer.analyzeData(testRunnerOutput);
 
         sinon.assert.calledWith(failedSpy, testItem, sinon.match.any, sinon.match.number);
-        const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
+        const testMessage = failedSpy.getCall(1).args[1] as TestMessage;
         const stringLiteral = (testMessage.message as MarkdownString).value;
         assert.ok(stringLiteral.split('<br/>').length === 3);
     });
@@ -338,7 +338,8 @@ org.junit.ComparisonFailure: expected:<hello
     });
 
     test("test diff is not duplicated when failing assertion is extracted", () => {
-        const testItem = generateTestItem(testController, 'junit@junit5.TestWithExtractedEqualityAssertion#test', TestKind.JUnit5, new Range(2, 0, 2, 0), undefined, 'TestWithExtractedEqualityAssertion.java');
+        const range = new Range(9, 0, 11, 0);
+        const testItem = generateTestItem(testController, 'junit@junit5.TestWithExtractedEqualityAssertion#test', TestKind.JUnit5, range, undefined, 'TestWithExtractedEqualityAssertion.java');
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');
@@ -356,16 +357,9 @@ org.junit.ComparisonFailure: expected:<hello
 %ACTUALE
 %TRACES
 org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
-    at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:55)
-    at org.junit.jupiter.api.AssertionUtils.failNotEqual(AssertionUtils.java:62)
-    at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
-    at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
-    at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:510)
     at junit5.TestWithExtractedEqualityAssertion.extracted2(TestWithExtractedEqualityAssertion.java:18)
     at junit5.TestWithExtractedEqualityAssertion.extracted1(TestWithExtractedEqualityAssertion.java:14)
-    at junit5.TestWithExtractedEqualityAssertion.test(TestWithExtractedEqualityAssertion.java:10)
-    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-    at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:210)
+    at junit5.TestWithExtractedEqualityAssertion.test(TestWithExtractedEqualityAssertion.java:11)
 %TRACEE
 %TESTE  3,test(junit5.TestWithExtractedEqualityAssertion)
 %RUNTIME55`;
@@ -384,16 +378,12 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         sinon.assert.calledWith(startedSpy, testItem);
         sinon.assert.calledWith(failedSpy, testItem, sinon.match.any);
 
-        const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
+        const diffTestMessages = failedSpy.getCalls().map(call => call.args[1] as TestMessage).filter(v => v.actualOutput || v.expectedOutput);
+        assert.strictEqual(diffTestMessages.length, 1, "not more than one diff-message");
+        const testMessage = diffTestMessages[0];
         assert.strictEqual(testMessage.expectedOutput, '1');
         assert.strictEqual(testMessage.actualOutput, '2');
-        assert.strictEqual(testMessage.location?.range.start.line, 2);
-
-        const testMessages = failedSpy.getCalls().map(call => call.args[1] as TestMessage).filter(v => v.actualOutput || v.expectedOutput);
-
-        assert.strictEqual(testMessages.length, 1, "not more than one diff-message");
-        // assert.strictEqual(testMessages[0].location?.range.start, 10); // todo
+        assert.strictEqual(testMessage.location?.range.start.line, 10); // =11 - 1, (most precise info we get from the stack trace)
     });
-
 
 });

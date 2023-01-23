@@ -7,7 +7,16 @@ class TestWithExtractedEqualityAssertion {
 
     @Test
     void test() {
+    }
+
+    @Test
+    void test1() {
         extracted1();
+    }
+
+    @Test
+    void test2() {
+        extracted2();
     }
 
     private void extracted1() {
