@@ -9,20 +9,24 @@ import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
 
+
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     private testOutputMapping: Map<string, ITestInfo> = new Map();
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
-    private currentTestState: TestResultState;
-    private currentItem: TestItem | undefined;
-    private currentDuration: number = 0;
+    private projectName: string;
+    private incompleteTestSuite: ITestInfo[] = [];
+
+    // tests may be run concurrently, so each item's current state needs to be remembered
+    private currentStates: Map<TestItem, CurrentItemState> = new Map();
+
+    // failure info for a test is received consecutively:
+    private tracingItem: TestItem | undefined;
     private traces: MarkdownString;
     private assertionFailure: TestMessage | undefined;
     private recordingType: RecordingType;
     private expectString: string;
     private actualString: string;
-    private projectName: string;
-    private incompleteTestSuite: ITestInfo[] = [];
 
     constructor(protected testContext: IRunTestContext) {
         super(testContext);
@@ -60,40 +64,26 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             if (!item) {
                 return;
             }
-            if (item.id !== this.currentItem?.id) {
-                this.initializeCache(item);
-            }
-            this.testContext.testRun.started(item);
-
-            const start: number = Date.now();
-            if (this.currentDuration === 0) {
-                this.currentDuration = -start;
-            } else if (this.currentDuration > 0) {
-                // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
-                this.currentDuration -= start;
-            }
+            this.setCurrentState(item, TestResultState.Running, 0);
+            this.setDurationAtStart(this.getCurrentState(item));
+            setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState);
         } else if (data.startsWith(MessageId.TestEnd)) {
-            if (!this.currentItem) {
+            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestEnd.length));
+            if (!item) {
                 return;
             }
-
-            if (this.currentDuration < 0) {
-                const end: number = Date.now();
-                this.currentDuration += end;
-            }
-
-            if (data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1) {
-                this.currentTestState = TestResultState.Skipped;
-            } else if (this.currentTestState === TestResultState.Running) {
-                this.currentTestState = TestResultState.Passed;
-            }
-            setTestState(this.testContext.testRun, this.currentItem, this.currentTestState, undefined, this.currentDuration);
+            const currentState: CurrentItemState = this.getCurrentState(item);
+            this.calcDurationAtEnd(currentState);
+            this.determineResultStateAtEnd(data, currentState);
+            setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
         } else if (data.startsWith(MessageId.TestFailed)) {
-            if (data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1) {
-                this.currentTestState = TestResultState.Skipped;
-            } else {
-                this.currentTestState = TestResultState.Failed;
+            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestFailed.length));
+            if (!item) {
+                return;
             }
+            const currentState: CurrentItemState = this.getCurrentState(item);
+            this.determineResultStateOnFailure(data, currentState);
+            this.initializeTracingItemProcessingCache(item); // traces or comparison failure info might follow immediately
         } else if (data.startsWith(MessageId.TestError)) {
             let item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestError.length));
             if (!item) {
@@ -104,25 +94,25 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                     return;
                 }
             }
-            if (item.id !== this.currentItem?.id) {
-                this.initializeCache(item);
+            this.getCurrentState(item).resultState = TestResultState.Errored;
+            if (item.id !== this.tracingItem?.id) {
+                this.initializeTracingItemProcessingCache(item);
             }
-            this.currentTestState = TestResultState.Errored;
         } else if (data.startsWith(MessageId.TraceStart)) {
             this.traces = new MarkdownString();
             this.traces.isTrusted = true;
             this.traces.supportHtml = true;
             this.recordingType = RecordingType.StackTrace;
         } else if (data.startsWith(MessageId.TraceEnd)) {
-            if (!this.currentItem) {
+            if (!this.tracingItem) {
                 return;
             }
-
             const testMessage: TestMessage = new TestMessage(this.traces);
-            this.tryAppendMessage(this.currentItem, testMessage, this.currentTestState);
+            const currentResultState: TestResultState = this.getCurrentState(this.tracingItem).resultState;
+            this.tryAppendMessage(this.tracingItem, testMessage, currentResultState);
             this.recordingType = RecordingType.None;
-            if (this.currentTestState === TestResultState.Errored) {
-                setTestState(this.testContext.testRun, this.currentItem, this.currentTestState);
+            if (currentResultState === TestResultState.Errored) {
+                setTestState(this.testContext.testRun, this.tracingItem, currentResultState);
             }
         } else if (data.startsWith(MessageId.ExpectStart)) {
             this.recordingType = RecordingType.ExpectMessage;
@@ -150,7 +140,38 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 }
             }
 
-            this.processStackTrace(data, this.traces, this.assertionFailure, this.currentItem, this.projectName);
+            this.processStackTrace(data, this.traces, this.assertionFailure, this.tracingItem, this.projectName);
+        }
+    }
+
+    private determineResultStateOnFailure(data: string, currentState: CurrentItemState): void {
+        const isSkip: boolean = data.indexOf(MessageId.ASSUMPTION_FAILED_TEST_PREFIX) > -1;
+        currentState.resultState = isSkip ? TestResultState.Skipped : TestResultState.Failed;
+    }
+
+    private determineResultStateAtEnd(data: string, currentState: CurrentItemState): void {
+        const isIgnore: boolean = data.indexOf(MessageId.IGNORE_TEST_PREFIX) > -1;
+        if (isIgnore) {
+            currentState.resultState = TestResultState.Skipped;
+        } else if (currentState.resultState === TestResultState.Running) {
+            currentState.resultState = TestResultState.Passed;
+        }
+    }
+
+    private setDurationAtStart(currentState: CurrentItemState): void {
+        const start: number = Date.now();
+        if (currentState.duration === 0) {
+            currentState.duration = -start;
+        } else if (currentState.duration > 0) {
+            // Some test cases may executed multiple times (@RepeatedTest), we need to calculate the time for each execution
+            currentState.duration -= start;
+        }
+    }
+
+    private calcDurationAtEnd(currentState: CurrentItemState): void {
+        if (currentState.duration < 0) {
+            const end: number = Date.now();
+            currentState.duration += end;
         }
     }
 
@@ -182,10 +203,17 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         return `${this.projectName}@${message}`;
     }
 
-    protected initializeCache(item: TestItem): void {
-        this.currentTestState = TestResultState.Running;
-        this.currentItem = item;
-        this.currentDuration = 0;
+    private setCurrentState(testItem: TestItem, resultState: TestResultState, duration: number): void {
+        this.currentStates.set(testItem, { resultState, duration });
+    }
+
+    private getCurrentState(testItem: TestItem): CurrentItemState {
+        if (!this.currentStates.has(testItem)) this.setCurrentState(testItem, TestResultState.Running, 0);
+        return this.currentStates.get(testItem)!;
+    }
+
+    private initializeTracingItemProcessingCache(item: TestItem): void {
+        this.tracingItem = item;
         this.assertionFailure = undefined;
         this.expectString = '';
         this.actualString = '';
@@ -288,7 +316,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
                 if (testItem) {
                     if (dataCache.get(testItem)?.testKind === TestKind.JUnit5 &&
-                            this.getLabelWithoutCodicon(testItem.label) !== displayName) {
+                        this.getLabelWithoutCodicon(testItem.label) !== displayName) {
                         testItem.description = displayName;
                     } else {
                         testItem.description = '';
@@ -389,4 +417,9 @@ enum RecordingType {
     StackTrace,
     ExpectMessage,
     ActualMessage,
+}
+
+interface CurrentItemState {
+    resultState: TestResultState;
+    duration: number;
 }
