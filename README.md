@@ -6,11 +6,8 @@
   <img src="https://raw.githubusercontent.com/Microsoft/vscode-java-test/main/resources/logo.png" width="128" height="128" alt="">
 </p>
 <p align="center">
-  <a href="https://github.com/microsoft/vscode-java-test/actions?query=workflow%3ACI+branch%3Amain">
-    <img src="https://img.shields.io/github/workflow/status/microsoft/vscode-java-test/CI/main?style=flat-square" alt="">
-  </a>
-  <a href="https://lgtm.com/projects/g/microsoft/vscode-java-test/alerts/?mode=list">
-    <img src="https://img.shields.io/lgtm/alerts/g/microsoft/vscode-java-test.svg?style=flat-square" alt="">
+  <a href="https://github.com/microsoft/vscode-java-test/actions/workflows/build.yml?query=branch%3Amain">
+    <img src="https://img.shields.io/github/actions/workflow/status/microsoft/vscode-java-test/build.yml?style=flat-square" alt="">
   </a>
   <a href="https://gitter.im/microsoft/vscode-java-test">
     <img src="https://img.shields.io/gitter/room/microsoft/vscode-java-test.svg?style=flat-square" alt="">
