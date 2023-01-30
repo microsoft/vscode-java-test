@@ -5,9 +5,9 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { IRunTestContext, TestKind } from '../../src/types';
 import { MarkdownString, Range, TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunnerResultAnalyzer } from '../../src/runners/junitRunner/JUnitRunnerResultAnalyzer';
+import { IRunTestContext, TestKind } from '../../src/types';
 import { generateTestItem } from './utils';
 
 // tslint:disable: only-arrow-functions
@@ -146,7 +146,7 @@ java.lang.AssertionError: expected:<1> but was:<2>
         analyzer.analyzeData(testRunnerOutput);
 
         sinon.assert.calledWith(failedSpy, testItem, sinon.match.any, sinon.match.number);
-        const testMessage = failedSpy.getCall(0).args[1] as TestMessage;
+        const testMessage = failedSpy.getCall(1).args[1] as TestMessage;
         const stringLiteral = (testMessage.message as MarkdownString).value;
         assert.ok(stringLiteral.split('<br/>').length === 3);
     });
@@ -336,4 +336,54 @@ org.junit.ComparisonFailure: expected:<hello
 
         assert.strictEqual(testItem.description, '');
     });
+
+    test("test diff is not duplicated when failing assertion is extracted", () => {
+        const range = new Range(9, 0, 11, 0);
+        const testItem = generateTestItem(testController, 'junit@junit5.TestWithExtractedEqualityAssertion#test', TestKind.JUnit5, range, undefined, 'TestWithExtractedEqualityAssertion.java');
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const failedSpy = sinon.spy(testRun, 'failed');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE2,junit5.TestWithExtractedEqualityAssertion,true,1,false,1,TestWithExtractedEqualityAssertion,,[engine:junit-jupiter]/[class:junit5.TestWithExtractedEqualityAssertion]
+%TSTTREE3,test(junit5.TestWithExtractedEqualityAssertion),false,1,false,2,test(),,[engine:junit-jupiter]/[class:junit5.TestWithExtractedEqualityAssertion]/[method:test()]
+%TESTS  3,test(junit5.TestWithExtractedEqualityAssertion)
+%FAILED 3,test(junit5.TestWithExtractedEqualityAssertion)
+%EXPECTS
+1
+%EXPECTE
+%ACTUALS
+2
+%ACTUALE
+%TRACES
+org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
+    at junit5.TestWithExtractedEqualityAssertion.extracted2(TestWithExtractedEqualityAssertion.java:18)
+    at junit5.TestWithExtractedEqualityAssertion.extracted1(TestWithExtractedEqualityAssertion.java:14)
+    at junit5.TestWithExtractedEqualityAssertion.test(TestWithExtractedEqualityAssertion.java:11)
+%TRACEE
+%TESTE  3,test(junit5.TestWithExtractedEqualityAssertion)
+%RUNTIME55`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(failedSpy, testItem, sinon.match.any);
+
+        const diffTestMessages = failedSpy.getCalls().map(call => call.args[1] as TestMessage).filter(v => v.actualOutput || v.expectedOutput);
+        assert.strictEqual(diffTestMessages.length, 1, "not more than one diff-message");
+        const testMessage = diffTestMessages[0];
+        assert.strictEqual(testMessage.expectedOutput, '1');
+        assert.strictEqual(testMessage.actualOutput, '2');
+        assert.strictEqual(testMessage.location?.range.start.line, 10); // =11 - 1, (most precise info we get from the stack trace)
+    });
+
 });
