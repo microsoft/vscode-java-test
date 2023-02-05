@@ -31,7 +31,11 @@
             "runtimeExecutable": "${execPath}",
             "args": ["${workspaceFolder}/test/test-projects/junit", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/out/test/suite" ],
             "sourceMaps": true,
-            "outFiles": [ "${workspaceFolder}/dist/**/*.js" ],
+            "pauseForSourceMap": true,
+            "outFiles": [ 
+                "${workspaceFolder}/dist/**/*.js",
+                "${workspaceFolder}/out/**/*.js"
+         ],
             "preLaunchTask": "npm: compile"
         },
         {

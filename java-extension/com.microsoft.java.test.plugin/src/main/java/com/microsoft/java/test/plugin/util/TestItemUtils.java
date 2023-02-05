@@ -11,8 +11,8 @@
 
 package com.microsoft.java.test.plugin.util;
 
+import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
-
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jdt.ls.core.internal.hover.JavaElementLabels;
 import org.eclipse.lsp4j.Range;
 
 @SuppressWarnings("restriction")
@@ -39,14 +40,23 @@ public class TestItemUtils {
         return null;
     }
 
-    public static String parseFullName(IJavaElement element, TestLevel level) {
+    public static String parseFullName(IJavaElement element, TestLevel level, TestKind kind) {
         switch (level) {
             case CLASS:
                 final IType type = (IType) element;
                 return type.getFullyQualifiedName();
             case METHOD:
                 final IMethod method = (IMethod) element;
-                return method.getDeclaringType().getFullyQualifiedName() + "#" + method.getElementName();
+                if (kind == TestKind.JUnit5) {
+                    final String className = method.getDeclaringType().getFullyQualifiedName();
+                    // Generics don't come through in the JUnit 5 test results, so we need to strip
+                    // them out now.
+                    final String methodName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT)
+                            .replaceAll("<.*?>", "");
+                    return className + "#" + methodName;
+                } else {
+                    return method.getDeclaringType().getFullyQualifiedName() + "#" + method.getElementName();
+                }
             default:
                 return element.getElementName();
         }

@@ -228,7 +228,7 @@ java.lang.RuntimeException
     });
 
     test("test diff with line separators", () => {
-        const testItem = generateTestItem(testController, 'junit@junit5.TestAnnotation#shouldFail2', TestKind.JUnit5, new Range(8, 0, 10, 0));
+        const testItem = generateTestItem(testController, 'junit@junit5.TestAnnotation#shouldFail2()', TestKind.JUnit5, new Range(8, 0, 10, 0));
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');
@@ -283,58 +283,74 @@ org.junit.ComparisonFailure: expected:<hello
         assert.strictEqual(testMessage.location?.range.start.line, 8);
     });
 
+    // The following test also tests JUnit 5 test classes that contain two
+    // methods with the same name but different signatures.
     test("test JUnit 5's display name", () => {
-        const testItem = generateTestItem(testController, 'junit@junit5.TestAnnotation#test', TestKind.JUnit5, new Range(8, 0, 10, 0));
-        let testRunRequest = new TestRunRequest([testItem], []);
+        const testItem = generateTestItem(testController, 'junit@junit5.TestAnnotation#test()', TestKind.JUnit5, new Range(8, 0, 10, 0));
+        const testItemWithParams = generateTestItem(testController, 'junit@junit5.TestAnnotation#test(int)', TestKind.JUnit5, new Range(14, 0, 16, 0));
+        let testRunRequest = new TestRunRequest([testItem, testItemWithParams], []);
         let testRun = testController.createTestRun(testRunRequest);
         let testRunnerOutput = `%TESTC  1 v2
-%TSTTREE2,junit5.TestAnnotation,true,1,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
+%TSTTREE2,junit5.TestAnnotation,true,2,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
 %TSTTREE3,test(junit5.TestAnnotation),false,1,false,2,hi,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[method:test()]
+%TSTTREE4,test(junit5.TestAnnotation),true,0,false,2,hi_with_params,int,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[test-template:test(int)]
 %TESTS  3,test(junit5.TestAnnotation)
 
 %TESTE  3,test(junit5.TestAnnotation)
-
+%TSTTREE5,test(junit5.TestAnnotation),false,1,true,4,[1] 1,int,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[test-template:test(int)]/[test-template-invocation:#1]
+%TESTS  5,test(junit5.TestAnnotation)
+%TESTE  5,test(junit5.TestAnnotation)
 %RUNTIME86`;
 
         let runnerContext: IRunTestContext = {
             isDebug: false,
             kind: TestKind.JUnit5,
             projectName: 'junit',
-            testItems: [testItem],
+            testItems: [testItem, testItemWithParams],
             testRun: testRun,
             workspaceFolder: workspace.workspaceFolders?.[0]!,
         };
-
-        let analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        let analyzer = new JUnitRunnerResultAnalyzer(runnerContext)
+        // We need to stub this method to avoid isssues with the TestController
+        // not being set up in the non-test version of the  utils file.
+        sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         analyzer.analyzeData(testRunnerOutput);
 
         assert.strictEqual(testItem.description, 'hi');
+        assert.strictEqual(testItemWithParams.description, 'hi_with_params');
 
         // Remove the @DisplayName annotation
-        testRunRequest = new TestRunRequest([testItem], []);
+        testRunRequest = new TestRunRequest([testItem, testItemWithParams], []);
         testRun = testController.createTestRun(testRunRequest);
         testRunnerOutput = `%TESTC  1 v2
-%TSTTREE2,junit5.TestAnnotation,true,1,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
+%TSTTREE2,junit5.TestAnnotation,true,2,false,1,TestAnnotation,,[engine:junit-jupiter]/[class:junit5.TestAnnotation]
 %TSTTREE3,test(junit5.TestAnnotation),false,1,false,2,test(),,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[method:test()]
+%TSTTREE4,test(junit5.TestAnnotation),true,0,false,2,test(int),int,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[test-template:test(int)]
 %TESTS  3,test(junit5.TestAnnotation)
 
 %TESTE  3,test(junit5.TestAnnotation)
-
+%TSTTREE5,test(junit5.TestAnnotation),false,1,true,4,[1] 1,int,[engine:junit-jupiter]/[class:junit5.TestAnnotation]/[test-template:test(int)]/[test-template-invocation:#1]
+%TESTS  5,test(junit5.TestAnnotation)
+%TESTE  5,test(junit5.TestAnnotation)
 %RUNTIME81`;
 
         runnerContext = {
             isDebug: false,
             kind: TestKind.JUnit5,
             projectName: 'junit',
-            testItems: [testItem],
+            testItems: [testItem, testItemWithParams],
             testRun: testRun,
             workspaceFolder: workspace.workspaceFolders?.[0]!,
         };
 
         analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        // We need to stub this method to avoid isssues with the TestController
+        // not being set up in the non-test version of the  utils file.
+        sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         analyzer.analyzeData(testRunnerOutput);
 
-        assert.strictEqual(testItem.description, '');
+        assert.strictEqual(testItemWithParams.description, '');
+        assert.strictEqual(testItemWithParams.description, '');
     });
 
     test("test diff is not duplicated when failing assertion is extracted", () => {

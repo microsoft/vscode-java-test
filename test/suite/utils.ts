@@ -18,7 +18,7 @@ export function generateTestItem(testController: TestController, id: string, tes
 
     const projectName = id.substring(0, id.indexOf('@'));
     const fullName = id.substring(id.indexOf('@') + 1);
-    const label = id.substring(id.indexOf('#') + 1) + '()';
+    const label = testKind === TestKind.JUnit5 ? id : id.substring(id.indexOf('#') + 1) + '()';
 
     const testItem = testController.createTestItem(id, label, Uri.file(uri));
     testItem.range = range || new Range(0, 0, 0, 0);

@@ -74,7 +74,7 @@ public class JavaTestItemBuilder {
         } else {
             displayName = JavaElementLabels.getElementLabel(this.element, JavaElementLabels.ALL_DEFAULT);
         }
-        final String fullName = TestItemUtils.parseFullName(this.element, this.level);
+        final String fullName = TestItemUtils.parseFullName(this.element, this.level, this.kind);
         if (uri == null) {
             uri = JDTUtils.getFileURI(this.element.getResource());
         }

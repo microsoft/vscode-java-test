@@ -184,6 +184,69 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     protected getTestId(message: string): string {
+        if (message.includes("engine:junit5") || message.includes("engine:junit-jupiter") || message.includes("engine:jqwik")) {
+            return this.getTestIdForJunit5Method(message);
+        } else {
+            return this.getTestIdForNonJunit5Method(message);
+        }
+    }
+
+    protected getTestIdForJunit5Method(message: string): string {
+        const classId: string = 'class:';
+        const nestedClassId: string = 'nested-class:';
+        const methodId: string = 'method:';
+        // Property id is for jqwik 
+        const propertyId: string = 'property:';
+        const testTemplateId: string = 'test-template:';
+
+        // We're expecting something like:
+        // [engine:junit5]/[class:com.example.MyTest]/[method:myTest]/[test-template:myTest(String\, int)]
+        const parts: string[] = message.split('/');
+
+        let className: string = '';
+        let methodName: string = '';
+
+        if (!parts || parts.length === 0) {
+            // The pattern doesn't match what we're expecting, so we'll go ahead and defer to the non JUnit5 method.
+            return this.getTestIdForNonJunit5Method(message);
+        }
+
+        parts.forEach((part: string) => {
+            // Remove the leading and trailing brackets.
+            part = part.trim().replace(/\[/g, '').replace(/\]/g, '');
+
+            if (part.startsWith(classId)) {
+                className = part.substring(classId.length);
+            } else if (part.startsWith(methodId)) {
+                const rawMethodName: string = part.substring(methodId.length);
+                // If the method name exists then we want to include the '#' qualifier.
+                methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
+            } else if (part.startsWith(nestedClassId)) {
+                const nestedClassName: string = part.substring(nestedClassId.length);
+                className = `${className}$${nestedClassName}`;
+            } else if (part.startsWith(testTemplateId)) {
+                const rawMethodName: string = part.substring(testTemplateId.length)
+                    .replace('\\,', ',')
+                    .replace(' ', '');
+                // If the method name exists then we want to include the '#' qualifier.
+                methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
+            } else if (part.startsWith(propertyId)) {
+                const rawMethodName: string = part.substring(propertyId.length)
+                    .replace('\\,', ',')
+                    .replace(' ', '');
+                // If the method name exists then we want to include the '#' qualifier.
+                methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
+            }
+        });
+
+        if (className) {
+            return `${this.projectName}@${className}${methodName}`;
+        } else {
+            return `${this.projectName}@${message}`;
+        }
+    }
+
+    protected getTestIdForNonJunit5Method(message: string): string {
         /**
          * The following regex expression is used to parse the test runner's output, which match the following components:
          * '(?:@AssumptionFailure: |@Ignore: )?' - indicate if the case is ignored due to assumption failure or disabled
@@ -204,6 +267,48 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         }
 
         return `${this.projectName}@${message}`;
+    }
+
+    protected getJUnit5MethodName(rawName: string): string {
+        // Let's start by grabbing the text between the parentheses.
+        let rawParamsString: string = rawName.substring(rawName.indexOf('(') + 1, rawName.indexOf(')'));
+        // We're going to replace any '$' characters with '.' characters to simplify the following logic.
+        // NOTE: you will get '$' characters in the name if you have a nested class.
+        rawParamsString = rawParamsString.replace(/\$/g, '.');
+
+        const params: string[] = rawParamsString.split(',');
+        let paramString: string = '';
+        params.forEach((param: string) => {
+            paramString += `${param.substring(param.lastIndexOf('.') + 1)}, `;
+        });
+        // We want to remove the final comma.
+        if (paramString.length > 0) {
+            paramString = paramString.substring(0, paramString.length - 2);
+        }
+
+        const methodName: string = rawName.substring(0, rawName.indexOf('('));
+        return `${methodName}(${paramString})`;
+    }
+
+    proteced getJUnit5MethodName(rawName: string): string {
+        // Let's start by grabbing the text between the parentheses.
+        let rawParamsString: string = rawName.substring(rawName.indexOf('(') + 1, rawName.indexOf(')'));
+        // We're going to replace any '$' characters with '.' characters to simplify the following logic.
+        // NOTE: you will get '$' characters in the name if you have a nested class.
+        rawParamsString = rawParamsString.replace(/\$/g, '.');
+
+        const params: string[] = rawParamsString.split(',');
+        let paramString: string = '';
+        params.forEach((param: string) => {
+            paramString += `${param.substring(param.lastIndexOf('.') + 1)}, `;
+        });
+        // We want to remove the final comma.
+        if (paramString.length > 0) {
+            paramString = paramString.substring(0, paramString.length - 2);
+        }
+
+        const methodName: string = rawName.substring(0, rawName.indexOf('('));
+        return `${methodName}(${paramString})`;
     }
 
     private setCurrentState(testItem: TestItem, resultState: TestResultState, duration: number): void {
@@ -248,7 +353,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         const result: RegExpMatchArray | null = message.match(regExp);
         if (result && result.length > 6) {
             const index: string = result[0];
-            const testId: string = this.getTestId(result[1]);
+            const testId: string = this.getTestId(result[result.length - 1]);
             const isSuite: boolean = result[2] === 'true';
             const testCount: number = parseInt(result[3], 10);
             const isDynamic: boolean = result[4] === 'true';
@@ -264,23 +369,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 if (parent) {
                     const parentData: ITestItemData | undefined = dataCache.get(parent);
                     if (parentData?.testLevel === TestLevel.Method) {
-                        testItem = updateOrCreateTestItem(parent, {
-                            children: [],
-                            uri: parent.uri?.toString(),
-                            range: parent.range,
-                            jdtHandler: parentData.jdtHandler,
-                            fullName: parentData.fullName,
-                            label: this.getTestMethodName(displayName),
-                            // prefer uniqueId, as it does not change when re-running only a single invocation:
-                            id: uniqueId ? `${INVOCATION_PREFIX}${uniqueId}`
-                                : `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
-                            projectName: parentData.projectName,
-                            testKind: parentData.testKind,
-                            testLevel: TestLevel.Invocation,
-                            uniqueId,
-                            // We will just create a string padded with the character "a" to provide easy sorting.
-                            sortText: ''.padStart(parent.children.size + 1, 'a')
-                        });
+                        testItem = this.enlistDynamicMethodToTestMapping(testItem, parent, parentData, displayName, uniqueId);
                     }
                 }
             } else {
@@ -336,6 +425,28 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         }
     }
 
+    // Leaving this public so that it can be mocked when testing.
+    public enlistDynamicMethodToTestMapping(testItem: TestItem | undefined, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined) {
+        testItem = updateOrCreateTestItem(parent, {
+            children: [],
+            uri: parent.uri?.toString(),
+            range: parent.range,
+            jdtHandler: parentData.jdtHandler,
+            fullName: parentData.fullName,
+            label: this.getTestMethodName(displayName),
+            // prefer uniqueId, as it does not change when re-running only a single invocation:
+            id: uniqueId ? `${INVOCATION_PREFIX}${uniqueId}`
+                : `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
+            projectName: parentData.projectName,
+            testKind: parentData.testKind,
+            testLevel: TestLevel.Invocation,
+            uniqueId,
+            // We will just create a string padded with the character "a" to provide easy sorting.
+            sortText: ''.padStart(parent.children.size + 1, 'a')
+        });
+        return testItem;
+    }
+
     private async tryAppendMessage(item: TestItem, testMessage: TestMessage, testState: TestResultState): Promise<void> {
         if (this.testMessageLocation) {
             testMessage.location = this.testMessageLocation;
@@ -373,6 +484,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
      * Get the test item label without the codicon prefix.
      */
     private getLabelWithoutCodicon(name: string): string {
+        if (name.includes('#')) {
+            name = name.substring(name.indexOf('#') + 1);
+        }
+
         const result: RegExpMatchArray | null = name.match(/(?:\$\(.+\) )?(.*)/);
         if (result?.length === 2) {
             return result[1];

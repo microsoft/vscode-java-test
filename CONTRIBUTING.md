@@ -64,3 +64,14 @@ If you want to build your own private build, run `npx @vscode/vsce@latest packag
 
 ### Check Lint Errors:
 Run `npm run lint` to check lint errors.
+
+## Running the test suite
+
+You can run tests using `npm run test` or by using the `Launch Tests` Run and Debug configurations in VS Code.
+
+### VS Code run and debug configurations
+
+There are two test suite folders for this project. In VS Code you'll see the following run targets:
+- `Launch Tests (maven junit)`: This will run the tests in the `./test/suite` folder.
+- `Launch Tests (unmanaged-folder)`: This will run the tests in the `./test/unmanaged-folder-suite` folder.
+

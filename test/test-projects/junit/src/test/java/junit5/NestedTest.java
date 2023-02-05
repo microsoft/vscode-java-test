@@ -20,7 +20,7 @@ class NestedTest {
         @Nested
         class ADeeperClass {
             @Test
-            void test() {
+            void tests() {
                 assertTrue(false);
             }
         }
