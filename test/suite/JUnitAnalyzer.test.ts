@@ -313,7 +313,8 @@ org.junit.ComparisonFailure: expected:<hello
         let analyzer = new JUnitRunnerResultAnalyzer(runnerContext)
         // We need to stub this method to avoid isssues with the TestController
         // not being set up in the non-test version of the  utils file.
-        sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
+        const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
+        stub.returnsArg(0);
         analyzer.analyzeData(testRunnerOutput);
 
         assert.strictEqual(testItem.description, 'hi');
@@ -355,7 +356,7 @@ org.junit.ComparisonFailure: expected:<hello
 
     test("test diff is not duplicated when failing assertion is extracted", () => {
         const range = new Range(9, 0, 11, 0);
-        const testItem = generateTestItem(testController, 'junit@junit5.TestWithExtractedEqualityAssertion#test', TestKind.JUnit5, range, undefined, 'TestWithExtractedEqualityAssertion.java');
+        const testItem = generateTestItem(testController, 'junit@junit5.TestWithExtractedEqualityAssertion#test()', TestKind.JUnit5, range, undefined, 'TestWithExtractedEqualityAssertion.java');
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');

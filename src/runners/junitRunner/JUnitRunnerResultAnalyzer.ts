@@ -405,7 +405,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     // Leaving this public so that it can be mocked when testing.
-    public enlistDynamicMethodToTestMapping(testItem: TestItem | undefined, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined): void {
+    public enlistDynamicMethodToTestMapping(testItem: TestItem | undefined, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined): TestItem {
         testItem = updateOrCreateTestItem(parent, {
             children: [],
             uri: parent.uri?.toString(),

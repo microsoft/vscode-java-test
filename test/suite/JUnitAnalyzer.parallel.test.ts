@@ -27,8 +27,8 @@ suite('JUnit Runner Analyzer Tests for JUnit5 Parallel Tests', () => {
     setup(() => {
         testController = tests.createTestController('testController', 'Mock Test');
         const testItemParent = generateTestItem(testController, 'junit@junit5.ParallelExecutionTest', TestKind.JUnit5, new Range(0, 0, 0, 0), undefined, 'ParallelExecutionTest.java');
-        testItem1 = generateTestItem(testController, 'junit@junit5.ParallelExecutionTest#test1', TestKind.JUnit5, new Range(1, 0, 1, 0), undefined, 'ParallelExecutionTest.java');
-        testItem2 = generateTestItem(testController, 'junit@junit5.ParallelExecutionTest#test2', TestKind.JUnit5, new Range(2, 0, 2, 0), undefined, 'ParallelExecutionTest.java');
+        testItem1 = generateTestItem(testController, 'junit@junit5.ParallelExecutionTest#test1()', TestKind.JUnit5, new Range(1, 0, 1, 0), undefined, 'ParallelExecutionTest.java');
+        testItem2 = generateTestItem(testController, 'junit@junit5.ParallelExecutionTest#test2()', TestKind.JUnit5, new Range(2, 0, 2, 0), undefined, 'ParallelExecutionTest.java');
         testItemParent.children.add(testItem1);
         testItemParent.children.add(testItem2);
         const testRunRequest = new TestRunRequest([testItemParent], []);
