@@ -47,9 +47,9 @@ public class TestItemUtils {
                 return type.getFullyQualifiedName();
             case METHOD:
                 final IMethod method = (IMethod) element;
-                if (kind == TestKind.JUnit5) {
+                if (kind == TestKind.JUnit5 || kind == TestKind.TestNG) {
                     final String className = method.getDeclaringType().getFullyQualifiedName();
-                    // Generics don't come through in the JUnit 5 test results, so we need to strip
+                    // Generics don't come through in the test results, so we need to strip
                     // them out now.
                     final String methodName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT)
                             .replaceAll("<.*?>", "");

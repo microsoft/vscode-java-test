@@ -184,7 +184,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     protected getTestId(message: string): string {
-        if (message.includes("engine:junit5") || message.includes("engine:junit-jupiter") || message.includes("engine:jqwik")) {
+        if (message.includes('engine:junit5') || message.includes('engine:junit-jupiter') || message.includes('engine:jqwik')) {
             return this.getTestIdForJunit5Method(message);
         } else {
             return this.getTestIdForNonJunit5Method(message);
@@ -195,7 +195,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         const classId: string = 'class:';
         const nestedClassId: string = 'nested-class:';
         const methodId: string = 'method:';
-        // Property id is for jqwik 
+        // Property id is for jqwik
         const propertyId: string = 'property:';
         const testTemplateId: string = 'test-template:';
 
@@ -405,7 +405,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     // Leaving this public so that it can be mocked when testing.
-    public enlistDynamicMethodToTestMapping(testItem: TestItem | undefined, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined) {
+    public enlistDynamicMethodToTestMapping(testItem: TestItem | undefined, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined): void {
         testItem = updateOrCreateTestItem(parent, {
             children: [],
             uri: parent.uri?.toString(),
