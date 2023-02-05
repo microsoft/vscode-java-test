@@ -290,27 +290,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         return `${methodName}(${paramString})`;
     }
 
-    proteced getJUnit5MethodName(rawName: string): string {
-        // Let's start by grabbing the text between the parentheses.
-        let rawParamsString: string = rawName.substring(rawName.indexOf('(') + 1, rawName.indexOf(')'));
-        // We're going to replace any '$' characters with '.' characters to simplify the following logic.
-        // NOTE: you will get '$' characters in the name if you have a nested class.
-        rawParamsString = rawParamsString.replace(/\$/g, '.');
-
-        const params: string[] = rawParamsString.split(',');
-        let paramString: string = '';
-        params.forEach((param: string) => {
-            paramString += `${param.substring(param.lastIndexOf('.') + 1)}, `;
-        });
-        // We want to remove the final comma.
-        if (paramString.length > 0) {
-            paramString = paramString.substring(0, paramString.length - 2);
-        }
-
-        const methodName: string = rawName.substring(0, rawName.indexOf('('));
-        return `${methodName}(${paramString})`;
-    }
-
     private setCurrentState(testItem: TestItem, resultState: TestResultState, duration: number): void {
         this.currentStates.set(testItem, { resultState, duration });
     }
