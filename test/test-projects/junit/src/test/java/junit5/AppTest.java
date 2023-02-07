@@ -17,7 +17,7 @@ public class AppTest {
             "1, 2",
             "1, 1"
     })
-    public void testGetGreetingd(int first, int second) throws Exception {
+    public void testGetGreeting(int first, int second) throws Exception {
         if (second == 2) {
             fail("second should not be 2");
         }

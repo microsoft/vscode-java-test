@@ -9,11 +9,11 @@ import java.util.Collection;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class ExampleTest {
+public class ParameterizedTest {
     private int input;
     private int expected;
 
-    public ExampleTest(int input, int expected) {
+    public ParameterizedTest(int input, int expected) {
         this.input = input;
         this.expected = expected;
     }
