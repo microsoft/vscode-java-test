@@ -350,7 +350,7 @@ org.junit.ComparisonFailure: expected:<hello
         sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         analyzer.analyzeData(testRunnerOutput);
 
-        assert.strictEqual(testItemWithParams.description, '');
+        assert.strictEqual(testItem.description, '');
         assert.strictEqual(testItemWithParams.description, '');
     });
 
