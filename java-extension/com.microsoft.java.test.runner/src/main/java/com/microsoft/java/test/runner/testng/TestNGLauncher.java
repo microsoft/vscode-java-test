@@ -49,16 +49,16 @@ public class TestNGLauncher implements ITestLauncher {
         return classToMethodsMap;
     }
 
-    private static String getClassName(String clazz) throws ClassNotFoundException {
-        return Class.forName(clazz, false, TestNGLauncher.class.getClassLoader()).getName();
+    private static String getClassName(String testId) throws ClassNotFoundException {
+        return Class.forName(testId, false, TestNGLauncher.class.getClassLoader()).getName();
     }
 
-    private static String getClassNameFromMethod(String clazz) throws ClassNotFoundException {
-        return Class.forName(clazz.substring(0, clazz.lastIndexOf("#")), false,
+    private static String getClassNameFromMethod(String testId) throws ClassNotFoundException {
+        return Class.forName(testId.substring(0, testId.lastIndexOf("#")), false,
                 TestNGLauncher.class.getClassLoader()).getName();
     }
 
-    private static String getMethodName(String clazz) {
-        return clazz.substring(clazz.lastIndexOf("#") + 1);
+    private static String getMethodName(String testId) {
+        return testId.substring(testId.lastIndexOf("#") + 1);
     }
 }
