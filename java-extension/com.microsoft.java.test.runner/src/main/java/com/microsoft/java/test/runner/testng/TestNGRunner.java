@@ -40,7 +40,7 @@ public class TestNGRunner {
             // backward compatibility
             testNG.addListener((ITestListener) listener);
         }
-        
+
         testNG.setXmlSuites(Collections.singletonList(suite));
         testNG.run();
     }
@@ -49,7 +49,7 @@ public class TestNGRunner {
         final XmlTest test = new XmlTest(suite);
         test.setName("TestNGTest-" + UUID.randomUUID().toString());
         final List<XmlClass> classes = new ArrayList<>();
-        for (final Entry<String, List<String>> entry: map.entrySet()) {
+        for (final Entry<String, List<String>> entry : map.entrySet()) {
             classes.add(createClass(entry.getKey(), entry.getValue()));
         }
         test.setXmlClasses(classes);
@@ -59,8 +59,8 @@ public class TestNGRunner {
         final XmlClass xmlClass = new XmlClass(clazz);
         if (methods.size() != 0) {
             final List<XmlInclude> includes = new ArrayList<>();
-            for (final String method: methods) {
-                includes.add(new XmlInclude(method));
+            for (final String method : methods) {
+                includes.add(new XmlInclude(method.replaceAll("\\(.*\\)", "")));
             }
             xmlClass.setIncludedMethods(includes);
         }

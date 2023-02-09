@@ -1,29 +1,35 @@
 package junit4;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class ParameterizedTest {
+    private int input;
+    private int expected;
 
-    @Parameter
-    public int expected;
+    public ParameterizedTest(int input, int expected) {
+        this.input = input;
+        this.expected = expected;
+    }
 
-    @Parameters
-    public static Collection<Integer> data(){
-        return Arrays.asList(1, 2);
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            { 0, 0 },
+            { 1, 1 },
+            { 2, 4 }
+        });
     }
 
     @Test
-    public void test() {
-        assertEquals(expected, 1);
+    public void testSquare() {
+        assertEquals(expected, input * input);
     }
 }
+

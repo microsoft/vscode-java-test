@@ -27,19 +27,19 @@ public class TestNGListener
 
     @Override
     public void onTestStart(ITestResult result) {
-        TestRunnerMessageHelper.testStarted(result.getTestClass().getName() + "#" + result.getName());
+        TestRunnerMessageHelper.testStarted(createTestName(result));
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
         final long duration = result.getEndMillis() - result.getStartMillis();
-        TestRunnerMessageHelper.testFinished(result.getTestClass().getName() + "#" + result.getName(), duration);
+        TestRunnerMessageHelper.testFinished(createTestName(result), duration);
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
         final long duration = result.getEndMillis() - result.getStartMillis();
-        TestRunnerMessageHelper.testFailed(result.getTestClass().getName() + "#" + result.getName(),
+        TestRunnerMessageHelper.testFailed(createTestName(result),
                 result.getThrowable(), duration);
     }
 
@@ -57,12 +57,30 @@ public class TestNGListener
             onTestFailure(result);
             return;
         }
-        TestRunnerMessageHelper.testIgnored(result.getTestClass().getName() + "#" + result.getName());
+        TestRunnerMessageHelper.testIgnored(createTestName(result));
     }
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
         onTestFailure(result);
+    }
+
+    private String createTestName(ITestResult result) {
+        final String className = result.getTestClass().getName();
+        final String methodName = result.getMethod().getMethodName();
+        final StringBuilder params = new StringBuilder();
+
+        for (final Class<?> paramClazz : result.getMethod().getParameterTypes()) {
+            params.append(paramClazz.getSimpleName().replaceAll("<.*?>", ""));
+            params.append(", ");
+        }
+
+        // Remove the last ", "
+        if (params.length() > 0) {
+            params.delete(params.length() - 2, params.length());
+        }
+
+        return className + "#" + methodName + "(" + params.toString() + ")";
     }
 
     @Override
@@ -82,7 +100,8 @@ public class TestNGListener
     }
 
     @Override
-    public void onConfigurationSuccess(ITestResult itr) {}
+    public void onConfigurationSuccess(ITestResult itr) {
+    }
 
     @Override
     public void onConfigurationFailure(ITestResult result) {
@@ -90,5 +109,6 @@ public class TestNGListener
     }
 
     @Override
-    public void onConfigurationSkip(ITestResult result) {}
+    public void onConfigurationSkip(ITestResult result) {
+    }
 }
