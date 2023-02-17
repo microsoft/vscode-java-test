@@ -226,14 +226,14 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 className = `${className}$${nestedClassName}`;
             } else if (part.startsWith(testTemplateId)) {
                 const rawMethodName: string = part.substring(testTemplateId.length)
-                    .replace('\\,', ',')
-                    .replace(' ', '');
+                    .replace(/\\,/g, ',')
+                    .replace(/ /g, '');
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
             } else if (part.startsWith(propertyId)) {
                 const rawMethodName: string = part.substring(propertyId.length)
-                    .replace('\\,', ',')
-                    .replace(' ', '');
+                    .replace(/\\,/g, ',')
+                    .replace(/ /g, '');
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
             }
@@ -279,11 +279,11 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         const params: string[] = rawParamsString.split(',');
         let paramString: string = '';
         params.forEach((param: string) => {
-            paramString += `${param.substring(param.lastIndexOf('.') + 1)}, `;
+            paramString += `${param.substring(param.lastIndexOf('.') + 1)},`;
         });
         // We want to remove the final comma.
         if (paramString.length > 0) {
-            paramString = paramString.substring(0, paramString.length - 2);
+            paramString = paramString.substring(0, paramString.length - 1);
         }
 
         const methodName: string = rawName.substring(0, rawName.indexOf('('));

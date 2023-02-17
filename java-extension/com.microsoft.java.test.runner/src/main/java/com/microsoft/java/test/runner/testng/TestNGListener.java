@@ -72,12 +72,12 @@ public class TestNGListener
 
         for (final Class<?> paramClazz : result.getMethod().getParameterTypes()) {
             params.append(paramClazz.getSimpleName().replaceAll("<.*?>", ""));
-            params.append(", ");
+            params.append(",");
         }
 
         // Remove the last ", "
         if (params.length() > 0) {
-            params.delete(params.length() - 2, params.length());
+            params.delete(params.length() - 1, params.length());
         }
 
         return className + "#" + methodName + "(" + params.toString() + ")";

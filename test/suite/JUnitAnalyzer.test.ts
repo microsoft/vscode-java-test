@@ -311,8 +311,8 @@ org.junit.ComparisonFailure: expected:<hello
             workspaceFolder: workspace.workspaceFolders?.[0]!,
         };
         let analyzer = new JUnitRunnerResultAnalyzer(runnerContext)
-        // We need to stub this method to avoid isssues with the TestController
-        // not being set up in the non-test version of the  utils file.
+        // We need to stub this method to avoid issues with the TestController
+        // not being set up in the non-test version of the utils file.
         const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         stub.returnsArg(0);
         analyzer.analyzeData(testRunnerOutput);
@@ -345,8 +345,8 @@ org.junit.ComparisonFailure: expected:<hello
         };
 
         analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
-        // We need to stub this method to avoid isssues with the TestController
-        // not being set up in the non-test version of the  utils file.
+        // We need to stub this method to avoid issues with the TestController
+        // not being set up in the non-test version of the utils file.
         sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         analyzer.analyzeData(testRunnerOutput);
 
@@ -401,6 +401,41 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         assert.strictEqual(testMessage.expectedOutput, '1');
         assert.strictEqual(testMessage.actualOutput, '2');
         assert.strictEqual(testMessage.location?.range.start.line, 10); // =11 - 1, (most precise info we get from the stack trace)
+    });
+
+    test("can handle test cases with more than 3 arguments", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.ParameterizedAnnotationTest#testMultiArguments(String,String,String)', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const passedSpy = sinon.spy(testRun, 'passed');
+        const testRunnerOutput = `%TESTC  0 v2
+%TSTTREE2,junit5.ParameterizedAnnotationTest,true,1,false,1,ParameterizedAnnotationTest,,[engine:junit-jupiter]/[class:junit5.ParameterizedAnnotationTest]
+%TSTTREE3,testMultiArguments(junit5.ParameterizedAnnotationTest),true,0,false,2,testMultiArguments(String\\, String\\, String),java.lang.String\\, java.lang.String\\, java.lang.String,[engine:junit-jupiter]/[class:junit5.ParameterizedAnnotationTest]/[test-template:testMultiArguments(java.lang.String\\, java.lang.String\\, java.lang.String)]
+%TSTTREE4,testMultiArguments(junit5.ParameterizedAnnotationTest),false,1,true,3,[1] a\\, b\\, c,java.lang.String\\, java.lang.String\\, java.lang.String,[engine:junit-jupiter]/[class:junit5.ParameterizedAnnotationTest]/[test-template:testMultiArguments(java.lang.String\\, java.lang.String\\, java.lang.String)]/[test-template-invocation:#1]
+%TESTS  4,testMultiArguments(junit5.ParameterizedAnnotationTest)
+%TESTE  4,testMultiArguments(junit5.ParameterizedAnnotationTest)
+%RUNTIME162`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+
+        // We need to stub this method to avoid isssues with the TestController
+        // not being set up in the non-test version of the utils file.
+        const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
+        const dummy = generateTestItem(testController, '[__INVOCATION__]-dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        stub.returns(dummy);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, dummy);
+        sinon.assert.calledWith(passedSpy, dummy);
     });
 
 });

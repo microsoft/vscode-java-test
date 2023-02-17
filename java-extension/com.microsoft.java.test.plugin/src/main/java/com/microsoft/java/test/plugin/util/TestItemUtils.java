@@ -52,7 +52,8 @@ public class TestItemUtils {
                     // Generics don't come through in the test results, so we need to strip
                     // them out now.
                     final String methodName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT)
-                            .replaceAll("<.*?>", "");
+                            .replaceAll("<.*?>", "")
+                            .replaceAll(" ", "");
                     return className + "#" + methodName;
                 } else {
                     return method.getDeclaringType().getFullyQualifiedName() + "#" + method.getElementName();
