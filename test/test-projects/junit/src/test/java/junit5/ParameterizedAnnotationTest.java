@@ -54,4 +54,9 @@ public class ParameterizedAnnotationTest {
     @MethodSource("users")
     public void testCheckUser(User user){
     }
+
+    @ParameterizedTest
+    @CsvSource({"a,b,c"})
+    public void testMultiArguments(String a, String b, String c) throws Exception {
+    }
 }
