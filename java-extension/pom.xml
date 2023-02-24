@@ -4,7 +4,7 @@
     <groupId>com.microsoft.java.test</groupId>
     <artifactId>parent</artifactId>
     <name>${base.name} :: Parent</name>
-    <version>0.37.1</version>
+    <version>0.38.0</version>
     <packaging>pom</packaging>
     <properties>
         <base.name>Test Runner for Java</base.name>
@@ -53,9 +53,14 @@
     </build>
     <repositories>
         <repository>
-            <id>202212</id>
+            <id>202303</id>
             <layout>p2</layout>
-            <url>https://download.eclipse.org/eclipse/updates/4.27-I-builds/I20221206-1800</url>
+            <url>https://download.eclipse.org/eclipse/updates/4.27-I-builds/I20230215-0610/</url>
+        </repository>
+        <repository>
+            <id>xbase</id>
+            <layout>p2</layout>
+            <url>https://download.eclipse.org/releases/2022-12/</url>
         </repository>
         <repository>
             <id>oss.sonatype.org</id>
@@ -74,11 +79,10 @@
             <layout>p2</layout>
             <url>https://download.eclipse.org/tools/orbit/R-builds/R20200529191137/repository/</url>
         </repository>
-        <!-- only used to download lsp4j 0.12.0 and its dependencies -->
         <repository>
-            <id>202112</id>
+            <id>lsp4j</id>
             <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/2021-12/202112081000/</url>
+            <url>https://download.eclipse.org/lsp4j/updates/releases/0.20.0/</url>
         </repository>
     </repositories>
 </project>

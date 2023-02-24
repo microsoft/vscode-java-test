@@ -4,6 +4,15 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.38.0
+### Added
+- Support JUnit 5 parallel execution. [#1472](https://github.com/microsoft/vscode-java-test/issues/1472), contributed by [@fladdimir](https://github.com/fladdimir)
+
+### Fixed
+- Sorting of parameterized tests should be natural. [#1465](https://github.com/microsoft/vscode-java-test/issues/1465), contributed by [@Kropie](https://github.com/Kropie)
+- Diff test messages may be duplicated. [#1522](https://github.com/microsoft/vscode-java-test/issues/1522), contributed by [@fladdimir](https://github.com/fladdimir)
+- Overload test methods are not handled properly. [#1517](https://github.com/microsoft/vscode-java-test/issues/1517), contributed by [@Kropie](https://github.com/Kropie)
+
 ## 0.37.1
 ### Fixed
 - Tests cannot be launched. [#1481](https://github.com/microsoft/vscode-java-test/issues/1481)
