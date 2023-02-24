@@ -75,11 +75,6 @@
             <url>https://download.eclipse.org/jdtls/snapshots/repository/latest/</url>
         </repository>
         <repository>
-            <id>orbit</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/tools/orbit/R-builds/R20200529191137/repository/</url>
-        </repository>
-        <repository>
             <id>lsp4j</id>
             <layout>p2</layout>
             <url>https://download.eclipse.org/lsp4j/updates/releases/0.20.0/</url>

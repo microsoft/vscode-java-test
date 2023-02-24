@@ -70,7 +70,7 @@
             "./server/org.apiguardian.api_1.1.2.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.3.0.v20220609-1843.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.1.100.v20220907-0450.jar",
-            "./server/org.opentest4j_1.2.0.v20190826-0900.jar",
+            "./server/org.opentest4j_1.2.0.jar",
             "./server/com.microsoft.java.test.plugin-0.38.0.jar"
         ],
         "viewsWelcome": [
