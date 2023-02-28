@@ -427,7 +427,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
 
         const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
 
-        // We need to stub this method to avoid isssues with the TestController
+        // We need to stub this method to avoid issues with the TestController
         // not being set up in the non-test version of the utils file.
         const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         const dummy = generateTestItem(testController, '[__INVOCATION__]-dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
@@ -436,6 +436,37 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
 
         sinon.assert.calledWith(startedSpy, dummy);
         sinon.assert.calledWith(passedSpy, dummy);
+    });
+
+    test("can handle normal test method with multiple arguments", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.VertxTest#test(Vertx,VertxTestContext)', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const passedSpy = sinon.spy(testRun, 'passed');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE2,junit5.VertxTest,true,1,false,1,VertxTest,,[engine:junit-jupiter]/[class:junit5.VertxTest]
+%TSTTREE3,test(junit5.VertxTest),false,1,false,2,test(Vertx\\, VertxTestContext),io.vertx.core.Vertx\\, io.vertx.junit5.VertxTestContext,[engine:junit-jupiter]/[class:junit5.VertxTest]/[method:test(io.vertx.core.Vertx\\, io.vertx.junit5.VertxTestContext)]
+%TESTS  3,test(junit5.VertxTest)
+
+%TESTE  3,test(junit5.VertxTest)
+
+%RUNTIME1066`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(passedSpy, testItem);
     });
 
 });

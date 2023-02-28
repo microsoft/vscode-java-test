@@ -274,7 +274,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         let rawParamsString: string = rawName.substring(rawName.indexOf('(') + 1, rawName.indexOf(')'));
         // We're going to replace any '$' characters with '.' characters to simplify the following logic.
         // NOTE: you will get '$' characters in the name if you have a nested class.
-        rawParamsString = rawParamsString.replace(/\$/g, '.');
+        rawParamsString = rawParamsString.replace(/\$/g, '.')
+            .replace(/\\,/g, ',')
+            .replace(/ /g, '');
 
         const params: string[] = rawParamsString.split(',');
         let paramString: string = '';
