@@ -464,10 +464,10 @@
         "@types/lodash": "^4.14.191",
         "@types/lru-cache": "^7.10.10",
         "@types/mocha": "^9.1.1",
-        "@types/node": "^16.18.11",
+        "@types/node": "^16.18.13",
         "@types/sinon": "^10.0.13",
         "@types/vscode": "1.69.0",
-        "@vscode/test-electron": "^2.2.2",
+        "@vscode/test-electron": "^2.3.0",
         "glob": "^7.2.3",
         "mocha": "^9.2.2",
         "sinon": "^14.0.2",
@@ -482,8 +482,8 @@
         "get-port": "^4.2.0",
         "iconv-lite": "^0.6.3",
         "lodash": "^4.17.21",
-        "lru-cache": "^7.14.1",
-        "vscode-extension-telemetry-wrapper": "^0.13.2",
+        "lru-cache": "^7.17.0",
+        "vscode-extension-telemetry-wrapper": "^0.13.3",
         "vscode-languageclient": "6.0.0-next.9",
         "vscode-tas-client": "^0.1.63"
     }

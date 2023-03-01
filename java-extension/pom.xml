@@ -15,11 +15,46 @@
         <module>build-tools</module>
         <module>com.microsoft.java.test.plugin</module>
         <module>com.microsoft.java.test.plugin.site</module>
+        <module>com.microsoft.java.test.target</module>
         <module>com.microsoft.java.test.runner</module>
     </modules>
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.eclipse.tycho</groupId>
+                    <artifactId>target-platform-configuration</artifactId>
+                    <version>${tycho-version}</version>
+                    <configuration>
+                        <resolver>p2</resolver>
+                        <target>
+                            <artifact>
+                                <groupId>com.microsoft.java.test</groupId>
+                                <artifactId>com.microsoft.java.test.tp</artifactId>
+                                <version>${project.version}</version>
+                            </artifact>
+                        </target>
+                        <environments>
+                            <environment>
+                                <os>linux</os>
+                                <ws>gtk</ws>
+                                <arch>x86_64</arch>
+                            </environment>
+                            <environment>
+                                <os>win32</os>
+                                <ws>win32</ws>
+                                <arch>x86_64</arch>
+                            </environment>
+                            <environment>
+                                <os>macosx</os>
+                                <ws>cocoa</ws>
+                                <arch>x86_64</arch>
+                            </environment>
+                        </environments>
+                        <dependency-resolution>
+                        </dependency-resolution>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
@@ -50,34 +85,22 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-maven-plugin</artifactId>
+                <version>${tycho-version}</version>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
     </build>
     <repositories>
-        <repository>
-            <id>202303</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/eclipse/updates/4.27-I-builds/I20230215-0610/</url>
-        </repository>
-        <repository>
-            <id>xbase</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/2022-12/</url>
-        </repository>
         <repository>
             <id>oss.sonatype.org</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
-        <repository>
-            <id>JDT.LS</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/jdtls/snapshots/repository/latest/</url>
-        </repository>
-        <repository>
-            <id>lsp4j</id>
-            <layout>p2</layout>
-            <url>https://download.eclipse.org/lsp4j/updates/releases/0.20.0/</url>
         </repository>
     </repositories>
 </project>
