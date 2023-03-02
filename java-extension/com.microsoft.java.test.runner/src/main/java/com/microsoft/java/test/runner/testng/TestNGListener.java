@@ -70,7 +70,7 @@ public class TestNGListener
         final String methodName = result.getMethod().getMethodName();
         final StringBuilder params = new StringBuilder();
 
-        for (final Class<?> paramClazz : result.getMethod().getParameterTypes()) {
+        for (final Class<?> paramClazz : result.getMethod().getConstructorOrMethod().getMethod().getParameterTypes()) {
             params.append(paramClazz.getSimpleName().replaceAll("<.*?>", ""));
             params.append(",");
         }
