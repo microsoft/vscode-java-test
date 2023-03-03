@@ -158,7 +158,7 @@ export interface IJUnitLaunchArguments {
 }
 
 export interface Response<T> {
-    body: T;
+    body: T | undefined;
     status: number;
-    errorMessage: string;
+    errorMessage: string | undefined;
 }

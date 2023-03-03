@@ -131,7 +131,7 @@ async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestL
         }),
     );
 
-    if (!argument || argument.errorMessage) {
+    if (!argument?.body || argument.errorMessage) {
         const error: Error = new Error(argument?.errorMessage || 'Failed to parse the JUnit launch arguments');
         sendError(error);
         throw error;

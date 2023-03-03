@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { JavaTestRunnerDelegateCommands } from "../../src/constants";
-import { IJUnitLaunchArguments } from "../../src/runners/baseRunner/BaseRunner";
+import { IJUnitLaunchArguments, Response } from "../../src/runners/baseRunner/BaseRunner";
 import { TestKind, TestLevel } from "../../src/types";
 import { executeJavaLanguageServerCommand } from "../../src/utils/commandUtils";
 import { setupTestEnv } from "./utils";
@@ -20,7 +20,7 @@ suite('LaunchUtils Tests', () => {
     });
 
     test('Resolve JUnit 5 parameterized test 1', async () => {
-        const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
+        const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
             JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
                 projectName: 'junit',
                 testLevel: TestLevel.Method,
@@ -29,13 +29,13 @@ suite('LaunchUtils Tests', () => {
             })
         );
         assert.strictEqual(
-            argument?.programArguments[argument?.programArguments.length - 1],
+            argument?.body?.programArguments[argument?.body?.programArguments.length - 1],
             'junit5.ParameterizedAnnotationTest:canRunWithComment(java.lang.String,java.lang.Boolean)'
         );
     });
 
     test('Resolve JUnit 5 parameterized test 2', async () => {
-        const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
+        const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
             JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
                 projectName: 'junit',
                 testLevel: TestLevel.Method,
@@ -44,13 +44,13 @@ suite('LaunchUtils Tests', () => {
             })
         );
         assert.strictEqual(
-            argument?.programArguments[argument?.programArguments.length - 1],
+            argument?.body?.programArguments[argument?.body?.programArguments.length - 1],
             'junit5.ParameterizedAnnotationTest:equal(int,int)'
         );
     });
 
     test('Resolve JUnit 5 parameterized test 3', async () => {
-        const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
+        const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
             JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
                 projectName: 'junit',
                 testLevel: TestLevel.Method,
@@ -59,13 +59,13 @@ suite('LaunchUtils Tests', () => {
             })
         );
         assert.strictEqual(
-            argument?.programArguments[argument?.programArguments.length - 1],
+            argument?.body?.programArguments[argument?.body?.programArguments.length - 1],
             'junit5.ParameterizedAnnotationTest:canRunWithGenericTypedParameter(java.util.List)'
         );
     });
 
     test('Resolve JUnit 5 parameterized test 4', async () => {
-        const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
+        const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
             JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
                 projectName: 'junit',
                 testLevel: TestLevel.Method,
@@ -74,7 +74,7 @@ suite('LaunchUtils Tests', () => {
             })
         );
         assert.strictEqual(
-            argument?.programArguments[argument?.programArguments.length - 1],
+            argument?.body?.programArguments[argument?.body?.programArguments.length - 1],
             'junit5.ParameterizedAnnotationTest:testCheckUser(junit5.ParameterizedAnnotationTest$User)'
         );
     });
