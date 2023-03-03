@@ -156,3 +156,9 @@ export interface IJUnitLaunchArguments {
     vmArguments: string[];
     programArguments: string[];
 }
+
+export interface Response<T> {
+    body: T;
+    status: number;
+    errorMessage: string;
+}
