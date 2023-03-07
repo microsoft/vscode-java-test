@@ -229,6 +229,9 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             resolvedConfiguration.__progressId = option.progressReporter?.getId();
                             delegatedToDebugger = true;
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
+                        } catch(error) {
+                            window.showErrorMessage(error.message || 'Failed to run tests.');
+                            option.progressReporter?.done();
                         } finally {
                             await runner.tearDown();
                         }

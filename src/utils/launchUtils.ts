@@ -9,7 +9,7 @@ import { dataCache } from '../controller/testItemDataCache';
 import { extensionContext } from '../extension';
 import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
-import { IJUnitLaunchArguments } from '../runners/baseRunner/BaseRunner';
+import { IJUnitLaunchArguments, Response } from '../runners/baseRunner/BaseRunner';
 import { IRunTestContext, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from './commandUtils';
 
@@ -121,7 +121,7 @@ function getTestNames(testContext: IRunTestContext): string[] {
 }
 
 async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestLevel, testKind: TestKind, testNames: string[], uniqueId: string | undefined): Promise<IJUnitLaunchArguments> {
-    const argument: IJUnitLaunchArguments | undefined = await executeJavaLanguageServerCommand<IJUnitLaunchArguments>(
+    const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             projectName,
             testLevel,
@@ -131,13 +131,13 @@ async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestL
         }),
     );
 
-    if (!argument) {
-        const error: Error = new Error('Failed to parse the JUnit launch arguments');
+    if (!argument?.body || argument.errorMessage) {
+        const error: Error = new Error(argument?.errorMessage || 'Failed to parse the JUnit launch arguments');
         sendError(error);
         throw error;
     }
 
-    return argument;
+    return argument.body;
 }
 
 /**

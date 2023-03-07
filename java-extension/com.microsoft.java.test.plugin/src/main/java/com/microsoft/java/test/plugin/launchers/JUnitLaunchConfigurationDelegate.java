@@ -12,6 +12,7 @@
 package com.microsoft.java.test.plugin.launchers;
 
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils.Argument;
+import com.microsoft.java.test.plugin.model.Response;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
@@ -65,8 +66,8 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
         this.args = args;
     }
 
-    public JUnitLaunchArguments getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
-            IProgressMonitor monitor) throws CoreException {
+    public Response<JUnitLaunchArguments> getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
+            IProgressMonitor monitor) {
         final ILaunch launch = new Launch(configuration, mode, null);
 
         // TODO: Make the getVMRunnerConfiguration() in super class protected.
@@ -87,12 +88,12 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             launchArguments.vmArguments = getVmArguments(config);
             launchArguments.programArguments = parseParameters(config.getProgramArguments());
 
-
-            return launchArguments;
+            return new Response<>(launchArguments, null);
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException |
-                InvocationTargetException e) {
+                InvocationTargetException | CoreException e) {
             JUnitPlugin.logException("failed to resolve the classpath.", e);
-            return null;
+            final String msg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            return new Response<>(null, msg);
         }
     }
 
