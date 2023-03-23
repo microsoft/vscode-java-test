@@ -4,6 +4,12 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.38.2
+### Fixed
+- Cannot run test with older versions of TestNG. [#1540](https://github.com/microsoft/vscode-java-test/issues/1540), contributed by [@Kropie](https://github.com/Kropie)
+- "Resolving launch configuration" never finishes when exception happens. [#1543](https://github.com/microsoft/vscode-java-test/issues/1536)
+- Update target platform. [PR#1549](https://github.com/microsoft/vscode-java-test/pull/1549), contributed by [@Frederick888](https://github.com/Frederick888)
+
 ## 0.38.1
 ### Added
 - Support JUnit 5 parallel execution. [#1472](https://github.com/microsoft/vscode-java-test/issues/1472), contributed by [@fladdimir](https://github.com/fladdimir)
