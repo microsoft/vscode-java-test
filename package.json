@@ -89,17 +89,17 @@
             "view/item/context": [
                 {
                     "command": "java.test.runFromJavaProjectExplorer",
-                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
+                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+source\\b)(?=.*?\\b\\+test\\b)/",
                     "group": "8_execution@10"
                 },
                 {
                     "command": "java.test.debugFromJavaProjectExplorer",
-                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
+                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+source\\b)(?=.*?\\b\\+test\\b)/",
                     "group": "8_execution@20"
                 },
                 {
                     "command": "java.test.runFromJavaProjectExplorer",
-                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)/",
+                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+source\\b)(?=.*?\\b\\+test\\b)/",
                     "group": "inline@run_0"
                 }
             ],
