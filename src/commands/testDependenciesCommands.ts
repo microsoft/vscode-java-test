@@ -137,7 +137,7 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             return [{
                 groupId: 'org.junit.platform',
                 artifactId: 'junit-platform-console-standalone',
-                defaultVersion: '1.9.1',
+                defaultVersion: '1.9.2',
             }];
         case TestKind.JUnit:
             return [{
@@ -154,7 +154,7 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             return [{
                 groupId: 'org.testng',
                 artifactId: 'testng',
-                defaultVersion: '7.6.1',
+                defaultVersion: '7.7.1',
             }, {
                 groupId: 'com.beust',
                 artifactId: 'jcommander',
@@ -162,7 +162,7 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             }, {
                 groupId: 'org.slf4j',
                 artifactId: 'slf4j-api',
-                defaultVersion: '2.0.5',
+                defaultVersion: '2.0.7',
             }];
         default:
             return [];
