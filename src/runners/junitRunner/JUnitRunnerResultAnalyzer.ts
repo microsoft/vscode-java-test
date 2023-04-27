@@ -195,6 +195,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         const classId: string = 'class:';
         const nestedClassId: string = 'nested-class:';
         const methodId: string = 'method:';
+        const testFactoryId: string = 'test-factory:';
         // Property id is for jqwik
         const propertyId: string = 'property:';
         const testTemplateId: string = 'test-template:';
@@ -219,6 +220,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 className = part.substring(classId.length);
             } else if (part.startsWith(methodId)) {
                 const rawMethodName: string = part.substring(methodId.length);
+                // If the method name exists then we want to include the '#' qualifier.
+                methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
+            } else if (part.startsWith(testFactoryId)) {
+                const rawMethodName: string = part.substring(testFactoryId.length);
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
             } else if (part.startsWith(nestedClassId)) {
