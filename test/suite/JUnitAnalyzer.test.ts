@@ -469,4 +469,41 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         sinon.assert.calledWith(passedSpy, testItem);
     });
 
+    test("can handle @TestFactory cases", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.TestFactoryTest#testDynamicTest()', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const passedSpy = sinon.spy(testRun, 'passed');
+        const testRunnerOutput = `%TESTC  0 v2
+%TSTTREE2,junit5.TestFactoryTest,true,1,false,1,TestFactoryTest,,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]
+%TSTTREE3,testDynamicTest(junit5.TestFactoryTest),true,0,false,2,testDynamicTest(),,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]/[test-factory:testDynamicTest()]
+%TSTTREE4,testDynamicTest(junit5.TestFactoryTest),false,1,true,3,TestInput 1,,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]/[test-factory:testDynamicTest()]/[dynamic-test:#1]
+%TESTS  4,testDynamicTest(junit5.TestFactoryTest)
+
+%TESTE  4,testDynamicTest(junit5.TestFactoryTest)
+
+%RUNTIME97`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+
+        // We need to stub this method to avoid issues with the TestController
+        // not being set up in the non-test version of the utils file.
+        const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
+        const dummy = generateTestItem(testController, '[__INVOCATION__]-dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        stub.returns(dummy);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, dummy);
+        sinon.assert.calledWith(passedSpy, dummy);
+    });
+
 });
