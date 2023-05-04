@@ -72,6 +72,12 @@ export interface IExecutionConfig {
      preLaunchTask?: string;
 
      /**
+     * The label of a task specified in tasks.json.
+     * @since 0.39.0
+     */
+     postDebugTask?: string;
+
+     /**
       * the test framework kind of this test configuration.
       * @since 0.37.0
       */

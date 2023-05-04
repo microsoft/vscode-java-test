@@ -27,6 +27,7 @@
     "configuration.java.test.config.envFile.description": "Specify the absolute path to a file containing environment variable definitions.",
     "configuration.java.test.config.sourcePaths.description": "Specify extra source paths when debugging the tests.",
     "configuration.java.test.config.preLaunchTask.description": "Specify the label of a task specified in tasks.json (in the workspace's .vscode folder). The task will be launched before the start of testing.",
+    "configuration.java.test.config.postDebugTask.description": "Specify the label of a task specified in tasks.json (in the workspace's .vscode folder). The task will be launched at the very end of testing.",
     "configuration.java.test.config.testKind.description": "Specify the targeting test framework for this test configuration. Supported values are `junit`, `testng`.",
     "configuration.java.test.config.filters.description": "Specify the test filters.",
     "configuration.java.test.config.filters.tags.description": "Specify the tags to be included or excluded. \n\nTags having `!` as the prefix will be **excluded**. \n\nNote: This setting **only** takes effect when `testKind` is set to `junit`.",
