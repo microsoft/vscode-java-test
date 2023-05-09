@@ -27,6 +27,7 @@
     "configuration.java.test.config.envFile.description": "环境变量文件绝对路径。",
     "configuration.java.test.config.sourcePaths.description": "设定调试测试用例时的源代码路径。",
     "configuration.java.test.config.preLaunchTask.description": "在 tasks.json（在工作空间的.vscode文件夹中）中某个任务的名称。该任务会在启动测试之前被执行。",
+    "configuration.java.test.config.postDebugTask.description": "在 tasks.json（在工作空间的.vscode文件夹中）中某个任务的名称。该任务会在测试完成之后被执行。",
     "configuration.java.test.config.testKind.description": "指定该测试配置项的目标测试框架。可选的值有 `junit`，`testng`。",
     "configuration.java.test.config.filters.description": "测试过滤配置项。",
     "configuration.java.test.config.filters.tags.description": "指定要包含或排除的标记。\n\n带有`!`前缀的标记将会被**排除**。 \n\n注意：该选项**仅**会在 `testKind` 设置为 `junit` 时生效。",

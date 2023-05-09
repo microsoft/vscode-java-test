@@ -46,6 +46,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             noDebug: !testContext.isDebug,
             sourcePaths: config?.sourcePaths,
             preLaunchTask: config?.preLaunchTask,
+            postDebugTask: config?.postDebugTask,
         };
     }
 
@@ -74,6 +75,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         noDebug: !testContext.isDebug,
         sourcePaths: config?.sourcePaths,
         preLaunchTask: config?.preLaunchTask,
+        postDebugTask: config?.postDebugTask,
     };
 }
 

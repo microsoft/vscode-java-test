@@ -287,6 +287,11 @@
                             "description": "%configuration.java.test.config.preLaunchTask.description%",
                             "default": ""
                         },
+                        "postDebugTask": {
+                            "type": "string",
+                            "description": "%configuration.java.test.config.postDebugTask.description%",
+                            "default": ""
+                        },
                         "testKind": {
                             "type": "string",
                             "markdownDescription": "%configuration.java.test.config.testKind.description%",
@@ -413,6 +418,11 @@
                             "preLaunchTask": {
                                 "type": "string",
                                 "description": "%configuration.java.test.config.preLaunchTask.description%",
+                                "default": ""
+                            },
+                            "postDebugTask": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.postDebugTask.description%",
                                 "default": ""
                             },
                             "testKind": {
