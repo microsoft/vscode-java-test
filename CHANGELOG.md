@@ -4,6 +4,14 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.39.0
+### Added
+- Support 'postDebugTask' in test configuration. [#1557](https://github.com/microsoft/vscode-java-test/issues/1557)
+
+### Fixed
+- Resource nodes in Java Projects view should not have run test actions. [#1559](https://github.com/microsoft/vscode-java-test/issues/1559)
+- Cannot run @TestFactory tests. [#1565](https://github.com/microsoft/vscode-java-test/issues/1565)
+
 ## 0.38.2
 ### Fixed
 - Cannot run test with older versions of TestNG. [#1540](https://github.com/microsoft/vscode-java-test/issues/1540), contributed by [@Kropie](https://github.com/Kropie)
