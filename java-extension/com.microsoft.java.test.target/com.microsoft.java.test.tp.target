@@ -21,7 +21,7 @@
         </location>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.eclipse.jdt.ls.core" version="0.0.0"/>
-            <repository location="https://download.eclipse.org/jdtls/snapshots/repository/latest/"/>
+            <repository location="https://download.eclipse.org/jdtls/milestones/1.24.0/repository/"/>
         </location>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
