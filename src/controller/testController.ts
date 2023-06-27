@@ -278,7 +278,7 @@ async function getIncludedItems(request: TestRunRequest, token?: CancellationTok
     }
     testItems = handleInvocations(testItems);
     testItems = await expandTests(testItems, TestLevel.Class, token);
-    // @ts-expect-error
+    // @ts-expect-error: ignore
     const excludingItems: TestItem[] = await expandTests(request.exclude || [], TestLevel.Class, token);
     testItems = _.differenceBy(testItems, excludingItems, 'id');
     return testItems;
@@ -343,13 +343,17 @@ function mergeInvocations(testItems: TestItem[]): TestItem[] {
     testItems = testItems.filter((item: TestItem) => !(isInvocation(item) && isAncestorIncluded(item, testItems)));
 
     // if all invocations of a method are selected, replace by single parent method run
-    const invocationsPerMethod: Map<TestItem, Set<TestItem>> = filterInvocations(testItems) /* tslint:disable: typedef */
-        .reduce((map, inv) => map.set(inv.parent!,
-            map.has(inv.parent!) ? new Set([...map.get(inv.parent!)!, inv]) : new Set([inv])),
-            new Map());
+    const invocationsPerMethod: Map<TestItem, Set<TestItem>> = filterInvocations(testItems)
+        /* eslint-disable @typescript-eslint/typedef */
+        .reduce(
+            (map, inv) => map.set(inv.parent!,
+                map.has(inv.parent!) ? new Set([...map.get(inv.parent!)!, inv]) : new Set([inv])),
+            new Map()
+        );
     const invocationsToMerge: TestItem[] = _.flatten([...invocationsPerMethod.entries()]
         .filter(([method, invs]) => method.children.size === invs.size)
-        .map(([, invs]) => [...invs])); /* tslint:enable: typedef */
+        .map(([, invs]) => [...invs]));
+        /* eslint-enable @typescript-eslint/typedef */
     return _.uniq(testItems.map((item: TestItem) => invocationsToMerge.includes(item) ? item.parent! : item));
 }
 
@@ -421,7 +425,7 @@ function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
     if (testItems.length <= 1) {
         return [testItems];
     }
-    // tslint:disable-next-line: typedef
+    // eslint-disable-next-line @typescript-eslint/typedef
     const classMapping: Map<string, TestItem> = testItems.reduce((map, i) => {
         const testLevel: TestLevel | undefined = dataCache.get(i)?.testLevel;
         if (testLevel === undefined) {
@@ -433,7 +437,7 @@ function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
         return map;
     }, new Map());
 
-    // tslint:disable-next-line: typedef
+    // eslint-disable-next-line @typescript-eslint/typedef
     const testMapping: Map<TestItem, Set<TestItem>> = testItems.reduce((map, i) => {
         const testLevel: TestLevel | undefined = dataCache.get(i)?.testLevel;
         if (testLevel === undefined) {

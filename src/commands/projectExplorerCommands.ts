@@ -32,7 +32,7 @@ export async function runTestsFromJavaProjectExplorer(node: any, isDebug: boolea
         const nodeFsPath: string = Uri.parse(node._nodeData.uri).fsPath;
         projectItem.children.forEach((child: TestItem) => {
             const itemPath: string = child.uri?.fsPath || '';
-            if (isHierarchicalMode || node._nodeData.kind === 3 /*packageRoot*/) {
+            if (isHierarchicalMode || node._nodeData.kind === 3 /* packageRoot */) {
                 // if the selected node is a package root or the view is in hierarchical mode,
                 // all the test items whose path start from the path of the selected node will be added
                 if (itemPath.startsWith(nodeFsPath)) {
@@ -55,7 +55,7 @@ export async function runTestsFromJavaProjectExplorer(node: any, isDebug: boolea
 function getTestLevel(nodeData: any): TestLevel {
     // The command will only register on the class/package/packageRoot
     // nodes of the Java Project explorer
-    if (nodeData.kind === 5 /*PrimaryType*/) {
+    if (nodeData.kind === 5 /* PrimaryType */) {
         return TestLevel.Class;
     } else {
         return TestLevel.Package;

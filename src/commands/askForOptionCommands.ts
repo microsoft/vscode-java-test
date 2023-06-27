@@ -111,7 +111,7 @@ function checkJavaQualifiedName(value: string): string {
         }
 
         if (!isJavaIdentifier(part)) {
-            return `Invalid Java qualified name.`;
+            return 'Invalid Java qualified name.';
         }
     }
 

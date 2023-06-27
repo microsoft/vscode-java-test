@@ -123,7 +123,7 @@ export abstract class BaseRunner implements ITestRunner {
         const applicationArgs: string[] = [];
         applicationArgs.push(`${(this.server.address() as AddressInfo).port}`);
 
-        applicationArgs.push(...this.getRunnerCommandParams(config));
+        applicationArgs.push(...this.getRunnerCommandParams());
 
         if (config && config.args) {
             applicationArgs.push(...config.args.filter(Boolean));
@@ -140,7 +140,7 @@ export abstract class BaseRunner implements ITestRunner {
         });
     }
 
-    protected getRunnerCommandParams(_config?: IExecutionConfig): string[] {
+    protected getRunnerCommandParams(): string[] {
         return [];
     }
 

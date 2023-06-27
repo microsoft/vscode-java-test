@@ -69,7 +69,7 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
                 setTimeout(() => {
                     testSourceProvider.clear();
                     refreshExplorer();
-                }, 1000 /*ms*/);
+                }, 1000 /* ms */);
             }));
         }
 
