@@ -178,7 +178,7 @@ function parseTags(config: IExecutionConfig | undefined): string[] {
     return tags;
 }
 
-// tslint:disable-next-line: typedef
+// eslint-disable-next-line @typescript-eslint/typedef
 export const exportedForTesting = {
     parseTags
 }

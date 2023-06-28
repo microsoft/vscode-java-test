@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Disposable, languages, Range, Selection, TextDocument } from 'vscode';
+import { CodeAction, CodeActionKind, CodeActionProvider, Disposable, languages, Range, Selection, TextDocument } from 'vscode';
 
 let provider: Disposable;
 export class TestCodeActionProvider implements CodeActionProvider {
 
-    public async provideCodeActions(document: TextDocument, range: Range | Selection, _context: CodeActionContext, _token: CancellationToken): Promise<CodeAction[] | null> {
+    public async provideCodeActions(document: TextDocument, range: Range | Selection): Promise<CodeAction[] | null> {
         if (document.fileName === 'module-info.java' || document.fileName === 'package-info.java') {
             return [];
         }
