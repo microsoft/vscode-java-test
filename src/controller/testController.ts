@@ -225,7 +225,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         }
                         try {
                             await runner.setup();
-                            const resolvedConfiguration: DebugConfiguration = option.launchConfiguration ?? await resolveLaunchConfigurationForRunner(runner, testContext, config);
+                            const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, config) ?? await resolveLaunchConfigurationForRunner(runner, testContext, config);
                             resolvedConfiguration.__progressId = option.progressReporter?.getId();
                             delegatedToDebugger = true;
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
@@ -244,6 +244,21 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
         run.end();
     }
 });
+
+function mergeConfigurations(launchConfiguration: DebugConfiguration | undefined, config: any): DebugConfiguration | undefined {
+    if (!launchConfiguration) {
+        return undefined;
+    }
+
+    const entryKeys: string[] = Object.keys(config);
+    for (const configKey of entryKeys) {
+        // for now we merge launcher properties which doesn't have a value.
+        if (!launchConfiguration[configKey]) {
+            launchConfiguration[configKey] = config[configKey];
+        }
+    }
+    return launchConfiguration;
+}
 
 /**
  * Set all the test item to queued state
