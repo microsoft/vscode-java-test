@@ -250,7 +250,7 @@
                         },
                         "javaExec": {
                             "type": "string",
-                            "description": "%configuration.java.test.config.javaExec.description%",
+                            "markdownDescription": "%configuration.java.test.config.javaExec.description%",
                             "default": ""
                         },
                         "vmArgs": {
@@ -388,7 +388,7 @@
                             },
                             "javaExec": {
                                 "type": "string",
-                                "description": "%configuration.java.test.config.javaExec.description%",
+                                "markdownDescription": "%configuration.java.test.config.javaExec.description%",
                                 "default": ""
                             },
                             "vmargs": {

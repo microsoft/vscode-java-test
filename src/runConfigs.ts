@@ -36,7 +36,7 @@ export interface IExecutionConfig {
 
     /**
      * The path to java executable to use. If undefined project JDK's java executable is used.
-     * @since 0.39.2
+     * @since 0.40.0
      */
     javaExec?: string;
 

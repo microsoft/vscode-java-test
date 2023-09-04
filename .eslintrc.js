@@ -29,7 +29,8 @@ module.exports = {
     ],
     'root': true,
     'ignorePatterns': [
-        '**/*.d.ts'
+        '**/*.d.ts',
+        '**/*.test.ts'
     ],
     'rules': {
         '@typescript-eslint/no-inferrable-types': 'off',
