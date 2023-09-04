@@ -46,18 +46,19 @@ suite('JUnit Runner Analyzer Tests', () => {
                 "/a/b/c.jar",
                 "/foo/bar.jar"
             ],
-            modulePaths: [
-                "/test/module.jar",
-            ],
             env: {
                 test: "test",
             },
             envFile: "${workspaceFolder}/.env",
+            javaExec: "/usr/bin/java",
+            modulePaths: [
+                "/test/module.jar",
+            ],
+            postDebugTask: "test",
+            preLaunchTask: "test",
             sourcePaths: [
                 "/a/b/c.jar"
-            ],
-            preLaunchTask: "test",
-            postDebugTask: "test"
+            ]
         });
         assert.strictEqual(configuration.env.test, "test");
         assert.strictEqual(configuration.envFile, "${workspaceFolder}/.env");
@@ -67,5 +68,6 @@ suite('JUnit Runner Analyzer Tests', () => {
         assert.strictEqual(configuration.modulePaths[0], "/test/module.jar");
         assert.strictEqual(configuration.classPaths[0], "/a/b/c.jar");
         assert.strictEqual(configuration.classPaths[1], "/foo/bar.jar");
+        assert.strictEqual(configuration.javaExec, "/usr/bin/java");
     });
 });

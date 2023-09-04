@@ -35,6 +35,12 @@ export interface IExecutionConfig {
     args?: any[];
 
     /**
+     * The path to java executable to use. If undefined project JDK's java executable is used.
+     * @since 0.40.0
+     */
+    javaExec?: string;
+
+    /**
      * the extra options and system properties for the JVM.
      * It's deprecated, we should align with the debug launch configuration, which is 'vmArgs'.
      * @since 0.14.0

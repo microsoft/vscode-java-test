@@ -47,6 +47,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             sourcePaths: config?.sourcePaths,
             preLaunchTask: config?.preLaunchTask,
             postDebugTask: config?.postDebugTask,
+            javaExec: config?.javaExec,
         };
     }
 
@@ -76,6 +77,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         sourcePaths: config?.sourcePaths,
         preLaunchTask: config?.preLaunchTask,
         postDebugTask: config?.postDebugTask,
+        javaExec: config?.javaExec,
     };
 }
 

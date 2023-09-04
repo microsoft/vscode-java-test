@@ -248,6 +248,11 @@
                             "description": "%configuration.java.test.config.modulePaths.description%",
                             "default": []
                         },
+                        "javaExec": {
+                            "type": "string",
+                            "markdownDescription": "%configuration.java.test.config.javaExec.description%",
+                            "default": ""
+                        },
                         "vmArgs": {
                             "type": "array",
                             "items": {
@@ -380,6 +385,11 @@
                                 },
                                 "description": "%configuration.java.test.config.modulePaths.description%",
                                 "default": []
+                            },
+                            "javaExec": {
+                                "type": "string",
+                                "markdownDescription": "%configuration.java.test.config.javaExec.description%",
+                                "default": ""
                             },
                             "vmargs": {
                                 "type": "array",
