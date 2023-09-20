@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
+import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
@@ -215,9 +216,6 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             testRun: run,
                             workspaceFolder,
                         };
-                        sendInfo(operationId, {
-                            testFramework: TestKind[testContext.kind],
-                        });
                         const runner: BaseRunner | undefined = getRunnerByContext(testContext);
                         if (!runner) {
                             window.showErrorMessage(`Failed to get suitable runner for the test kind: ${testContext.kind}.`);
@@ -228,6 +226,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, config) ?? await resolveLaunchConfigurationForRunner(runner, testContext, config);
                             resolvedConfiguration.__progressId = option.progressReporter?.getId();
                             delegatedToDebugger = true;
+                            trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
                         } catch(error) {
                             window.showErrorMessage(error.message || 'Failed to run tests.');
@@ -541,6 +540,36 @@ function getRunnerByContext(testContext: IRunTestContext): BaseRunner | undefine
         default:
             return undefined;
     }
+}
+
+function trackTestFrameworkVersion(testKind: TestKind, classpaths: string[], modulepaths: string[]) {
+    let artifactPattern: RegExp;
+    switch (testKind) {
+        case TestKind.JUnit:
+            artifactPattern = /junit-(\d+\.\d+\.\d+(-[a-zA-Z\d]+)?).jar/;
+            break;
+        case TestKind.JUnit5:
+            artifactPattern = /junit-jupiter-api-(\d+\.\d+\.\d+(-[a-zA-Z\d]+)?).jar/;
+            break;
+        case TestKind.TestNG:
+            artifactPattern = /testng-(\d+\.\d+\.\d+(-[a-zA-Z\d]+)?).jar/;
+            break;
+        default:
+            return;
+    }
+    let version = 'unknown';
+    for (const entry of [...classpaths, ...modulepaths]) {
+        const fileName = path.basename(entry);
+        const match: RegExpMatchArray | null = artifactPattern.exec(fileName);
+        if (match) {
+            version = match[1];
+            break;
+        }
+    }
+    sendInfo('', {
+        testFramework: testKind,
+        version,
+    });
 }
 
 interface IRunOption {
