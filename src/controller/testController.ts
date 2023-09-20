@@ -567,7 +567,7 @@ function trackTestFrameworkVersion(testKind: TestKind, classpaths: string[], mod
         }
     }
     sendInfo('', {
-        testFramework: testKind,
+        testFramework: TestKind[testKind],
         version,
     });
 }
