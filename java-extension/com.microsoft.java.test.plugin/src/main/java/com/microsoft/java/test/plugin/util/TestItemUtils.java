@@ -20,8 +20,8 @@ import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
+import org.eclipse.jdt.internal.core.manipulation.JavaElementLabelsCore;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
-import org.eclipse.jdt.ls.core.internal.hover.JavaElementLabels;
 import org.eclipse.lsp4j.Range;
 
 @SuppressWarnings("restriction")
@@ -51,7 +51,8 @@ public class TestItemUtils {
                     final String className = method.getDeclaringType().getFullyQualifiedName();
                     // Generics don't come through in the test results, so we need to strip
                     // them out now.
-                    final String methodName = JavaElementLabels.getElementLabel(element, JavaElementLabels.ALL_DEFAULT)
+                    final String methodName = JavaElementLabelsCore.getElementLabel(element,
+                            JavaElementLabelsCore.ALL_DEFAULT)
                             .replaceAll("<.*?>", "")
                             .replaceAll(" ", "");
                     return className + "#" + methodName;
