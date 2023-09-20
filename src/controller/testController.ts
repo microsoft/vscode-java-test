@@ -557,9 +557,9 @@ function trackTestFrameworkVersion(testKind: TestKind, classpaths: string[], mod
         default:
             return;
     }
-    let version = 'unknown';
+    let version: string = 'unknown';
     for (const entry of [...classpaths, ...modulepaths]) {
-        const fileName = path.basename(entry);
+        const fileName: string = path.basename(entry);
         const match: RegExpMatchArray | null = artifactPattern.exec(fileName);
         if (match) {
             version = match[1];
