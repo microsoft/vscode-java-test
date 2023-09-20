@@ -22,9 +22,9 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.manipulation.JavaElementLabelsCore;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
-import org.eclipse.jdt.ls.core.internal.hover.JavaElementLabels;
 import org.eclipse.lsp4j.Range;
 
 /**
@@ -72,7 +72,7 @@ public class JavaTestItemBuilder {
         } else if (this.element instanceof IPackageFragment && ((IPackageFragment) this.element).isDefaultPackage()) {
             displayName = DEFAULT_PACKAGE_NAME;
         } else {
-            displayName = JavaElementLabels.getElementLabel(this.element, JavaElementLabels.ALL_DEFAULT);
+            displayName = JavaElementLabelsCore.getElementLabel(this.element, JavaElementLabelsCore.ALL_DEFAULT);
         }
         final String fullName = TestItemUtils.parseFullName(this.element, this.level, this.kind);
         if (uri == null) {
