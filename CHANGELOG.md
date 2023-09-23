@@ -4,6 +4,13 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.40.0
+### Added
+- support to specify java executable. [PR#1602](https://github.com/microsoft/vscode-java-test/pull/1602), contributed by [@gayanper](https://github.com/gayanper)
+
+### Fixed
+- Editor gutter shortcuts disappear. [#1604](https://github.com/microsoft/vscode-java-test/issues/1604)
+
 ## 0.39.1
 ### Removed
 - Remove marketplace preview flag. [PR#1592](https://github.com/microsoft/vscode-java-test/pull/1592)
