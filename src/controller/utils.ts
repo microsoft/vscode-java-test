@@ -7,7 +7,7 @@ import * as fse from 'fs-extra';
 import { performance } from 'perf_hooks';
 import { CancellationToken, commands, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
-import { INVOCATION_PREFIX, JavaTestRunnerDelegateCommands } from '../constants';
+import { JavaTestRunnerDelegateCommands } from '../constants';
 import { IJavaTestItem, ProjectType, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
@@ -85,7 +85,7 @@ export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJav
     if (childrenData) {
         // remove the out-of-date children
         parent.children.forEach((child: TestItem) => {
-            if (child.id.startsWith(INVOCATION_PREFIX)) {
+            if (dataCache.get(child)?.testLevel === TestLevel.Invocation) {
                 // only remove the invocation items before a new test session starts
                 return;
             }
@@ -118,15 +118,13 @@ export function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestIte
 function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
     testItem.range = asRange(metaInfo.range);
     testItem.label = `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`;
-    if (metaInfo.testLevel !== TestLevel.Invocation) {
-        dataCache.set(testItem, {
-            jdtHandler: metaInfo.jdtHandler,
-            fullName: metaInfo.fullName,
-            projectName: metaInfo.projectName,
-            testLevel: metaInfo.testLevel,
-            testKind: metaInfo.testKind,
-        });
-    }
+    dataCache.set(testItem, {
+        jdtHandler: metaInfo.jdtHandler,
+        fullName: metaInfo.fullName,
+        projectName: metaInfo.projectName,
+        testLevel: metaInfo.testLevel,
+        testKind: metaInfo.testKind,
+    });
 }
 
 /**
@@ -145,19 +143,15 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
         metaInfo.uri ? Uri.parse(metaInfo.uri) : undefined,
     );
     item.range = asRange(metaInfo.range);
-    if (metaInfo.testLevel !== TestLevel.Invocation
-        // invocations of JUnit5 parameterized tests can be run again using their uniqueId:
-        || (metaInfo.testKind === TestKind.JUnit5 && metaInfo.uniqueId)) {
-        item.tags = [runnableTag];
-        dataCache.set(item, {
-            jdtHandler: metaInfo.jdtHandler,
-            fullName: metaInfo.fullName,
-            projectName: metaInfo.projectName,
-            testLevel: metaInfo.testLevel,
-            testKind: metaInfo.testKind,
-            uniqueId: metaInfo.uniqueId
-        });
-    }
+    item.tags = [runnableTag];
+    dataCache.set(item, {
+        jdtHandler: metaInfo.jdtHandler,
+        fullName: metaInfo.fullName,
+        projectName: metaInfo.projectName,
+        testLevel: metaInfo.testLevel,
+        testKind: metaInfo.testKind,
+        uniqueId: metaInfo.uniqueId
+    });
 
     if (metaInfo.testLevel === TestLevel.Invocation) {
         item.sortText = metaInfo.sortText ?? metaInfo.id;

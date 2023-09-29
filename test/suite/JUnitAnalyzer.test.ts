@@ -430,7 +430,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         // We need to stub this method to avoid issues with the TestController
         // not being set up in the non-test version of the utils file.
         const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
-        const dummy = generateTestItem(testController, '[__INVOCATION__]-dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const dummy = generateTestItem(testController, 'dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
         stub.returns(dummy);
         analyzer.analyzeData(testRunnerOutput);
 
@@ -498,7 +498,45 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         // We need to stub this method to avoid issues with the TestController
         // not being set up in the non-test version of the utils file.
         const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
-        const dummy = generateTestItem(testController, '[__INVOCATION__]-dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const dummy = generateTestItem(testController, 'dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        stub.returns(dummy);
+        analyzer.analyzeData(testRunnerOutput);
+
+        sinon.assert.calledWith(startedSpy, dummy);
+        sinon.assert.calledWith(passedSpy, dummy);
+    });
+
+    test("can handle DynamicContainer", () => {
+        const testItem = generateTestItem(testController, 'junit@junit5.TestFactoryTest#testContainers()', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const passedSpy = sinon.spy(testRun, 'passed');
+        const testRunnerOutput = `%TESTC  0 v2
+%TSTTREE2,junit5.TestFactoryTest,true,1,false,1,TestFactoryTest,,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]
+%TSTTREE3,testContainers(junit5.TestFactoryTest),true,0,false,2,testContainers(),,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]/[test-factory:testContainers()]
+%TSTTREE4,testContainers(junit5.TestFactoryTest),true,0,true,3,Container,,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]/[test-factory:testContainers()]/[dynamic-container:#1]
+%TSTTREE5,testContainers(junit5.TestFactoryTest),false,1,true,4,Test,,[engine:junit-jupiter]/[class:junit5.TestFactoryTest]/[test-factory:testContainers()]/[dynamic-container:#1]/[dynamic-test:#1]
+%TESTS  5,testContainers(junit5.TestFactoryTest)
+
+%TESTE  5,testContainers(junit5.TestFactoryTest)
+
+%RUNTIME103`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+
+        // We need to stub this method to avoid issues with the TestController
+        // not being set up in the non-test version of the utils file.
+        const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
+        const dummy = generateTestItem(testController, 'dummy', TestKind.JUnit5, new Range(10, 0, 16, 0));
         stub.returns(dummy);
         analyzer.analyzeData(testRunnerOutput);
 
