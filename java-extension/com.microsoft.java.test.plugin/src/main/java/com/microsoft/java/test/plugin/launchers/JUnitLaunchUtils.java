@@ -95,12 +95,25 @@ public class JUnitLaunchUtils {
             return null;
         }
 
+        final Response<JUnitLaunchArguments> result;
         if (TESTNG_LOADER.equals(info.testKind)) {
             // TestNG is not suported yet, we only use the junit launch configuration to resolve the classpath
-            return resolveTestNGLaunchArguments(configuration, javaProject, delegate);
+            result = resolveTestNGLaunchArguments(configuration, javaProject, delegate);
+        } else {
+            result = delegate.getJUnitLaunchArguments(configuration, "run", monitor);
         }
 
-        return delegate.getJUnitLaunchArguments(configuration, "run", monitor);
+        if (result != null && result.getStatus() == Response.OK) {
+            // If the project is unmanaged folder, we need to set the working directory
+            // to the folder that is opened in the editor.
+            if (ProjectUtils.isUnmanagedFolder(javaProject.getProject())) {
+                final IPath realLocation = ProjectUtils.getProjectRealFolder(javaProject.getProject());
+                if (realLocation != null) {
+                    result.getBody().workingDirectory = realLocation.toOSString();
+                }
+            }
+        }
+        return result;
     }
 
     public static void addOverrideDependencies(List<String> vmArgs, String dependencies) {
