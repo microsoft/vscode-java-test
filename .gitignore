@@ -30,8 +30,6 @@ hs_err_pid*
 **/node_modules/
 .DS_Store
 target/
-.classpath
-.project
 .settings
 **/.checkstyle
 target/

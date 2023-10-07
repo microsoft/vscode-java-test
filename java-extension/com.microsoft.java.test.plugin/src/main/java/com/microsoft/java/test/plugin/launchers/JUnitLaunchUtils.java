@@ -12,7 +12,6 @@
 package com.microsoft.java.test.plugin.launchers;
 
 import com.google.gson.Gson;
-import com.microsoft.java.test.plugin.launchers.JUnitLaunchConfigurationDelegate.JUnitLaunchArguments;
 import com.microsoft.java.test.plugin.model.Response;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;

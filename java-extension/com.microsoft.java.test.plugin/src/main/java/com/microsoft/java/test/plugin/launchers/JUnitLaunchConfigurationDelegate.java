@@ -213,14 +213,4 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR, "", e)); //$NON-NLS-1$
         }
     }
-
-    public static class JUnitLaunchArguments {
-        String workingDirectory;
-        String mainClass;
-        String projectName;
-        String[] classpath;
-        String[] modulepath;
-        String[] vmArguments;
-        String[] programArguments;
-    }
 }
