@@ -1,6 +1,7 @@
 {
     "projects": [
-        "./java-extension/com.microsoft.java.test.plugin"
+        "./java-extension/com.microsoft.java.test.plugin",
+        "./java-extension/com.microsoft.java.test.plugin.test"
     ],
     "targetPlatform": "./java-extension/com.microsoft.java.test.target/com.microsoft.java.test.tp.target"
 }

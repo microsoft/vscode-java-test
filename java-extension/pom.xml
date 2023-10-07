@@ -14,6 +14,7 @@
     <modules>
         <module>build-tools</module>
         <module>com.microsoft.java.test.plugin</module>
+        <module>com.microsoft.java.test.plugin.test</module>
         <module>com.microsoft.java.test.plugin.site</module>
         <module>com.microsoft.java.test.target</module>
         <module>com.microsoft.java.test.runner</module>
