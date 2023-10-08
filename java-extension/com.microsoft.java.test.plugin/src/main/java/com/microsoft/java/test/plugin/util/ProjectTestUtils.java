@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2017-2021 Microsoft Corporation and others.
+* Copyright (c) 2017-2023 Microsoft Corporation and others.
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
 * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 
 package com.microsoft.java.test.plugin.util;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathAttribute;
@@ -111,13 +112,13 @@ public final class ProjectTestUtils {
             }
     
             if (isTestEntry(entry)) {
-                paths.add(new TestSourcePath(parseTestSourcePathString(entry, project), true));
+                addTestSourcePath(paths, project.getProject(), entry, true);
                 continue;
             }
     
             // Always return true Eclipse & invisible project
             if (ProjectUtils.isGeneralJavaProject(project.getProject())) {
-                paths.add(new TestSourcePath(parseTestSourcePathString(entry, project), false));
+                addTestSourcePath(paths, project.getProject(), entry, false);
             }
         }
         return paths;
@@ -134,14 +135,20 @@ public final class ProjectTestUtils {
                 .collect(Collectors.toSet());
     }
 
-    private static String parseTestSourcePathString(IClasspathEntry entry, IJavaProject project) {
-        final IPath relativePath = entry.getPath().makeRelativeTo(project.getPath());
+    private static void addTestSourcePath(List<TestSourcePath> paths, IProject project,
+            IClasspathEntry entry, boolean isStrict) {
+        final IPath relativePath = entry.getPath().makeRelativeTo(project.getFullPath());
+        final IPath testSourcePath;
         // Eclipse project that source files stored directly at project root
         if (relativePath.isEmpty()) {
-            return project.getProject().getLocation().toOSString();
+            testSourcePath = project.getLocation();
+        } else {
+            testSourcePath = project.getFolder(relativePath).getLocation();
         }
 
-        return project.getProject().getFolder(relativePath).getLocation().toOSString();
+        if (testSourcePath != null) {
+            paths.add(new TestSourcePath(testSourcePath.toOSString(), isStrict));
+        }
     }
 
     public static boolean isTest(IJavaProject project, IPath path, boolean containsGeneral) {

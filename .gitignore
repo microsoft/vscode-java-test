@@ -31,6 +31,8 @@ hs_err_pid*
 .DS_Store
 target/
 .settings
+test/**/.classpath
+test/**/.project
 **/.checkstyle
 target/
 bin/
