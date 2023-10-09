@@ -1,14 +1,12 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { TestController, TestItem, tests, window } from "vscode";
-import { INVOCATION_PREFIX } from '../../src/constants';
 import { handleInvocations } from '../../src/controller/testController';
 import { dataCache } from "../../src/controller/testItemDataCache";
 import { TestKind, TestLevel } from "../../src/types";
 import { setupTestEnv } from './utils';
 
 function generateTestItem(testController: TestController, id: string, testKind: TestKind, testLevel: TestLevel, uniqueId?: string): TestItem {
-    id = testLevel === TestLevel.Invocation ? INVOCATION_PREFIX + id : id;
     const testItem = testController.createTestItem(id, id + '_label');
     dataCache.set(testItem, {
         jdtHandler: id + '_jdtHandler',

@@ -6,7 +6,6 @@ import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
-import { INVOCATION_PREFIX } from '../constants';
 import { IProgressReporter } from '../debugger.api';
 import { progressProvider } from '../extension';
 import { testSourceProvider } from '../provider/testSourceProvider';
@@ -420,7 +419,7 @@ function removeNonRerunTestInvocations(testItems: TestItem[]): void {
         if (rerunMethods.includes(item)) {
             continue;
         }
-        if (item.id.startsWith(INVOCATION_PREFIX)) {
+        if (dataCache.get(item)?.testLevel === TestLevel.Invocation) {
             item.parent?.children.delete(item.id);
             continue;
         }

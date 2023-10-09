@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
-import { INVOCATION_PREFIX } from '../../constants';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { createTestItem, updateOrCreateTestItem } from '../../controller/utils';
 import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { findTestLocation, setTestState, TestResultState } from '../utils';
+import { JUnitTestPart } from '../../constants';
 
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
@@ -192,20 +192,13 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     protected getTestIdForJunit5Method(message: string): string {
-        const classId: string = 'class:';
-        const nestedClassId: string = 'nested-class:';
-        const methodId: string = 'method:';
-        const testFactoryId: string = 'test-factory:';
-        // Property id is for jqwik
-        const propertyId: string = 'property:';
-        const testTemplateId: string = 'test-template:';
-
         // We're expecting something like:
         // [engine:junit5]/[class:com.example.MyTest]/[method:myTest]/[test-template:myTest(String\, int)]
         const parts: string[] = message.split('/');
 
         let className: string = '';
         let methodName: string = '';
+        let InvocationSuffix: string = '';
 
         if (!parts || parts.length === 0) {
             // The pattern doesn't match what we're expecting, so we'll go ahead and defer to the non JUnit5 method.
@@ -216,38 +209,44 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             // Remove the leading and trailing brackets.
             part = part.trim().replace(/\[/g, '').replace(/\]/g, '');
 
-            if (part.startsWith(classId)) {
-                className = part.substring(classId.length);
-            } else if (part.startsWith(methodId)) {
-                const rawMethodName: string = part.substring(methodId.length);
+            if (part.startsWith(JUnitTestPart.CLASS)) {
+                className = part.substring(JUnitTestPart.CLASS.length);
+            } else if (part.startsWith(JUnitTestPart.METHOD)) {
+                const rawMethodName: string = part.substring(JUnitTestPart.METHOD.length);
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
-            } else if (part.startsWith(testFactoryId)) {
-                const rawMethodName: string = part.substring(testFactoryId.length);
+            } else if (part.startsWith(JUnitTestPart.TEST_FACTORY)) {
+                const rawMethodName: string = part.substring(JUnitTestPart.TEST_FACTORY.length);
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
-            } else if (part.startsWith(nestedClassId)) {
-                const nestedClassName: string = part.substring(nestedClassId.length);
+            } else if (part.startsWith(JUnitTestPart.NESTED_CLASS)) {
+                const nestedClassName: string = part.substring(JUnitTestPart.NESTED_CLASS.length);
                 className = `${className}$${nestedClassName}`;
-            } else if (part.startsWith(testTemplateId)) {
-                const rawMethodName: string = part.substring(testTemplateId.length)
+            } else if (part.startsWith(JUnitTestPart.TEST_TEMPLATE)) {
+                const rawMethodName: string = part.substring(JUnitTestPart.TEST_TEMPLATE.length)
                     .replace(/\\,/g, ',')
                     .replace(/ /g, '');
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
-            } else if (part.startsWith(propertyId)) {
-                const rawMethodName: string = part.substring(propertyId.length)
+            } else if (part.startsWith(JUnitTestPart.PROPERTY)) {
+                const rawMethodName: string = part.substring(JUnitTestPart.PROPERTY.length)
                     .replace(/\\,/g, ',')
                     .replace(/ /g, '');
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
+            } else if (part.startsWith(JUnitTestPart.TEST_TEMPLATE_INVOCATION)) {
+                InvocationSuffix += `[${part.substring(JUnitTestPart.TEST_TEMPLATE_INVOCATION.length)}]`;
+            } else if (part.startsWith(JUnitTestPart.DYNAMIC_CONTAINER)) {
+                InvocationSuffix += `[${part.substring(JUnitTestPart.DYNAMIC_CONTAINER.length)}]`;
+            } else if (part.startsWith(JUnitTestPart.DYNAMIC_TEST)) {
+                InvocationSuffix += `[${part.substring(JUnitTestPart.DYNAMIC_TEST.length)}]`;
             }
         });
 
         if (className) {
-            return `${this.projectName}@${className}${methodName}`;
+            return `${this.projectName}@${className}${methodName}${InvocationSuffix}`;
         } else {
-            return `${this.projectName}@${message}`;
+            return `${this.projectName}@${message}${InvocationSuffix}`;
         }
     }
 
@@ -354,8 +353,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 const parent: TestItem | undefined = parentInfo?.testItem;
                 if (parent) {
                     const parentData: ITestItemData | undefined = dataCache.get(parent);
-                    if (parentData?.testLevel === TestLevel.Method) {
-                        testItem = this.enlistDynamicMethodToTestMapping(testItem, parent, parentData, displayName, uniqueId);
+                    if (parentData?.testLevel === TestLevel.Method || parentData?.testLevel === TestLevel.Invocation) {
+                        testItem = this.enlistDynamicMethodToTestMapping(testId, parent, parentData, displayName, uniqueId);
                     }
                 }
             } else {
@@ -376,7 +375,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                             jdtHandler: '',
                             fullName: testId.substr(testId.indexOf('@') + 1),
                             label: this.getTestMethodName(displayName),
-                            id: `${INVOCATION_PREFIX}${testId}`,
+                            id: testId,
                             projectName: this.projectName,
                             testKind: this.testContext.kind,
                             testLevel: TestLevel.Invocation,
@@ -412,8 +411,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     // Leaving this public so that it can be mocked when testing.
-    public enlistDynamicMethodToTestMapping(testItem: TestItem | undefined, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined): TestItem {
-        testItem = updateOrCreateTestItem(parent, {
+    public enlistDynamicMethodToTestMapping(testId: string, parent: TestItem, parentData: ITestItemData, displayName: string, uniqueId: string | undefined): TestItem {
+        return updateOrCreateTestItem(parent, {
             children: [],
             uri: parent.uri?.toString(),
             range: parent.range,
@@ -421,8 +420,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             fullName: parentData.fullName,
             label: this.getTestMethodName(displayName),
             // prefer uniqueId, as it does not change when re-running only a single invocation:
-            id: uniqueId ? `${INVOCATION_PREFIX}${uniqueId}`
-                : `${INVOCATION_PREFIX}${parent.id}[#${parent.children.size + 1}]`,
+            id: uniqueId ? uniqueId : testId,
             projectName: parentData.projectName,
             testKind: parentData.testKind,
             testLevel: TestLevel.Invocation,
@@ -430,7 +428,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             // We will just create a string padded with the character "a" to provide easy sorting.
             sortText: ''.padStart(parent.children.size + 1, 'a')
         });
-        return testItem;
     }
 
     private async tryAppendMessage(item: TestItem, testMessage: TestMessage, testState: TestResultState): Promise<void> {
@@ -440,15 +437,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             testMessage.location = new Location(item.uri, item.range);
         } else {
             let id: string = item.id;
-            if (id.startsWith(INVOCATION_PREFIX)) {
-                id = id.substring(INVOCATION_PREFIX.length);
-                if (this.testContext.kind === TestKind.JUnit) {
-                    // change test[0] -> test
-                    // to fix: https://github.com/microsoft/vscode-java-test/issues/1296
-                    const indexOfParameterizedTest: number = id.lastIndexOf('[');
-                    if (indexOfParameterizedTest > -1) {
-                        id = id.substring(0, id.lastIndexOf('['));
-                    }
+            if (this.testContext.kind === TestKind.JUnit) {
+                // change test[0] -> test
+                // to fix: https://github.com/microsoft/vscode-java-test/issues/1296
+                const indexOfParameterizedTest: number = id.lastIndexOf('[');
+                if (indexOfParameterizedTest > -1) {
+                    id = id.substring(0, id.lastIndexOf('['));
                 }
             }
             const location: Location | undefined = await findTestLocation(id);
