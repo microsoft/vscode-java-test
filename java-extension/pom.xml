@@ -9,7 +9,7 @@
     <properties>
         <base.name>Test Runner for Java</base.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <tycho-version>2.7.2</tycho-version>
+        <tycho-version>4.0.3</tycho-version>
     </properties>
     <modules>
         <module>build-tools</module>
