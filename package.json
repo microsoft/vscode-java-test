@@ -507,6 +507,6 @@
         "lru-cache": "^7.17.0",
         "vscode-extension-telemetry-wrapper": "^0.13.3",
         "vscode-languageclient": "6.0.0-next.9",
-        "vscode-tas-client": "^0.1.63"
+        "vscode-tas-client": "^0.1.75"
     }
 }
