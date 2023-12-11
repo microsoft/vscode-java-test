@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><?pde version="3.8"?><target name="JDTLS.EXT" sequenceNumber="38">
     <locations>
-		<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+        <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.eclipse.buildship.feature.group" version="0.0.0"/>
             <repository location="https://download.eclipse.org/buildship/updates/e423/snapshots/3.x/3.1.7.v20221108-1729-s/"/>
         </location>
-		<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+        <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.eclipse.m2e.jdt" version="0.0.0"/>
             <unit id="org.eclipse.m2e.apt.core" version="0.0.0"/>
             <unit id="org.eclipse.m2e.core" version="0.0.0"/>
@@ -41,7 +41,16 @@
         </location>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
-            <repository location="https://download.eclipse.org/tools/orbit/R-builds/R20200529191137/repository/"/>
+                    <repository location="https://download.eclipse.org/tools/orbit/R-builds/R20200529191137/repository/"/>
+        </location>
+        <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven">
+            <dependencies>
+                <dependency>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>org.jacoco.core</artifactId>
+                    <version>0.8.11</version>
+                </dependency>
+            </dependencies>
         </location>
     </locations>
 </target>

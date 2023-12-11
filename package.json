@@ -21,6 +21,9 @@
         "debug"
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
+    "enabledApiProposals": [
+        "testCoverage"
+    ],
     "engines": {
         "vscode": "^1.69.0"
     },
@@ -71,6 +74,7 @@
             "./server/org.eclipse.jdt.junit4.runtime_1.3.0.v20220609-1843.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.1.100.v20220907-0450.jar",
             "./server/org.opentest4j_1.2.0.jar",
+            "./server/org.jacoco.core_0.8.11.202310140853.jar",
             "./server/com.microsoft.java.test.plugin-0.40.1.jar"
         ],
         "viewsWelcome": [
@@ -472,7 +476,9 @@
         "test": "npm run compile && node ./out/test/index.js",
         "lint": "eslint -c .eslintrc.js --ext .ts ./src",
         "build-plugin": "node scripts/buildJdtlsExt.js",
-        "vscode:prepublish": "webpack --mode production"
+        "vscode:prepublish": "webpack --mode production",
+        "download-api": "dts main && dts dev",
+        "postinstall": "npm run download-api"
     },
     "extensionDependencies": [
         "redhat.java",
@@ -489,6 +495,7 @@
         "@types/vscode": "1.69.0",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
         "@typescript-eslint/parser": "^5.60.1",
+        "@vscode/dts": "^0.4.0",
         "@vscode/test-electron": "^2.3.0",
         "eslint": "^8.43.0",
         "glob": "^7.2.3",
