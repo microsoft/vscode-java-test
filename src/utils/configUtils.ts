@@ -3,13 +3,13 @@
 
 import * as crypto from 'crypto';
 import * as _ from 'lodash';
-import { ConfigurationTarget, QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { ConfigurationTarget, QuickPickItem, TestItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { Configurations, Dialog } from '../constants';
 import { extensionContext } from '../extension';
 import { getBuiltinConfig, IExecutionConfig } from '../runConfigs';
 
-export async function loadRunConfig(workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
+export async function loadRunConfig(testItems: TestItem[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
     const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(Configurations.CONFIG_SETTING_KEY, {});
     const configItems: IExecutionConfig[] = [];
     if (!_.isEmpty(configSetting)) {
@@ -40,7 +40,13 @@ export async function loadRunConfig(workspaceFolder: WorkspaceFolder): Promise<I
             return defaultConfigs[0];
         }
     }
-    return await selectQuickPick(configItems, workspaceFolder);
+
+    const candidateConfigItems: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
+        const pattern: RegExp | undefined = config.filters?.pattern ? new RegExp(config.filters.pattern) : undefined;
+        return testItems.every((testItem: TestItem) => pattern ? pattern.test(testItem.id) : true);
+    });
+
+    return await selectQuickPick(candidateConfigItems, workspaceFolder);
 }
 
 async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {

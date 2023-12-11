@@ -318,6 +318,11 @@
                                     },
                                     "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
                                     "default": []
+                                },
+                                "pattern": {
+                                    "type": "string",
+                                    "markdownDescription": "%configuration.java.test.config.filters.pattern.description%",
+                                    "default": ""
                                 }
                             }
                         }
@@ -456,6 +461,11 @@
                                         },
                                         "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
                                         "default": []
+                                    },
+                                    "pattern": {
+                                        "type": "string",
+                                        "markdownDescription": "%configuration.java.test.config.filters.pattern.description%",
+                                        "default": ""
                                     }
                                 }
                             }

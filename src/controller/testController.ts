@@ -203,7 +203,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             window.showErrorMessage(`Failed to get workspace folder from test item: ${items[0].label}.`);
                             continue;
                         }
-                        const config: IExecutionConfig | undefined = await loadRunConfig(workspaceFolder);
+                        const config: IExecutionConfig | undefined = await loadRunConfig(items, workspaceFolder);
                         if (!config) {
                             continue;
                         }
