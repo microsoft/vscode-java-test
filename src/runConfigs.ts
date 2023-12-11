@@ -103,8 +103,8 @@ export interface IExecutionConfig {
         tags?: string[]
 
         /**
-         * The regex pattern for matching tests by ID to determine if the configuration should be
-         * run with.
+         * The regex pattern for matching tests by fully-qualified name to determine if the
+         * configuration should be run with.
          */
         pattern?: string
     }

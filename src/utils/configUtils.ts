@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 import { ConfigurationTarget, QuickPickItem, TestItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { Configurations, Dialog } from '../constants';
+import { dataCache } from '../controller/testItemDataCache';
 import { extensionContext } from '../extension';
 import { getBuiltinConfig, IExecutionConfig } from '../runConfigs';
 
@@ -43,7 +44,14 @@ export async function loadRunConfig(testItems: TestItem[], workspaceFolder: Work
 
     const candidateConfigItems: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
         const pattern: RegExp | undefined = config.filters?.pattern ? new RegExp(config.filters.pattern) : undefined;
-        return testItems.every((testItem: TestItem) => pattern ? pattern.test(testItem.id) : true);
+        return testItems.every((testItem: TestItem) => {
+            if (!pattern) {
+                return true;
+            }
+
+            const fullName: string | undefined = dataCache.get(testItem)?.fullName;
+            return fullName && pattern.test(fullName);
+        });
     });
 
     return await selectQuickPick(candidateConfigItems, workspaceFolder);
