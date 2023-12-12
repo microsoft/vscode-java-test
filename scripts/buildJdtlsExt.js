@@ -26,6 +26,7 @@ const bundleList = [
     'junit-platform-suite-commons',
     'junit-platform-suite-engine',
     'org.apiguardian.api',
+    'org.jacoco.core'
 ];
 cp.execSync(`${mvnw()} clean verify`, { cwd: serverDir, stdio: [0, 1, 2] });
 copy(path.join(serverDir, 'com.microsoft.java.test.plugin/target'), path.resolve('server'), (file) => path.extname(file) === '.jar');
@@ -34,6 +35,7 @@ copy(path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository
     return bundleList.some(bundleName => file.startsWith(bundleName));
 });
 updateVersion();
+downloadJacocoAgent();
 
 function copy(sourceFolder, targetFolder, fileFilter) {
     const jars = fse.readdirSync(sourceFolder).filter(file => fileFilter(file));
@@ -71,6 +73,18 @@ function findNewRequiredJar(fileName) {
         return file.indexOf(fileName) >= 0;
     });
     return f;
+}
+
+function downloadJacocoAgent() {
+    const version = "0.8.11";
+    const jacocoAgentUrl = `https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/${version}/org.jacoco.agent-${version}-runtime.jar`;
+    const jacocoAgentPath = path.resolve('server', 'jacocoagent.jar');
+    if (!fs.existsSync(jacocoAgentPath)) {
+        cp.execSync(`curl -L ${jacocoAgentUrl} -o ${jacocoAgentPath}`);
+    }
+    if (!fs.existsSync(jacocoAgentPath)) {
+        throw new Error('Failed to download jacoco agent.');
+    }
 }
 
 function isWin() {
