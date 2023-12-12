@@ -15,12 +15,18 @@ import com.microsoft.java.test.plugin.coverage.model.BranchCoverage;
 import com.microsoft.java.test.plugin.coverage.model.LineCoverage;
 import com.microsoft.java.test.plugin.coverage.model.MethodCoverage;
 import com.microsoft.java.test.plugin.coverage.model.SourceFileCoverage;
+import com.microsoft.java.test.plugin.util.JUnitPlugin;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
@@ -39,6 +45,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -49,8 +57,8 @@ public class CoverageHandler {
 
     private IJavaProject javaProject;
     private Path reportBasePath;
-
-    private static final String CONSTRUCTOR_NAME = "<init>";
+    // TODO: expose this setting to users?
+    private boolean ignoreCompilerGeneratedMethod = false;
 
     /**
      * The Jacoco data file name
@@ -62,13 +70,15 @@ public class CoverageHandler {
         reportBasePath = Paths.get(basePath);
     }
 
+    /**
+     * Get coverage details that needed by the client.
+     */
     public List<SourceFileCoverage> getCoverageDetail(IProgressMonitor monitor) throws JavaModelException, IOException {
         if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(javaProject.getProject().getName())) {
             Collections.emptyList();
         }
         final List<SourceFileCoverage> coverage = new LinkedList<>();
         final Map<IPath, List<IPath>> outputToSourcePaths = getOutputToSourcePathsMapping();
-
         final File executionDataFile = reportBasePath.resolve(JACOCO_EXEC).toFile();
         final ExecFileLoader execFileLoader = new ExecFileLoader();
         execFileLoader.load(executionDataFile);
@@ -84,6 +94,7 @@ public class CoverageHandler {
                 }
 
                 if (sourceFileCoverage.getFirstLine() == ISourceNode.UNKNOWN_LINE) {
+                    JUnitPlugin.logInfo("Missing debug information for " + sourceFileCoverage.getName());
                     continue; // no debug information
                 }
                 final File sourceFile = getSourceFile(entry.getValue(), sourceFileCoverage);
@@ -91,11 +102,8 @@ public class CoverageHandler {
                     continue;
                 }
 
-                final URI uri = sourceFile.toURI();
-                final List<LineCoverage> lineCoverages = getLineCoverages(sourceFileCoverage);
-                final List<MethodCoverage> methodCoverages = getMethodCoverages(coverageBuilder,
-                        sourceFileCoverage);
-                coverage.add(new SourceFileCoverage(uri.toString(), lineCoverages, methodCoverages));
+                coverage.add(getSourceFileCoverage(
+                        sourceFileCoverage, sourceFile, coverageBuilder.getClasses(), monitor));
             }
         }
         return coverage;
@@ -141,6 +149,53 @@ public class CoverageHandler {
         return javaProject.getProject().getLocation().append(path).toFile();
     }
 
+    private SourceFileCoverage getSourceFileCoverage(ISourceFileCoverage sourceFileCoverage,
+            File sourceFile, Collection<IClassCoverage> allClassCoverages, IProgressMonitor monitor)
+            throws JavaModelException {
+        final URI uri = sourceFile.toURI();
+        final List<LineCoverage> lineCoverages = getLineCoverages(sourceFileCoverage);
+        final List<IClassCoverage> classCoverages = findBelongingClassCoverages(
+                    allClassCoverages, sourceFileCoverage.getPackageName(),
+                    sourceFileCoverage.getName());
+        final List<MethodCoverage> methodCoverages = new LinkedList<>();
+        if (ignoreCompilerGeneratedMethod) {
+            methodCoverages.addAll(getMethodCoveragesWithoutJavaModel(classCoverages));
+        } else {
+            final ICompilationUnit unit = getCompilationUnit(javaProject, sourceFile);
+            if (unit != null) {
+                final TypeTraverser typeTraverser = new TypeTraverser(unit);
+                typeTraverser.process(monitor);
+                methodCoverages.addAll(getMethodCoverages(classCoverages, typeTraverser));
+            } else {
+                methodCoverages.addAll(getMethodCoveragesWithoutJavaModel(classCoverages));
+            }
+        }
+
+        return new SourceFileCoverage(uri.toString(), lineCoverages, methodCoverages);
+    }
+
+    private List<IClassCoverage> findBelongingClassCoverages(final Collection<IClassCoverage> classCoverages,
+            final String packageName, final String sourceFileName) {
+        final List<IClassCoverage> belongingClassCoverages = new LinkedList<>();
+        for (final IClassCoverage classCoverage : classCoverages) {
+            if (classCoverage.getPackageName().equals(packageName) &&
+                    classCoverage.getSourceFileName().equals(sourceFileName)) {
+                belongingClassCoverages.add(classCoverage);
+            }
+        }
+        return belongingClassCoverages;
+    }
+
+    private static ICompilationUnit getCompilationUnit(IJavaProject javaProject, File javaFile) {
+        final IPath filePath = new org.eclipse.core.runtime.Path(javaFile.getAbsolutePath());
+        final IPath relativePath = filePath.makeRelativeTo(javaProject.getProject().getLocation());
+        final IFile file = javaProject.getProject().getFile(relativePath);
+        if (file.exists()) {
+            return (ICompilationUnit) JavaCore.create(file);
+        }
+        return null;
+    }
+
     private List<LineCoverage> getLineCoverages(final ISourceFileCoverage sourceFileCoverage) {
         final List<LineCoverage> lineCoverages = new LinkedList<>();
         final int last = sourceFileCoverage.getLastLine();
@@ -162,21 +217,40 @@ public class CoverageHandler {
         return lineCoverages;
     }
 
-    private List<MethodCoverage> getMethodCoverages(final CoverageBuilder coverageBuilder,
-            final ISourceFileCoverage sourceFileCoverage) {
+    private List<MethodCoverage> getMethodCoverages(final List<IClassCoverage> classCoverages,
+            final TypeTraverser typeTraverser) throws JavaModelException {
         final List<MethodCoverage> methodCoverages = new LinkedList<>();
-        for (final IClassCoverage classCoverage : coverageBuilder.getClasses()) {
-            if (classCoverage.getSourceFileName().equals(sourceFileCoverage.getName())) {
+        for (final IClassCoverage classCoverage : classCoverages) {
+            final IType type = typeTraverser.getType(classCoverage.getName());
+            if (type == null) {
+                methodCoverages.addAll(getMethodCoveragesWithoutJavaModel(Arrays.asList(classCoverage)));
+            } else {
+                final MethodLocator methodLocator = new MethodLocator(type);
                 for (final IMethodCoverage methodCoverage : classCoverage.getMethods()) {
-                    if (CONSTRUCTOR_NAME.equals(methodCoverage.getName())) {
-                        continue;
+                    final IMethod method = methodLocator.findMethod(methodCoverage.getName(),
+                            methodCoverage.getDesc());
+                    if (method != null) {
+                        methodCoverages.add(new MethodCoverage(
+                            methodCoverage.getFirstLine(),
+                            methodCoverage.getMethodCounter().getCoveredCount() > 0 ? 1 : 0,
+                            methodCoverage.getName()
+                        ));
                     }
-                    methodCoverages.add(new MethodCoverage(
-                        methodCoverage.getFirstLine(),
-                        methodCoverage.getMethodCounter().getCoveredCount() > 0 ? 1 : 0,
-                        methodCoverage.getName()
-                    ));
                 }
+            }
+        }
+        return methodCoverages;
+    }
+
+    private List<MethodCoverage> getMethodCoveragesWithoutJavaModel(final List<IClassCoverage> classCoverages) {
+        final List<MethodCoverage> methodCoverages = new LinkedList<>();
+        for (final IClassCoverage classCoverage : classCoverages) {
+            for (final IMethodCoverage methodCoverage : classCoverage.getMethods()) {
+                methodCoverages.add(new MethodCoverage(
+                    methodCoverage.getFirstLine(),
+                    methodCoverage.getMethodCounter().getCoveredCount() > 0 ? 1 : 0,
+                    methodCoverage.getName()
+                ));
             }
         }
         return methodCoverages;
