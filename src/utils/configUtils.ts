@@ -44,11 +44,12 @@ export async function loadRunConfig(testItems: TestItem[], workspaceFolder: Work
 
     const candidateConfigItems: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
         const pattern: RegExp | undefined = config.filters?.pattern ? new RegExp(config.filters.pattern) : undefined;
-        return testItems.every((testItem: TestItem) => {
-            if (!pattern) {
-                return true;
-            }
 
+        if (!pattern) {
+            return true;
+        }
+
+        return testItems.every((testItem: TestItem) => {
             const fullName: string | undefined = dataCache.get(testItem)?.fullName;
             return fullName && pattern.test(fullName);
         });
