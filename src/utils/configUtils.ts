@@ -43,20 +43,14 @@ export async function loadRunConfig(testItems: TestItem[], workspaceFolder: Work
     }
 
     const candidateConfigItems: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
-        const pattern: string | undefined = config.filters?.pattern;
-
-        if (!pattern) {
-            return testItems;
-        }
-
-        const invertResult: boolean = pattern.startsWith('!');
-        const patternRegex: RegExp = new RegExp(invertResult ? pattern.slice(1) : pattern);
-
+        const pattern: RegExp | undefined = config.filters?.pattern ? new RegExp(config.filters.pattern) : undefined;
         return testItems.every((testItem: TestItem) => {
-            const fullName: string | undefined = dataCache.get(testItem)?.fullName;
-            const result: boolean = !!fullName && patternRegex.test(fullName);
+            if (!pattern) {
+                return true;
+            }
 
-            return invertResult ? !result : result;
+            const fullName: string | undefined = dataCache.get(testItem)?.fullName;
+            return fullName && pattern.test(fullName);
         });
     });
 
