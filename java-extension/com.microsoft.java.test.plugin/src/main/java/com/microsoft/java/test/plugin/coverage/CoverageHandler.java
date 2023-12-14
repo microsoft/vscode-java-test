@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -77,6 +78,8 @@ public class CoverageHandler {
                     execFileLoader.getExecutionDataStore(), coverageBuilder);
             final File outputDirectory = getFileForFs(javaProject, entry.getKey());
             analyzer.analyzeAll(outputDirectory);
+            final Map<String, Collection<IClassCoverage>> classCoverageBySourceFilePath =
+                    groupClassCoverageBySourceFilePath(coverageBuilder.getClasses());
             for (final ISourceFileCoverage sourceFileCoverage : coverageBuilder.getSourceFiles()) {
                 if (monitor.isCanceled()) {
                     return Collections.emptyList();
@@ -94,8 +97,10 @@ public class CoverageHandler {
 
                 final URI uri = sourceFile.toURI();
                 final List<LineCoverage> lineCoverages = getLineCoverages(sourceFileCoverage);
-                final List<MethodCoverage> methodCoverages = getMethodCoverages(coverageBuilder,
-                        sourceFileCoverage);
+                final String sourcePath = sourceFileCoverage.getPackageName() + "/" +
+                        sourceFileCoverage.getName();
+                final List<MethodCoverage> methodCoverages = getMethodCoverages(
+                        classCoverageBySourceFilePath.get(sourcePath), sourceFileCoverage);
                 coverage.add(new SourceFileCoverage(uri.toString(), lineCoverages, methodCoverages));
             }
         }
@@ -119,6 +124,16 @@ public class CoverageHandler {
             outputToSourcePaths.computeIfAbsent(outputRelativePath, k -> new LinkedList<>()).add(sourceRelativePath);
         }
         return outputToSourcePaths;
+    }
+
+    private Map<String, Collection<IClassCoverage>> groupClassCoverageBySourceFilePath(
+            final Collection<IClassCoverage> classCoverages) {
+        final Map<String, Collection<IClassCoverage>> result = new HashMap<>();
+        for (final IClassCoverage classCoverage : classCoverages) {
+            final String key = classCoverage.getPackageName() + "/" + classCoverage.getSourceFileName();
+            result.computeIfAbsent(key, k -> new LinkedList<>()).add(classCoverage);
+        }
+        return result;
     }
 
     /**
@@ -163,10 +178,13 @@ public class CoverageHandler {
         return lineCoverages;
     }
 
-    private List<MethodCoverage> getMethodCoverages(final CoverageBuilder coverageBuilder,
+    private List<MethodCoverage> getMethodCoverages(final Collection<IClassCoverage> classCoverages,
             final ISourceFileCoverage sourceFileCoverage) {
+        if (classCoverages == null || classCoverages.isEmpty()) {
+            return Collections.emptyList();
+        }
         final List<MethodCoverage> methodCoverages = new LinkedList<>();
-        for (final IClassCoverage classCoverage : coverageBuilder.getClasses()) {
+        for (final IClassCoverage classCoverage : classCoverages) {
             if (classCoverage.getSourceFileName().equals(sourceFileCoverage.getName())) {
                 for (final IMethodCoverage methodCoverage : classCoverage.getMethods()) {
                     methodCoverages.add(new MethodCoverage(
