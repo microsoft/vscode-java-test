@@ -63,7 +63,7 @@ public class CoverageHandler {
 
     public List<SourceFileCoverage> getCoverageDetail(IProgressMonitor monitor) throws JavaModelException, IOException {
         if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(javaProject.getProject().getName())) {
-            Collections.emptyList();
+            return Collections.emptyList();
         }
         final List<SourceFileCoverage> coverage = new LinkedList<>();
         final Map<IPath, List<IPath>> outputToSourcePaths = getOutputToSourcePathsMapping();

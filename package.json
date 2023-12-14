@@ -474,6 +474,18 @@
                                         "default": []
                                     }
                                 }
+                            },
+                            "coverage": {
+                                "type": "object",
+                                "description": "%configuration.java.test.config.coverage.description%",
+                                "default": {},
+                                "properties": {
+                                    "appendResult": {
+                                        "type": "boolean",
+                                        "description": "%configuration.java.test.config.coverage.appendResult.description%",
+                                        "default": true
+                                    }
+                                }
                             }
                         }
                     },
