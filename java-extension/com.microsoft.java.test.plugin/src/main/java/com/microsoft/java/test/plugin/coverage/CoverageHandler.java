@@ -185,14 +185,12 @@ public class CoverageHandler {
         }
         final List<MethodCoverage> methodCoverages = new LinkedList<>();
         for (final IClassCoverage classCoverage : classCoverages) {
-            if (classCoverage.getSourceFileName().equals(sourceFileCoverage.getName())) {
-                for (final IMethodCoverage methodCoverage : classCoverage.getMethods()) {
-                    methodCoverages.add(new MethodCoverage(
+            for (final IMethodCoverage methodCoverage : classCoverage.getMethods()) {
+                methodCoverages.add(new MethodCoverage(
                         methodCoverage.getFirstLine(),
                         methodCoverage.getMethodCounter().getCoveredCount() > 0 ? 1 : 0,
                         methodCoverage.getName()
-                    ));
-                }
+                ));
             }
         }
         return methodCoverages;
