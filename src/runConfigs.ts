@@ -101,13 +101,12 @@ export interface IExecutionConfig {
          * @since 0.37.0
          */
         tags?: string[]
-
-        /**
-         * The regex pattern for matching tests by fully-qualified name to determine if the
-         * configuration should be run with.
-         */
-        pattern?: string
     }
+
+    /**
+     * The when clause for matching tests by to determine if the configuration should be run with.
+     */
+    when?: string
 }
 
 export function getBuiltinConfig(): IExecutionConfig {

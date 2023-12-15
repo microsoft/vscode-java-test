@@ -42,16 +42,20 @@ export async function loadRunConfig(testItems: TestItem[], workspaceFolder: Work
         }
     }
 
+    const testItemMatch: RegExp = /testItem ~= \/(?<pattern>.*)\//;
+
     const candidateConfigItems: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
-        const pattern: RegExp | undefined = config.filters?.pattern ? new RegExp(config.filters.pattern) : undefined;
+        const pattern: string | undefined = config.when && testItemMatch.exec(config.when)?.groups!['pattern'];
 
         if (!pattern) {
             return true;
         }
 
+        const patternRegex: RegExp = new RegExp(pattern);
+
         return testItems.every((testItem: TestItem) => {
             const fullName: string | undefined = dataCache.get(testItem)?.fullName;
-            return fullName && pattern.test(fullName);
+            return fullName && patternRegex.test(fullName);
         });
     });
 

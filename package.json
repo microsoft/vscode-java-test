@@ -318,13 +318,13 @@
                                     },
                                     "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
                                     "default": []
-                                },
-                                "pattern": {
-                                    "type": "string",
-                                    "markdownDescription": "%configuration.java.test.config.filters.pattern.description%",
-                                    "default": ""
                                 }
                             }
+                        },
+                        "when": {
+                            "type": "string",
+                            "markdownDescription": "%configuration.java.test.config.when.description%",
+                            "default": "testItem ~= //"
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -461,13 +461,13 @@
                                         },
                                         "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
                                         "default": []
-                                    },
-                                    "pattern": {
-                                        "type": "string",
-                                        "markdownDescription": "%configuration.java.test.config.filters.pattern.description%",
-                                        "default": ""
                                     }
                                 }
+                            },
+                            "when": {
+                                "type": "string",
+                                "markdownDescription": "%configuration.java.test.config.when.description%",
+                                "default": "testItem ~= //"
                             }
                         }
                     },
