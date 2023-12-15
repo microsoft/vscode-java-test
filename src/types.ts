@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range, TestItem, TestRun } from 'vscode';
-import * as vscode from 'vscode';
+import { Range, TestItem, TestRun, TestRunProfile, WorkspaceFolder } from 'vscode';
 
 export interface IJavaTestItem {
     children: IJavaTestItem[];
@@ -55,7 +54,8 @@ export interface IRunTestContext {
     projectName: string;
     testItems: TestItem[];
     testRun: TestRun;
-    workspaceFolder: vscode.WorkspaceFolder;
+    workspaceFolder: WorkspaceFolder;
+    profile?: TestRunProfile;
 }
 
 export enum ProjectType {

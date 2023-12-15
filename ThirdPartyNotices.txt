@@ -12,12 +12,13 @@ This project incorporates components from the projects listed below. The origina
 5. Eskibear/vscode-extension-telemetry-wrapper (https://github.com/Eskibear/vscode-extension-telemetry-wrapper)
 6. google/gson (https://github.com/google/gson)
 7. isaacs/node-lru-cache (https://github.com/isaacs/node-lru-cache)
-8. jprichardson/node-fs-extra (https://github.com/jprichardson/node-fs-extra)
-9. junit-team/junit5 (https://github.com/junit-team/junit5)
-10. lodash/lodash (https://github.com/lodash/lodash)
-11. microsoft/vscode-languageserver-node (https://github.com/microsoft/vscode-languageserver-node)
-12. ota4j-team/opentest4j (https://github.com/ota4j-team/opentest4j)
-13. sindresorhus/get-port (https://github.com/sindresorhus/get-port)
+8. jacoco/jacoco (https://github.com/jacoco/jacoco)
+9. jprichardson/node-fs-extra (https://github.com/jprichardson/node-fs-extra)
+10. junit-team/junit5 (https://github.com/junit-team/junit5)
+11. lodash/lodash (https://github.com/lodash/lodash)
+12. microsoft/vscode-languageserver-node (https://github.com/microsoft/vscode-languageserver-node)
+13. ota4j-team/opentest4j (https://github.com/ota4j-team/opentest4j)
+14. sindresorhus/get-port (https://github.com/sindresorhus/get-port)
 
 %% Apache Commons Lang NOTICES AND INFORMATION BEGIN HERE
 =========================================
@@ -975,6 +976,25 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 =========================================
 END OF isaacs/node-lru-cache NOTICES AND INFORMATION
+
+%% jacoco/jacoco NOTICES AND INFORMATION BEGIN HERE
+=========================================
+License
+=======
+
+Copyright (c) 2009, 2023 Mountainminds GmbH & Co. KG and Contributors
+
+The JaCoCo Java Code Coverage Library and all included documentation is made
+available by Mountainminds GmbH & Co. KG, Munich. Except indicated below, the
+Content is provided to you under the terms and conditions of the Eclipse Public
+License Version 2.0 ("EPL"). A copy of the EPL is available at
+[https://www.eclipse.org/legal/epl-2.0/](https://www.eclipse.org/legal/epl-2.0/).
+
+Please visit
+[http://www.jacoco.org/jacoco/trunk/doc/license.html](http://www.jacoco.org/jacoco/trunk/doc/license.html)
+for the complete license information including third party licenses and trademarks.
+=========================================
+END OF jacoco/jacoco NOTICES AND INFORMATION
 
 %% jprichardson/node-fs-extra NOTICES AND INFORMATION BEGIN HERE
 =========================================

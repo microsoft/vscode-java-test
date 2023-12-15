@@ -18,6 +18,7 @@ import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, ITestItemData } from './testItemDataCache';
 import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
+import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
@@ -33,6 +34,7 @@ export function createTestController(): void {
 
     testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, runnableTag);
     testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
+    testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Run, runHandler, false, runnableTag);
 
     testController.refreshHandler = () => {
         refreshExplorer();
@@ -139,6 +141,7 @@ async function runHandler(request: TestRunRequest, token: CancellationToken): Pr
 export const runTests: (request: TestRunRequest, option: IRunOption) => any = instrumentOperation('java.test.runTests', async (operationId: string, request: TestRunRequest, option: IRunOption) => {
     sendInfo(operationId, {
         isDebug: `${option.isDebug}`,
+        profile: request.profile?.label ?? 'UNKNOWN',
     });
 
     const testItems: TestItem[] = await new Promise<TestItem[]>(async (resolve: (result: TestItem[]) => void): Promise<void> => {
@@ -164,6 +167,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 
     const run: TestRun = testController!.createTestRun(request);
+    const coverageProvider = new JavaTestCoverageProvider();
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
             const token: CancellationToken = option.token ?? run.token;
@@ -214,6 +218,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             testItems: items,
                             testRun: run,
                             workspaceFolder,
+                            profile: request.profile,
                         };
                         const runner: BaseRunner | undefined = getRunnerByContext(testContext);
                         if (!runner) {
@@ -227,18 +232,24 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             delegatedToDebugger = true;
                             trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
-                        } catch(error) {
+                        } catch (error) {
                             window.showErrorMessage(error.message || 'Failed to run tests.');
                             option.progressReporter?.done();
                         } finally {
                             await runner.tearDown();
                         }
                     }
+                    if (request.profile?.label.includes('Coverage')) {
+                        coverageProvider.addProject(projectName);
+                    }
                 }
             }
             return resolve();
         });
     } finally {
+        if (request.profile?.label.includes('Coverage')) {
+            run.coverageProvider = coverageProvider;
+        }
         run.end();
     }
 });
