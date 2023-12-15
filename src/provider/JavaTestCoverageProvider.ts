@@ -28,18 +28,20 @@ export class JavaTestCoverageProvider implements TestCoverageProvider {
             }
 
             for (const sourceFileCoverage of sourceFileCoverages) {
-                const uri = Uri.file(Uri.parse(sourceFileCoverage.uriString).fsPath);
+                const uri: Uri = Uri.file(Uri.parse(sourceFileCoverage.uriString).fsPath);
                 const detailedCoverage: DetailedCoverage[] = [];
                 for (const lineCoverage of sourceFileCoverage.lineCoverages) {
                     const branchCoverages: BranchCoverage[] = [];
                     for (const branchCoverage of lineCoverage.branchCoverages) {
                         branchCoverages.push(new BranchCoverage(branchCoverage.hit, new Position(lineCoverage.lineNumber - 1, 0)));
                     }
-                    const statementCoverage = new StatementCoverage(lineCoverage.hit, new Position(lineCoverage.lineNumber - 1, 0), branchCoverages);
+                    const statementCoverage: StatementCoverage = new StatementCoverage(lineCoverage.hit,
+                        new Position(lineCoverage.lineNumber - 1, 0), branchCoverages);
                     detailedCoverage.push(statementCoverage);
                 }
                 for (const methodCoverage of sourceFileCoverage.methodCoverages) {
-                    const functionCoverage = new FunctionCoverage(methodCoverage.name, methodCoverage.hit, new Position(methodCoverage.lineNumber - 1, 0));
+                    const functionCoverage: FunctionCoverage = new FunctionCoverage(methodCoverage.name, methodCoverage.hit,
+                        new Position(methodCoverage.lineNumber - 1, 0));
                     detailedCoverage.push(functionCoverage);
                 }
                 fileCoverages.push(FileCoverage.fromDetails(uri, detailedCoverage));

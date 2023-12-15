@@ -167,7 +167,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 
     const run: TestRun = testController!.createTestRun(request);
-    const coverageProvider = new JavaTestCoverageProvider();
+    const coverageProvider: JavaTestCoverageProvider = new JavaTestCoverageProvider();
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
             const token: CancellationToken = option.token ?? run.token;
