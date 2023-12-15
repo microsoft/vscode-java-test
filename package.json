@@ -511,8 +511,7 @@
         "lint": "eslint -c .eslintrc.js --ext .ts ./src",
         "build-plugin": "node scripts/buildJdtlsExt.js",
         "vscode:prepublish": "webpack --mode production",
-        "download-api": "dts main && dts dev",
-        "postinstall": "npm run download-api"
+        "download-api": "dts main && dts dev"
     },
     "extensionDependencies": [
         "redhat.java",
