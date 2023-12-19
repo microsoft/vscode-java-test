@@ -324,7 +324,7 @@
                         "when": {
                             "type": "string",
                             "markdownDescription": "%configuration.java.test.config.when.description%",
-                            "default": "testItem ~= //"
+                            "default": ""
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -467,7 +467,7 @@
                             "when": {
                                 "type": "string",
                                 "markdownDescription": "%configuration.java.test.config.when.description%",
-                                "default": "testItem ~= //"
+                                "default": ""
                             }
                         }
                     },
