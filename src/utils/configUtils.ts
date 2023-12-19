@@ -42,24 +42,38 @@ export async function loadRunConfig(testItems: TestItem[], workspaceFolder: Work
         }
     }
 
-    const testItemMatch: RegExp = /testItem ~= \/(?<pattern>.*)\//;
-
-    const candidateConfigItems: IExecutionConfig[] = configItems.filter((config: IExecutionConfig) => {
-        const pattern: string | undefined = config.when && testItemMatch.exec(config.when)?.groups!['pattern'];
-
-        if (!pattern) {
-            return true;
-        }
-
-        const patternRegex: RegExp = new RegExp(pattern);
-
-        return testItems.every((testItem: TestItem) => {
-            const fullName: string | undefined = dataCache.get(testItem)?.fullName;
-            return fullName && patternRegex.test(fullName);
-        });
-    });
-
+    const candidateConfigItems: IExecutionConfig[] = filterCandidateConfigItems(configItems, testItems);
     return await selectQuickPick(candidateConfigItems, workspaceFolder);
+}
+
+function filterCandidateConfigItems(configItems: IExecutionConfig[], testItems: TestItem[]): IExecutionConfig[] {
+    const whenClausePattern: RegExp = /(?<contextKey>.+)\s*~=\s*\/(?<pattern>.+)\//;
+    return configItems.filter((config: IExecutionConfig) => {
+        const whenClause: string | undefined = config.when?.trim();
+
+        if (!whenClause)
+            return true;
+
+        const groups: Record<string, string> | undefined = whenClause.match(whenClausePattern)?.groups;
+
+        if (!groups)
+            return true;
+
+        switch (groups.contextKey) {
+            case 'testItem':
+                const testItemPattern: RegExp = new RegExp(groups.pattern);
+                return checkTestItems(testItems, testItemPattern);
+            default:
+                return true;
+        }
+    });
+}
+
+function checkTestItems(testItems: TestItem[], pattern: RegExp): boolean {
+    return testItems.every((testItem: TestItem) => {
+        const fullName: string | undefined = dataCache.get(testItem)?.fullName;
+        return fullName && pattern.test(fullName);
+    });
 }
 
 async function selectQuickPick(configs: IExecutionConfig[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
