@@ -77,6 +77,9 @@ public class CoverageHandler {
             final Analyzer analyzer = new Analyzer(
                     execFileLoader.getExecutionDataStore(), coverageBuilder);
             final File outputDirectory = getFileForFs(javaProject, entry.getKey());
+            if (!outputDirectory.exists()) {
+                continue;
+            }
             analyzer.analyzeAll(outputDirectory);
             final Map<String, Collection<IClassCoverage>> classCoverageBySourceFilePath =
                     groupClassCoverageBySourceFilePath(coverageBuilder.getClasses());
