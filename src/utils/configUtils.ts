@@ -191,9 +191,11 @@ export class WhenClauseEvaluationContext {
         if (quotedStringMatch)
             return quotedStringMatch[1];
 
-        const regexMatch: RegExpMatchArray | null = token.match(/\/(.*)\//);
-        if (regexMatch)
-            return new RegExp(regexMatch[1]);
+        const regexMatch: RegExpMatchArray | null = token.match(/\/(?<pattern>.*)\/(?<flags>[ismu]*)/)
+        if (regexMatch?.groups) {
+            const { pattern, flags } = regexMatch.groups;
+            return new RegExp(pattern, flags);
+        }
 
         const number: number = Number(token);
         if (!isNaN(number))

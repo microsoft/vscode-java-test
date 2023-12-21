@@ -57,6 +57,8 @@ suite('ConfigUtils Tests', () => {
         { clause: '"foo" =~ /^foo$/', expectedResult: true },
         { clause: '"foo" =~ /\\w+/', expectedResult: true },
         { clause: '"foo" =~ //', expectedResult: true },
+        { clause: '"foo" =~ /FOO/', expectedResult: false },
+        { clause: '"foo" =~ /FOO/i', expectedResult: true },
         { clause: 'false && true && true || !false', expectedResult: true },
         { clause: 'false && true && (true || !false)', expectedResult: false },
         { clause: '(false && true) && (true || !false)', expectedResult: false },
