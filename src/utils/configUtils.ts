@@ -47,32 +47,31 @@ export async function loadRunConfig(testItems: TestItem[], workspaceFolder: Work
 }
 
 function filterCandidateConfigItems(configItems: IExecutionConfig[], testItems: TestItem[]): IExecutionConfig[] {
-    const whenClausePattern: RegExp = /(?<contextKey>.+)\s*~=\s*\/(?<pattern>.+)\//;
     return configItems.filter((config: IExecutionConfig) => {
         const whenClause: string | undefined = config.when?.trim();
 
-        if (!whenClause)
-            return true;
+        if (whenClause) {
+            const context: WhenClauseEvaluationContext = new WhenClauseEvaluationContext(whenClause);
 
-        const groups: Record<string, string> | undefined = whenClause.match(whenClausePattern)?.groups;
-
-        if (!groups)
-            return true;
-
-        switch (groups.contextKey) {
-            case 'testItem':
-                const testItemPattern: RegExp = new RegExp(groups.pattern);
-                return checkTestItems(testItems, testItemPattern);
-            default:
-                return true;
+            try {
+                return checkTestItems(testItems, context);
+            } catch (e) {
+                if (e instanceof Error)
+                    window.showWarningMessage(e.message);
+            }
         }
+
+        return true;
+
     });
 }
 
-function checkTestItems(testItems: TestItem[], pattern: RegExp): boolean {
+function checkTestItems(testItems: TestItem[], context: WhenClauseEvaluationContext): boolean {
     return testItems.every((testItem: TestItem) => {
         const fullName: string | undefined = dataCache.get(testItem)?.fullName;
-        return fullName && pattern.test(fullName);
+
+        context.addContextKey('testItem', fullName);
+        return context.evaluate();
     });
 }
 
@@ -135,4 +134,148 @@ async function askPreferenceForConfig(configs: IExecutionConfig[], selectedConfi
 
 export function randomSequence(): string {
     return crypto.randomBytes(3).toString('hex');
+}
+
+type ApplyOperator = (value1: unknown, value2?: unknown) => boolean
+
+interface Token {
+    stringValue: string
+    getValue: () => unknown
+}
+
+interface ResultToken extends Token {
+    getValue: () => boolean
+}
+
+export class WhenClauseEvaluationContext {
+
+    private static readonly OPERATORS: Record<string, ApplyOperator> = {
+        // logical
+        '!': (value: unknown) => !value,
+        '&&': (value1: unknown, value2: unknown) => !!(value1 && value2),
+        '||': (value1: unknown, value2: unknown) => !!(value1 || value2),
+
+        // equality
+        '==': (value1: unknown, value2: unknown) => value1 === value2,
+        '===': (value1: unknown, value2: unknown) => value1 === value2,
+        '!=': (value1: unknown, value2: unknown) => value1 !== value2,
+        '!==': (value1: unknown, value2: unknown) => value1 !== value2,
+
+        // comparison
+        '>': (value1: number, value2: number) => value1 > value2,
+        '>=': (value1: number, value2: number) => value1 >= value2,
+        '<': (value1: number, value2: number) => value1 < value2,
+        '<=': (value1: number, value2: number) => value1 <= value2,
+
+        // match
+        '=~': (value: string, pattern: RegExp) => pattern.test(value),
+    }
+
+    private readonly context: Record<string, unknown> = {};
+
+    public constructor(readonly clause: string) {}
+
+    private tokenize(): Token[] {
+        const tokens: string[] = this.clause.split(/\s+/)
+            .flatMap((token: string) => token.split(/([\(\)]|!(?!=))/))
+            .filter(Boolean);
+
+        return tokens.map((token: string) => ({
+            stringValue: token,
+            getValue: () => this.parse(token),
+        }));
+    }
+
+    private parse(token: string) {
+        const quotedStringMatch: RegExpMatchArray | null = token.match(/['"](.*)['"]/);
+        if (quotedStringMatch)
+            return quotedStringMatch[1];
+
+        const regexMatch: RegExpMatchArray | null = token.match(/\/(.*)\//);
+        if (regexMatch)
+            return new RegExp(regexMatch[1]);
+
+        const number: number = Number(token);
+        if (!isNaN(number))
+            return number;
+
+        const booleanMatch: RegExpMatchArray | null = token.match(/^true|false$/);
+        if (booleanMatch)
+            return booleanMatch[0] === 'true';
+
+        if (token === typeof undefined)
+            return;
+
+        if (!(token in this.context)) {
+            window.showWarningMessage(`Context key not found in evaluation context: ${token}`);
+            return;
+        }
+
+        return this.context[token];
+    }
+
+    private evaluateTokens(tokens: Token[], start?: number, end?: number) {
+        start ||= 0;
+        end ||= tokens.length;
+
+        const currentTokens: Token[] = tokens.slice(start, end);
+
+        while (currentTokens.length > 1) {
+            const stringTokens: string[] = currentTokens.map((token: Token) => token.stringValue);
+
+            const parenthesesStart: number = stringTokens.lastIndexOf('(');
+            const parenthesesEnd: number = (() => {
+                const relativeEnd: number = stringTokens.slice(parenthesesStart).indexOf(')');
+                return relativeEnd >= 0 ? parenthesesStart + relativeEnd : -1;
+            })();
+
+            if (parenthesesEnd < parenthesesStart)
+                throw new SyntaxError('Mismatched parentheses in expression');
+
+            if (parenthesesEnd > parenthesesStart) {
+                const resultToken: Token = this.evaluateTokens(currentTokens, parenthesesStart + 1, parenthesesEnd);
+                currentTokens.splice(parenthesesStart, parenthesesEnd - parenthesesStart + 1, resultToken);
+
+                continue;
+            }
+
+            for (const [operator, applyOperator] of Object.entries(WhenClauseEvaluationContext.OPERATORS)) {
+                const operatorIndex: number = currentTokens.findIndex((token: Token) => token.stringValue === operator);
+
+                if (operatorIndex === -1)
+                    continue;
+
+                const leftOperand: Token = currentTokens[operatorIndex - 1];
+                const rightOperand: Token = currentTokens[operatorIndex + 1];
+
+                const value: boolean = applyOperator.length === 1
+                    ? applyOperator(rightOperand.getValue())
+                    : applyOperator(leftOperand.getValue(), rightOperand.getValue());
+
+                const operationStart: number = operatorIndex - (applyOperator.length - 1);
+                const operationLength: number = applyOperator.length + 1;
+
+                currentTokens.splice(operationStart, operationLength, {
+                    stringValue: value.toString(),
+                    getValue: () => value,
+                });
+
+                break;
+            }
+        }
+
+        return currentTokens[0] as ResultToken;
+    }
+
+    addContextKey(key: string, value: unknown): void {
+        this.context[key] = value;
+    }
+
+    evaluate(): boolean {
+        const tokens: Token[] = this.tokenize();
+        const result: ResultToken = this.evaluateTokens(tokens);
+
+        return result.getValue();
+    }
+
 }
