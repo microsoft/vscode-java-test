@@ -177,7 +177,7 @@ export class WhenClauseEvaluationContext {
 
     private tokenize(): Token[] {
         const tokens: string[] = this.clause.split(/\s+/)
-            .flatMap((token: string) => token.split(/([\(\)]|!(?!=))/))
+            .flatMap((token: string) => token.split(/([()]|!(?!=))/))
             .filter(Boolean);
 
         return tokens.map((token: string) => ({
