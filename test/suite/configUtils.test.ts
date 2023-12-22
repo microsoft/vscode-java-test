@@ -9,6 +9,10 @@ import { WhenClauseEvaluationContext } from '../../src/utils/configUtils';
 suite('ConfigUtils Tests', () => {
 
     [
+        { clause: 'true', expectedResult: true },
+        { clause: 'false', expectedResult: false },
+        { clause: 'truefalse', expectedResult: false },
+        { clause: 'falsetrue', expectedResult: false },
         { clause: '!false', expectedResult: true },
         { clause: '!true', expectedResult: false },
         { clause: 'false && false', expectedResult: false },

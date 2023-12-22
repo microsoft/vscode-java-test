@@ -143,10 +143,6 @@ interface Token {
     getValue: () => unknown
 }
 
-interface ResultToken extends Token {
-    getValue: () => boolean
-}
-
 export class WhenClauseEvaluationContext {
 
     private static readonly OPERATORS: Record<string, ApplyOperator> = {
@@ -201,7 +197,7 @@ export class WhenClauseEvaluationContext {
         if (!isNaN(number))
             return number;
 
-        const booleanMatch: RegExpMatchArray | null = token.match(/^true|false$/);
+        const booleanMatch: RegExpMatchArray | null = token.match(/^(?:true|false)$/);
         if (booleanMatch)
             return booleanMatch[0] === 'true';
 
@@ -266,7 +262,7 @@ export class WhenClauseEvaluationContext {
             }
         }
 
-        return currentTokens[0] as ResultToken;
+        return currentTokens[0];
     }
 
     addContextKey(key: string, value: unknown): void {
@@ -275,9 +271,9 @@ export class WhenClauseEvaluationContext {
 
     evaluate(): boolean {
         const tokens: Token[] = this.tokenize();
-        const result: ResultToken = this.evaluateTokens(tokens);
+        const result: Token = this.evaluateTokens(tokens);
 
-        return result.getValue();
+        return !!result.getValue();
     }
 
 }
