@@ -171,8 +171,11 @@ export class WhenClauseEvaluationContext {
     public constructor(readonly clause: string) {}
 
     private tokenize(): Token[] {
-        const tokens: string[] = this.clause.split(/\s+/)
-            .flatMap((token: string) => token.split(/([()]|!(?!=))/))
+        const operatorKeys: string[] = Object.keys(WhenClauseEvaluationContext.OPERATORS).sort((a: string, b: string) => b.length - a.length);
+        const operatorPattern: RegExp = new RegExp(`(${operatorKeys.map(_.escapeRegExp).join('|')})`);
+
+        const tokens: string[] = this.clause.split(operatorPattern)
+            .flatMap((token: string) => token.trim().split(/([()])/))
             .filter(Boolean);
 
         return tokens.map((token: string) => ({
