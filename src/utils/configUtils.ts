@@ -56,8 +56,7 @@ function filterCandidateConfigItems(configItems: IExecutionConfig[], testItems: 
             try {
                 return checkTestItems(testItems, context);
             } catch (e) {
-                if (e instanceof Error)
-                    window.showWarningMessage(e.message);
+                // do something with the error
             }
         }
 
@@ -204,10 +203,8 @@ export class WhenClauseEvaluationContext {
         if (token === typeof undefined)
             return;
 
-        if (!(token in this.context)) {
-            window.showWarningMessage(`Context key not found in evaluation context: ${token}`);
-            return;
-        }
+        if (!(token in this.context))
+            throw new SyntaxError(`Context key not found in evaluation context: ${token}`);
 
         return this.context[token];
     }

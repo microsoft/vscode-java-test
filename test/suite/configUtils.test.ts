@@ -11,8 +11,6 @@ suite('ConfigUtils Tests', () => {
     [
         { clause: 'true', expectedResult: true },
         { clause: 'false', expectedResult: false },
-        { clause: 'truefalse', expectedResult: false },
-        { clause: 'falsetrue', expectedResult: false },
         { clause: '!false', expectedResult: true },
         { clause: '!true', expectedResult: false },
         { clause: 'false && false', expectedResult: false },
@@ -91,17 +89,13 @@ suite('ConfigUtils Tests', () => {
     }));
 
     [
-        { clause: 'test == undefined', expectedResult: true },
-        { clause: 'test == "foo"', expectedResult: false },
-        { clause: 'test == "bar"', expectedResult: false },
-        { clause: 'test != "bar"', expectedResult: true },
-        { clause: 'test =~ /foo/', expectedResult: false },
-        { clause: 'test =~ /bar/', expectedResult: false },
-    ].forEach(({ clause, expectedResult }) => test(`Evaluate when clause - missing context key: ${clause}`, () => {
+        'truefalse',
+        'falsetrue',
+        'test',
+        'test == true',
+    ].forEach(clause => test(`Evaluate when clause - missing context key: ${clause}`, () => {
         const context = new WhenClauseEvaluationContext(clause);
-        const result = context.evaluate();
-
-        assert.equal(result, expectedResult);
+        assert.throws(() => context.evaluate(), SyntaxError);
     }));
 
 });
