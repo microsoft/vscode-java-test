@@ -102,6 +102,12 @@ export interface IExecutionConfig {
          */
         tags?: string[]
     }
+
+    /**
+     * The when clause for matching tests by to determine if the configuration should be run with.
+     * @since 0.41.0
+     */
+    when?: string
 }
 
 export function getBuiltinConfig(): IExecutionConfig {

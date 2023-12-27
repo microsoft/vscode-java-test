@@ -320,6 +320,11 @@
                                     "default": []
                                 }
                             }
+                        },
+                        "when": {
+                            "type": "string",
+                            "markdownDescription": "%configuration.java.test.config.when.description%",
+                            "default": ""
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -458,6 +463,11 @@
                                         "default": []
                                     }
                                 }
+                            },
+                            "when": {
+                                "type": "string",
+                                "markdownDescription": "%configuration.java.test.config.when.description%",
+                                "default": ""
                             }
                         }
                     },
