@@ -20,6 +20,7 @@ CONTRIBUTING.md
 extension.bundle.ts
 javaConfig.json
 .github/**
+.azure-pipelines/**
 
 # Ignore output of code sign
 server/*.md

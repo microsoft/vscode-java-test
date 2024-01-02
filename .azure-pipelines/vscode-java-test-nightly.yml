@@ -1,0 +1,122 @@
+name: $(Date:yyyyMMdd).$(Rev:r)
+variables:
+  - name: Codeql.Enabled
+    value: true
+schedules:
+  - cron: 0 2 * * *
+    branches:
+      include:
+        - main
+resources:
+  repositories:
+    - repository: self
+      type: git
+      ref: refs/heads/main
+    - repository: 1esPipelines
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+trigger: none
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  parameters:
+    pool:
+      name: 1ES_JavaTooling_Pool
+      image: 1ES_JavaTooling_Ubuntu-2004
+      os: linux
+    sdl:
+      sourceAnalysisPool:
+        name: 1ES_JavaTooling_Pool
+        image: 1ES_JavaTooling_Windows_2022
+        os: windows
+    customBuildTags:
+      - MigrationTooling-mseng-VSJava-13462-Tool
+    stages:
+      - stage: Build
+        jobs:
+          - job: Job_1
+            displayName: VSCode-Test-Runner-Nightly
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  artifactName: extension
+                  targetPath: $(Build.ArtifactStagingDirectory)
+                  displayName: "Publish Artifact: extension"
+            steps:
+              - checkout: self
+                fetchTags: true
+              - task: JavaToolInstaller@0
+                displayName: Use Java 17
+                inputs:
+                  versionSpec: "17"
+                  jdkArchitectureOption: x64
+                  jdkSourceOption: PreInstalled
+              - task: Npm@1
+                displayName: npm install
+                inputs:
+                  verbose: false
+              - task: Npm@1
+                displayName: npm run lint
+                inputs:
+                  command: custom
+                  verbose: false
+                  customCommand: run lint
+              - task: Npm@1
+                displayName: npm run build-plugin
+                inputs:
+                  command: custom
+                  verbose: false
+                  customCommand: run build-plugin
+              - task: Npm@1
+                displayName: npm run compile
+                inputs:
+                  command: custom
+                  verbose: false
+                  customCommand: run compile
+              - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@2
+                displayName: ESRP CodeSigning
+                inputs:
+                  ConnectedServiceName: vscjavaci_codesign
+                  FolderPath: server
+                  Pattern: com.microsoft.java.test.*.jar
+                  signConfigType: inlineSignParams
+                  inlineOperation: |-
+                    [
+                            {
+                                "KeyCode" : "CP-447347-Java",
+                                "OperationCode" : "JavaSign",
+                                "Parameters" : {
+                                    "SigAlg" : "SHA256withRSA",
+                                    "Timestamp" : "-tsa http://sha256timestamp.ws.digicert.com/sha256/timestamp"
+                                },
+                                "ToolName" : "sign",
+                                "ToolVersion" : "1.0"
+                            },
+                            {
+                                "KeyCode" : "CP-447347-Java",
+                                "OperationCode" : "JavaVerify",
+                                "Parameters" : {},
+                                "ToolName" : "sign",
+                                "ToolVersion" : "1.0"
+                            }
+                    ]
+              - task: CmdLine@2
+                displayName: Replace AI Key
+                inputs:
+                  script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"$AI_KEY\""
+              - task: Bash@3
+                displayName: Bash Script
+                inputs:
+                  targetType: inline
+                  script: |-
+                    node ./scripts/prepare-nightly-build.js
+                    mv ./package.insiders.json ./package.json
+              - task: CmdLine@2
+                displayName: vsce package --pre-release
+                inputs:
+                  script: npx @vscode/vsce@latest package --pre-release
+              - task: CopyFiles@2
+                displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
+                inputs:
+                  Contents: "*.vsix"
+                  TargetFolder: $(Build.ArtifactStagingDirectory)
