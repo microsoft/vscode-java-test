@@ -18,11 +18,13 @@ import com.microsoft.java.test.plugin.coverage.model.SourceFileCoverage;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 import org.jacoco.core.analysis.Analyzer;
@@ -192,10 +194,36 @@ public class CoverageHandler {
                 methodCoverages.add(new MethodCoverage(
                         methodCoverage.getFirstLine(),
                         methodCoverage.getMethodCounter().getCoveredCount() > 0 ? 1 : 0,
-                        methodCoverage.getName()
+                        getMethodName(methodCoverage)
                 ));
             }
         }
         return methodCoverages;
+    }
+
+    private String getMethodName(IMethodCoverage methodCoverage) {
+        final String methodName = methodCoverage.getName();
+        if ("<clinit>".equals(methodName) || "<init>".equals(methodName)) {
+            return methodName;
+        }
+        final String signature = methodCoverage.getDesc();
+        if (StringUtils.isBlank(signature)) {
+            return methodName;
+        }
+        
+        try {
+            final String[] parameterTypes = Signature.getParameterTypes(signature);
+            final List<String> parameterNames = new LinkedList<>();
+            if (parameterTypes.length > 0) {
+                for (final String parameterType : parameterTypes) {
+                    final String simpleName = Signature.getSignatureSimpleName(parameterType.replace("/", "."));
+                    parameterNames.add(simpleName);
+                }
+            }
+            return String.format("%s(%s)", methodName, String.join(", ", parameterNames));
+        } catch (IllegalArgumentException e) {
+            return methodName;
+        }
+
     }
 }

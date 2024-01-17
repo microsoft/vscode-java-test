@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as os from 'os';
-import { DebugConfiguration, TestItem } from 'vscode';
+import { DebugConfiguration, TestItem, TestRunProfileKind } from 'vscode';
 import { sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { dataCache } from '../controller/testItemDataCache';
@@ -82,7 +82,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         };
     }
 
-    if (testContext.profile?.label.includes('Coverage')) {
+    if (testContext.profile?.kind === TestRunProfileKind.Coverage) {
         let agentArg: string = `-javaagent:${getJacocoAgentPath()}=destfile=${getJacocoDataFilePath(launchArguments.projectName)}`;
         if (config?.coverage?.appendResult === false) {
             agentArg += ',append=false';

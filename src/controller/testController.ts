@@ -35,7 +35,7 @@ export function createTestController(): void {
     testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, runnableTag);
     testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
     if (env.appName.includes('Insiders')) {
-        testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Run, runHandler, false, runnableTag);
+        testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Coverage, runHandler, true, runnableTag);
     }
 
     testController.refreshHandler = () => {
@@ -241,7 +241,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             await runner.tearDown();
                         }
                     }
-                    if (request.profile?.label.includes('Coverage')) {
+                    if (request.profile?.kind === TestRunProfileKind.Coverage) {
                         coverageProvider.addProject(projectName);
                     }
                 }
@@ -249,7 +249,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
             return resolve();
         });
     } finally {
-        if (request.profile?.label.includes('Coverage')) {
+        if (request.profile?.kind === TestRunProfileKind.Coverage) {
             run.coverageProvider = coverageProvider;
         }
         run.end();
