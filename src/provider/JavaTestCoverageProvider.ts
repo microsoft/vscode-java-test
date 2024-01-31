@@ -28,7 +28,7 @@ export class JavaTestCoverageProvider implements TestCoverageProvider {
             }
 
             for (const sourceFileCoverage of sourceFileCoverages) {
-                const uri: Uri = Uri.file(Uri.parse(sourceFileCoverage.uriString).fsPath);
+                const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
                 const detailedCoverage: DetailedCoverage[] = [];
                 for (const lineCoverage of sourceFileCoverage.lineCoverages) {
                     const branchCoverages: BranchCoverage[] = [];
