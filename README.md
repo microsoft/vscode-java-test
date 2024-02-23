@@ -36,7 +36,7 @@ The [Test Runner for Java](https://marketplace.visualstudio.com/items?itemName=v
 
 ## Requirements
 
-- JDK (version 11 or later)
+- JDK (version 17 or later)
 - VS Code (version 1.59.0 or later)
 - [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java)
 - [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
