@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { BranchCoverage, CancellationToken, DetailedCoverage, FileCoverage, FunctionCoverage, Position, StatementCoverage, TestCoverageProvider, Uri } from 'vscode';
+import { BranchCoverage, CancellationToken, DeclarationCoverage, DetailedCoverage, FileCoverage, Position, StatementCoverage, TestCoverageProvider, Uri } from 'vscode';
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { JavaTestRunnerDelegateCommands } from '../constants';
@@ -40,7 +40,7 @@ export class JavaTestCoverageProvider implements TestCoverageProvider {
                     detailedCoverage.push(statementCoverage);
                 }
                 for (const methodCoverage of sourceFileCoverage.methodCoverages) {
-                    const functionCoverage: FunctionCoverage = new FunctionCoverage(methodCoverage.name, methodCoverage.hit,
+                    const functionCoverage: DeclarationCoverage = new DeclarationCoverage(methodCoverage.name, methodCoverage.hit,
                         new Position(methodCoverage.lineNumber - 1, 0));
                     detailedCoverage.push(functionCoverage);
                 }

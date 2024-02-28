@@ -23,4 +23,29 @@ public class LineCoverage {
         this.hit = hit;
         this.branchCoverages = branchCoverages;
     }
+
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
+    public void setLineNumber(int lineNumber) {
+        this.lineNumber = lineNumber;
+    }
+
+    public int getHit() {
+        return hit;
+    }
+
+    public void setHit(int hit) {
+        this.hit = hit;
+    }
+
+    public List<BranchCoverage> getBranchCoverages() {
+        return branchCoverages;
+    }
+
+    public void setBranchCoverages(List<BranchCoverage> branchCoverages) {
+        this.branchCoverages = branchCoverages;
+    }
+
 }

@@ -165,7 +165,11 @@ public class CoverageHandler {
     private List<LineCoverage> getLineCoverages(final ISourceFileCoverage sourceFileCoverage) {
         final List<LineCoverage> lineCoverages = new LinkedList<>();
         final int last = sourceFileCoverage.getLastLine();
-        for (int nr = sourceFileCoverage.getFirstLine(); nr <= last; nr++) {
+        final int first = sourceFileCoverage.getFirstLine();
+        if (first == ISourceNode.UNKNOWN_LINE || last == ISourceNode.UNKNOWN_LINE) {
+            return lineCoverages;
+        }
+        for (int nr = first; nr <= last; nr++) {
             final ILine line = sourceFileCoverage.getLine(nr);
             if (line.getStatus() != ICounter.EMPTY) {
                 final List<BranchCoverage> branchCoverages = new LinkedList<>();
@@ -191,6 +195,9 @@ public class CoverageHandler {
         final List<MethodCoverage> methodCoverages = new LinkedList<>();
         for (final IClassCoverage classCoverage : classCoverages) {
             for (final IMethodCoverage methodCoverage : classCoverage.getMethods()) {
+                if (methodCoverage.getFirstLine() == ISourceNode.UNKNOWN_LINE) {
+                    continue;
+                }
                 methodCoverages.add(new MethodCoverage(
                         methodCoverage.getFirstLine(),
                         methodCoverage.getMethodCounter().getCoveredCount() > 0 ? 1 : 0,

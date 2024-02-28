@@ -24,4 +24,28 @@ public class SourceFileCoverage {
         this.lineCoverages = lineCoverages;
         this.methodCoverages = methodCoverages;
     }
+
+    public String getUriString() {
+        return uriString;
+    }
+
+    public void setUriString(String uriString) {
+        this.uriString = uriString;
+    }
+
+    public List<LineCoverage> getLineCoverages() {
+        return lineCoverages;
+    }
+
+    public void setLineCoverages(List<LineCoverage> lineCoverages) {
+        this.lineCoverages = lineCoverages;
+    }
+
+    public List<MethodCoverage> getMethodCoverages() {
+        return methodCoverages;
+    }
+
+    public void setMethodCoverages(List<MethodCoverage> methodCoverages) {
+        this.methodCoverages = methodCoverages;
+    }
 }

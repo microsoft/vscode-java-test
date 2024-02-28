@@ -17,4 +17,12 @@ public class BranchCoverage {
     public BranchCoverage(int hit) {
         this.hit = hit;
     }
+
+    public int getHit() {
+        return hit;
+    }
+
+    public void setHit(int hit) {
+        this.hit = hit;
+    }
 }
