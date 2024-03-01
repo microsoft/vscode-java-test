@@ -22,8 +22,8 @@ extends:
   parameters:
     pool:
       name: 1ES_JavaTooling_Pool
-      image: 1ES_JavaTooling_Ubuntu-2004
-      os: linux
+      image: 1ES_JavaTooling_Windows_2022
+      os: windows
     sdl:
       sourceAnalysisPool:
         name: 1ES_JavaTooling_Pool
@@ -115,6 +115,25 @@ extends:
                 displayName: vsce package --pre-release
                 inputs:
                   script: npx @vscode/vsce@latest package --pre-release
+              ### Copy files for APIScan
+              - task: CopyFiles@2
+                displayName: "Copy Files for APIScan"
+                inputs:
+                  Contents: "*.vsix"
+                  TargetFolder: $(Agent.TempDirectory)/APIScanFiles
+                condition: and(succeeded(), ne(variables['DisableAPIScan'], 'true'))
+              ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
+              - task: APIScan@2
+                displayName: Run APIScan
+                inputs:
+                  softwareFolder: $(Agent.TempDirectory)/APIScanFiles
+                  softwareName: "vscode-java-test"
+                  softwareVersionNum: "$(Build.BuildId)"
+                  isLargeApp: false
+                  toolVersion: "Latest"
+                condition: and(succeeded(), ne(variables['DisableAPIScan'], 'true'))
+                env:
+                  AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
               - task: CopyFiles@2
                 displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
                 inputs:
