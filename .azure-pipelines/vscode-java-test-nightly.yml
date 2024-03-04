@@ -100,10 +100,10 @@ extends:
                                 "ToolVersion" : "1.0"
                             }
                     ]
-              - task: Bash@3
+              - task: CmdLine@2
                 displayName: Replace AI Key
                 inputs:
-                  script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"$AI_KEY\""
+                  script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"%AI_KEY%\""
               - task: Bash@3
                 displayName: Bash Script
                 inputs:
