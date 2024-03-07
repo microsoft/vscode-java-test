@@ -3,7 +3,7 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
-import { CancellationToken, DebugConfiguration, Disposable, env, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
 import { IProgressReporter } from '../debugger.api';
@@ -34,9 +34,7 @@ export function createTestController(): void {
 
     testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, runnableTag);
     testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
-    if (env.appName.includes('Insiders')) {
-        testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Coverage, runHandler, true, runnableTag);
-    }
+    testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Coverage, runHandler, true, runnableTag);
 
     testController.refreshHandler = () => {
         refreshExplorer();
