@@ -19,6 +19,7 @@ import com.microsoft.java.test.plugin.util.JUnitPlugin;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -26,6 +27,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
@@ -120,13 +122,22 @@ public class CoverageHandler {
                 continue;
             }
 
-            final IPath sourceRelativePath = entry.getPath().makeRelativeTo(javaProject.getProject().getFullPath());
+            final IProject project = javaProject.getProject();
+            final IPath sourceRelativePath = entry.getPath().makeRelativeTo(project.getFullPath());
+            final IPath projectRealFolderPath = ProjectUtils.getProjectRealFolder(project);
+            final IPath realSourcePath = project.getFolder(sourceRelativePath).getLocation();
+            final IPath realRelativeSourcePath = realSourcePath.makeRelativeTo(projectRealFolderPath);
+
             IPath outputLocation = entry.getOutputLocation();
             if (outputLocation == null) {
                 outputLocation = javaProject.getOutputLocation();
             }
             final IPath outputRelativePath = outputLocation.makeRelativeTo(javaProject.getProject().getFullPath());
-            outputToSourcePaths.computeIfAbsent(outputRelativePath, k -> new LinkedList<>()).add(sourceRelativePath);
+            final IPath realOutputPath = project.getFolder(outputRelativePath).getLocation();
+            final IPath realRelativeOutputPath = realOutputPath.makeRelativeTo(projectRealFolderPath);
+
+            outputToSourcePaths.computeIfAbsent(realRelativeOutputPath, k -> new LinkedList<>())
+                    .add(realRelativeSourcePath);
         }
         return outputToSourcePaths;
     }
@@ -159,7 +170,7 @@ public class CoverageHandler {
     }
 
     private static File getFileForFs(IJavaProject javaProject, IPath path) {
-        return javaProject.getProject().getLocation().append(path).toFile();
+        return ProjectUtils.getProjectRealFolder(javaProject.getProject()).append(path).toFile();
     }
 
     private List<LineCoverage> getLineCoverages(final ISourceFileCoverage sourceFileCoverage) {
