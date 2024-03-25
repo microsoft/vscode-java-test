@@ -67,12 +67,6 @@ extends:
                   command: custom
                   verbose: false
                   customCommand: run build-plugin
-              - task: Npm@1
-                displayName: npm run compile
-                inputs:
-                  command: custom
-                  verbose: false
-                  customCommand: run compile
               - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@2
                 displayName: ESRP CodeSigning
                 inputs:

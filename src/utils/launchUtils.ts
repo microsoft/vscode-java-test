@@ -2,16 +2,17 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { DebugConfiguration, TestItem } from 'vscode';
+import * as os from 'os';
+import { DebugConfiguration, TestItem, TestRunProfileKind } from 'vscode';
 import { sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { dataCache } from '../controller/testItemDataCache';
 import { extensionContext } from '../extension';
 import { IExecutionConfig } from '../runConfigs';
-import { BaseRunner } from '../runners/baseRunner/BaseRunner';
-import { IJUnitLaunchArguments, Response } from '../runners/baseRunner/BaseRunner';
+import { BaseRunner, IJUnitLaunchArguments, Response } from '../runners/baseRunner/BaseRunner';
 import { IRunTestContext, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from './commandUtils';
+import { getJacocoAgentPath, getJacocoDataFilePath } from './coverageUtils';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, testContext: IRunTestContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const launchArguments: IJUnitLaunchArguments = await getLaunchArguments(testContext);
@@ -22,8 +23,9 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         launchArguments.vmArguments.push(...config.vmargs.filter(Boolean));
     }
 
+    let debugConfiguration: DebugConfiguration;
     if (testContext.kind === TestKind.TestNG) {
-        return {
+        debugConfiguration = {
             name: `Launch Java Tests - ${testContext.testItems[0].label}`,
             type: 'java',
             request: 'launch',
@@ -49,36 +51,49 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             postDebugTask: config?.postDebugTask,
             javaExec: config?.javaExec,
         };
+    } else {
+        debugConfiguration = {
+            name: `Launch Java Tests - ${testContext.testItems[0].label}`,
+            type: 'java',
+            request: 'launch',
+            mainClass: launchArguments.mainClass,
+            projectName: launchArguments.projectName,
+            cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
+            classPaths: [
+                ...config?.classPaths || [],
+                ...launchArguments.classpath || [],
+            ],
+            modulePaths: [
+                ...config?.modulePaths || [],
+                ...launchArguments.modulepath || [],
+            ],
+            args: [
+                ...launchArguments.programArguments,
+                ...(testContext.kind === TestKind.JUnit5 ? parseTags(config) : [])
+            ],
+            vmArgs: launchArguments.vmArguments,
+            env: config?.env,
+            envFile: config?.envFile,
+            noDebug: !testContext.isDebug,
+            sourcePaths: config?.sourcePaths,
+            preLaunchTask: config?.preLaunchTask,
+            postDebugTask: config?.postDebugTask,
+            javaExec: config?.javaExec,
+        };
     }
 
-    return {
-        name: `Launch Java Tests - ${testContext.testItems[0].label}`,
-        type: 'java',
-        request: 'launch',
-        mainClass: launchArguments.mainClass,
-        projectName: launchArguments.projectName,
-        cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
-        classPaths: [
-            ...config?.classPaths || [],
-            ...launchArguments.classpath || [],
-        ],
-        modulePaths: [
-            ...config?.modulePaths || [],
-            ...launchArguments.modulepath || [],
-        ],
-        args: [
-            ...launchArguments.programArguments,
-            ...(testContext.kind === TestKind.JUnit5 ? parseTags(config) : [])
-        ],
-        vmArgs: launchArguments.vmArguments,
-        env: config?.env,
-        envFile: config?.envFile,
-        noDebug: !testContext.isDebug,
-        sourcePaths: config?.sourcePaths,
-        preLaunchTask: config?.preLaunchTask,
-        postDebugTask: config?.postDebugTask,
-        javaExec: config?.javaExec,
-    };
+    if (testContext.profile?.kind === TestRunProfileKind.Coverage) {
+        let agentArg: string = `-javaagent:${getJacocoAgentPath()}=destfile=${getJacocoDataFilePath(launchArguments.projectName)}`;
+        if (config?.coverage?.appendResult === false) {
+            agentArg += ',append=false';
+        }
+        if (os.platform() === 'win32') {
+            agentArg = `"${agentArg}"`;
+        }
+        (debugConfiguration.vmArgs as string[]).push(agentArg);
+    }
+
+    return debugConfiguration;
 }
 
 async function getLaunchArguments(testContext: IRunTestContext): Promise<IJUnitLaunchArguments> {

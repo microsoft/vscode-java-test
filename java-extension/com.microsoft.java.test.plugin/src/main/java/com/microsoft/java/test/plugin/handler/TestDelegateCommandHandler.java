@@ -11,7 +11,9 @@
 
 package com.microsoft.java.test.plugin.handler;
 
+import com.microsoft.java.test.plugin.coverage.CoverageHandler;
 import com.microsoft.java.test.plugin.launchers.JUnitLaunchUtils;
+import com.microsoft.java.test.plugin.util.JUnitPlugin;
 import com.microsoft.java.test.plugin.util.ProjectTestUtils;
 import com.microsoft.java.test.plugin.util.TestGenerationUtils;
 import com.microsoft.java.test.plugin.util.TestNavigationUtils;
@@ -19,7 +21,9 @@ import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 
 import java.util.List;
 
@@ -36,6 +40,7 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
     private static final String RESOLVE_PATH = "vscode.java.test.resolvePath";
     private static final String FIND_TEST_LOCATION = "vscode.java.test.findTestLocation";
     private static final String NAVIGATE_TO_TEST_OR_TARGET = "vscode.java.test.navigateToTestOrTarget";
+    private static final String GET_COVERAGE_DETAIL = "vscode.java.test.jacoco.getCoverageDetail";
 
     @Override
     public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor) throws Exception {
@@ -64,6 +69,20 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
                 return TestSearchUtils.findTestLocation(arguments, monitor);
             case NAVIGATE_TO_TEST_OR_TARGET:
                 return TestNavigationUtils.findTestOrTarget(arguments, monitor);
+            case GET_COVERAGE_DETAIL:
+                if (arguments == null || arguments.size() < 2) {
+                    throw new IllegalArgumentException(
+                        "The arguments for command 'vscode.java.test.jacoco.getCoverageDetail' is invalid.");
+                }
+                final String projectName = (String) arguments.get(0);
+                final IJavaProject javaProject = ProjectUtils.getJavaProject(projectName);
+                if (javaProject == null) {
+                    JUnitPlugin.logError("Cannot find the project: " + projectName + " for coverage generation.");
+                    return null;
+                }
+                final String reportBasePath = (String) arguments.get(1);
+                final CoverageHandler coverageHandler = new CoverageHandler(javaProject, reportBasePath);
+                return coverageHandler.getCoverageDetail(monitor);
             default:
                 throw new UnsupportedOperationException(
                         String.format("Java test plugin doesn't support the command '%s'.", commandId));

@@ -13,6 +13,7 @@
       <command id="vscode.java.test.resolvePath" />
       <command id="vscode.java.test.findTestLocation" />
       <command id="vscode.java.test.navigateToTestOrTarget" />
+      <command id="vscode.java.test.jacoco.getCoverageDetail" />
     </delegateCommandHandler>
   </extension>
 </plugin>

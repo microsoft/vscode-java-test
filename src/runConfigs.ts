@@ -101,6 +101,19 @@ export interface IExecutionConfig {
          * @since 0.37.0
          */
         tags?: string[]
+    };
+
+    /**
+     * The coverage configuration.
+     * @since 0.41.0
+     */
+    coverage?: {
+        /**
+         * Whether the coverage result is appended. For Jacoco, it means the execution data
+         * is appended to the existing data file if it already exists.
+         * @since 0.41.0
+         */
+        appendResult?: boolean;
     }
 
     /**
