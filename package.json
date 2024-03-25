@@ -21,11 +21,8 @@
         "debug"
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
-    "enabledApiProposals": [
-        "testCoverage"
-    ],
     "engines": {
-        "vscode": "^1.69.0"
+        "vscode": "^1.88.0"
     },
     "categories": [
         "Testing"

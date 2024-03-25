@@ -1,53 +1,42 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { BranchCoverage, CancellationToken, DeclarationCoverage, DetailedCoverage, FileCoverage, Position, StatementCoverage, TestCoverageProvider, Uri } from 'vscode';
+import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, TestRun, Uri } from 'vscode';
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 
-export class JavaTestCoverageProvider implements TestCoverageProvider {
+export class JavaTestCoverageProvider {
 
-    private projectNames: Set<string>;
+    private coverageDetails: Map<Uri, FileCoverageDetail[]> = new Map<Uri, FileCoverageDetail[]>();
 
-    constructor() {
-        this.projectNames = new Set<string>();
-    }
-
-    public addProject(projectName: string): void {
-        this.projectNames.add(projectName);
-    }
-
-    public async provideFileCoverage(token: CancellationToken): Promise<FileCoverage[]> {
-        const fileCoverages: FileCoverage[] = [];
-        for (const projectName of this.projectNames) {
-            const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
-                projectName, getJacocoReportBasePath(projectName), token) || [];
-            if (token.isCancellationRequested) {
-                return [];
-            }
-
-            for (const sourceFileCoverage of sourceFileCoverages) {
-                const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
-                const detailedCoverage: DetailedCoverage[] = [];
-                for (const lineCoverage of sourceFileCoverage.lineCoverages) {
-                    const branchCoverages: BranchCoverage[] = [];
-                    for (const branchCoverage of lineCoverage.branchCoverages) {
-                        branchCoverages.push(new BranchCoverage(branchCoverage.hit, new Position(lineCoverage.lineNumber - 1, 0)));
-                    }
-                    const statementCoverage: StatementCoverage = new StatementCoverage(lineCoverage.hit,
-                        new Position(lineCoverage.lineNumber - 1, 0), branchCoverages);
-                    detailedCoverage.push(statementCoverage);
+    public async provideFileCoverage(run: TestRun, projectName: string): Promise<void> {
+        const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
+            projectName, getJacocoReportBasePath(projectName)) || [];
+        for (const sourceFileCoverage of sourceFileCoverages) {
+            const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
+            const detailedCoverage: FileCoverageDetail[] = [];
+            for (const lineCoverage of sourceFileCoverage.lineCoverages) {
+                const branchCoverages: BranchCoverage[] = [];
+                for (const branchCoverage of lineCoverage.branchCoverages) {
+                    branchCoverages.push(new BranchCoverage(branchCoverage.hit, new Position(lineCoverage.lineNumber - 1, 0)));
                 }
-                for (const methodCoverage of sourceFileCoverage.methodCoverages) {
-                    const functionCoverage: DeclarationCoverage = new DeclarationCoverage(methodCoverage.name, methodCoverage.hit,
-                        new Position(methodCoverage.lineNumber - 1, 0));
-                    detailedCoverage.push(functionCoverage);
-                }
-                fileCoverages.push(FileCoverage.fromDetails(uri, detailedCoverage));
+                const statementCoverage: StatementCoverage = new StatementCoverage(lineCoverage.hit,
+                    new Position(lineCoverage.lineNumber - 1, 0), branchCoverages);
+                detailedCoverage.push(statementCoverage);
             }
+            for (const methodCoverage of sourceFileCoverage.methodCoverages) {
+                const functionCoverage: DeclarationCoverage = new DeclarationCoverage(methodCoverage.name, methodCoverage.hit,
+                    new Position(methodCoverage.lineNumber - 1, 0));
+                detailedCoverage.push(functionCoverage);
+            }
+            run.addCoverage(FileCoverage.fromDetails(uri, detailedCoverage));
+            this.coverageDetails.set(uri, detailedCoverage);
         }
-        return fileCoverages;
+    }
+
+    public getCoverageDetails(uri: Uri): FileCoverageDetail[] {
+        return this.coverageDetails.get(uri) || [];
     }
 }
 

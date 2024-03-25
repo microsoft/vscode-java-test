@@ -3,7 +3,7 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
-import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
 import { IProgressReporter } from '../debugger.api';
@@ -167,7 +167,14 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 
     const run: TestRun = testController!.createTestRun(request);
-    const coverageProvider: JavaTestCoverageProvider = new JavaTestCoverageProvider();
+    let coverageProvider: JavaTestCoverageProvider | undefined;
+    if (request.profile?.kind === TestRunProfileKind.Coverage) {
+        coverageProvider = new JavaTestCoverageProvider();
+        request.profile.loadDetailedCoverage = (_testRun: TestRun, fileCoverage: FileCoverage, _token: CancellationToken): Promise<FileCoverageDetail[]> => {
+            return Promise.resolve(coverageProvider!.getCoverageDetails(fileCoverage.uri));
+        };
+    }
+
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
             const token: CancellationToken = option.token ?? run.token;
@@ -240,16 +247,13 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         }
                     }
                     if (request.profile?.kind === TestRunProfileKind.Coverage) {
-                        coverageProvider.addProject(projectName);
+                        await coverageProvider!.provideFileCoverage(run, projectName);
                     }
                 }
             }
             return resolve();
         });
     } finally {
-        if (request.profile?.kind === TestRunProfileKind.Coverage) {
-            run.coverageProvider = coverageProvider;
-        }
         run.end();
     }
 });
