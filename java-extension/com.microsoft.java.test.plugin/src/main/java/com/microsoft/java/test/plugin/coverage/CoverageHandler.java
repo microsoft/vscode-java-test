@@ -47,9 +47,11 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CoverageHandler {
 
@@ -71,7 +73,9 @@ public class CoverageHandler {
             return Collections.emptyList();
         }
         final List<SourceFileCoverage> coverage = new LinkedList<>();
-        final Map<IPath, List<IPath>> outputToSourcePaths = getOutputToSourcePathsMapping();
+        final List<IJavaProject> javaProjects = new LinkedList<>();
+        javaProjects.addAll(getAllJavaProjects(javaProject));
+        final Map<IPath, List<IPath>> outputToSourcePaths = getOutputToSourcePathsMapping(javaProjects);
 
         final File executionDataFile = reportBasePath.resolve(JACOCO_EXEC).toFile();
         final ExecFileLoader execFileLoader = new ExecFileLoader();
@@ -80,7 +84,7 @@ public class CoverageHandler {
             final CoverageBuilder coverageBuilder = new CoverageBuilder();
             final Analyzer analyzer = new Analyzer(
                     execFileLoader.getExecutionDataStore(), coverageBuilder);
-            final File outputDirectory = getFileForFs(javaProject, entry.getKey());
+            final File outputDirectory = entry.getKey().toFile();
             if (!outputDirectory.exists()) {
                 continue;
             }
@@ -114,30 +118,30 @@ public class CoverageHandler {
         return coverage;
     }
 
-    private Map<IPath, List<IPath>> getOutputToSourcePathsMapping() throws JavaModelException {
+    private Map<IPath, List<IPath>> getOutputToSourcePathsMapping(List<IJavaProject> javaProjects)
+            throws JavaModelException {
         final Map<IPath, List<IPath>> outputToSourcePaths = new HashMap<>();
-        for (final IClasspathEntry entry : javaProject.getRawClasspath()) {
-            if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE ||
-                    ProjectTestUtils.isTestEntry(entry)) {
-                continue;
+        for (final IJavaProject javaProject : javaProjects) {
+            for (final IClasspathEntry entry : javaProject.getRawClasspath()) {
+                if (entry.getEntryKind() != ClasspathEntry.CPE_SOURCE ||
+                        ProjectTestUtils.isTestEntry(entry)) {
+                    continue;
+                }
+    
+                final IProject project = javaProject.getProject();
+                final IPath sourceRelativePath = entry.getPath().makeRelativeTo(project.getFullPath());
+                final IPath realSourcePath = project.getFolder(sourceRelativePath).getLocation();
+    
+                IPath outputLocation = entry.getOutputLocation();
+                if (outputLocation == null) {
+                    outputLocation = javaProject.getOutputLocation();
+                }
+                final IPath outputRelativePath = outputLocation.makeRelativeTo(javaProject.getProject().getFullPath());
+                final IPath realOutputPath = project.getFolder(outputRelativePath).getLocation();
+    
+                outputToSourcePaths.computeIfAbsent(realOutputPath, k -> new LinkedList<>())
+                        .add(realSourcePath);
             }
-
-            final IProject project = javaProject.getProject();
-            final IPath sourceRelativePath = entry.getPath().makeRelativeTo(project.getFullPath());
-            final IPath projectRealFolderPath = ProjectUtils.getProjectRealFolder(project);
-            final IPath realSourcePath = project.getFolder(sourceRelativePath).getLocation();
-            final IPath realRelativeSourcePath = realSourcePath.makeRelativeTo(projectRealFolderPath);
-
-            IPath outputLocation = entry.getOutputLocation();
-            if (outputLocation == null) {
-                outputLocation = javaProject.getOutputLocation();
-            }
-            final IPath outputRelativePath = outputLocation.makeRelativeTo(javaProject.getProject().getFullPath());
-            final IPath realOutputPath = project.getFolder(outputRelativePath).getLocation();
-            final IPath realRelativeOutputPath = realOutputPath.makeRelativeTo(projectRealFolderPath);
-
-            outputToSourcePaths.computeIfAbsent(realRelativeOutputPath, k -> new LinkedList<>())
-                    .add(realRelativeSourcePath);
         }
         return outputToSourcePaths;
     }
@@ -160,17 +164,12 @@ public class CoverageHandler {
         final IPath sourceRelativePath = new org.eclipse.core.runtime.Path(packagePath)
                 .append(sourceFileCoverage.getName());
         for (final IPath sourceRoot : sourceRoots) {
-            final IPath relativePath = sourceRoot.append(sourceRelativePath);
-            final File sourceFile = getFileForFs(javaProject, relativePath);
+            final File sourceFile = sourceRoot.append(sourceRelativePath).toFile();
             if (sourceFile.exists()) {
                 return sourceFile;
             }
         }
         return null;
-    }
-
-    private static File getFileForFs(IJavaProject javaProject, IPath path) {
-        return ProjectUtils.getProjectRealFolder(javaProject.getProject()).append(path).toFile();
     }
 
     private List<LineCoverage> getLineCoverages(final ISourceFileCoverage sourceFileCoverage) {
@@ -242,6 +241,30 @@ public class CoverageHandler {
         } catch (IllegalArgumentException e) {
             return methodName;
         }
+    }
 
+    /**
+     * Returns a collection containing all Java projects that are required by the given {@link IJavaProject}
+     * and the input java project as well.
+     */
+    private static Collection<IJavaProject> getAllJavaProjects(IJavaProject javaProject)
+            throws JavaModelException {
+        final Set<IJavaProject> result = new LinkedHashSet<>();
+        final List<IJavaProject> toScan = new LinkedList<>();
+        toScan.add(javaProject);
+        while (!toScan.isEmpty()) {
+            final IJavaProject currentProject = toScan.remove(0);
+            if (result.contains(currentProject)) {
+                continue;
+            }
+            result.add(currentProject);
+            for (final String projectName : currentProject.getRequiredProjectNames()) {
+                final IJavaProject requiredProject = ProjectUtils.getJavaProject(projectName);
+                if (requiredProject != null) {
+                    toScan.add(requiredProject);
+                }
+            }
+        }
+        return result;
     }
 }
