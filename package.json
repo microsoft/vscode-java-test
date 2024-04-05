@@ -507,8 +507,7 @@
         "test": "npm run compile && node ./out/test/index.js",
         "lint": "eslint -c .eslintrc.js --ext .ts ./src",
         "build-plugin": "node scripts/buildJdtlsExt.js",
-        "vscode:prepublish": "webpack --mode production",
-        "download-api": "dts main && dts dev"
+        "vscode:prepublish": "webpack --mode production"
     },
     "extensionDependencies": [
         "redhat.java",
@@ -522,10 +521,9 @@
         "@types/mocha": "^9.1.1",
         "@types/node": "^16.18.13",
         "@types/sinon": "^10.0.13",
-        "@types/vscode": "1.69.0",
+        "@types/vscode": "1.88.0",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
         "@typescript-eslint/parser": "^5.60.1",
-        "@vscode/dts": "^0.4.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.43.0",
         "glob": "^7.2.3",
