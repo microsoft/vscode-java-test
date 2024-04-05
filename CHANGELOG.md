@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.41.0
+### Added
+- Support test coverage. [#387](https://github.com/microsoft/vscode-java-test/issues/387)
+- Support when clause for test configurations. [#1627](https://github.com/microsoft/vscode-java-test/issues/1627), contributed by [@ReubenFrankel](https://github.com/ReubenFrankel)
+
+### Fixed
+- Upgrade tycho to v4.0.5. [#1656](https://github.com/microsoft/vscode-java-test/issues/1656), contributed by [@baronswindle](https://github.com/baronswindle)
+- Correct JDK requirement in readme page. [PR#1667](https://github.com/microsoft/vscode-java-test/pull/1667), contributed by [@hacke2](https://github.com/hacke2)
+
+
 ## 0.40.1
 ### Fixed
 - The working directory is not set to folder opened in VS Code when it's unmanaged folder. [#1606](https://github.com/microsoft/vscode-java-test/issues/1606)
