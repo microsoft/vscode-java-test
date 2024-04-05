@@ -21,6 +21,7 @@ extension.bundle.ts
 javaConfig.json
 .github/**
 .azure-pipelines/**
+vscode.d.ts
 
 # Ignore output of code sign
 server/*.md

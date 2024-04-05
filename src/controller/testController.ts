@@ -3,7 +3,7 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
-import { CancellationToken, DebugConfiguration, Disposable, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
 import { IProgressReporter } from '../debugger.api';
@@ -18,6 +18,7 @@ import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, ITestItemData } from './testItemDataCache';
 import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
+import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
@@ -33,6 +34,7 @@ export function createTestController(): void {
 
     testController.createRunProfile('Run Tests', TestRunProfileKind.Run, runHandler, true, runnableTag);
     testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
+    testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Coverage, runHandler, true, runnableTag);
 
     testController.refreshHandler = () => {
         refreshExplorer();
@@ -139,6 +141,7 @@ async function runHandler(request: TestRunRequest, token: CancellationToken): Pr
 export const runTests: (request: TestRunRequest, option: IRunOption) => any = instrumentOperation('java.test.runTests', async (operationId: string, request: TestRunRequest, option: IRunOption) => {
     sendInfo(operationId, {
         isDebug: `${option.isDebug}`,
+        profile: request.profile?.label ?? 'UNKNOWN',
     });
 
     const testItems: TestItem[] = await new Promise<TestItem[]>(async (resolve: (result: TestItem[]) => void): Promise<void> => {
@@ -164,6 +167,14 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 
     const run: TestRun = testController!.createTestRun(request);
+    let coverageProvider: JavaTestCoverageProvider | undefined;
+    if (request.profile?.kind === TestRunProfileKind.Coverage) {
+        coverageProvider = new JavaTestCoverageProvider();
+        request.profile.loadDetailedCoverage = (_testRun: TestRun, fileCoverage: FileCoverage, _token: CancellationToken): Promise<FileCoverageDetail[]> => {
+            return Promise.resolve(coverageProvider!.getCoverageDetails(fileCoverage.uri));
+        };
+    }
+
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
             const token: CancellationToken = option.token ?? run.token;
@@ -214,6 +225,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             testItems: items,
                             testRun: run,
                             workspaceFolder,
+                            profile: request.profile,
                         };
                         const runner: BaseRunner | undefined = getRunnerByContext(testContext);
                         if (!runner) {
@@ -227,12 +239,15 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             delegatedToDebugger = true;
                             trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
-                        } catch(error) {
+                        } catch (error) {
                             window.showErrorMessage(error.message || 'Failed to run tests.');
                             option.progressReporter?.done();
                         } finally {
                             await runner.tearDown();
                         }
+                    }
+                    if (request.profile?.kind === TestRunProfileKind.Coverage) {
+                        await coverageProvider!.provideFileCoverage(run, projectName);
                     }
                 }
             }

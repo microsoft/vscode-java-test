@@ -22,7 +22,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.69.0"
+        "vscode": "^1.88.0"
     },
     "categories": [
         "Testing"
@@ -71,6 +71,7 @@
             "./server/org.eclipse.jdt.junit4.runtime_1.3.0.v20220609-1843.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.1.100.v20220907-0450.jar",
             "./server/org.opentest4j_1.2.0.jar",
+            "./server/org.jacoco.core_0.8.11.202310140853.jar",
             "./server/com.microsoft.java.test.plugin-0.40.1.jar"
         ],
         "viewsWelcome": [
@@ -325,6 +326,18 @@
                             "type": "string",
                             "markdownDescription": "%configuration.java.test.config.when.description%",
                             "default": ""
+                        },
+                        "coverage": {
+                            "type": "object",
+                            "description": "%configuration.java.test.config.coverage.description%",
+                            "default": {},
+                            "properties": {
+                                "appendResult": {
+                                    "type": "boolean",
+                                    "description": "%configuration.java.test.config.coverage.appendResult.description%",
+                                    "default": true
+                                }
+                            }
                         }
                     },
                     "description": "%configuration.java.test.config.description%",
@@ -468,6 +481,18 @@
                                 "type": "string",
                                 "markdownDescription": "%configuration.java.test.config.when.description%",
                                 "default": ""
+                            },
+                            "coverage": {
+                                "type": "object",
+                                "description": "%configuration.java.test.config.coverage.description%",
+                                "default": {},
+                                "properties": {
+                                    "appendResult": {
+                                        "type": "boolean",
+                                        "description": "%configuration.java.test.config.coverage.appendResult.description%",
+                                        "default": true
+                                    }
+                                }
                             }
                         }
                     },
@@ -496,7 +521,7 @@
         "@types/mocha": "^9.1.1",
         "@types/node": "^16.18.13",
         "@types/sinon": "^10.0.13",
-        "@types/vscode": "1.69.0",
+        "@types/vscode": "1.88.0",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
         "@typescript-eslint/parser": "^5.60.1",
         "@vscode/test-electron": "^2.3.8",

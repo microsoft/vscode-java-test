@@ -33,6 +33,8 @@
     "configuration.java.test.config.filters.tags.description": "指定要包含或排除的标记。\n\n带有`!`前缀的标记将会被**排除**。 \n\n注意：该选项**仅**会在 `testKind` 设置为 `junit` 时生效。",
     "configuration.java.test.config.when.description": "指定测试配置项的启用条件。\n\n注：目前仅支持`testItem =~ /<正则表达式>/`，其中，`testItem` 是测试类或方法的完全限定名。例如：\n- `testItem =~ /^com\\.company\\.package\\.test/` - 匹配包名包含`com.company.package.test`的测试。\n- `testItem =~ /(?<=\\.)Test/` - 匹配类名包含`Test`的测试。\n\n如果在执行测试时，仅有一个配置满足匹配条件，该配置将会被启用。如果多个配置项均满足，用户需要选择其中一个。\n\n当一次执行多个测试用例时（例如执行整个测试类或者包），那么配置项的匹配条件必须满足**全部**测试项才会视为匹配通过。\n\n该选项为空时，则视为匹配全部测试项。",
     "configuration.java.test.config.javaExec.description": "指定 Java 可执行文件。例如：`C:\\Program Files\\jdk\\bin\\java.exe`。未指定时将使用项目 JDK 执行测试。",
+    "configuration.java.test.config.coverage.description": "测试覆盖配置项。",
+    "configuration.java.test.config.coverage.appendResult.description": "是否追加测试覆盖结果。",
     "contributes.viewsWelcome.inLightWeightMode": "由于 Java 语言服务正运行在 [LightWeight 模式](https://aka.ms/vscode-java-lightweight)下，因此测试用例将不会展示在该视图中。如果您需要展示测试用例，可以点击下方按钮将 Java 语言服务切换至 Standard 模式。\n[切换至 Standard 模式](command:java.server.mode.switch?%5B%22Standard%22,true%5D)",
     "contributes.viewsWelcome.enableTests": "点击下方按钮为你的项目添加一个测试框架\n[启用 Java 测试](command:_java.test.enableTests)"
 }

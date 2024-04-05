@@ -16,6 +16,7 @@ export namespace JavaTestRunnerDelegateCommands {
     export const FIND_TEST_TYPES_AND_METHODS: string = 'vscode.java.test.findTestTypesAndMethods';
     export const RESOLVE_PATH: string = 'vscode.java.test.resolvePath';
     export const NAVIGATE_TO_TEST_OR_TARGET: string = 'vscode.java.test.navigateToTestOrTarget';
+    export const GET_COVERAGE_DETAIL: string = 'vscode.java.test.jacoco.getCoverageDetail';
 }
 
 export namespace JavaTestRunnerCommands {
