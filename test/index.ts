@@ -12,12 +12,12 @@ async function main(): Promise<void> {
         const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
 
         // Resolve redhat.java dependency
-        cp.spawnSync(cli, [...args, '--install-extension', 'redhat.java'], {
+        cp.spawnSync(cli, [...args, '--install-extension', 'redhat.java', '--pre-release'], {
             encoding: 'utf-8',
             stdio: 'inherit',
         });
 
-        cp.spawnSync(cli, [...args, '--install-extension', 'vscjava.vscode-java-debug'], {
+        cp.spawnSync(cli, [...args, '--install-extension', 'vscjava.vscode-java-debug', '--pre-release'], {
             encoding: 'utf-8',
             stdio: 'inherit',
         });

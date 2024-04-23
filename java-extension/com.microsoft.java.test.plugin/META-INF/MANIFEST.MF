@@ -40,8 +40,8 @@ Require-Bundle: org.eclipse.jdt.core,
  org.apiguardian.api;bundle-version="1.0.0",
  org.apache.commons.lang3;bundle-version="3.1.0",
  com.google.gson;bundle-version="2.7.0",
- org.objectweb.asm;bundle-version="9.6.0",
- org.jacoco.core;bundle-version="0.8.11"
+ org.objectweb.asm;bundle-version="9.7.0",
+ org.jacoco.core;bundle-version="0.8.12"
 Export-Package: com.microsoft.java.test.plugin.launchers;x-friends:="com.microsoft.java.test.plugin.test",
  com.microsoft.java.test.plugin.model;x-friends:="com.microsoft.java.test.plugin.test",
  com.microsoft.java.test.plugin.coverage;x-friends:="com.microsoft.java.test.plugin.test",
