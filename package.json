@@ -540,7 +540,7 @@
         "iconv-lite": "^0.6.3",
         "lodash": "^4.17.21",
         "lru-cache": "^7.17.0",
-        "vscode-extension-telemetry-wrapper": "^0.13.3",
+        "vscode-extension-telemetry-wrapper": "^0.14.0",
         "vscode-languageclient": "6.0.0-next.9",
         "vscode-tas-client": "^0.1.75"
     }
