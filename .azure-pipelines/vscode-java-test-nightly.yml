@@ -113,7 +113,7 @@ extends:
               - task: CmdLine@2
                 displayName: vsce package --pre-release
                 inputs:
-                  script: npx @vscode/vsce@latest package --pre-release
+                  script: npx @vscode/vsce@latest package --pre-release -o extension.vsix
               ### Copy files for APIScan
               - task: CopyFiles@2
                 displayName: "Copy Files for APIScan"
@@ -138,3 +138,35 @@ extends:
                 inputs:
                   Contents: "*.vsix"
                   TargetFolder: $(Build.ArtifactStagingDirectory)
+              - script: npx @vscode/vsce@latest generate-manifest -i $(Build.ArtifactStagingDirectory)/extension.vsix -o $(Build.ArtifactStagingDirectory)/extension.manifest
+                displayName: 'Generate extension manifest'
+                workingDirectory: '$(Build.ArtifactStagingDirectory)'
+              - script: cp $(Build.ArtifactStagingDirectory)/extension.manifest $(Build.ArtifactStagingDirectory)/extension.signature.p7s
+                displayName: 'Prepare manifest for signing'
+                workingDirectory: '$(Build.ArtifactStagingDirectory)'
+              - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
+                inputs:
+                  ConnectedServiceName: 'ESRP-Release-Test'
+                  AppRegistrationClientId: '1992ee18-e9d2-42d6-ab20-94dd947a44b6'
+                  AppRegistrationTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
+                  AuthAKVName: 'vscjavaci'
+                  AuthCertName: 'vscjava-esrprelease-auth'
+                  AuthSignCertName: 'VSCJava-CodeSign'
+                  FolderPath: '$(Build.ArtifactStagingDirectory)'
+                  Pattern: 'extension.signature.p7s'
+                  signConfigType: inlineSignParams
+                  inlineOperation: |
+                    [
+                      {
+                        "keyCode": "CP-401405",
+                        "operationSetCode": "VSCodePublisherSign",
+                        "parameters" : [],
+                        "toolName": "sign",
+                        "toolVersion": "1.0"
+                      }
+                    ]
+                  SessionTimeout: 90
+                  MaxConcurrency: 25
+                  MaxRetryAttempts: 5
+                  PendingAnalysisWaitTimeoutMinutes: 5
+                displayName: 'Sign extension'
