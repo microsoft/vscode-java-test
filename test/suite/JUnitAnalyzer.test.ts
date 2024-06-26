@@ -404,7 +404,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
     });
 
     test("can handle test cases with more than 3 arguments", () => {
-        const testItem = generateTestItem(testController, 'junit@junit5.ParameterizedAnnotationTest#testMultiArguments(String,String,String)', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const testItem = generateTestItem(testController, 'junit@junit5.ParameterizedAnnotationTest#testMultiArguments(String, String, String)', TestKind.JUnit5, new Range(10, 0, 16, 0));
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');
@@ -439,7 +439,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
     });
 
     test("can handle normal test method with multiple arguments", () => {
-        const testItem = generateTestItem(testController, 'junit@junit5.VertxTest#test(Vertx,VertxTestContext)', TestKind.JUnit5, new Range(10, 0, 16, 0));
+        const testItem = generateTestItem(testController, 'junit@junit5.VertxTest#test(Vertx, VertxTestContext)', TestKind.JUnit5, new Range(10, 0, 16, 0));
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');
