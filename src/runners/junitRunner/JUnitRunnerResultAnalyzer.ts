@@ -224,14 +224,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 className = `${className}$${nestedClassName}`;
             } else if (part.startsWith(JUnitTestPart.TEST_TEMPLATE)) {
                 const rawMethodName: string = part.substring(JUnitTestPart.TEST_TEMPLATE.length)
-                    .replace(/\\,/g, ',')
-                    .replace(/ /g, '');
+                    .replace(/\\,/g, ',');
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
             } else if (part.startsWith(JUnitTestPart.PROPERTY)) {
                 const rawMethodName: string = part.substring(JUnitTestPart.PROPERTY.length)
-                    .replace(/\\,/g, ',')
-                    .replace(/ /g, '');
+                    .replace(/\\,/g, ',');
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
             } else if (part.startsWith(JUnitTestPart.TEST_TEMPLATE_INVOCATION)) {
@@ -285,11 +283,11 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         const params: string[] = rawParamsString.split(',');
         let paramString: string = '';
         params.forEach((param: string) => {
-            paramString += `${param.substring(param.lastIndexOf('.') + 1)},`;
+            paramString += `${param.substring(param.lastIndexOf('.') + 1)}, `;
         });
-        // We want to remove the final comma.
+        // We want to remove the final comma and space.
         if (paramString.length > 0) {
-            paramString = paramString.substring(0, paramString.length - 1);
+            paramString = paramString.substring(0, paramString.length - 2);
         }
 
         const methodName: string = rawName.substring(0, rawName.indexOf('('));

@@ -53,8 +53,7 @@ public class TestItemUtils {
                     // them out now.
                     final String methodName = JavaElementLabelsCore.getElementLabel(element,
                             JavaElementLabelsCore.ALL_DEFAULT)
-                            .replaceAll("<.*?>", "")
-                            .replaceAll(" ", "");
+                            .replaceAll("<.*?>", "");
                     return className + "#" + methodName;
                 } else {
                     return method.getDeclaringType().getFullyQualifiedName() + "#" + method.getElementName();
