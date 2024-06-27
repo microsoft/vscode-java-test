@@ -26,7 +26,7 @@ export abstract class RunnerResultAnalyzer {
         }
 
         const location: Location | undefined = processStackTraceLine(data, traces, currentItem, projectName);
-        if (!this.testMessageLocation && location) {
+        if (location) {
             this.testMessageLocation = location;
         }
     }
