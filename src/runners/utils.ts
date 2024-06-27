@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Location, TestItem, TestMessage, TestRun, Uri } from 'vscode';
+import { Location, MarkdownString, Range, TestItem, TestMessage, TestRun, Uri } from 'vscode';
 import { JavaTestRunnerCommands } from '../constants';
 import { asRange } from '../controller/utils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
+import * as path from 'path';
 
 export async function findTestLocation(fullName: string): Promise<Location | undefined> {
     const location: any | undefined = await executeJavaLanguageServerCommand<any>(
@@ -51,4 +52,52 @@ export enum TestResultState {
     Skipped = 5,
     // Test run failed for some other reason (compilation error, timeout, etc)
     Errored = 6,
+}
+
+/**
+ * Append the line of stack trace to the traces.
+ * @param lineOfMessage line of stack trace.
+ * @param traces stack trace in markdown string.
+ * @param currentItem current test item.
+ * @param projectName project name.
+ */
+export function processStackTraceLine(lineOfMessage: string, traces: MarkdownString, currentItem: TestItem | undefined, projectName: string): Location | undefined {
+    let testMessageLocation: Location | undefined;
+    const traceResults: RegExpExecArray | null = /(\s?at\s+)([\w$\\.]+\/)?((?:[\w$]+\.)+[<\w$>]+)\((.*)\)/.exec(lineOfMessage);
+    if (traceResults) {
+        const fullyQualifiedName: string = traceResults[3];
+        const location: string = traceResults[4];
+        let sourceName: string | undefined;
+        let lineNumLiteral: string | undefined;
+        const locationResult: RegExpExecArray | null = /([\w-$]+\.java):(\d+)/.exec(location);
+        if (locationResult) {
+            sourceName = locationResult[1];
+            lineNumLiteral = locationResult[2];
+        }
+
+        if (!sourceName || !lineNumLiteral) {
+            traces.appendText(lineOfMessage);
+        } else {
+            const atLiteral: string = traceResults[1];
+            const optionalModuleName: string = traceResults[2] || '';
+            traces.appendText(atLiteral);
+            traces.appendMarkdown(`${optionalModuleName + fullyQualifiedName}([${sourceName}:${lineNumLiteral}](command:_java.test.openStackTrace?${encodeURIComponent(JSON.stringify([lineOfMessage, projectName]))}))`);
+            if (currentItem && path.basename(currentItem.uri?.fsPath || '') === sourceName) {
+                const lineNum: number = parseInt(lineNumLiteral, 10);
+                if (currentItem.uri) {
+                    if (!currentItem.range || (currentItem.range.start.line + 1 < lineNum && currentItem.range.end.line + 1 > lineNum)) {
+                        testMessageLocation = new Location(currentItem.uri, new Range(lineNum - 1, 0, lineNum, 0));
+                    } else {
+                        testMessageLocation = new Location(currentItem.uri, new Range(currentItem.range.start.line, 0, currentItem.range.start.line, 0));
+                    }
+                }
+            }
+        }
+    } else {
+        // '<' & '>' will be escaped when displaying the test message, so replacing them to '[' & ']'.
+        traces.appendText(lineOfMessage.replace(/</g, '[').replace(/>/g, ']'));
+    }
+    traces.appendMarkdown('<br/>');
+
+    return testMessageLocation
 }
