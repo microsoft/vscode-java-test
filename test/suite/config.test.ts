@@ -6,9 +6,9 @@
 import * as assert from 'assert';
 import { TestController, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunner } from '../../src/runners/junitRunner/JunitRunner';
-import { IRunTestContext, TestKind } from '../../src/types';
 import { resolveLaunchConfigurationForRunner } from '../../src/utils/launchUtils';
 import { generateTestItem, setupTestEnv } from './utils';
+import { TestKind, IRunTestContext } from '../../src/java-test-runner.api';
 
 // tslint:disable: only-arrow-functions
 // tslint:disable: no-object-literal-type-assertion

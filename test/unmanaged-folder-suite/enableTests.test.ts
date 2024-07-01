@@ -8,8 +8,8 @@ import * as path from 'path';
 import * as fse from 'fs-extra';
 import { Uri, window } from 'vscode';
 import { enableTests } from '../../src/commands/testDependenciesCommands';
-import { TestKind } from '../../src/types';
 import { setupTestEnv, sleep } from '../suite/utils';
+import { TestKind } from '../../src/java-test-runner.api';
 
 // tslint:disable: only-arrow-functions
 // tslint:disable: no-object-literal-type-assertion

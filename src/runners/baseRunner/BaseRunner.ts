@@ -9,12 +9,11 @@ import { CancellationToken, debug, DebugConfiguration, DebugSession, Disposable 
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { Configurations } from '../../constants';
 import { IProgressReporter } from '../../debugger.api';
-import { IExecutionConfig } from '../../runConfigs';
-import { IRunTestContext } from '../../types';
-import { ITestRunner } from '../ITestRunner';
+import { ITestRunnerInternal } from '../ITestRunner';
 import { RunnerResultAnalyzer } from './RunnerResultAnalyzer';
+import { IExecutionConfig, IRunTestContext } from '../../java-test-runner.api';
 
-export abstract class BaseRunner implements ITestRunner {
+export abstract class BaseRunner implements ITestRunnerInternal {
     protected server: Server;
     protected socket: Socket;
     protected runnerResultAnalyzer: RunnerResultAnalyzer;

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Range, TestItem, TestRun, TestRunProfile } from 'vscode';
-import * as vscode from 'vscode';
+import { Range } from 'vscode';
+import { TestKind, TestLevel } from './java-test-runner.api';
 
 export interface IJavaTestItem {
     children: IJavaTestItem[];
@@ -29,34 +29,6 @@ export interface IJavaTestItem {
      * Optional fields for projects
      */
     natureIds?: string[];
-}
-
-export enum TestKind {
-    JUnit5 = 0,
-    JUnit = 1,
-    TestNG = 2,
-    None = 100,
-}
-
-export enum TestLevel {
-    Root = 0,
-    Workspace = 1,
-    WorkspaceFolder = 2,
-    Project = 3,
-    Package = 4,
-    Class = 5,
-    Method = 6,
-    Invocation = 7,
-}
-
-export interface IRunTestContext {
-    isDebug: boolean;
-    kind: TestKind;
-    projectName: string;
-    testItems: TestItem[];
-    testRun: TestRun;
-    workspaceFolder: vscode.WorkspaceFolder;
-    profile?: TestRunProfile;
 }
 
 export enum ProjectType {

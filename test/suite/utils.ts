@@ -7,7 +7,7 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import { commands, extensions, Range, TestController, TestItem, Uri, workspace } from "vscode";
 import { dataCache } from "../../src/controller/testItemDataCache";
-import { TestKind, TestLevel } from "../../src/types";
+import { TestKind, TestLevel } from '../../src/java-test-runner.api';
 
 export function generateTestItem(testController: TestController, id: string, testKind: TestKind,
     range?: Range, jdtHandler?: string, uri: string = '/mock/test/TestAnnotation.java'): TestItem {

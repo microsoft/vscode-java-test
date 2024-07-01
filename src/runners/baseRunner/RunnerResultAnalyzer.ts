@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Location, MarkdownString, TestItem } from 'vscode';
-import { IRunTestContext } from '../../types';
+import { IRunTestContext } from '../../java-test-runner.api';
 import { processStackTraceLine } from '../utils';
 
 export abstract class RunnerResultAnalyzer {

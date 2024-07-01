@@ -3,9 +3,9 @@
 
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache } from '../../controller/testItemDataCache';
-import { IRunTestContext, TestLevel } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
-import { setTestState, TestResultState } from '../utils';
+import { setTestState } from '../utils';
+import { IRunTestContext, TestLevel, TestResultState } from '../../java-test-runner.api';
 
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';

@@ -9,11 +9,12 @@ import * as fse from 'fs-extra';
 import * as _ from 'lodash';
 import * as os from 'os';
 import { getJavaProjects, getProjectType } from '../controller/utils';
-import { IJavaTestItem, ProjectType, TestKind } from '../types';
+import { IJavaTestItem, ProjectType } from '../types';
 import { createWriteStream, WriteStream } from 'fs';
 import { URL } from 'url';
 import { ClientRequest, IncomingMessage } from 'http';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
+import { TestKind } from '../java-test-runner.api';
 
 export async function enableTests(testKind?: TestKind): Promise<void> {
     const project: IJavaTestItem | undefined = await getTargetProject();

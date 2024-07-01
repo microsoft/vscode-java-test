@@ -4,10 +4,11 @@
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
 import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { createTestItem, updateOrCreateTestItem } from '../../controller/utils';
-import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../../types';
+import { IJavaTestItem } from '../../types';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
-import { findTestLocation, setTestState, TestResultState } from '../utils';
+import { findTestLocation, setTestState } from '../utils';
 import { JUnitTestPart } from '../../constants';
+import { IRunTestContext, TestKind, TestLevel, TestResultState } from '../../java-test-runner.api';
 
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {

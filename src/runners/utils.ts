@@ -6,6 +6,7 @@ import { JavaTestRunnerCommands } from '../constants';
 import { asRange } from '../controller/utils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import * as path from 'path';
+import { TestResultState } from '../java-test-runner.api';
 
 export async function findTestLocation(fullName: string): Promise<Location | undefined> {
     const location: any | undefined = await executeJavaLanguageServerCommand<any>(
@@ -36,22 +37,6 @@ export function setTestState(testRun: TestRun, item: TestItem, result: TestResul
         default:
             break;
     }
-}
-
-// Copied from the proposed part of the API
-export enum TestResultState {
-    // Test will be run, but is not currently running.
-    Queued = 1,
-    // Test is currently running
-    Running = 2,
-    // Test run has passed
-    Passed = 3,
-    // Test run has failed (on an assertion)
-    Failed = 4,
-    // Test run has been skipped
-    Skipped = 5,
-    // Test run failed for some other reason (compilation error, timeout, etc)
-    Errored = 6,
 }
 
 /**
