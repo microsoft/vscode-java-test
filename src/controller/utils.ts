@@ -5,14 +5,15 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as fse from 'fs-extra';
 import { performance } from 'perf_hooks';
-import { CancellationToken, commands, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, commands, Range, TestItem, TestTag, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
-import { IJavaTestItem, ProjectType, TestKind, TestLevel } from '../types';
+import { IJavaTestItem, ProjectType } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
 import { runnableTag, testController } from './testController';
 import { dataCache } from './testItemDataCache';
+import { TestKind, TestLevel } from '../java-test-runner.api';
 
 /**
  * Load the Java projects, which are the root nodes of the test explorer
@@ -133,17 +134,21 @@ function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
  * @param parent The parent node of the test item (if it has)
  * @returns The created test item
  */
-export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): TestItem {
+export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem, tags?: TestTag[]): TestItem {
     if (!testController) {
         throw new Error('Failed to create test item. The test controller is not initialized.');
     }
     const item: TestItem = testController.createTestItem(
         metaInfo.id,
-        `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`,
+        `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`.trim(),
         metaInfo.uri ? Uri.parse(metaInfo.uri) : undefined,
     );
     item.range = asRange(metaInfo.range);
-    item.tags = [runnableTag];
+    if (tags) {
+        item.tags = tags;
+    } else {
+        item.tags = [runnableTag];
+    }
     dataCache.set(item, {
         jdtHandler: metaInfo.jdtHandler,
         fullName: metaInfo.fullName,

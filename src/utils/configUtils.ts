@@ -8,7 +8,8 @@ import { sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { Configurations, Dialog } from '../constants';
 import { dataCache } from '../controller/testItemDataCache';
 import { extensionContext } from '../extension';
-import { getBuiltinConfig, IExecutionConfig } from '../runConfigs';
+import { getBuiltinConfig } from '../runConfigs';
+import { IExecutionConfig } from '../java-test-runner.api';
 
 export async function loadRunConfig(testItems: TestItem[], workspaceFolder: WorkspaceFolder): Promise<IExecutionConfig | undefined> {
     const configSetting: IExecutionConfig[] | IExecutionConfig = workspace.getConfiguration(undefined, workspaceFolder.uri).get<IExecutionConfig[] | IExecutionConfig>(Configurations.CONFIG_SETTING_KEY, {});

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { TestItem } from 'vscode';
-import { TestKind, TestLevel } from '../types';
+import { TestKind, TestLevel } from '../java-test-runner.api';
 
 /**
  * A map cache to save the metadata of the test item.
