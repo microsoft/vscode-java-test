@@ -19,8 +19,9 @@ import { dataCache, ITestItemData } from './testItemDataCache';
 import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 import { testRunnerService } from './testRunnerService';
-import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState } from '../java-test-runner.api';
+import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
 import { processStackTraceLine } from '../runners/utils';
+import { parsePartsFromTestId } from '../utils/testItemUtils';
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
@@ -184,9 +185,11 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
             const token: CancellationToken = option.token ?? run.token;
+            let disposables: Disposable[] = [];
             token.onCancellationRequested(() => {
                 option.progressReporter?.done();
                 run.end();
+                disposables.forEach((d: Disposable) => d.dispose());
                 return resolve();
             });
             enqueueTestMethods(testItems, run);
@@ -215,7 +218,9 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                     };
                     const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
                     if (testRunner) {
-                        await executeWithTestRunner(option, testRunner, testContext, run);
+                        await executeWithTestRunner(option, testRunner, testContext, run, disposables);
+                        disposables.forEach((d: Disposable) => d.dispose());
+                        disposables = [];
                         continue;
                     }
                     const testKindMapping: Map<TestKind, TestItem[]> = mapTestItemsByKind(itemsPerProject);
@@ -271,22 +276,22 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 });
 
-async function executeWithTestRunner(option: IRunOption, testRunner: any, testContext: IRunTestContext, run: TestRun) {
+async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner, testContext: IRunTestContext, run: TestRun, disposables: Disposable[]) {
     option.progressReporter?.done();
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
-        testRunner.onDidChangeTestItemStatus((event: TestItemStatusChangeEvent) => {
+        disposables.push(testRunner.onDidChangeTestItemStatus((event: TestItemStatusChangeEvent) => {
+            const parts: TestIdParts = parsePartsFromTestId(event.testId);
             let parentItem: TestItem;
             try {
-                parentItem = findTestClass(testContext.projectName, event.test);
+                parentItem = findTestClass(parts);
             } catch (e) {
                 sendError(e);
                 window.showErrorMessage(e.message);
                 return resolve();
             }
             let currentItem: TestItem | undefined;
-            const idxOfMethodStart: number = event.test.indexOf('#');
-            const invocations: string[] = idxOfMethodStart > 0 ? event.test.substring(idxOfMethodStart + 1).split('#') : [];
-            if (invocations.length > 0) {
+            const invocations: string[] | undefined = parts.invocations;
+            if (invocations?.length) {
                 let i: number = 0;
                 for (; i < invocations.length; i++) {
                     currentItem = parentItem.children.get(`${parentItem.id}#${invocations[i]}`);
@@ -297,28 +302,29 @@ async function executeWithTestRunner(option: IRunOption, testRunner: any, testCo
                 }
 
                 if (i < invocations.length - 1) {
-                    window.showErrorMessage('Test not found:' + event.test);
-                    sendError(new Error('Test not found:' + event.test));
+                    window.showErrorMessage('Test not found:' + event.testId);
+                    sendError(new Error('Test not found:' + event.testId));
                     return resolve();
+                }
+
+                if (!currentItem) {
+                    currentItem = createTestItem({
+                        children: [],
+                        uri: parentItem.uri?.toString(),
+                        range: parentItem.range,
+                        jdtHandler: '',
+                        fullName: `${parentItem.id}#${invocations[invocations.length - 1]}`,
+                        label: event.displayName || invocations[invocations.length - 1],
+                        id: `${parentItem.id}#${invocations[invocations.length - 1]}`,
+                        projectName: testContext.projectName,
+                        testKind: TestKind.None,
+                        testLevel: TestLevel.Invocation,
+                    }, parentItem);
                 }
             } else {
                 currentItem = parentItem;
             }
 
-            if (!currentItem) {
-                currentItem = createTestItem({
-                    children: [],
-                    uri: parentItem.uri?.toString(),
-                    range: parentItem.range,
-                    jdtHandler: '',
-                    fullName: `${parentItem.id}#${invocations[invocations.length - 1]}`,
-                    label: event.displayName || invocations[invocations.length - 1],
-                    id: `${parentItem.id}#${invocations[invocations.length - 1]}`,
-                    projectName: testContext.projectName,
-                    testKind: TestKind.None,
-                    testLevel: TestLevel.Invocation,
-                }, parentItem, []);
-            }
             if (event.displayName && getLabelWithoutCodicon(currentItem.label) !== event.displayName) {
                 currentItem.description = event.displayName;
             }
@@ -354,36 +360,35 @@ async function executeWithTestRunner(option: IRunOption, testRunner: any, testCo
                 default:
                     break;
             }
-        });
+        }));
 
-        testRunner.onDidFinishTestRun((_event: TestFinishEvent) => {
+        disposables.push(testRunner.onDidFinishTestRun((_event: TestFinishEvent) => {
             return resolve();
-        });
+        }));
 
         testRunner.launch(testContext);
     });
 
-    function findTestClass(projectName: string, testIdentifier: string): TestItem {
-        const projectItem: TestItem | undefined = testController?.items.get(projectName);
+    function findTestClass(parts: TestIdParts): TestItem {
+        const projectItem: TestItem | undefined = testController?.items.get(parts.project);
         if (!projectItem) {
             throw new Error('Failed to get the project test item.');
         }
-        const idxOfMethodStart: number = testIdentifier.indexOf('#');
-        let classFullyQualifiedName: string;
-        if (idxOfMethodStart > 0) {
-            classFullyQualifiedName = testIdentifier.substring(0, idxOfMethodStart);
-        } else {
-            classFullyQualifiedName = testIdentifier;
+
+        if (parts.package === undefined) { // '' means default package
+            throw new Error('package is undefined in the id parts.');
         }
 
-        const idxOfLastDot: number = classFullyQualifiedName.lastIndexOf('.');
-        const packageName: string = idxOfLastDot > 0 ? classFullyQualifiedName.substring(0, idxOfLastDot) : '';
-        const packageItem: TestItem | undefined = projectItem.children.get(`${projectItem.id}@${packageName}`);
+        const packageItem: TestItem | undefined = projectItem.children.get(`${projectItem.id}@${parts.package}`);
         if (!packageItem) {
             throw new Error('Failed to get the package test item.');
         }
 
-        const classes: string[] = classFullyQualifiedName.split('$'); // handle nested classes
+        if (!parts.class) {
+            throw new Error('class is undefined in the id parts.');
+        }
+
+        const classes: string[] = parts.class.split('$'); // handle nested classes
         let current: TestItem | undefined = packageItem.children.get(`${projectItem.id}@${classes[0]}`);
         if (!current) {
             throw new Error('Failed to get the class test item.');

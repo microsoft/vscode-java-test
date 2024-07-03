@@ -11,6 +11,45 @@ export type registerTestProfile = (name: string, kind: vscode.TestRunProfileKind
 
 /**
  * @todo Proposed API
+ * Parse the test id from the parts.
+ */
+export type parseTestIdFromParts = (parts: TestIdParts) => string;
+
+/**
+ * @todo Proposed API
+ * Parse the test id parts from the id.
+ */
+export type parsePartsFromTestId = (id: string) => TestIdParts;
+
+
+/**
+ * @todo Proposed API
+ * The parts that compose a test id.
+ */
+export interface TestIdParts {
+    /**
+     * The project name.
+     */
+    project: string;
+
+    /**
+     * The package fully qualified name.
+     */
+    package?: string;
+
+    /**
+     * The class fully qualified name.
+     */
+    class?: string;
+
+    /**
+     * The method name or the invocation names(for example, the dynamic tests in JUnit Jupiter).
+     */
+    invocations?: string[];
+}
+
+/**
+ * @todo Proposed API
  * The test runner.
  */
 export interface TestRunner {
@@ -37,22 +76,22 @@ export interface TestRunner {
  */
 export interface TestItemStatusChangeEvent {
     /**
-     * An identifier representing the test item in the test exploer.
-     * The identifir must follow the following format:
+     * An identifier representing the test item in the test explorer.
+     * The identifier must follow the following format:
      * <package name>.<class name>[#<method or invocation name>]*
      *
      * Please note that:
      *
      * 1. The test controller will split the identifier to multiple parts according
-     * to the above example, and find the target test item using this hierarchy in the test exploer.
-     * 2. The class fully qualified name must be a valid one which exists in the test exploer.
+     * to the above example, and find the target test item using this hierarchy in the test explorer.
+     * 2. The class fully qualified name must be a valid one which exists in the test explorer.
      * 3. Only the last part of the invocation or method name of the item is allowed to be non-existent
-     * in the exploere. In such case, the test controller will create a new test item in the test exploer.
+     * in the explorer. In such case, the test controller will create a new test item in the test explorer.
      *
      * @example 'org.junit.Test#testMethod'
      * @example 'foo.bar#test(String, String)#1 + 1 = 2'
      */
-    test: string;
+    testId: string;
 
     /**
      * The new state of the test item.
@@ -119,7 +158,7 @@ export interface TestFinishEvent {
     /**
      * The status of the test run.
      */
-    status: number;
+    statusCode: number;
 
     /**
      * The message of the test run.
@@ -239,13 +278,6 @@ export interface IExecutionConfig {
      * @since 0.40.0
      */
     javaExec?: string;
-
-    /**
-     * the extra options and system properties for the JVM.
-     * It's deprecated, we should align with the debug launch configuration, which is 'vmArgs'.
-     * @since 0.14.0
-     */
-    vmargs?: any[];
 
     /**
      * the extra options and system properties for the JVM.

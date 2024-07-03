@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as fse from 'fs-extra';
 import { performance } from 'perf_hooks';
-import { CancellationToken, commands, Range, TestItem, TestTag, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, commands, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { IJavaTestItem, ProjectType } from '../types';
@@ -130,11 +130,11 @@ function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
 
 /**
  * Create test item which will be shown in the test explorer
- * @param metaInfo The data from the server side of the test item
- * @param parent The parent node of the test item (if it has)
+ * @param metaInfo The data from the server side of the test item.
+ * @param parent The parent node of the test item (if it has).
  * @returns The created test item
  */
-export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem, tags?: TestTag[]): TestItem {
+export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): TestItem {
     if (!testController) {
         throw new Error('Failed to create test item. The test controller is not initialized.');
     }
@@ -144,11 +144,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem, tags?
         metaInfo.uri ? Uri.parse(metaInfo.uri) : undefined,
     );
     item.range = asRange(metaInfo.range);
-    if (tags) {
-        item.tags = tags;
-    } else {
-        item.tags = [runnableTag];
-    }
+    item.tags = [runnableTag];
     dataCache.set(item, {
         jdtHandler: metaInfo.jdtHandler,
         fullName: metaInfo.fullName,

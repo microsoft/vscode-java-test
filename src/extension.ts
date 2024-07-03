@@ -20,6 +20,7 @@ import { registerAskForChoiceCommand, registerAdvanceAskForChoice, registerAskFo
 import { enableTests } from './commands/testDependenciesCommands';
 import { testRunnerService } from './controller/testRunnerService';
 import { TestRunner } from './java-test-runner.api';
+import { parsePartsFromTestId, parseTestIdFromParts } from './utils/testItemUtils';
 
 export let extensionContext: ExtensionContext;
 let componentsRegistered: boolean = false;
@@ -36,6 +37,8 @@ export async function activate(context: ExtensionContext): Promise<any> {
         registerTestProfile: (name: string, kind: TestRunProfileKind, runner: TestRunner) => {
             testRunnerService.registerTestRunner(name, kind, runner);
         },
+        parseTestIdFromParts,
+        parsePartsFromTestId,
     };
 }
 
