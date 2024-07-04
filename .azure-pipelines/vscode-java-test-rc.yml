@@ -65,12 +65,12 @@ extends:
               - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
                 displayName: ESRP CodeSigning
                 inputs:
-                  ConnectedServiceName: 'ESRP-Release-Test'
-                  AppRegistrationClientId: '1992ee18-e9d2-42d6-ab20-94dd947a44b6'
-                  AppRegistrationTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
-                  AuthAKVName: 'vscjavaci'
-                  AuthCertName: 'vscjava-esrprelease-auth'
-                  AuthSignCertName: 'VSCJava-CodeSign'
+                  ConnectedServiceName: $(EsrpConnectionServiceName)
+                  AppRegistrationClientId: $(AppRegistrationClientId)
+                  AppRegistrationTenantId: $(AppRegistrationTenantId)
+                  AuthAKVName: $(AuthAKVName)
+                  AuthCertName: $(AuthCertName)
+                  AuthSignCertName: $(AuthSignCertName)
                   FolderPath: server
                   Pattern: com.microsoft.java.test.*.jar
                   signConfigType: inlineSignParams
@@ -101,7 +101,7 @@ extends:
               - task: CmdLine@2
                 displayName: vsce package
                 inputs:
-                  script: npx @vscode/vsce@latest package
+                  script: npx @vscode/vsce@latest package -o extension.vsix
               ### Copy files for APIScan
               - task: CopyFiles@2
                 displayName: "Copy Files for APIScan"
@@ -121,8 +121,41 @@ extends:
                 condition: and(succeeded(), ne(variables['DisableAPIScan'], 'true'))
                 env:
                   AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+              - script: npx @vscode/vsce@latest generate-manifest -i extension.vsix -o extension.manifest
+                displayName: 'Generate extension manifest'
+              - script: cp extension.manifest extension.signature.p7s
+                displayName: 'Prepare manifest for signing'
+              - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
+                inputs:
+                  ConnectedServiceName: $(EsrpConnectionServiceName)
+                  AppRegistrationClientId: $(AppRegistrationClientId)
+                  AppRegistrationTenantId: $(AppRegistrationTenantId)
+                  AuthAKVName: $(AuthAKVName)
+                  AuthCertName: $(AuthCertName)
+                  AuthSignCertName: $(AuthSignCertName)
+                  FolderPath: '.'
+                  Pattern: 'extension.signature.p7s'
+                  signConfigType: inlineSignParams
+                  inlineOperation: |
+                    [
+                      {
+                        "keyCode": "CP-401405",
+                        "operationSetCode": "VSCodePublisherSign",
+                        "parameters" : [],
+                        "toolName": "sign",
+                        "toolVersion": "1.0"
+                      }
+                    ]
+                  SessionTimeout: 90
+                  MaxConcurrency: 25
+                  MaxRetryAttempts: 5
+                  PendingAnalysisWaitTimeoutMinutes: 5
+                displayName: 'Sign extension'
               - task: CopyFiles@2
                 displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
                 inputs:
-                  Contents: "*.vsix"
+                  Contents: |
+                    extension.vsix
+                    extension.manifest
+                    extension.signature.p7s
                   TargetFolder: $(Build.ArtifactStagingDirectory)
