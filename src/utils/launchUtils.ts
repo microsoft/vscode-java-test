@@ -8,19 +8,19 @@ import { sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { dataCache } from '../controller/testItemDataCache';
 import { extensionContext } from '../extension';
-import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner, IJUnitLaunchArguments, Response } from '../runners/baseRunner/BaseRunner';
-import { IRunTestContext, TestKind, TestLevel } from '../types';
 import { executeJavaLanguageServerCommand } from './commandUtils';
 import { getJacocoAgentPath, getJacocoDataFilePath } from './coverageUtils';
+import { IExecutionConfig, IRunTestContext, TestKind, TestLevel } from '../java-test-runner.api';
 
 export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, testContext: IRunTestContext, config?: IExecutionConfig): Promise<DebugConfiguration> {
     const launchArguments: IJUnitLaunchArguments = await getLaunchArguments(testContext);
 
     if (config && config.vmArgs) {
         launchArguments.vmArguments.push(...config.vmArgs.filter(Boolean));
-    } else if (config && config.vmargs) {
-        launchArguments.vmArguments.push(...config.vmargs.filter(Boolean));
+    } else if (config && (config as any).vmargs) { // to support the deprecated property name.
+        launchArguments.vmArguments.push(...(config as any).vmargs.filter(Boolean));
+        sendInfo('', {'deprecatedPropertyUsed': 'vmargs'});
     }
 
     let debugConfiguration: DebugConfiguration;

@@ -3,8 +3,8 @@ import * as sinon from 'sinon';
 import { TestController, TestItem, tests, window } from "vscode";
 import { handleInvocations } from '../../src/controller/testController';
 import { dataCache } from "../../src/controller/testItemDataCache";
-import { TestKind, TestLevel } from "../../src/types";
 import { setupTestEnv } from './utils';
+import { TestKind, TestLevel } from '../../src/java-test-runner.api';
 
 function generateTestItem(testController: TestController, id: string, testKind: TestKind, testLevel: TestLevel, uniqueId?: string): TestItem {
     const testItem = testController.createTestItem(id, id + '_label');

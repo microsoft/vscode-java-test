@@ -3,22 +3,25 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
-import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, RelativePattern, TestController, TestItem, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, Location, MarkdownString, RelativePattern, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { refreshExplorer } from '../commands/testExplorerCommands';
 import { IProgressReporter } from '../debugger.api';
 import { progressProvider } from '../extension';
 import { testSourceProvider } from '../provider/testSourceProvider';
-import { IExecutionConfig } from '../runConfigs';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { JUnitRunner } from '../runners/junitRunner/JunitRunner';
 import { TestNGRunner } from '../runners/testngRunner/TestNGRunner';
-import { IJavaTestItem, IRunTestContext, TestKind, TestLevel } from '../types';
+import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, ITestItemData } from './testItemDataCache';
-import { findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
+import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
+import { testRunnerService } from './testRunnerService';
+import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
+import { processStackTraceLine } from '../runners/utils';
+import { parsePartsFromTestId } from '../utils/testItemUtils';
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
@@ -41,6 +44,10 @@ export function createTestController(): void {
     }
 
     startWatchingWorkspace();
+}
+
+export function creatTestProfile(name: string, kind: TestRunProfileKind): void {
+    testController?.createRunProfile(name, kind, runHandler, false, runnableTag);
 }
 
 export const loadChildren: (item: TestItem, token?: CancellationToken) => any = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken) => {
@@ -178,12 +185,15 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
             const token: CancellationToken = option.token ?? run.token;
+            let disposables: Disposable[] = [];
             token.onCancellationRequested(() => {
                 option.progressReporter?.done();
                 run.end();
+                disposables.forEach((d: Disposable) => d.dispose());
                 return resolve();
             });
             enqueueTestMethods(testItems, run);
+            // TODO: first group by project, then merge test methods.
             const queue: TestItem[][] = mergeTestMethods(testItems);
             for (const testsInQueue of queue) {
                 if (testsInQueue.length === 0) {
@@ -191,8 +201,32 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                 }
                 const testProjectMapping: Map<string, TestItem[]> = mapTestItemsByProject(testsInQueue);
                 for (const [projectName, itemsPerProject] of testProjectMapping.entries()) {
+                    const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(itemsPerProject[0].uri!);
+                    if (!workspaceFolder) {
+                        window.showErrorMessage(`Failed to get workspace folder from test item: ${itemsPerProject[0].label}.`);
+                        continue;
+                    }
+                    const testContext: IRunTestContext = {
+                        isDebug: option.isDebug,
+                        kind: TestKind.None,
+                        projectName,
+                        testItems: itemsPerProject,
+                        testRun: run,
+                        workspaceFolder,
+                        profile: request.profile,
+                        testConfig: await loadRunConfig(itemsPerProject, workspaceFolder),
+                    };
+                    const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
+                    if (testRunner) {
+                        await executeWithTestRunner(option, testRunner, testContext, run, disposables);
+                        disposables.forEach((d: Disposable) => d.dispose());
+                        disposables = [];
+                        continue;
+                    }
                     const testKindMapping: Map<TestKind, TestItem[]> = mapTestItemsByKind(itemsPerProject);
                     for (const [kind, items] of testKindMapping.entries()) {
+                        testContext.kind = kind;
+                        testContext.testItems = items;
                         if (option.progressReporter?.isCancelled()) {
                             option.progressReporter = progressProvider?.createProgressReporter(option.isDebug ? 'Debug Tests' : 'Run Tests');
                         }
@@ -208,25 +242,9 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             return resolve();
                         });
                         option.progressReporter?.report('Resolving launch configuration...');
-                        // TODO: improve the config experience
-                        const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(items[0].uri!);
-                        if (!workspaceFolder) {
-                            window.showErrorMessage(`Failed to get workspace folder from test item: ${items[0].label}.`);
+                        if (!testContext.testConfig) {
                             continue;
                         }
-                        const config: IExecutionConfig | undefined = await loadRunConfig(items, workspaceFolder);
-                        if (!config) {
-                            continue;
-                        }
-                        const testContext: IRunTestContext = {
-                            isDebug: option.isDebug,
-                            kind,
-                            projectName,
-                            testItems: items,
-                            testRun: run,
-                            workspaceFolder,
-                            profile: request.profile,
-                        };
                         const runner: BaseRunner | undefined = getRunnerByContext(testContext);
                         if (!runner) {
                             window.showErrorMessage(`Failed to get suitable runner for the test kind: ${testContext.kind}.`);
@@ -234,7 +252,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         }
                         try {
                             await runner.setup();
-                            const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, config) ?? await resolveLaunchConfigurationForRunner(runner, testContext, config);
+                            const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, testContext.testConfig) ?? await resolveLaunchConfigurationForRunner(runner, testContext, testContext.testConfig);
                             resolvedConfiguration.__progressId = option.progressReporter?.getId();
                             delegatedToDebugger = true;
                             trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
@@ -257,6 +275,133 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
         run.end();
     }
 });
+
+async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner, testContext: IRunTestContext, run: TestRun, disposables: Disposable[]) {
+    option.progressReporter?.done();
+    await new Promise<void>(async (resolve: () => void): Promise<void> => {
+        disposables.push(testRunner.onDidChangeTestItemStatus((event: TestItemStatusChangeEvent) => {
+            const parts: TestIdParts = parsePartsFromTestId(event.testId);
+            let parentItem: TestItem;
+            try {
+                parentItem = findTestClass(parts);
+            } catch (e) {
+                sendError(e);
+                window.showErrorMessage(e.message);
+                return resolve();
+            }
+            let currentItem: TestItem | undefined;
+            const invocations: string[] | undefined = parts.invocations;
+            if (invocations?.length) {
+                let i: number = 0;
+                for (; i < invocations.length; i++) {
+                    currentItem = parentItem.children.get(`${parentItem.id}#${invocations[i]}`);
+                    if (!currentItem) {
+                        break;
+                    }
+                    parentItem = currentItem;
+                }
+
+                if (i < invocations.length - 1) {
+                    window.showErrorMessage('Test not found:' + event.testId);
+                    sendError(new Error('Test not found:' + event.testId));
+                    return resolve();
+                }
+
+                if (!currentItem) {
+                    currentItem = createTestItem({
+                        children: [],
+                        uri: parentItem.uri?.toString(),
+                        range: parentItem.range,
+                        jdtHandler: '',
+                        fullName: `${parentItem.id}#${invocations[invocations.length - 1]}`,
+                        label: event.displayName || invocations[invocations.length - 1],
+                        id: `${parentItem.id}#${invocations[invocations.length - 1]}`,
+                        projectName: testContext.projectName,
+                        testKind: TestKind.None,
+                        testLevel: TestLevel.Invocation,
+                    }, parentItem);
+                }
+            } else {
+                currentItem = parentItem;
+            }
+
+            if (event.displayName && getLabelWithoutCodicon(currentItem.label) !== event.displayName) {
+                currentItem.description = event.displayName;
+            }
+            switch (event.state) {
+                case TestResultState.Running:
+                    run.started(currentItem);
+                    break;
+                case TestResultState.Passed:
+                    run.passed(currentItem);
+                    break;
+                case TestResultState.Failed:
+                case TestResultState.Errored:
+                    const testMessages: TestMessage[] = [];
+                    if (event.message) {
+                        const markdownTrace: MarkdownString = new MarkdownString();
+                        markdownTrace.supportHtml = true;
+                        markdownTrace.isTrusted = true;
+                        const testMessage: TestMessage = new TestMessage(markdownTrace);
+                        testMessages.push(testMessage);
+                        const lines: string[] = event.message.split(/\r?\n/);
+                        for (const line of lines) {
+                            const location: Location | undefined = processStackTraceLine(line, markdownTrace, currentItem, testContext.projectName);
+                            if (location) {
+                                testMessage.location = location;
+                            }
+                        }
+                    }
+                    run.failed(currentItem, testMessages);
+                    break;
+                case TestResultState.Skipped:
+                    run.skipped(currentItem);
+                    break;
+                default:
+                    break;
+            }
+        }));
+
+        disposables.push(testRunner.onDidFinishTestRun((_event: TestFinishEvent) => {
+            return resolve();
+        }));
+
+        testRunner.launch(testContext);
+    });
+
+    function findTestClass(parts: TestIdParts): TestItem {
+        const projectItem: TestItem | undefined = testController?.items.get(parts.project);
+        if (!projectItem) {
+            throw new Error('Failed to get the project test item.');
+        }
+
+        if (parts.package === undefined) { // '' means default package
+            throw new Error('package is undefined in the id parts.');
+        }
+
+        const packageItem: TestItem | undefined = projectItem.children.get(`${projectItem.id}@${parts.package}`);
+        if (!packageItem) {
+            throw new Error('Failed to get the package test item.');
+        }
+
+        if (!parts.class) {
+            throw new Error('class is undefined in the id parts.');
+        }
+
+        const classes: string[] = parts.class.split('$'); // handle nested classes
+        let current: TestItem | undefined = packageItem.children.get(`${projectItem.id}@${classes[0]}`);
+        if (!current) {
+            throw new Error('Failed to get the class test item.');
+        }
+        for (let i: number = 1; i < classes.length; i++) {
+            current = current.children.get(`${current.id}$${classes[i]}`);
+            if (!current) {
+                throw new Error('Failed to get the class test item.');
+            }
+        }
+        return current;
+    }
+}
 
 function mergeConfigurations(launchConfiguration: DebugConfiguration | undefined, config: any): DebugConfiguration | undefined {
     if (!launchConfiguration) {
@@ -584,6 +729,18 @@ function trackTestFrameworkVersion(testKind: TestKind, classpaths: string[], mod
         testFramework: TestKind[testKind],
         frameworkVersion: version
     });
+}
+
+function getLabelWithoutCodicon(name: string): string {
+    if (name.includes('#')) {
+        name = name.substring(name.indexOf('#') + 1);
+    }
+
+    const result: RegExpMatchArray | null = name.match(/(?:\$\(.+\) )?(.*)/);
+    if (result?.length === 2) {
+        return result[1];
+    }
+    return name;
 }
 
 interface IRunOption {

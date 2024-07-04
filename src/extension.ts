@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
+import { commands, DebugConfiguration, Event, Extension, ExtensionContext, extensions, TestItem, TestRunProfileKind, TextDocument, TextDocumentChangeEvent, TextEditor, Uri, window, workspace, WorkspaceFoldersChangeEvent } from 'vscode';
 import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentOperation, instrumentOperationAsVsCodeCommand } from 'vscode-extension-telemetry-wrapper';
 import { navigateToTestOrTarget } from './commands/navigation/navigationCommands';
 import { generateTests } from './commands/generationCommands';
@@ -18,11 +18,14 @@ import { disposeCodeActionProvider, registerTestCodeActionProvider } from './pro
 import { testSourceProvider } from './provider/testSourceProvider';
 import { registerAskForChoiceCommand, registerAdvanceAskForChoice, registerAskForInputCommand } from './commands/askForOptionCommands';
 import { enableTests } from './commands/testDependenciesCommands';
+import { testRunnerService } from './controller/testRunnerService';
+import { TestRunner } from './java-test-runner.api';
+import { parsePartsFromTestId, parseTestIdFromParts } from './utils/testItemUtils';
 
 export let extensionContext: ExtensionContext;
 let componentsRegistered: boolean = false;
 
-export async function activate(context: ExtensionContext): Promise<void> {
+export async function activate(context: ExtensionContext): Promise<any> {
     extensionContext = context;
     await initializeFromJsonFile(context.asAbsolutePath('./package.json'), { replacementOptions: [{
         lookup: /path must include project and resource name: \/.*/gi,
@@ -30,6 +33,13 @@ export async function activate(context: ExtensionContext): Promise<void> {
     }]});
     await initExpService(context);
     await instrumentOperation('activation', doActivate)(context);
+    return {
+        registerTestProfile: (name: string, kind: TestRunProfileKind, runner: TestRunner) => {
+            testRunnerService.registerTestRunner(name, kind, runner);
+        },
+        parseTestIdFromParts,
+        parsePartsFromTestId,
+    };
 }
 
 export async function deactivate(): Promise<void> {

@@ -8,11 +8,12 @@ import { performance } from 'perf_hooks';
 import { CancellationToken, commands, Range, TestItem, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
-import { IJavaTestItem, ProjectType, TestKind, TestLevel } from '../types';
+import { IJavaTestItem, ProjectType } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
 import { runnableTag, testController } from './testController';
 import { dataCache } from './testItemDataCache';
+import { TestKind, TestLevel } from '../java-test-runner.api';
 
 /**
  * Load the Java projects, which are the root nodes of the test explorer
@@ -129,8 +130,8 @@ function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
 
 /**
  * Create test item which will be shown in the test explorer
- * @param metaInfo The data from the server side of the test item
- * @param parent The parent node of the test item (if it has)
+ * @param metaInfo The data from the server side of the test item.
+ * @param parent The parent node of the test item (if it has).
  * @returns The created test item
  */
 export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): TestItem {
@@ -139,7 +140,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
     }
     const item: TestItem = testController.createTestItem(
         metaInfo.id,
-        `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`,
+        `${getCodiconLabel(metaInfo.testLevel)} ${metaInfo.label}`.trim(),
         metaInfo.uri ? Uri.parse(metaInfo.uri) : undefined,
     );
     item.range = asRange(metaInfo.range);

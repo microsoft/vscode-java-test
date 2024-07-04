@@ -6,8 +6,8 @@
 import * as sinon from 'sinon';
 import { Range, TestController, TestItem, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
 import { JUnitRunnerResultAnalyzer } from '../../src/runners/junitRunner/JUnitRunnerResultAnalyzer';
-import { TestKind } from '../../src/types';
 import { generateTestItem } from './utils';
+import { TestKind } from '../../src/java-test-runner.api';
 
 // tslint:disable: only-arrow-functions
 // tslint:disable: no-object-literal-type-assertion

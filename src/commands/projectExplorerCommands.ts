@@ -8,7 +8,7 @@ import { loadChildren, runTests, testController } from '../controller/testContro
 import { loadJavaProjects, updateItemForDocument } from '../controller/utils';
 import { IProgressReporter } from '../debugger.api';
 import { progressProvider } from '../extension';
-import { TestLevel } from '../types';
+import { TestLevel } from '../java-test-runner.api';
 
 export async function runTestsFromJavaProjectExplorer(node: any, isDebug: boolean): Promise<void> {
     const testLevel: TestLevel = getTestLevel(node._nodeData);
