@@ -65,12 +65,12 @@ extends:
               - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
                 displayName: ESRP CodeSigning
                 inputs:
-                  ConnectedServiceName: 'ESRP-Release-Test'
-                  AppRegistrationClientId: '1992ee18-e9d2-42d6-ab20-94dd947a44b6'
-                  AppRegistrationTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
-                  AuthAKVName: 'vscjavaci'
-                  AuthCertName: 'vscjava-esrprelease-auth'
-                  AuthSignCertName: 'VSCJava-CodeSign'
+                  ConnectedServiceName: $(EsrpConnectionServiceName)
+                  AppRegistrationClientId: $(AppRegistrationClientId)
+                  AppRegistrationTenantId: $(AppRegistrationTenantId)
+                  AuthAKVName: $(AuthAKVName)
+                  AuthCertName: $(AuthCertName)
+                  AuthSignCertName: $(AuthSignCertName)
                   FolderPath: server
                   Pattern: com.microsoft.java.test.*.jar
                   signConfigType: inlineSignParams
@@ -127,12 +127,12 @@ extends:
                 displayName: 'Prepare manifest for signing'
               - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
                 inputs:
-                  ConnectedServiceName: 'ESRP-Release-Test'
-                  AppRegistrationClientId: '1992ee18-e9d2-42d6-ab20-94dd947a44b6'
-                  AppRegistrationTenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47'
-                  AuthAKVName: 'vscjavaci'
-                  AuthCertName: 'vscjava-esrprelease-auth'
-                  AuthSignCertName: 'VSCJava-CodeSign'
+                  ConnectedServiceName: $(EsrpConnectionServiceName)
+                  AppRegistrationClientId: $(AppRegistrationClientId)
+                  AppRegistrationTenantId: $(AppRegistrationTenantId)
+                  AuthAKVName: $(AuthAKVName)
+                  AuthCertName: $(AuthCertName)
+                  AuthSignCertName: $(AuthSignCertName)
                   FolderPath: '.'
                   Pattern: 'extension.signature.p7s'
                   signConfigType: inlineSignParams
