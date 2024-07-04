@@ -313,8 +313,7 @@ org.junit.ComparisonFailure: expected:<hello
         let analyzer = new JUnitRunnerResultAnalyzer(runnerContext)
         // We need to stub this method to avoid issues with the TestController
         // not being set up in the non-test version of the utils file.
-        const stub = sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
-        stub.returnsArg(0);
+        sinon.stub(analyzer, "enlistDynamicMethodToTestMapping");
         analyzer.analyzeData(testRunnerOutput);
 
         assert.strictEqual(testItem.description, 'hi');
