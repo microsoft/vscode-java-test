@@ -4,6 +4,10 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.42.0
+## What's Changed
+* feat - allow other extensions to register test runner by @jdneo in https://github.com/microsoft/vscode-java-test/pull/1705
+
 ## 0.41.1
 ### Fixed
 - Line breaks not working in test result panels. [#1678](https://github.com/microsoft/vscode-java-test/issues/1678)
