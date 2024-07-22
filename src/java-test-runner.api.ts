@@ -54,10 +54,10 @@ export interface TestIdParts {
  */
 export interface TestRunner {
     /**
-     * launch test test execution.
+     * launch the test execution.
      * @param context the context for this test run.
      */
-    launch(context: IRunTestContext): void;
+    launch(context: IRunTestContext): vscode.ProviderResult<void>;
 
     /**
      * Event that should be emitted when the status of a test item changes.

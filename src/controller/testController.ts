@@ -362,11 +362,14 @@ async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner,
             }
         }));
 
-        disposables.push(testRunner.onDidFinishTestRun((_event: TestFinishEvent) => {
+        disposables.push(testRunner.onDidFinishTestRun((event: TestFinishEvent) => {
+            if (event.statusCode !== 0) {
+                window.showErrorMessage(event.message ?? 'Failed to run tests.');
+            }
             return resolve();
         }));
 
-        testRunner.launch(testContext);
+        await testRunner.launch(testContext);
     });
 
     function findTestClass(parts: TestIdParts): TestItem {
