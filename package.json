@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.41.1",
+    "version": "0.42.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -72,7 +72,7 @@
             "./server/org.eclipse.jdt.junit5.runtime_1.1.100.v20220907-0450.jar",
             "./server/org.opentest4j_1.2.0.jar",
             "./server/org.jacoco.core_0.8.12.202403310830.jar",
-            "./server/com.microsoft.java.test.plugin-0.41.1.jar"
+            "./server/com.microsoft.java.test.plugin-0.42.0.jar"
         ],
         "viewsWelcome": [
             {
