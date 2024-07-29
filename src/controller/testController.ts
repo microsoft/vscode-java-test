@@ -363,7 +363,7 @@ async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner,
         }));
 
         disposables.push(testRunner.onDidFinishTestRun((event: TestFinishEvent) => {
-            if (event.statusCode !== 0) {
+            if (event.statusCode === 2) { // See: https://build-server-protocol.github.io/docs/specification#statuscode
                 window.showErrorMessage(event.message ?? 'Failed to run tests.');
             }
             return resolve();
