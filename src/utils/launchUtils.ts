@@ -93,6 +93,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         (debugConfiguration.vmArgs as string[]).push(agentArg);
     }
 
+    debugConfiguration.shortenCommandLine = 'auto';
     return debugConfiguration;
 }
 
