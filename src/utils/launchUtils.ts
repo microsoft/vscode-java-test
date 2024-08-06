@@ -83,7 +83,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
     }
 
     if (testContext.profile?.kind === TestRunProfileKind.Coverage) {
-        let agentArg: string = `-javaagent:${getJacocoAgentPath()}=destfile=${getJacocoDataFilePath(launchArguments.projectName)}`;
+        let agentArg: string = `-javaagent:${getJacocoAgentPath(debugConfiguration)}=destfile=${getJacocoDataFilePath(launchArguments.projectName)}`;
         if (config?.coverage?.appendResult === false) {
             agentArg += ',append=false';
         }
