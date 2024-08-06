@@ -16,15 +16,11 @@ import com.microsoft.java.test.plugin.coverage.model.LineCoverage;
 import com.microsoft.java.test.plugin.coverage.model.MethodCoverage;
 import com.microsoft.java.test.plugin.coverage.model.SourceFileCoverage;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
-import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,7 +32,7 @@ public class CoverageHandlerTest extends AbstractProjectsManagerBasedTest {
     public void testGetCoverageDetail() throws Exception {
         importProjects(Collections.singleton("coverage-test"));
         final IJavaProject javaProject = ProjectUtils.getJavaProject("coverage-test");
-        final String basePath = new File("projects/coverage-test").getAbsolutePath();
+        final String basePath = javaProject.getProject().getLocation().toFile().getAbsolutePath();
         final CoverageHandler coverageHandler = new CoverageHandler(javaProject, basePath);
         final List<SourceFileCoverage> coverageDetail = coverageHandler.getCoverageDetail(new NullProgressMonitor());
         for (final SourceFileCoverage fileCoverage : coverageDetail) {

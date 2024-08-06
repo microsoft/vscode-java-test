@@ -79,6 +79,21 @@ suite('LaunchUtils Tests', () => {
         );
     });
 
+    test('Resolve JUnit 5 parameterized test 5', async () => {
+        const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
+            JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
+                projectName: 'junit',
+                testLevel: TestLevel.Method,
+                testKind: TestKind.JUnit5,
+                testNames: ['=junit/src\\/test\\/java=/optional=/true=/=/maven.pomderived=/true=/=/test=/true=/<junit5{TestParameterizedWithStrangeComments.java[TestParameterizedWithStrangeComments~whenInvalidReqCtxSessionId~QLong;~QString;']
+            })
+        );
+        assert.strictEqual(
+            0,
+            argument?.status
+        );
+    });
+
     test('test parseTags()', () => {
         const { parseTags } = exportedForTesting;
         const config = {

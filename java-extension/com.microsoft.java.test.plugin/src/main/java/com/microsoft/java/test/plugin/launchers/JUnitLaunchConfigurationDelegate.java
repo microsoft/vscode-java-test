@@ -31,12 +31,11 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.internal.corext.refactoring.structure.ASTNodeSearchUtil;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 import java.io.BufferedWriter;
@@ -156,20 +155,14 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                 }
                 final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
                         false /*fromCache*/, new NullProgressMonitor());
-                final String key = method.getKey();
-                ASTNode methodDeclaration = root.findDeclaringNode(key);
+                final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method, root);
                 if (methodDeclaration == null) {
-                    // fallback to find it according to source range
-                    methodDeclaration = NodeFinder.perform(root, method.getSourceRange().getOffset(),
-                            method.getSourceRange().getLength(), unit);
-                }
-                if (!(methodDeclaration instanceof MethodDeclaration)) {
                     throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
                             "Cannot get method declaration of method" + method.getElementName(), null)); //$NON-NLS-1$
                 }
 
                 final List<String> parameters = new LinkedList<>();
-                for (final Object obj : ((MethodDeclaration) methodDeclaration).parameters()) {
+                for (final Object obj : methodDeclaration.parameters()) {
                     if (obj instanceof SingleVariableDeclaration) {
                         final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
                                 .getType().resolveBinding();
