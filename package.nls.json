@@ -21,6 +21,7 @@
     "configuration.java.test.config.modulePaths.runtime.description": "The modulepaths within 'runtime' scope of current project.",
     "configuration.java.test.config.modulePaths.test.description": "The modulepaths within 'test' scope of current project.",
     "configuration.java.test.config.modulePaths.exclude.description": "The path after '!' will be excluded from the modulePaths.",
+    "configuration.java.test.config.encoding.description": "The 'file.encoding' setting for the test JVM. Only set this if you have to test code that relies on the default encoding being something other than UTF-8.",
     "configuration.java.test.config.vmArgs.description": "Specify the extra options and system properties for the JVM.",
     "configuration.java.test.config.args.description": "Specify the command line arguments which will be passed to the test runner.",
     "configuration.java.test.config.env.description": "Specify the extra environment variables when running the tests.",

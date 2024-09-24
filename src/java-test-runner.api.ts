@@ -280,6 +280,12 @@ export interface IExecutionConfig {
     javaExec?: string;
 
     /**
+     * the default encoding the JVM will start with. If undefined, this will be UTF-8.
+     * @since 0.43.0
+     */
+    encoding?: string;
+
+    /**
      * the extra options and system properties for the JVM.
      * @since 0.14.0
      */
