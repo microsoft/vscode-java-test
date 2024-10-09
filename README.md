@@ -116,7 +116,7 @@ Please refer to [Getting Started](https://junit.org/junit5/docs/current/user-gui
 Please refer to [Download and Install](https://github.com/junit-team/junit4/wiki/Download-and-Install) from the JUnit 4's official document for the getting started documentation.
 
 ### TestNG
-Please refer to [TestNG Docs](https://testng.org/doc/) from the TestNG's official document for getting started documentation.
+Please refer to [TestNG Docs](https://testng.org/) from the TestNG's official document for getting started documentation.
 
 ## FAQ
 If you meet any problem when using the extension, please refer to the [FAQ](https://github.com/microsoft/vscode-java-test/wiki/FAQ) and our [issue list](https://github.com/microsoft/vscode-java-test/issues) to check if there is an answer to your problem.
