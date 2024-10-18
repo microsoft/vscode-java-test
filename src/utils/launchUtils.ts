@@ -18,9 +18,6 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
 
     if (config && config.vmArgs) {
         launchArguments.vmArguments.push(...config.vmArgs.filter(Boolean));
-    } else if (config && (config as any).vmargs) { // to support the deprecated property name.
-        launchArguments.vmArguments.push(...(config as any).vmargs.filter(Boolean));
-        sendInfo('', {'deprecatedPropertyUsed': 'vmargs'});
     }
 
     let debugConfiguration: DebugConfiguration = {
