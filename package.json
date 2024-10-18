@@ -414,7 +414,7 @@
                                 "markdownDescription": "%configuration.java.test.config.javaExec.description%",
                                 "default": ""
                             },
-                            "vmargs": {
+                            "vmArgs": {
                                 "type": "array",
                                 "items": {
                                     "type": "string"
