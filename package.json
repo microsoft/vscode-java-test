@@ -414,6 +414,11 @@
                                 "markdownDescription": "%configuration.java.test.config.javaExec.description%",
                                 "default": ""
                             },
+                            "encoding": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.encoding.description%",
+                                "default": ""
+                            },
                             "vmArgs": {
                                 "type": "array",
                                 "items": {
