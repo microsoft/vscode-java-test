@@ -55,18 +55,18 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/junit-jupiter-api_5.10.3.jar",
-            "./server/junit-jupiter-engine_5.10.3.jar",
-            "./server/junit-jupiter-migrationsupport_5.10.3.jar",
-            "./server/junit-jupiter-params_5.10.3.jar",
-            "./server/junit-platform-commons_1.10.3.jar",
-            "./server/junit-platform-engine_1.10.3.jar",
-            "./server/junit-platform-launcher_1.10.3.jar",
-            "./server/junit-platform-runner_1.10.3.jar",
-            "./server/junit-platform-suite-api_1.10.3.jar",
-            "./server/junit-platform-suite-commons_1.10.3.jar",
-            "./server/junit-platform-suite-engine_1.10.3.jar",
-            "./server/junit-vintage-engine_5.10.3.jar",
+            "./server/junit-jupiter-api_5.11.0.jar",
+            "./server/junit-jupiter-engine_5.11.0.jar",
+            "./server/junit-jupiter-migrationsupport_5.11.0.jar",
+            "./server/junit-jupiter-params_5.11.0.jar",
+            "./server/junit-platform-commons_1.11.0.jar",
+            "./server/junit-platform-engine_1.11.0.jar",
+            "./server/junit-platform-launcher_1.11.0.jar",
+            "./server/junit-platform-runner_1.11.0.jar",
+            "./server/junit-platform-suite-api_1.11.0.jar",
+            "./server/junit-platform-suite-commons_1.11.0.jar",
+            "./server/junit-platform-suite-engine_1.11.0.jar",
+            "./server/junit-vintage-engine_5.11.0.jar",
             "./server/org.apiguardian.api_1.1.2.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.3.100.v20231214-1952.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.1.300.v20231214-1952.jar",
@@ -254,6 +254,11 @@
                             "markdownDescription": "%configuration.java.test.config.javaExec.description%",
                             "default": ""
                         },
+                        "encoding": {
+                            "type": "string",
+                            "description": "%configuration.java.test.config.encoding.description%",
+                            "default": ""
+                        },
                         "vmArgs": {
                             "type": "array",
                             "items": {
@@ -409,7 +414,12 @@
                                 "markdownDescription": "%configuration.java.test.config.javaExec.description%",
                                 "default": ""
                             },
-                            "vmargs": {
+                            "encoding": {
+                                "type": "string",
+                                "description": "%configuration.java.test.config.encoding.description%",
+                                "default": ""
+                            },
+                            "vmArgs": {
                                 "type": "array",
                                 "items": {
                                     "type": "string"

@@ -18,68 +18,51 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
 
     if (config && config.vmArgs) {
         launchArguments.vmArguments.push(...config.vmArgs.filter(Boolean));
-    } else if (config && (config as any).vmargs) { // to support the deprecated property name.
-        launchArguments.vmArguments.push(...(config as any).vmargs.filter(Boolean));
-        sendInfo('', {'deprecatedPropertyUsed': 'vmargs'});
     }
 
-    let debugConfiguration: DebugConfiguration;
+    let debugConfiguration: DebugConfiguration = {
+        name: `Launch Java Tests - ${testContext.testItems[0].label}`,
+        type: 'java',
+        request: 'launch',
+        projectName: launchArguments.projectName,
+        cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
+        modulePaths: [
+            ...config?.modulePaths || [],
+            ...launchArguments.modulepath || [],
+        ],
+        encoding: config?.encoding,
+        vmArgs: launchArguments.vmArguments,
+        env: config?.env,
+        envFile: config?.envFile,
+        noDebug: !testContext.isDebug,
+        sourcePaths: config?.sourcePaths,
+        preLaunchTask: config?.preLaunchTask,
+        postDebugTask: config?.postDebugTask,
+        javaExec: config?.javaExec,
+    };
+
     if (testContext.kind === TestKind.TestNG) {
-        debugConfiguration = {
-            name: `Launch Java Tests - ${testContext.testItems[0].label}`,
-            type: 'java',
-            request: 'launch',
+        debugConfiguration = Object.assign(debugConfiguration, {
             mainClass: 'com.microsoft.java.test.runner.Launcher',
-            projectName: launchArguments.projectName,
-            cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
             classPaths: [
                 ...config?.classPaths || [],
                 ...launchArguments.classpath || [],
                 path.join(extensionContext.extensionPath, 'server', 'com.microsoft.java.test.runner-jar-with-dependencies.jar'),
             ],
-            modulePaths: [
-                ...config?.modulePaths || [],
-                ...launchArguments.modulepath || [],
-            ],
             args: runner.getApplicationArgs(config),
-            vmArgs: launchArguments.vmArguments,
-            env: config?.env,
-            envFile: config?.envFile,
-            noDebug: !testContext.isDebug,
-            sourcePaths: config?.sourcePaths,
-            preLaunchTask: config?.preLaunchTask,
-            postDebugTask: config?.postDebugTask,
-            javaExec: config?.javaExec,
-        };
+        });
     } else {
-        debugConfiguration = {
-            name: `Launch Java Tests - ${testContext.testItems[0].label}`,
-            type: 'java',
-            request: 'launch',
+        debugConfiguration = Object.assign(debugConfiguration, {
             mainClass: launchArguments.mainClass,
-            projectName: launchArguments.projectName,
-            cwd: config && config.workingDirectory ? config.workingDirectory : launchArguments.workingDirectory,
             classPaths: [
                 ...config?.classPaths || [],
                 ...launchArguments.classpath || [],
-            ],
-            modulePaths: [
-                ...config?.modulePaths || [],
-                ...launchArguments.modulepath || [],
             ],
             args: [
                 ...launchArguments.programArguments,
                 ...(testContext.kind === TestKind.JUnit5 ? parseTags(config) : [])
             ],
-            vmArgs: launchArguments.vmArguments,
-            env: config?.env,
-            envFile: config?.envFile,
-            noDebug: !testContext.isDebug,
-            sourcePaths: config?.sourcePaths,
-            preLaunchTask: config?.preLaunchTask,
-            postDebugTask: config?.postDebugTask,
-            javaExec: config?.javaExec,
-        };
+        });
     }
 
     if (testContext.profile?.kind === TestRunProfileKind.Coverage) {
