@@ -4,6 +4,18 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.43.0
+## What's Changed
+* feat - Set which encoding your test JVM will start with by @awilkins in https://github.com/microsoft/vscode-java-test/pull/1735
+* fix - method parsing error by @jdneo in https://github.com/microsoft/vscode-java-test/pull/1722
+* fix - Use project's jacoco agent when it's available by @jdneo in https://github.com/microsoft/vscode-java-test/pull/1723
+* docs - Fix TestNG Docs link by @antublue in https://github.com/microsoft/vscode-java-test/pull/1736
+* build - Update jacoco to 0.8.12 by @jdneo in https://github.com/microsoft/vscode-java-test/pull/1720
+
+## New Contributors
+* @antublue made their first contribution in https://github.com/microsoft/vscode-java-test/pull/1736
+* @awilkins made their first contribution in https://github.com/microsoft/vscode-java-test/pull/1735
+
 ## 0.42.0
 ## What's Changed
 * feat - allow other extensions to register test runner by @jdneo in https://github.com/microsoft/vscode-java-test/pull/1705
