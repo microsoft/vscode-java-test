@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.microsoft.java.test.plugin
 Bundle-Name: com.microsoft.java.test.plugin
 Bundle-SymbolicName: com.microsoft.java.test.plugin;singleton:=true
-Bundle-Version: 0.42.0
+Bundle-Version: 0.43.0
 Bundle-Activator: com.microsoft.java.test.plugin.util.JUnitPlugin
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.eclipse.jdt.core,
