@@ -14,7 +14,7 @@ resources/templates/scss/**
 dist/**/test
 webpack.*.js
 node_modules
-*.log
+**/*.log
 demo
 CONTRIBUTING.md
 extension.bundle.ts
