@@ -42,6 +42,10 @@ extends:
             steps:
               - checkout: self
                 fetchTags: true
+              - task: Bash@3
+                inputs:
+                  targetType: 'inline'
+                  script: echo Hello
               - task: UseNode@1
                 displayName: Use Node 20.x
                 inputs:
