@@ -71,7 +71,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             agentArg += ',append=false';
         }
         if (os.platform() === 'win32') {
-            agentArg = `"${agentArg}"`;
+            agentArg = `${agentArg}`;
         }
         (debugConfiguration.vmArgs as string[]).push(agentArg);
     }
