@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import * as os from 'os';
 import { DebugConfiguration, TestItem, TestRunProfileKind } from 'vscode';
 import { sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
