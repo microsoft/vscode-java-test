@@ -70,9 +70,6 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         if (config?.coverage?.appendResult === false) {
             agentArg += ',append=false';
         }
-        if (os.platform() === 'win32') {
-            agentArg = `${agentArg}`;
-        }
         (debugConfiguration.vmArgs as string[]).push(agentArg);
     }
 
