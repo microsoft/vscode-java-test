@@ -537,7 +537,7 @@
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.43.0",
         "glob": "^7.2.3",
-        "mocha": "^9.2.2",
+        "mocha": "^11.1.0",
         "sinon": "^14.0.2",
         "ts-loader": "^9.4.2",
         "typescript": "^4.9.4",
