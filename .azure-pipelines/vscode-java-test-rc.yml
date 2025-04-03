@@ -43,20 +43,20 @@ extends:
                   version: '20.x'
               # The image does not have jdk preinstalled, we need to download it first.
               - task: PowerShell@2
-                displayName: Download JDK 17
+                displayName: Download JDK 21
                 inputs:
                   targetType: 'inline'
                   script: |-
                     New-Item -ItemType Directory -Path "$env:AGENT_TEMPDIRECTORY\downloadjdk"
-                    Invoke-WebRequest -Uri "https://aka.ms/download-jdk/microsoft-jdk-17-windows-x64.zip" -OutFile "$env:AGENT_TEMPDIRECTORY\downloadjdk\microsoft-jdk-17-windows-x64.zip"
+                    Invoke-WebRequest -Uri "https://aka.ms/download-jdk/microsoft-jdk-21-windows-x64.zip" -OutFile "$env:AGENT_TEMPDIRECTORY\downloadjdk\microsoft-jdk-21-windows-x64.zip"
               - task: JavaToolInstaller@0
-                displayName: Use Java 17
+                displayName: Use Java 21
                 inputs:
-                  versionSpec: "17"
+                  versionSpec: "21"
                   jdkArchitectureOption: x64
                   jdkSourceOption: LocalDirectory
-                  jdkFile: $(Agent.TempDirectory)/downloadjdk/microsoft-jdk-17-windows-x64.zip
-                  jdkDestinationDirectory: $(Agent.ToolsDirectory)/ms-jdk17
+                  jdkFile: $(Agent.TempDirectory)/downloadjdk/microsoft-jdk-21-windows-x64.zip
+                  jdkDestinationDirectory: $(Agent.ToolsDirectory)/ms-jdk21
               - script: java --version
                 displayName: 'Check Java installation'
               - task: Npm@1
