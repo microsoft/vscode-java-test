@@ -15,11 +15,13 @@ async function main(): Promise<void> {
         cp.spawnSync(cli, [...args, '--install-extension', 'redhat.java', '--pre-release'], {
             encoding: 'utf-8',
             stdio: 'inherit',
+            shell: true,
         });
 
         cp.spawnSync(cli, [...args, '--install-extension', 'vscjava.vscode-java-debug', '--pre-release'], {
             encoding: 'utf-8',
             stdio: 'inherit',
+            shell: true,
         });
 
         // The folder containing the Extension Manifest package.json
