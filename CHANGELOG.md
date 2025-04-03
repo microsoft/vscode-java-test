@@ -4,6 +4,14 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.43.1
+## What's Changed
+* chore(deps): bump serialize-javascript and mocha by @dependabot in https://github.com/microsoft/vscode-java-test/pull/1754
+* Update to Jacoco 0.8.13 by @rgrunber in https://github.com/microsoft/vscode-java-test/pull/1764
+
+## New Contributors
+* @rgrunber made their first contribution in https://github.com/microsoft/vscode-java-test/pull/1764
+
 ## 0.43.0
 ## What's Changed
 * feat - Set which encoding your test JVM will start with by @awilkins in https://github.com/microsoft/vscode-java-test/pull/1735
