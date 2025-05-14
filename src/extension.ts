@@ -21,6 +21,7 @@ import { enableTests } from './commands/testDependenciesCommands';
 import { testRunnerService } from './controller/testRunnerService';
 import { TestRunner } from './java-test-runner.api';
 import { parsePartsFromTestId, parseTestIdFromParts } from './utils/testItemUtils';
+import { waitForExtensionDependencies } from './extensionDependencyValidator';
 
 export let extensionContext: ExtensionContext;
 let componentsRegistered: boolean = false;
@@ -32,6 +33,10 @@ export async function activate(context: ExtensionContext): Promise<any> {
         replacementString: 'Path must include project and resource name: /<REDACT>',
     }]});
     await initExpService(context);
+    const extensionDependenciesResolved: boolean = await waitForExtensionDependencies();
+    if (!extensionDependenciesResolved) {
+        return;
+    }
     await instrumentOperation('activation', doActivate)(context);
     return {
         registerTestProfile: (name: string, kind: TestRunProfileKind, runner: TestRunner) => {

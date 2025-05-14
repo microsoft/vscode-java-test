@@ -517,12 +517,9 @@
         "test": "npm run compile && node ./out/test/index.js",
         "lint": "eslint -c .eslintrc.js --ext .ts ./src",
         "build-plugin": "node scripts/buildJdtlsExt.js",
-        "vscode:prepublish": "webpack --mode production"
+        "vscode:prepublish": "webpack --mode production",
+        "extension": "vsce package"
     },
-    "extensionDependencies": [
-        "redhat.java",
-        "vscjava.vscode-java-debug"
-    ],
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/glob": "^7.2.0",
