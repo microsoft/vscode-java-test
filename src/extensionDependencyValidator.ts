@@ -12,8 +12,8 @@ import { extensions, Extension, OutputChannel, window } from 'vscode';
 // Create an OutputChannel for logging
 const logger: OutputChannel = window.createOutputChannel('Java Test Runner');
 
-const WAIT_TIME_MS: number = 3000; // 3 seconds
-const MAX_ATTEMPTS: number = 40; // 40 attempts * 3 seconds = 120 seconds (2 minutes)
+const WAIT_TIME_MS: number = 4000; // 3 seconds
+const MAX_ATTEMPTS: number = 45; // 40 attempts * 3 seconds = 120 seconds (2 minutes)
 
 
 /**
