@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
@@ -173,7 +174,7 @@ public final class ProjectTestUtils {
             return false;
         }
 
-        if (isTestEntry(entry)) {
+        if (disableTestFlag() || isTestEntry(entry)) {
             return true;
         }
 
@@ -181,8 +182,14 @@ public final class ProjectTestUtils {
         return containsGeneral && ProjectUtils.isGeneralJavaProject(project.getProject());
     }
 
+    private static boolean disableTestFlag() {
+        final boolean disableTestFlag = JavaLanguageServerPlugin.getPreferencesManager().getPreferences()
+                .isMavenDisableTestClasspathFlag();
+        return disableTestFlag;
+    }
+
     public static boolean isTestEntry(IClasspathEntry entry) {
-        if (entry.isTest()) {
+        if (disableTestFlag() || entry.isTest()) {
             return true;
         }
 
