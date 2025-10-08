@@ -9,6 +9,7 @@ import { generateTests } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
 import { refreshExplorer, runTestsFromTestExplorer } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
+import { openLatestTestReport } from './commands/reportCommands';
 import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
 import { createTestController, testController, watchers } from './controller/testController';
 import { updateItemForDocument, updateItemForDocumentWithDebounce } from './controller/utils';
@@ -121,6 +122,7 @@ function registerComponents(context: ExtensionContext): void {
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST, async () => await navigateToTestOrTarget(true)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.GO_TO_TEST_SUBJECT, async () => await navigateToTestOrTarget(false)),
         instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.ENABLE_TESTS, async () => await enableTests()),
+        instrumentOperationAsVsCodeCommand(JavaTestRunnerCommands.OPEN_TEST_REPORT, async () => await openLatestTestReport()),
         window.onDidChangeActiveTextEditor(async (e: TextEditor | undefined) => {
             if (await isTestJavaFile(e?.document)) {
                 await updateItemForDocumentWithDebounce(e!.document.uri);

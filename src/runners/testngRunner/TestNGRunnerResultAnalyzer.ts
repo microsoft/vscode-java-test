@@ -65,7 +65,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 return;
             }
             this.currentTestState = TestResultState.Running;
-            this.testContext.testRun.started(item);
+            setTestState(this.testContext.testRun, item, this.currentTestState, undefined, undefined, this.reportGenerator);
         } else if (outputData.name === TEST_FAIL) {
             const item: TestItem | undefined = this.getTestItem(id);
             if (!item) {
@@ -92,7 +92,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 testMessages.push(testMessage);
             }
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
-            setTestState(this.testContext.testRun, item, this.currentTestState, testMessages, duration);
+            setTestState(this.testContext.testRun, item, this.currentTestState, testMessages, duration, this.reportGenerator);
         } else if (outputData.name === TEST_FINISH) {
             const item: TestItem | undefined = this.getTestItem(data);
             if (!item) {
@@ -102,7 +102,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 this.currentTestState = TestResultState.Passed;
             }
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
-            setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration);
+            setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration, this.reportGenerator);
         }
     }
 

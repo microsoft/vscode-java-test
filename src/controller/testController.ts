@@ -22,6 +22,7 @@ import { testRunnerService } from './testRunnerService';
 import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
 import { processStackTraceLine } from '../runners/utils';
 import { parsePartsFromTestId } from '../utils/testItemUtils';
+import { TestReportGenerator } from '../reports/TestReportGenerator';
 
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
@@ -174,6 +175,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 
     const run: TestRun = testController!.createTestRun(request);
+    const reportGenerator = new TestReportGenerator();
     let coverageProvider: JavaTestCoverageProvider | undefined;
     if (request.profile?.kind === TestRunProfileKind.Coverage) {
         coverageProvider = new JavaTestCoverageProvider();
@@ -218,7 +220,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                     };
                     const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
                     if (testRunner) {
-                        await executeWithTestRunner(option, testRunner, testContext, run, disposables);
+                        await executeWithTestRunner(option, testRunner, testContext, run, disposables, reportGenerator);
                         disposables.forEach((d: Disposable) => d.dispose());
                         disposables = [];
                         continue;
@@ -252,6 +254,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         }
                         try {
                             await runner.setup();
+                            runner.setReportGenerator(reportGenerator);
                             const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, testContext.testConfig) ?? await resolveLaunchConfigurationForRunner(runner, testContext, testContext.testConfig);
                             resolvedConfiguration.__progressId = option.progressReporter?.getId();
                             delegatedToDebugger = true;
@@ -273,10 +276,11 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
         });
     } finally {
         run.end();
+        await reportGenerator.generateReport();
     }
 });
 
-async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner, testContext: IRunTestContext, run: TestRun, disposables: Disposable[]) {
+async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner, testContext: IRunTestContext, run: TestRun, disposables: Disposable[], reportGenerator: TestReportGenerator) {
     option.progressReporter?.done();
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         disposables.push(testRunner.onDidChangeTestItemStatus((event: TestItemStatusChangeEvent) => {
@@ -331,9 +335,11 @@ async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner,
             switch (event.state) {
                 case TestResultState.Running:
                     run.started(currentItem);
+                    reportGenerator.recordStarted(currentItem);
                     break;
                 case TestResultState.Passed:
-                    run.passed(currentItem);
+                    run.passed(currentItem, event.duration);
+                    reportGenerator.recordPassed(currentItem, event.duration);
                     break;
                 case TestResultState.Failed:
                 case TestResultState.Errored:
@@ -352,10 +358,16 @@ async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner,
                             }
                         }
                     }
-                    run.failed(currentItem, testMessages);
+                    run.failed(currentItem, testMessages, event.duration);
+                    if (event.state === TestResultState.Failed) {
+                        reportGenerator.recordFailed(currentItem, event.duration, event.message);
+                    } else {
+                        reportGenerator.recordErrored(currentItem, event.duration, event.message);
+                    }
                     break;
                 case TestResultState.Skipped:
                     run.skipped(currentItem);
+                    reportGenerator.recordSkipped(currentItem);
                     break;
                 default:
                     break;

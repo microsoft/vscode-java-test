@@ -3,10 +3,17 @@
 
 import { Location, MarkdownString, TestItem } from 'vscode';
 import { IRunTestContext } from '../../java-test-runner.api';
+import { TestReportGenerator } from '../../reports/TestReportGenerator';
 import { processStackTraceLine } from '../utils';
 
 export abstract class RunnerResultAnalyzer {
+    protected reportGenerator?: TestReportGenerator;
+
     constructor(protected testContext: IRunTestContext) { }
+
+    public setReportGenerator(reportGenerator: TestReportGenerator): void {
+        this.reportGenerator = reportGenerator;
+    }
 
     public abstract analyzeData(data: string): void;
     public abstract processData(data: string): void;

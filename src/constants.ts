@@ -32,6 +32,7 @@ export namespace JavaTestRunnerCommands {
     export const GO_TO_TEST_SUBJECT: string = 'java.test.goToTestSubject';
     export const ENABLE_TESTS: string = '_java.test.enableTests';
     export const JAVA_TEST_OPEN_STACKTRACE: string = '_java.test.openStackTrace';
+    export const OPEN_TEST_REPORT: string = 'java.test.report.open';
     export const ASK_CLIENT_FOR_CHOICE: string = '_java.test.askClientForChoice';
     export const ASK_CLIENT_FOR_INPUT: string = '_java.test.askClientForInput';
     export const ADVANCED_ASK_CLIENT_FOR_CHOICE: string = '_java.test.advancedAskClientForChoice';

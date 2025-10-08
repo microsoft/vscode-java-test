@@ -7,6 +7,7 @@ import { asRange } from '../controller/utils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import * as path from 'path';
 import { TestResultState } from '../java-test-runner.api';
+import { TestReportGenerator } from '../reports/TestReportGenerator';
 
 export async function findTestLocation(fullName: string): Promise<Location | undefined> {
     const location: any | undefined = await executeJavaLanguageServerCommand<any>(
@@ -18,22 +19,43 @@ export async function findTestLocation(fullName: string): Promise<Location | und
     return undefined;
 }
 
-export function setTestState(testRun: TestRun, item: TestItem, result: TestResultState, message?: TestMessage | TestMessage[], duration?: number): void {
+export function setTestState(testRun: TestRun, item: TestItem, result: TestResultState, message?: TestMessage | TestMessage[], duration?: number, reportGenerator?: TestReportGenerator): void {
     switch (result) {
         case TestResultState.Errored:
             testRun.errored(item, message || [], duration);
+            if (reportGenerator) {
+                const errorMessage = Array.isArray(message) 
+                    ? message.map(m => typeof m.message === 'string' ? m.message : m.message.value).join('\n') 
+                    : message ? (typeof message.message === 'string' ? message.message : message.message.value) : undefined;
+                reportGenerator.recordErrored(item, duration, errorMessage);
+            }
             break;
         case TestResultState.Failed:
             testRun.failed(item, message || [], duration);
+            if (reportGenerator) {
+                const errorMessage = Array.isArray(message) 
+                    ? message.map(m => typeof m.message === 'string' ? m.message : m.message.value).join('\n') 
+                    : message ? (typeof message.message === 'string' ? message.message : message.message.value) : undefined;
+                reportGenerator.recordFailed(item, duration, errorMessage);
+            }
             break;
         case TestResultState.Passed:
             testRun.passed(item, duration);
+            if (reportGenerator) {
+                reportGenerator.recordPassed(item, duration);
+            }
             break;
         case TestResultState.Skipped:
             testRun.skipped(item);
+            if (reportGenerator) {
+                reportGenerator.recordSkipped(item);
+            }
             break;
         case TestResultState.Running:
             testRun.started(item);
+            if (reportGenerator) {
+                reportGenerator.recordStarted(item);
+            }
         default:
             break;
     }

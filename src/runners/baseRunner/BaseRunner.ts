@@ -9,6 +9,7 @@ import { CancellationToken, debug, DebugConfiguration, DebugSession, Disposable 
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { Configurations } from '../../constants';
 import { IProgressReporter } from '../../debugger.api';
+import { TestReportGenerator } from '../../reports/TestReportGenerator';
 import { ITestRunnerInternal } from '../ITestRunner';
 import { RunnerResultAnalyzer } from './RunnerResultAnalyzer';
 import { IExecutionConfig, IRunTestContext } from '../../java-test-runner.api';
@@ -25,6 +26,12 @@ export abstract class BaseRunner implements ITestRunnerInternal {
     public async setup(): Promise<void> {
         await this.startSocketServer();
         this.runnerResultAnalyzer = this.getAnalyzer();
+    }
+
+    public setReportGenerator(reportGenerator: TestReportGenerator): void {
+        if (this.runnerResultAnalyzer) {
+            this.runnerResultAnalyzer.setReportGenerator(reportGenerator);
+        }
     }
 
     public async run(launchConfiguration: DebugConfiguration, token: CancellationToken, progressReporter?: IProgressReporter): Promise<void> {

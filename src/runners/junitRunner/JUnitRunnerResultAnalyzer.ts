@@ -67,7 +67,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             this.setCurrentState(item, TestResultState.Running, 0);
             this.setDurationAtStart(this.getCurrentState(item));
-            setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState);
+            setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState, undefined, undefined, this.reportGenerator);
         } else if (data.startsWith(MessageId.TestEnd)) {
             const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestEnd.length));
             if (!item) {
@@ -76,7 +76,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const currentState: CurrentItemState = this.getCurrentState(item);
             this.calcDurationAtEnd(currentState);
             this.determineResultStateAtEnd(data, currentState);
-            setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
+            setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration, this.reportGenerator);
         } else if (data.startsWith(MessageId.TestFailed)) {
             const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestFailed.length));
             if (!item) {
@@ -116,7 +116,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 this.tryAppendMessage(this.tracingItem, new TestMessage(this.traces), currentResultState);
             }
             if (currentResultState === TestResultState.Errored) {
-                setTestState(this.testContext.testRun, this.tracingItem, currentResultState);
+                const duration = this.getCurrentState(this.tracingItem).duration;
+                setTestState(this.testContext.testRun, this.tracingItem, currentResultState, undefined, duration, this.reportGenerator);
             }
             this.recordingType = RecordingType.None;
         } else if (data.startsWith(MessageId.ExpectStart)) {
@@ -447,7 +448,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const location: Location | undefined = await findTestLocation(id);
             testMessage.location = location;
         }
-        setTestState(this.testContext.testRun, item, testState, testMessage);
+        const duration = this.getCurrentState(item).duration;
+        setTestState(this.testContext.testRun, item, testState, testMessage, duration, this.reportGenerator);
     }
 
     // See: org.eclipse.jdt.internal.junit.model.TestCaseElement#getTestMethodName()
