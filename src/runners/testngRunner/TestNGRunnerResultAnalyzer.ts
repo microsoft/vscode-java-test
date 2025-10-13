@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
-import { dataCache } from '../../controller/testItemDataCache';
+import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { setTestState } from '../utils';
 import { IRunTestContext, TestLevel, TestResultState } from '../../java-test-runner.api';
@@ -64,8 +64,10 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             if (!item) {
                 return;
             }
+            this.initializeParentState(item, this.triggeredTestsMapping);
             this.currentTestState = TestResultState.Running;
             this.testContext.testRun.started(item);
+            this.updateParentOnChildStart(item);
         } else if (outputData.name === TEST_FAIL) {
             const item: TestItem | undefined = this.getTestItem(id);
             if (!item) {
@@ -103,6 +105,10 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
             setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration);
+            const itemData: ITestItemData | undefined = dataCache.get(item);
+            if (itemData?.testLevel === TestLevel.Method) {
+                this.updateParentOnChildComplete(item, this.currentTestState);
+            }
         }
     }
 
