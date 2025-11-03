@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## What's Changed
 * fix - Update to jacoco 0.8.14 by @fbricon in https://github.com/microsoft/vscode-java-test/pull/1798
 * fix - Test Runner for Java doesn't recognize tests by @snjeza in https://github.com/microsoft/vscode-java-test/pull/1783
-* fix: update parent node state when test completes by @fbricon in https://github.com/microsoft/vscode-java-test/pull/1799
+* fix - update parent node state when test completes by @fbricon in https://github.com/microsoft/vscode-java-test/pull/1799
 
 ## 0.43.1
 ## What's Changed
