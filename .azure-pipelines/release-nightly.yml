@@ -38,7 +38,7 @@ extends:
                 buildType: specific
                 project: $(AzDo.ProjectId) # Azure DevOps project ID
                 definition: $(AzDo.BuildPipelineId) # artifact build pipeline ID
-                artifactName: vsix
+                artifactName: extension
                 downloadType: specific
                 targetPath: '$(Build.SourcesDirectory)'
             steps:
