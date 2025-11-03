@@ -4,6 +4,12 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.43.2
+## What's Changed
+* fix - Update to jacoco 0.8.14 by @fbricon in https://github.com/microsoft/vscode-java-test/pull/1798
+* fix - Test Runner for Java doesn't recognize tests by @snjeza in https://github.com/microsoft/vscode-java-test/pull/1783
+* fix: update parent node state when test completes by @fbricon in https://github.com/microsoft/vscode-java-test/pull/1799
+
 ## 0.43.1
 ## What's Changed
 * chore(deps): bump serialize-javascript and mocha by @dependabot in https://github.com/microsoft/vscode-java-test/pull/1754
