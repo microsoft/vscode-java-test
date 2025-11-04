@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, TestRun, Uri } from 'vscode';
+import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, Uri } from 'vscode';
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { JavaTestRunnerDelegateCommands } from '../constants';
