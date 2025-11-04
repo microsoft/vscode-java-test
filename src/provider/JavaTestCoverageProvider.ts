@@ -5,12 +5,13 @@ import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, 
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { JavaTestRunnerDelegateCommands } from '../constants';
+import { IRunTestContext } from '../java-test-runner.api';
 
 export class JavaTestCoverageProvider {
 
     private coverageDetails: Map<Uri, FileCoverageDetail[]> = new Map<Uri, FileCoverageDetail[]>();
 
-    public async provideFileCoverage(run: TestRun, projectName: string): Promise<void> {
+    public async provideFileCoverage({testRun: run, projectName, testConfig}: IRunTestContext): Promise<void> {
         const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
             projectName, getJacocoReportBasePath(projectName)) || [];
         for (const sourceFileCoverage of sourceFileCoverages) {
