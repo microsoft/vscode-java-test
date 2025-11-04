@@ -16,10 +16,12 @@ export class JavaTestCoverageProvider {
             projectName, getJacocoReportBasePath(projectName)) || [];
         const sourceFileCoverageExclusions: minimatch.Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((exclusion: string) =>
             new minimatch.Minimatch(exclusion, {flipNegate: true}));
-        const sourceFileCoveragesToReport: ISourceFileCoverage[] = sourceFileCoverageExclusions
-            .reduce((results: ISourceFileCoverage[], exclusion: minimatch.Minimatch) =>
-                results.filter((sourceFile: ISourceFileCoverage) =>
-                    exclusion.match(Uri.parse(sourceFile.uriString).fsPath)), sourceFileCoverages);
+        const sourceFileCoveragesToReport: ISourceFileCoverage[] = sourceFileCoverageExclusions.length > 0 ?
+            sourceFileCoverageExclusions
+                .reduce((results: ISourceFileCoverage[], exclusion: minimatch.Minimatch) =>
+                    results.filter((sourceFile: ISourceFileCoverage) =>
+                        exclusion.match(Uri.parse(sourceFile.uriString).fsPath)), sourceFileCoverages) :
+            sourceFileCoverages;
         for (const sourceFileCoverage of sourceFileCoveragesToReport) {
             const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
             const detailedCoverage: FileCoverageDetail[] = [];
