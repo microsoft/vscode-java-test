@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
-
+import * as minimatch from 'minimatch';
 import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, Uri } from 'vscode';
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
@@ -14,7 +14,13 @@ export class JavaTestCoverageProvider {
     public async provideFileCoverage({testRun: run, projectName, testConfig}: IRunTestContext): Promise<void> {
         const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
             projectName, getJacocoReportBasePath(projectName)) || [];
-        for (const sourceFileCoverage of sourceFileCoverages) {
+        const sourceFileCoverageExclusions: minimatch.Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((exclusion: string) =>
+            new minimatch.Minimatch(exclusion, {flipNegate: true}));
+        const sourceFileCoveragesToReport: ISourceFileCoverage[] = sourceFileCoverageExclusions
+            .reduce((results: ISourceFileCoverage[], exclusion: minimatch.Minimatch) =>
+                results.filter((sourceFile: ISourceFileCoverage) =>
+                    exclusion.match(Uri.parse(sourceFile.uriString).fsPath)), sourceFileCoverages);
+        for (const sourceFileCoverage of sourceFileCoveragesToReport) {
             const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
             const detailedCoverage: FileCoverageDetail[] = [];
             for (const lineCoverage of sourceFileCoverage.lineCoverages) {
