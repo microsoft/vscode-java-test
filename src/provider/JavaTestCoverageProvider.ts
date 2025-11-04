@@ -15,7 +15,7 @@ export class JavaTestCoverageProvider {
         const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
             projectName, getJacocoReportBasePath(projectName)) || [];
         const sourceFileCoverageExclusions: minimatch.Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((exclusion: string) =>
-            new minimatch.Minimatch(exclusion, {flipNegate: true}));
+            new minimatch.Minimatch(exclusion, {flipNegate: true, nonegate: true}));
         const sourceFileCoveragesToReport: ISourceFileCoverage[] = [];
         if (sourceFileCoverageExclusions.length <= 0) {
             sourceFileCoveragesToReport.push(...sourceFileCoverages);
