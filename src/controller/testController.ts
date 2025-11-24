@@ -696,6 +696,7 @@ function getRunnerByContext(testContext: IRunTestContext): BaseRunner | undefine
     switch (testContext.kind) {
         case TestKind.JUnit:
         case TestKind.JUnit5:
+        case TestKind.JUnit6:
             return new JUnitRunner(testContext);
         case TestKind.TestNG:
             return new TestNGRunner(testContext);
@@ -711,6 +712,7 @@ function trackTestFrameworkVersion(testKind: TestKind, classpaths: string[], mod
             artifactPattern = /junit-(\d+\.\d+\.\d+(-[a-zA-Z\d]+)?).jar/;
             break;
         case TestKind.JUnit5:
+        case TestKind.JUnit6:
             artifactPattern = /junit-jupiter-api-(\d+\.\d+\.\d+(-[a-zA-Z\d]+)?).jar/;
             break;
         case TestKind.TestNG:

@@ -70,6 +70,7 @@
             "./server/org.apiguardian.api_1.1.2.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.3.100.v20231214-1952.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.1.300.v20231214-1952.jar",
+            "./server/undefined",
             "./server/org.opentest4j_1.3.0.jar",
             "./server/org.jacoco.core_0.8.14.202510111229.jar",
             "./server/com.microsoft.java.test.plugin-0.43.1.jar"

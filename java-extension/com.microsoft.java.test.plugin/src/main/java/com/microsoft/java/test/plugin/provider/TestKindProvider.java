@@ -14,13 +14,20 @@ package com.microsoft.java.test.plugin.provider;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.IVMInstall2;
+import org.eclipse.jdt.launching.JavaRuntime;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TestKindProvider {
     private static Map<IJavaProject, List<TestKind>> map = new HashMap<>();
@@ -45,7 +52,11 @@ public class TestKindProvider {
         final List<TestKind> result = new LinkedList<>();
         try {
             if (javaProject.findType(JUNIT5_TEST) != null) {
-                result.add(TestKind.JUnit5);
+                if (isJUnit6(javaProject)) {
+                    result.add(TestKind.JUnit6);
+                } else {
+                    result.add(TestKind.JUnit5);
+                }
             }
 
             if (javaProject.findType(JUNIT4_TEST) != null) {
@@ -59,5 +70,62 @@ public class TestKindProvider {
             JUnitPlugin.logError("failed to find the test kinds from project: " + javaProject.getElementName());
         }
         return result;
+    }
+
+    private static boolean isJUnit6(IJavaProject project) {
+        if (!isJava17OrHigher(project)) {
+            return false;
+        }
+        return isJUnitJupiterApiVersion6OrHigher(project);
+    }
+
+    private static boolean isJava17OrHigher(IJavaProject project) {
+        try {
+            final IVMInstall vm = JavaRuntime.getVMInstall(project);
+            if (vm instanceof IVMInstall2) {
+                final String javaVersion = ((IVMInstall2) vm).getJavaVersion();
+                if (javaVersion != null) {
+                    return getMajorVersion(javaVersion) >= 17;
+                }
+            }
+        } catch (CoreException e) {
+            // ignore
+        }
+        return false;
+    }
+
+    private static int getMajorVersion(String version) {
+        if (version.startsWith("1.")) {
+            return Integer.parseInt(version.substring(2, 3));
+        }
+        final int dot = version.indexOf('.');
+        if (dot != -1) {
+            return Integer.parseInt(version.substring(0, dot));
+        }
+        try {
+            return Integer.parseInt(version);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private static boolean isJUnitJupiterApiVersion6OrHigher(IJavaProject project) {
+        try {
+            for (final IClasspathEntry entry : project.getResolvedClasspath(true)) {
+                if (entry.getPath().lastSegment().contains("junit-jupiter-api")) {
+                    final String fileName = entry.getPath().lastSegment();
+                    final Matcher m = Pattern.compile("junit-jupiter-api-(\\d+)\\.").matcher(fileName);
+                    if (m.find()) {
+                        final int major = Integer.parseInt(m.group(1));
+                        if (major >= 6) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (JavaModelException e) {
+            // ignore
+        }
+        return false;
     }
 }
