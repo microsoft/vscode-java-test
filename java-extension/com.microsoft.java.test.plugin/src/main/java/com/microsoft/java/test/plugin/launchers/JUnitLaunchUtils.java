@@ -204,6 +204,7 @@ public class JUnitLaunchUtils {
             case JUnit:
                 return JUNIT4_LOADER;
             case JUnit5:
+            case JUnit6:
                 return JUNIT5_LOADER;
             case TestNG:
                 return TESTNG_LOADER;
