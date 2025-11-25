@@ -73,7 +73,7 @@ public class JUnit6TestSearcher extends BaseFrameworkSearcher {
     @Override
     public String getJdtTestKind() {
         // JUnit 6 uses the same JDT test kind as JUnit 5
-        return TestKindRegistry.JUNIT5_TEST_KIND_ID;
+        return TestKindRegistry.JUNIT6_TEST_KIND_ID;
     }
 
     @Override
