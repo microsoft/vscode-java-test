@@ -27,6 +27,8 @@ const bundleList = [
     'junit-platform-suite-commons',
     'junit-platform-suite-engine',
     'org.apiguardian.api',
+    'org.eclipse.jdt.junit.core_',
+    'org.eclipse.jdt.junit.runtime_',
     'org.jacoco.core'
 ];
 // Set MAVEN_OPTS to disable XML entity size limits for JDK XML parser
