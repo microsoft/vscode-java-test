@@ -54,15 +54,34 @@ function updateVersion() {
     const packageJsonData = require('../package.json');
     const javaExtensions = packageJsonData.contributes.javaExtensions;
     if (Array.isArray(javaExtensions)) {
-        packageJsonData.contributes.javaExtensions  = javaExtensions.map((extensionString) => {
+        const newExtensions = [];
+        const processedBaseNames = new Set();
+        
+        for (const extensionString of javaExtensions) {
             const ind = extensionString.indexOf('_');
-            const fileName = findNewRequiredJar(extensionString.substring(extensionString.lastIndexOf('/') + 1, ind));
             if (ind >= 0) {
-                return extensionString.substring(0, extensionString.lastIndexOf('/') + 1) + fileName;
+                const baseName = extensionString.substring(extensionString.lastIndexOf('/') + 1, ind);
+                const pathPrefix = extensionString.substring(0, extensionString.lastIndexOf('/') + 1);
+                
+                // Check if we've already processed this base name
+                if (!processedBaseNames.has(baseName)) {
+                    processedBaseNames.add(baseName);
+                    
+                    // Find all jar files matching this base name
+                    const matchingJars = findAllMatchingJars(baseName);
+                    
+                    // Add all matching jars to the new extensions list
+                    for (const jar of matchingJars) {
+                        newExtensions.push(pathPrefix + jar);
+                    }
+                }
+            } else {
+                // Keep non-versioned entries as is
+                newExtensions.push(extensionString);
             }
-            return extensionString;
-        });
+        }
 
+        packageJsonData.contributes.javaExtensions = newExtensions;
         fs.writeFileSync(path.resolve('package.json'), JSON.stringify(packageJsonData, null, 4));
         fs.appendFileSync(path.resolve('package.json'), os.EOL);
     }
@@ -77,6 +96,18 @@ function findNewRequiredJar(fileName) {
         return file.indexOf(fileName) >= 0;
     });
     return f;
+}
+
+// Find all jar files matching the base name (supports multiple versions)
+function findAllMatchingJars(baseName) {
+    const prefix = baseName + "_";
+    const destFolder = path.resolve('./server');
+    const files = fs.readdirSync(destFolder);
+    const matchingFiles = files.filter((file) => {
+        return file.startsWith(prefix) && file.endsWith('.jar');
+    });
+    // Sort to ensure consistent order (helps with version ordering)
+    return matchingFiles.sort();
 }
 
 function downloadJacocoAgent() {
