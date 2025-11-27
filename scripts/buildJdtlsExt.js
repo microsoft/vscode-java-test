@@ -12,6 +12,7 @@ const serverDir = path.resolve('java-extension');
 const bundleList = [
     'org.eclipse.jdt.junit4.runtime_',
     'org.eclipse.jdt.junit5.runtime_',
+    'org.eclipse.jdt.junit6.runtime_',
     'junit-jupiter-api',
     'junit-jupiter-engine',
     'junit-jupiter-migrationsupport',
