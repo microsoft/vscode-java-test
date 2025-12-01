@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -53,6 +54,8 @@ public class JUnitPlugin implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         handler.addElementChangeListener();
         JUnitPlugin.context = context;
+        // Debug: Log JUnit bundle status on startup
+        logJUnitBundleStatus();
     }
 
     /*
@@ -113,5 +116,47 @@ public class JUnitPlugin implements BundleActivator {
     public static Object askClientForInput(String prompt, String defaultValue) {
         return JavaLanguageServerPlugin.getInstance().getClientConnection()
                     .executeClientCommand(JAVA_TEST_ASK_CLIENT_FOR_INPUT, prompt, defaultValue);
+    }
+
+    /**
+     * Debug method to log all installed OSGi bundles related to JUnit.
+     * Call this method to diagnose bundle resolution issues.
+     */
+    public static void logJUnitBundleStatus() {
+        if (context == null) {
+            return;
+        }
+        
+        logInfo("=== OSGi Bundle Status for JUnit ===");
+        final Bundle[] bundles = context.getBundles();
+        
+        for (final Bundle bundle : bundles) {
+            final String symbolicName = bundle.getSymbolicName();
+            if (symbolicName != null && (
+                    symbolicName.contains("junit") || 
+                    symbolicName.contains("jupiter") ||
+                    symbolicName.contains("opentest4j") ||
+                    symbolicName.contains("apiguardian"))) {
+                
+                final String stateStr = getBundleStateString(bundle.getState());
+                logInfo(String.format("Bundle: %s, Version: %s, State: %s", 
+                    symbolicName, 
+                    bundle.getVersion().toString(),
+                    stateStr));
+            }
+        }
+        logInfo("=== End Bundle Status ===");
+    }
+    
+    private static String getBundleStateString(int state) {
+        switch (state) {
+            case Bundle.UNINSTALLED: return "UNINSTALLED";
+            case Bundle.INSTALLED: return "INSTALLED";
+            case Bundle.RESOLVED: return "RESOLVED";
+            case Bundle.STARTING: return "STARTING";
+            case Bundle.STOPPING: return "STOPPING";
+            case Bundle.ACTIVE: return "ACTIVE";
+            default: return "UNKNOWN(" + state + ")";
+        }
     }
 }

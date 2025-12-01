@@ -49,49 +49,86 @@ function copy(sourceFolder, targetFolder, fileFilter) {
     }
 }
 
-// Helper function to select the correct JAR version when multiple versions exist
-function selectJarVersion(files, baseName) {
+// Helper function to select the JAR version(s) for javaExtensions (OSGi bundles)
+// Returns both JUnit 5 (5.x/1.x) and JUnit 6 (6.x) versions for components that need both
+// This is required because org.eclipse.jdt.junit5.runtime requires 5.x and 
+// org.eclipse.jdt.junit6.runtime requires 6.x
+function selectJarVersions(files, baseName) {
     const matchingFiles = files.filter(file => file.startsWith(baseName + '_'));
     if (matchingFiles.length === 0) {
-        return null;
+        return [];
     }
     
-    // For JUnit Platform and Jupiter, prefer version 6.x over 5.x
-    const junit6Pattern = new RegExp(`^${baseName}_(6\\.\\d+\\.\\d+)\\.jar$`);
+    // Pattern to match version numbers
     const junit5Pattern = new RegExp(`^${baseName}_(5\\.\\d+\\.\\d+)\\.jar$`);
-    const platformPattern = new RegExp(`^${baseName}_(\\d+\\.\\d+\\.\\d+)\\.jar$`);
+    const junit6Pattern = new RegExp(`^${baseName}_(6\\.\\d+\\.\\d+)\\.jar$`);
+    const platform1Pattern = new RegExp(`^${baseName}_(1\\.\\d+\\.\\d+)\\.jar$`);
     
-    // Check if this is a JUnit component that has both 5.x and 6.x versions
-    const isJunitComponent = baseName.startsWith('junit-jupiter') || 
-                             baseName.startsWith('junit-platform');
+    // Components that need both JUnit 5 and JUnit 6 versions
+    const needsBothVersions = [
+        'junit-jupiter-api',
+        'junit-jupiter-engine',
+        'junit-jupiter-params',
+        'junit-platform-commons',
+        'junit-platform-engine',
+        'junit-platform-launcher',
+        'junit-platform-suite-api',
+        'junit-platform-suite-engine'
+    ];
     
-    if (isJunitComponent) {
-        // Prefer 6.x version for JUnit components
+    if (needsBothVersions.includes(baseName)) {
+        const result = [];
+        // Add 5.x version if exists (for junit-jupiter-*)
+        const version5Files = matchingFiles.filter(file => junit5Pattern.test(file));
+        if (version5Files.length > 0) {
+            result.push(version5Files.sort().reverse()[0]);
+        }
+        // Add 1.x version if exists (for junit-platform-*)
+        const version1Files = matchingFiles.filter(file => platform1Pattern.test(file));
+        if (version1Files.length > 0) {
+            result.push(version1Files.sort().reverse()[0]);
+        }
+        // Add 6.x version if exists
         const version6Files = matchingFiles.filter(file => junit6Pattern.test(file));
         if (version6Files.length > 0) {
-            // Sort by version and return the highest
-            return version6Files.sort().reverse()[0];
+            result.push(version6Files.sort().reverse()[0]);
         }
+        // Remove duplicates and return
+        return [...new Set(result)];
     }
     
-    // For junit-vintage-engine and other packages, use 5.x
+    // For junit-vintage-engine, only use 5.x
     if (baseName === 'junit-vintage-engine') {
         const version5Files = matchingFiles.filter(file => junit5Pattern.test(file));
         if (version5Files.length > 0) {
-            return version5Files.sort().reverse()[0];
+            return [version5Files.sort().reverse()[0]];
         }
     }
     
-    // For platform-runner and suite-commons, prefer 1.x version
+    // For junit-jupiter-migrationsupport, only use 5.x (no 6.x version exists)
+    if (baseName === 'junit-jupiter-migrationsupport') {
+        const version5Files = matchingFiles.filter(file => junit5Pattern.test(file));
+        if (version5Files.length > 0) {
+            return [version5Files.sort().reverse()[0]];
+        }
+    }
+    
+    // For platform-runner and suite-commons, use 1.x version only
     if (baseName === 'junit-platform-runner' || baseName === 'junit-platform-suite-commons') {
-        const platform1Files = matchingFiles.filter(file => platformPattern.test(file) && file.includes('_1.'));
+        const platform1Files = matchingFiles.filter(file => platform1Pattern.test(file));
         if (platform1Files.length > 0) {
-            return platform1Files.sort().reverse()[0];
+            return [platform1Files.sort().reverse()[0]];
         }
     }
     
     // Default: return the highest version
-    return matchingFiles.sort().reverse()[0];
+    return [matchingFiles.sort().reverse()[0]];
+}
+
+// Legacy function for backward compatibility
+function selectJarVersion(files, baseName) {
+    const versions = selectJarVersions(files, baseName);
+    return versions.length > 0 ? versions[0] : null;
 }
 
 function updateVersion() {
@@ -102,17 +139,41 @@ function updateVersion() {
     const files = fs.readdirSync(destFolder);
     
     if (Array.isArray(javaExtensions)) {
-        packageJsonData.contributes.javaExtensions = javaExtensions.map((extensionString) => {
+        // Track which base names we've already processed to avoid duplicates
+        const processedBaseNames = new Set();
+        const newJavaExtensions = [];
+        
+        for (const extensionString of javaExtensions) {
             const ind = extensionString.indexOf('_');
             if (ind >= 0) {
                 const baseName = extensionString.substring(extensionString.lastIndexOf('/') + 1, ind);
-                const fileName = selectJarVersion(files, baseName) || findNewRequiredJar(baseName);
-                if (fileName) {
-                    return extensionString.substring(0, extensionString.lastIndexOf('/') + 1) + fileName;
+                
+                // Skip if we've already processed this base name
+                if (processedBaseNames.has(baseName)) {
+                    continue;
                 }
+                processedBaseNames.add(baseName);
+                
+                // Get all versions for this component
+                const fileNames = selectJarVersions(files, baseName);
+                if (fileNames.length > 0) {
+                    for (const fileName of fileNames) {
+                        newJavaExtensions.push('./server/' + fileName);
+                    }
+                } else {
+                    // Fallback to finding any matching jar
+                    const fallbackFileName = findNewRequiredJar(baseName);
+                    if (fallbackFileName) {
+                        newJavaExtensions.push('./server/' + fallbackFileName);
+                    }
+                }
+            } else {
+                // Non-versioned extension (like the plugin jar)
+                newJavaExtensions.push(extensionString);
             }
-            return extensionString;
-        });
+        }
+        
+        packageJsonData.contributes.javaExtensions = newJavaExtensions;
 
         fs.writeFileSync(path.resolve('package.json'), JSON.stringify(packageJsonData, null, 4));
         fs.appendFileSync(path.resolve('package.json'), os.EOL);
