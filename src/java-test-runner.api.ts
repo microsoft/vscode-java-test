@@ -220,6 +220,7 @@ export enum TestKind {
     JUnit5 = 0,
     JUnit = 1,
     TestNG = 2,
+    JUnit6 = 3,
     None = 100,
 }
 

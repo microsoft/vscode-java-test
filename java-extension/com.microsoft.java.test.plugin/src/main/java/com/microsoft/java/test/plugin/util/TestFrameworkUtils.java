@@ -14,6 +14,7 @@ package com.microsoft.java.test.plugin.util;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.searcher.JUnit4TestSearcher;
 import com.microsoft.java.test.plugin.searcher.JUnit5TestSearcher;
+import com.microsoft.java.test.plugin.searcher.JUnit6TestSearcher;
 import com.microsoft.java.test.plugin.searcher.TestFrameworkSearcher;
 import com.microsoft.java.test.plugin.searcher.TestNGTestSearcher;
 
@@ -25,6 +26,7 @@ public class TestFrameworkUtils {
 
     public static final TestFrameworkSearcher JUNIT4_TEST_SEARCHER = new JUnit4TestSearcher();
     public static final TestFrameworkSearcher JUNIT5_TEST_SEARCHER = new JUnit5TestSearcher();
+    public static final TestFrameworkSearcher JUNIT6_TEST_SEARCHER = new JUnit6TestSearcher();
     public static final TestFrameworkSearcher TESTNG_TEST_SEARCHER = new TestNGTestSearcher();
 
     public static boolean isEquivalentAnnotationType(ITypeBinding annotationType, String annotationName) {
@@ -37,6 +39,8 @@ public class TestFrameworkUtils {
                 return JUNIT4_TEST_SEARCHER;
             case JUnit5:
                 return JUNIT5_TEST_SEARCHER;
+            case JUnit6:
+                return JUNIT6_TEST_SEARCHER;
             case TestNG:
                 return TESTNG_TEST_SEARCHER;
             default:

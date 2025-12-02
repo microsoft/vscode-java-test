@@ -764,6 +764,7 @@ public class TestGenerationUtils {
                 list.add(JUNIT4_AFTER_CLASS_ANNOTATION);
                 break;
             case JUnit5:
+            case JUnit6:
                 list.add(JUNIT5_BEFORE_CLASS_ANNOTATION);
                 list.add(JUNIT5_SET_UP_ANNOTATION);
                 list.add(JUNIT5_TEAR_DOWN_ANNOTATION);
