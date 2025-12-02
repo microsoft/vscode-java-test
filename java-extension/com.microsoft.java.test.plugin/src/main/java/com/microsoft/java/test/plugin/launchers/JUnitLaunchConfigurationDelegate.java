@@ -67,6 +67,30 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     private static final Set<String> testNameArgs = new HashSet<>(
         Arrays.asList("-test", "-classNames", "-packageNameFile", "-testNameFile"));
 
+    // Pattern to match junit-platform-* and junit-jupiter-* jars with version numbers
+    // Supports both Maven format (junit-jupiter-api-6.0.0.jar) and
+    // OSGi bundle format (junit-jupiter-api_6.0.0.jar)
+    private static final Pattern JUNIT_VERSION_PATTERN = Pattern.compile(
+            "(junit-platform-[a-z-]+|junit-jupiter-[a-z-]+)[-_](\\d+)\\.(\\d+)\\.(\\d+)\\.jar$");
+
+    // JUnit bundle names that need to be injected for test execution
+    private static final String[] JUNIT_BUNDLE_NAMES = {
+        "junit-jupiter-api",
+        "junit-jupiter-engine",
+        "junit-jupiter-params",
+        "junit-platform-commons",
+        "junit-platform-engine",
+        "junit-platform-launcher",
+        "junit-platform-suite-api",
+        "junit-platform-suite-engine"
+    };
+
+    // Common dependency bundle names
+    private static final String[] COMMON_BUNDLE_NAMES = {
+        "org.opentest4j",
+        "org.apiguardian.api"
+    };
+
     public JUnitLaunchConfigurationDelegate(Argument args) {
         super();
         this.args = args;
@@ -232,24 +256,31 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     }
 
     /**
-     * Filter the classpath/modulepath based on the test kind to avoid version conflicts.
-     * For JUnit 5: use junit-platform-* version 1.x and junit-jupiter-* version 5.x
-     * For JUnit 6: use junit-platform-* version 6.x and junit-jupiter-* version 6.x
+     * Check if the given major version is compatible with the test kind.
+     * For JUnit 5: version < 6 (1.x for platform, 5.x for jupiter)
+     * For JUnit 6: version >= 6
      * 
-     * @param paths the original classpath or modulepath array
+     * @param majorVersion the major version number
      * @param testKind the test framework kind
-     * @return filtered paths array
+     * @return true if compatible, false otherwise
      */
-    private String[] filterClasspathByTestKind(String[] paths, TestKind testKind) {
-        return filterClasspathByTestKind(paths, testKind, false);
+    private boolean isVersionCompatible(int majorVersion, TestKind testKind) {
+        switch (testKind) {
+            case JUnit5:
+                return majorVersion < 6;
+            case JUnit6:
+                return majorVersion >= 6;
+            default:
+                return true;
+        }
     }
-    
+
     /**
      * Filter the classpath/modulepath based on the test kind to avoid version conflicts.
      * For JUnit 5: use junit-platform-* version 1.x and junit-jupiter-* version 5.x
      * For JUnit 6: use junit-platform-* version 6.x and junit-jupiter-* version 6.x
      * 
-     * Also optionally injects the required JUnit bundles from OSGi into the classpath since 
+     * Also optionally injects the required JUnit bundles from OSGi into the classpath since
      * Eclipse's ClasspathLocalizer only adds the junit*runtime bundle but not its Require-Bundle deps.
      * 
      * @param paths the original classpath or modulepath array
@@ -262,93 +293,70 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             return paths;
         }
 
-        // Pattern to match junit-platform-* and junit-jupiter-* jars with version numbers
-        // Supports both Maven format (junit-jupiter-api-6.0.0.jar) and 
-        // OSGi bundle format (junit-jupiter-api_6.0.0.jar)
-        // Capture full version string for version matching
-        final Pattern junitVersionPattern = Pattern.compile(
-                "(junit-platform-[a-z-]+|junit-jupiter-[a-z-]+)[-_](\\d+)\\.(\\d+)\\.(\\d+)\\.jar$");
+        // For non-JUnit5/6 test kinds, no filtering needed
+        if (testKind != TestKind.JUnit5 && testKind != TestKind.JUnit6) {
+            return paths;
+        }
 
         final List<String> filteredPaths = new ArrayList<>();
         final Set<String> foundJUnitArtifacts = new HashSet<>();
+        // Track essential artifacts for incomplete dependency detection
+        boolean hasApi = false;
+        boolean hasEngine = false;
+        boolean hasLauncher = false;
         int includedCount = 0;
         int excludedCount = 0;
-        
-        // First pass: check if project has incomplete JUnit dependencies
-        // If so, we'll use all OSGi bundles to ensure version consistency
-        boolean needsFullBundleInjection = false;
-        if (injectBundles && (testKind == TestKind.JUnit5 || testKind == TestKind.JUnit6)) {
-            final Set<String> projectArtifacts = new HashSet<>();
-            for (final String path : paths) {
-                final String fileName = new File(path).getName();
-                final Matcher m = junitVersionPattern.matcher(fileName);
-                if (m.find()) {
-                    projectArtifacts.add(m.group(1));
-                }
-            }
-            // Check if essential runtime bundles are missing
-            final boolean hasApi = projectArtifacts.contains("junit-jupiter-api");
-            final boolean hasEngine = projectArtifacts.contains("junit-jupiter-engine");
-            final boolean hasLauncher = projectArtifacts.contains("junit-platform-launcher");
-            needsFullBundleInjection = hasApi && (!hasEngine || !hasLauncher);
-            
-            if (needsFullBundleInjection) {
-                JUnitPlugin.logInfo("[Classpath Filter] Project has incomplete JUnit dependencies, " +
-                        "will use OSGi bundles for all JUnit components to ensure version consistency");
-            }
-        }
-        
+
+        // Single pass: filter paths and detect incomplete dependencies simultaneously
         for (final String path : paths) {
             final String fileName = new File(path).getName();
-            final Matcher matcher = junitVersionPattern.matcher(fileName);
-            
-            if (matcher.find()) {
-                final String artifactName = matcher.group(1);
-                final int majorVersion = Integer.parseInt(matcher.group(2));
-                
-                // If we need full bundle injection, exclude ALL project JUnit jars
-                if (needsFullBundleInjection) {
-                    excludedCount++;
-                    JUnitPlugin.logInfo("[Classpath Filter] Excluding project jar " +
-                            "(will use OSGi bundle): " + fileName);
-                    continue;
-                }
-                
-                if (testKind == TestKind.JUnit5) {
-                    // For JUnit 5: only include version 1.x for platform, 5.x for jupiter
-                    if (majorVersion < 6) {
-                        filteredPaths.add(path);
-                        foundJUnitArtifacts.add(artifactName);
-                        includedCount++;
-                    } else {
-                        excludedCount++;
-                        JUnitPlugin.logInfo("[Classpath Filter] JUnit5 - Excluding: " + fileName);
-                    }
-                } else if (testKind == TestKind.JUnit6) {
-                    // For JUnit 6: only include version 6.x for both platform and jupiter
-                    if (majorVersion >= 6) {
-                        filteredPaths.add(path);
-                        foundJUnitArtifacts.add(artifactName);
-                        includedCount++;
-                    } else {
-                        excludedCount++;
-                        JUnitPlugin.logInfo("[Classpath Filter] JUnit6 - Excluding: " + fileName);
-                    }
-                } else {
-                    // For other test kinds, include all
-                    filteredPaths.add(path);
-                    foundJUnitArtifacts.add(artifactName);
-                    includedCount++;
-                }
-            } else {
-                // Not a junit-platform/jupiter jar, include it
+            final Matcher matcher = JUNIT_VERSION_PATTERN.matcher(fileName);
+
+            if (!matcher.find()) {
+                // Not a junit-platform/jupiter jar, include it directly
                 filteredPaths.add(path);
+                continue;
+            }
+
+            final String artifactName = matcher.group(1);
+            final int majorVersion = Integer.parseInt(matcher.group(2));
+
+            // Track essential artifacts for bundle injection decision
+            if (injectBundles) {
+                if ("junit-jupiter-api".equals(artifactName)) {
+                    hasApi = true;
+                } else if ("junit-jupiter-engine".equals(artifactName)) {
+                    hasEngine = true;
+                } else if ("junit-platform-launcher".equals(artifactName)) {
+                    hasLauncher = true;
+                }
+            }
+
+            if (isVersionCompatible(majorVersion, testKind)) {
+                filteredPaths.add(path);
+                foundJUnitArtifacts.add(artifactName);
+                includedCount++;
+            } else {
+                excludedCount++;
+                JUnitPlugin.logInfo("[Classpath Filter] " + testKind + " - Excluding: " + fileName);
             }
         }
-        
+
+        // Handle incomplete JUnit dependencies: if project has API but missing engine/launcher,
+        // remove all project JUnit jars and use OSGi bundles for version consistency
+        final boolean needsFullBundleInjection = injectBundles && hasApi && (!hasEngine || !hasLauncher);
+        if (needsFullBundleInjection) {
+            JUnitPlugin.logInfo("[Classpath Filter] Project has incomplete JUnit dependencies, " +
+                    "will use OSGi bundles for all JUnit components to ensure version consistency");
+            // Remove all JUnit jars that were added
+            filteredPaths.removeIf(p -> JUNIT_VERSION_PATTERN.matcher(new File(p).getName()).find());
+            foundJUnitArtifacts.clear();
+            excludedCount += includedCount;
+            includedCount = 0;
+        }
+
         // Inject JUnit bundles from OSGi if needed
-        // If needsFullBundleInjection, foundJUnitArtifacts is empty so all bundles will be injected
-        if (injectBundles && (testKind == TestKind.JUnit5 || testKind == TestKind.JUnit6)) {
+        if (injectBundles) {
             final List<String> injectedPaths = injectMissingJUnitBundles(testKind, foundJUnitArtifacts);
             if (!injectedPaths.isEmpty()) {
                 filteredPaths.addAll(injectedPaths);
@@ -356,7 +364,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                         " JUnit bundles for " + testKind);
             }
         }
-        
+
         JUnitPlugin.logInfo("[Classpath Filter] TestKind=" + testKind + ", Included=" +
                 includedCount + " JUnit jars, Excluded=" + excludedCount +
                 " JUnit jars, Found artifacts=" + foundJUnitArtifacts +
@@ -376,78 +384,65 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
      */
     private List<String> injectMissingJUnitBundles(TestKind testKind, Set<String> foundArtifacts) {
         final List<String> bundlePaths = new ArrayList<>();
-        
-        // Define required bundles based on test kind
-        final String[][] bundleSpecs;
-        if (testKind == TestKind.JUnit5) {
-            bundleSpecs = new String[][] {
-                {"junit-jupiter-api", "[5.0.0,6.0.0)"},
-                {"junit-jupiter-engine", "[5.0.0,6.0.0)"},
-                {"junit-jupiter-params", "[5.0.0,6.0.0)"},
-                {"junit-platform-commons", "[1.0.0,2.0.0)"},
-                {"junit-platform-engine", "[1.0.0,2.0.0)"},
-                {"junit-platform-launcher", "[1.0.0,2.0.0)"},
-                {"junit-platform-suite-api", "[1.0.0,2.0.0)"},
-                {"junit-platform-suite-engine", "[1.0.0,2.0.0)"}
-            };
-        } else if (testKind == TestKind.JUnit6) {
-            bundleSpecs = new String[][] {
-                {"junit-jupiter-api", "[6.0.0,7.0.0)"},
-                {"junit-jupiter-engine", "[6.0.0,7.0.0)"},
-                {"junit-jupiter-params", "[6.0.0,7.0.0)"},
-                {"junit-platform-commons", "[6.0.0,7.0.0)"},
-                {"junit-platform-engine", "[6.0.0,7.0.0)"},
-                {"junit-platform-launcher", "[6.0.0,7.0.0)"},
-                {"junit-platform-suite-api", "[6.0.0,7.0.0)"},
-                {"junit-platform-suite-engine", "[6.0.0,7.0.0)"}
-            };
-        } else {
-            return bundlePaths;
-        }
-        
-        // Common dependencies
-        final String[][] commonBundles = {
-            {"org.opentest4j", "[1.0.0,3.0.0)"},
-            {"org.apiguardian.api", "[1.0.0,2.0.0)"}
-        };
-        
-        // Inject bundles that are not already in classpath
-        for (final String[] spec : bundleSpecs) {
-            final String bundleName = spec[0];
-            final String versionRange = spec[1];
-            
+
+        // Inject JUnit bundles that are not already in classpath
+        for (final String bundleName : JUNIT_BUNDLE_NAMES) {
             if (!foundArtifacts.contains(bundleName)) {
-                final String bundlePath = getBundlePath(bundleName, versionRange);
-                if (bundlePath != null) {
-                    bundlePaths.add(bundlePath);
-                    JUnitPlugin.logInfo("[Classpath Inject] Added bundle: " +
-                            bundleName + " -> " + bundlePath);
-                } else {
-                    JUnitPlugin.logInfo("[Classpath Inject] Bundle not found: " +
-                            bundleName + " " + versionRange);
-                }
+                injectBundle(bundleName, getVersionRange(bundleName, testKind), bundlePaths);
             }
         }
-        
-        // Inject common dependencies if not present
-        for (final String[] spec : commonBundles) {
-            final String bundleName = spec[0];
-            final String versionRange = spec[1];
-            
-            final boolean found = foundArtifacts.stream()
-                    .anyMatch(a -> a.contains("opentest4j") || a.contains("apiguardian"));
-            
-            if (!found) {
-                final String bundlePath = getBundlePath(bundleName, versionRange);
-                if (bundlePath != null) {
-                    bundlePaths.add(bundlePath);
-                    JUnitPlugin.logInfo("[Classpath Inject] Added common bundle: " +
-                            bundleName + " -> " + bundlePath);
-                }
+
+        // Inject common dependencies if not present (check once, not per bundle)
+        final boolean hasCommonDeps = foundArtifacts.stream()
+                .anyMatch(a -> a.contains("opentest4j") || a.contains("apiguardian"));
+
+        if (!hasCommonDeps) {
+            for (final String bundleName : COMMON_BUNDLE_NAMES) {
+                injectBundle(bundleName, getVersionRange(bundleName, testKind), bundlePaths);
             }
         }
-        
+
         return bundlePaths;
+    }
+
+    /**
+     * Get the OSGi version range for a bundle based on test kind.
+     * 
+     * @param bundleName the bundle symbolic name
+     * @param testKind the test framework kind
+     * @return the OSGi version range string
+     */
+    private String getVersionRange(String bundleName, TestKind testKind) {
+        if (bundleName.startsWith("junit-jupiter")) {
+            return testKind == TestKind.JUnit5 ? "[5.0.0,6.0.0)" : "[6.0.0,7.0.0)";
+        } else if (bundleName.startsWith("junit-platform")) {
+            return testKind == TestKind.JUnit5 ? "[1.0.0,2.0.0)" : "[6.0.0,7.0.0)";
+        } else if ("org.opentest4j".equals(bundleName)) {
+            return "[1.0.0,3.0.0)";
+        } else if ("org.apiguardian.api".equals(bundleName)) {
+            return "[1.0.0,2.0.0)";
+        }
+        return null;
+    }
+
+    /**
+     * Try to inject a bundle into the classpath.
+     * 
+     * @param bundleName the bundle symbolic name
+     * @param versionRange the OSGi version range
+     * @param bundlePaths the list to add the bundle path to
+     */
+    private void injectBundle(String bundleName, String versionRange, List<String> bundlePaths) {
+        if (versionRange == null) {
+            return;
+        }
+        final String bundlePath = getBundlePath(bundleName, versionRange);
+        if (bundlePath != null) {
+            bundlePaths.add(bundlePath);
+            JUnitPlugin.logInfo("[Classpath Inject] Added bundle: " + bundleName + " -> " + bundlePath);
+        } else {
+            JUnitPlugin.logInfo("[Classpath Inject] Bundle not found: " + bundleName + " " + versionRange);
+        }
     }
     
     /**
