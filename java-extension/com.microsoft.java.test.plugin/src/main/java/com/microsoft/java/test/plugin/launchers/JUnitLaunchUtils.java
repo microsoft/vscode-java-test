@@ -47,6 +47,7 @@ import java.util.Set;
 public class JUnitLaunchUtils {
 
     private static final String TESTNG_LOADER = "com.microsoft.java.test.loader.testng";
+    private static final String JUNIT6_LOADER = "org.eclipse.jdt.junit.loader.junit6";
     private static final String JUNIT5_LOADER = "org.eclipse.jdt.junit.loader.junit5";
     private static final String JUNIT4_LOADER = "org.eclipse.jdt.junit.loader.junit4";
 
@@ -205,6 +206,8 @@ public class JUnitLaunchUtils {
                 return JUNIT4_LOADER;
             case JUnit5:
                 return JUNIT5_LOADER;
+            case JUnit6:
+                return JUNIT6_LOADER;
             case TestNG:
                 return TESTNG_LOADER;
             default:

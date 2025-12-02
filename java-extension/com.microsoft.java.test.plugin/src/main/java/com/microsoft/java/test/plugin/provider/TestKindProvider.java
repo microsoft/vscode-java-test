@@ -16,6 +16,7 @@ import com.microsoft.java.test.plugin.util.JUnitPlugin;
 
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -44,7 +45,10 @@ public class TestKindProvider {
     private static List<TestKind> getTestKinds(IJavaProject javaProject) {
         final List<TestKind> result = new LinkedList<>();
         try {
-            if (javaProject.findType(JUNIT5_TEST) != null) {
+            // Check for JUnit 6 first using Eclipse JDT's built-in detection
+            if (CoreTestSearchEngine.hasJUnit6TestAnnotation(javaProject)) {
+                result.add(TestKind.JUnit6);
+            } else if (CoreTestSearchEngine.hasJUnit5TestAnnotation(javaProject)) {
                 result.add(TestKind.JUnit5);
             }
 
