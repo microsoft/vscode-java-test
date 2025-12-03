@@ -324,6 +324,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             'org.eclipse.jdt.internal.junit.runner.',
             'org.eclipse.jdt.internal.junit4.runner.',
             'org.eclipse.jdt.internal.junit5.runner.',
+            'org.eclipse.jdt.internal.junit6.runner.',
             'org.eclipse.jdt.internal.junit.ui.',
             'junit.framework.TestCase',
             'junit.framework.TestResult',
@@ -398,7 +399,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 }
 
                 if (testItem) {
-                    if (dataCache.get(testItem)?.testKind === TestKind.JUnit5 &&
+                    if ((dataCache.get(testItem)?.testKind === TestKind.JUnit5 ||
+                        dataCache.get(testItem)?.testKind === TestKind.JUnit6) &&
                         this.getLabelWithoutCodicon(testItem.label) !== displayName) {
                         testItem.description = displayName;
                     } else {
