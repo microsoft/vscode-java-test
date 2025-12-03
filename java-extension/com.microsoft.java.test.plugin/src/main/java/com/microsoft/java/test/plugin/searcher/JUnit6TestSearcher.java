@@ -12,7 +12,6 @@
 package com.microsoft.java.test.plugin.searcher;
 
 import com.microsoft.java.test.plugin.model.TestKind;
-import com.microsoft.java.test.plugin.util.TestFrameworkUtils;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -20,10 +19,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
 
 import java.util.Collections;
@@ -33,22 +28,21 @@ import java.util.Set;
 /**
  * Test searcher for JUnit 6 (Jupiter API 6.x).
  * 
- * JUnit 6 builds upon JUnit 5's Jupiter platform and shares the same core infrastructure.
- * This searcher uses JUnit 6's test finder to properly detect tests in JUnit 6 projects.
+ * <p>JUnit 6 is an evolutionary release built on top of JUnit 5's Jupiter platform.
+ * It maintains full backward compatibility with JUnit 5 while adding improvements
+ * and new features. This class extends JUnit5TestSearcher to inherit all the 
+ * Jupiter test detection logic, only overriding the parts specific to JUnit 6:
+ * <ul>
+ *   <li>Test kind identification (JUnit6 vs JUnit5)</li>
+ *   <li>Test finder instance (uses JUnit6TestFinder for proper classpath resolution)</li>
+ * </ul>
+ * 
+ * @see JUnit5TestSearcher
+ * @see JUnit6TestFinder
  */
-public class JUnit6TestSearcher extends BaseFrameworkSearcher {
+public class JUnit6TestSearcher extends JUnit5TestSearcher {
 
     private static final JUnit6TestFinder JUNIT6_TEST_FINDER = new JUnit6TestFinder();
-
-    public static final String JUPITER_NESTED = "org.junit.jupiter.api.Nested";
-    public static final String JUNIT_PLATFORM_TESTABLE = "org.junit.platform.commons.annotation.Testable";
-
-    protected static final String DISPLAY_NAME_ANNOTATION_JUNIT6 = "org.junit.jupiter.api.DisplayName";
-
-    public JUnit6TestSearcher() {
-        super();
-        this.testMethodAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE };
-    }
 
     @Override
     public TestKind getTestKind() {
@@ -57,76 +51,12 @@ public class JUnit6TestSearcher extends BaseFrameworkSearcher {
 
     @Override
     public String getJdtTestKind() {
-        // JUnit 6 uses the same JDT test kind as JUnit 6
         return TestKindRegistry.JUNIT6_TEST_KIND_ID;
-    }
-
-    @Override
-    public boolean isTestMethod(IMethodBinding methodBinding) {
-        final int modifiers = methodBinding.getModifiers();
-        if (Modifier.isAbstract(modifiers) || Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers)) {
-            return false;
-        }
-
-        if (methodBinding.isConstructor()) {
-            return false;
-        }
-
-        return this.findAnnotation(methodBinding.getAnnotations(), this.getTestMethodAnnotations());
-    }
-
-    @Override
-    public boolean findAnnotation(IAnnotationBinding[] annotations, String[] annotationNames) {
-        for (final IAnnotationBinding annotation : annotations) {
-            if (annotation == null) {
-                continue;
-            }
-            for (final String annotationName : annotationNames) {
-                if (matchesName(annotation.getAnnotationType(), annotationName)) {
-                    return true;
-                }
-    
-                if (JUPITER_NESTED.equals(annotationName) || JUNIT_PLATFORM_TESTABLE.equals(annotationName)) {
-                    final Set<ITypeBinding> hierarchy = new HashSet<>();
-                    if (matchesNameInAnnotationHierarchy(annotation, annotationName, hierarchy)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     @Override
     public boolean isTestClass(IType type) throws JavaModelException {
         return JUNIT6_TEST_FINDER.isTest(type);
-    }
-
-    private boolean matchesName(ITypeBinding annotationType, String annotationName) {
-        return TestFrameworkUtils.isEquivalentAnnotationType(annotationType, annotationName);
-    }
-
-    private boolean matchesNameInAnnotationHierarchy(IAnnotationBinding annotation, String annotationName,
-            Set<ITypeBinding> hierarchy) {
-        final ITypeBinding type = annotation.getAnnotationType();
-        if (type == null) {
-            return false;
-        }
-
-        for (final IAnnotationBinding annotationBinding : type.getAnnotations()) {
-            if (annotationBinding == null) {
-                continue;
-            }
-            final ITypeBinding annotationType = annotationBinding.getAnnotationType();
-            if (annotationType != null && hierarchy.add(annotationType)) {
-                if (matchesName(annotationType, annotationName) ||
-                        matchesNameInAnnotationHierarchy(annotationBinding, annotationName, hierarchy)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     @Override

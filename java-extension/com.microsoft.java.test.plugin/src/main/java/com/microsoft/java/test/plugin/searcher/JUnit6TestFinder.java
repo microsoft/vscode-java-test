@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.RecordDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder;
@@ -42,11 +43,28 @@ import java.util.Set;
 /**
  * Test finder for JUnit 6 (Jupiter API 6.x).
  * 
- * This class is similar to JUnit5TestFinder but uses the JUnit 6 loader
+ * <p>This class is similar to JUnit5TestFinder but uses the JUnit 6 loader
  * to properly detect tests in JUnit 6 projects.
+ * 
+ * <p><b>Why this class exists:</b> Eclipse JDT does not yet have built-in support for JUnit 6.
+ * This is a custom implementation that will be needed until Eclipse JDT adds official JUnit 6 support.
+ * 
+ * <p><b>Key differences from JUnit5TestFinder:</b>
+ * <ul>
+ *   <li>Uses custom loader ID "org.eclipse.jdt.junit.loader.junit6"</li>
+ *   <li>Filters out abstract classes explicitly</li>
+ *   <li>Only supports JUnit Jupiter annotations (not JUnit 4 vintage)</li>
+ * </ul>
+ * 
+ * @see org.eclipse.jdt.internal.junit.launcher.JUnit5TestFinder
  */
 public class JUnit6TestFinder implements ITestFinder {
 
+    /**
+     * Custom loader ID for JUnit 6 tests.
+     * This is used by Eclipse JDT's classpath resolution mechanism to identify
+     * JUnit 6 test runtime dependencies.
+     */
     private static final String JUNIT6_LOADER = "org.eclipse.jdt.junit.loader.junit6";
 
     public JUnit6TestFinder() {
@@ -155,7 +173,7 @@ public class JUnit6TestFinder implements ITestFinder {
     }
 
     private boolean isTest(ITypeBinding typeBinding) {
-        if (typeBinding == null) {
+        if (typeBinding == null || Modifier.isAbstract(typeBinding.getModifiers())) {
             return false;
         }
 
@@ -207,6 +225,15 @@ public class JUnit6TestFinder implements ITestFinder {
         return false;
     }
 
+    /**
+     * Checks if an annotation or its meta-annotations is a JUnit testable annotation.
+     * This supports JUnit Platform's meta-annotation model where custom annotations
+     * can be annotated with @Testable to make them test annotations.
+     * 
+     * @param annotationType the annotation type to check
+     * @param visited set of already visited annotations to prevent infinite recursion
+     * @return true if this is a testable annotation or has @Testable in its hierarchy
+     */
     private boolean isTestableAnnotation(ITypeBinding annotationType, Set<ITypeBinding> visited) {
         if (annotationType == null || !visited.add(annotationType)) {
             return false;
@@ -214,7 +241,7 @@ public class JUnit6TestFinder implements ITestFinder {
 
         final String qualifiedName = annotationType.getQualifiedName();
         
-        // Direct check for @Testable
+        // Direct check for @Testable meta-annotation
         if ("org.junit.platform.commons.annotation.Testable".equals(qualifiedName)) {
             return true;
         }
