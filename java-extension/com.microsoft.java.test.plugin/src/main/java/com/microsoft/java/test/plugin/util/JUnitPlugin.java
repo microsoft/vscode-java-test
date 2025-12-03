@@ -54,57 +54,6 @@ public class JUnitPlugin implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         handler.addElementChangeListener();
         JUnitPlugin.context = context;
-        
-        // Diagnostic logging for JUnit runtime bundles
-        logBundleDiagnostics(context);
-    }
-    
-    private void logBundleDiagnostics(BundleContext context) {
-        final String[] bundlesToCheck = {
-            "org.eclipse.jdt.junit.runtime",
-            "org.eclipse.jdt.junit4.runtime",
-            "org.eclipse.jdt.junit5.runtime",
-            "org.eclipse.jdt.junit6.runtime",
-            "junit-jupiter-api",
-            "junit-jupiter-engine",
-            "junit-platform-launcher",
-            "junit-platform-commons",
-            "junit-platform-engine",
-            "org.junit",
-            "org.opentest4j"
-        };
-        
-        final StringBuilder sb = new StringBuilder();
-        sb.append("\n====== JUnit Bundle Diagnostics ======\n");
-        
-        for (final String symbolicName : bundlesToCheck) {
-            final Bundle[] bundles = Platform.getBundles(symbolicName, null);
-            if (bundles == null || bundles.length == 0) {
-                sb.append("MISSING: ").append(symbolicName).append("\n");
-            } else {
-                for (final Bundle bundle : bundles) {
-                    final String state = getBundleStateString(bundle.getState());
-                    sb.append("FOUND: ").append(symbolicName)
-                      .append(" v").append(bundle.getVersion())
-                      .append(" [").append(state).append("]\n");
-                }
-            }
-        }
-        
-        sb.append("======================================\n");
-        log(new Status(IStatus.INFO, PLUGIN_ID, sb.toString()));
-    }
-    
-    private String getBundleStateString(int state) {
-        switch (state) {
-            case Bundle.UNINSTALLED: return "UNINSTALLED";
-            case Bundle.INSTALLED: return "INSTALLED";
-            case Bundle.RESOLVED: return "RESOLVED";
-            case Bundle.STARTING: return "STARTING";
-            case Bundle.STOPPING: return "STOPPING";
-            case Bundle.ACTIVE: return "ACTIVE";
-            default: return "UNKNOWN(" + state + ")";
-        }
     }
 
     /*
