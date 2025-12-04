@@ -100,6 +100,7 @@ class TestInfo {
         final Map<String, String> valueMap = new HashMap<>();
         valueMap.put("testKind", testKind);
         valueMap.put("mainType", mainType);
+        valueMap.put("projectName", project.getName());
         return valueMap;
     }
 }

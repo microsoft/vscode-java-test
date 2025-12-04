@@ -24,19 +24,24 @@ public enum TestKind {
     @SerializedName("2")
     TestNG(2),
 
+    @SerializedName("3")
+    JUnit6(3),
+
     @SerializedName("100")
     None(100);
 
     private int value;
 
     public static TestKind fromString(String s) {
-        switch(s) {
+        switch (s) {
             case "Unknown":
                 return None;
             case "JUnit 4":
                 return JUnit;
             case "JUnit 5":
                 return JUnit5;
+            case "JUnit 6":
+                return JUnit6;
             case "TestNG":
                 return TestNG;
             default:
@@ -53,6 +58,8 @@ public enum TestKind {
                 return "JUnit 4";
             case JUnit5:
                 return "JUnit 5";
+            case JUnit6:
+                return "JUnit 6";
             case TestNG:
                 return "TestNG";
             default:
@@ -64,7 +71,7 @@ public enum TestKind {
         return this.value;
     }
 
-    private TestKind(int value){
+    private TestKind(int value) {
         this.value = value;
     }
 }

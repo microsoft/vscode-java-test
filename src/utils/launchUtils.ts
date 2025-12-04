@@ -60,7 +60,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             ],
             args: [
                 ...launchArguments.programArguments,
-                ...(testContext.kind === TestKind.JUnit5 ? parseTags(config) : [])
+                ...(testContext.kind === TestKind.JUnit5 || testContext.kind === TestKind.JUnit6 ? parseTags(config) : [])
             ],
         });
     }

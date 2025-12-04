@@ -9,24 +9,31 @@ const fse = require('fs-extra');
 
 fse.removeSync('server');
 const serverDir = path.resolve('java-extension');
+// Bundle prefixes to copy from the p2 repository.
+// Each prefix may match multiple versions (e.g., junit-jupiter-api_5.x and junit-jupiter-api_6.x)
+// to support both JUnit 5 and JUnit 6.
 const bundleList = [
     'org.eclipse.jdt.junit4.runtime_',
     'org.eclipse.jdt.junit5.runtime_',
-    'junit-jupiter-api',
-    'junit-jupiter-engine',
-    'junit-jupiter-migrationsupport',
-    'junit-jupiter-params',
-    'junit-vintage-engine',
-    'org.opentest4j',
-    'junit-platform-commons',
-    'junit-platform-engine',
-    'junit-platform-launcher',
-    'junit-platform-runner',
-    'junit-platform-suite-api',
-    'junit-platform-suite-commons',
-    'junit-platform-suite-engine',
-    'org.apiguardian.api',
-    'org.jacoco.core'
+    'org.eclipse.jdt.junit6.runtime_',
+    'org.eclipse.jdt.junit.runtime_',
+    'org.eclipse.jdt.junit.core_',
+    'org.junit_',
+    'junit-jupiter-api_',
+    'junit-jupiter-engine_',
+    'junit-jupiter-migrationsupport_',
+    'junit-jupiter-params_',
+    'junit-vintage-engine_',
+    'org.opentest4j_',
+    'junit-platform-commons_',
+    'junit-platform-engine_',
+    'junit-platform-launcher_',
+    'junit-platform-runner_',
+    'junit-platform-suite-api_',
+    'junit-platform-suite-commons_',
+    'junit-platform-suite-engine_',
+    'org.apiguardian.api_',
+    'org.jacoco.core_'
 ];
 // Set MAVEN_OPTS to disable XML entity size limits for JDK XML parser
 const env = { ...process.env };
@@ -49,33 +56,34 @@ function copy(sourceFolder, targetFolder, fileFilter) {
 }
 
 function updateVersion() {
-    // Update the version
+    // Update the version - rebuild javaExtensions from actual server folder contents
     const packageJsonData = require('../package.json');
-    const javaExtensions = packageJsonData.contributes.javaExtensions;
-    if (Array.isArray(javaExtensions)) {
-        packageJsonData.contributes.javaExtensions  = javaExtensions.map((extensionString) => {
-            const ind = extensionString.indexOf('_');
-            const fileName = findNewRequiredJar(extensionString.substring(extensionString.lastIndexOf('/') + 1, ind));
-            if (ind >= 0) {
-                return extensionString.substring(0, extensionString.lastIndexOf('/') + 1) + fileName;
-            }
-            return extensionString;
-        });
-
-        fs.writeFileSync(path.resolve('package.json'), JSON.stringify(packageJsonData, null, 4));
-        fs.appendFileSync(path.resolve('package.json'), os.EOL);
-    }
-}
-
-// The plugin jar follows the name convention: <name>_<version>.jar
-function findNewRequiredJar(fileName) {
-    fileName = fileName + "_";
     const destFolder = path.resolve('./server');
     const files = fs.readdirSync(destFolder);
-    const f = files.find((file) => {
-        return file.indexOf(fileName) >= 0;
-    });
-    return f;
+    
+    // Build new javaExtensions list from all jar files in server folder
+    // that match our bundleList prefixes, plus the plugin jar
+    const newJavaExtensions = [];
+    
+    for (const file of files) {
+        if (file.endsWith('.jar')) {
+            // Check if this file matches any bundle prefix or is the plugin jar
+            const isBundle = bundleList.some(prefix => file.startsWith(prefix));
+            const isPlugin = file.startsWith('com.microsoft.java.test.plugin');
+            
+            if (isBundle || isPlugin) {
+                newJavaExtensions.push('./server/' + file);
+            }
+        }
+    }
+    
+    // Sort for consistent ordering
+    newJavaExtensions.sort();
+    
+    packageJsonData.contributes.javaExtensions = newJavaExtensions;
+
+    fs.writeFileSync(path.resolve('package.json'), JSON.stringify(packageJsonData, null, 4));
+    fs.appendFileSync(path.resolve('package.json'), os.EOL);
 }
 
 function downloadJacocoAgent() {
