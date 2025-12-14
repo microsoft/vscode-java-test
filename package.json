@@ -353,6 +353,14 @@
                                     "type": "boolean",
                                     "description": "%configuration.java.test.config.coverage.appendResult.description%",
                                     "default": true
+                                },
+                                "excludes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "%configuration.java.test.config.coverage.excludes.description%",
+                                    "default": []
                                 }
                             }
                         }
@@ -513,6 +521,14 @@
                                         "type": "boolean",
                                         "description": "%configuration.java.test.config.coverage.appendResult.description%",
                                         "default": true
+                                    },
+                                    "excludes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "%configuration.java.test.config.coverage.excludes.description%",
+                                        "default": []
                                     }
                                 }
                             }
