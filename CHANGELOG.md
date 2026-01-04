@@ -4,6 +4,11 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.43.3
+## What's Changed
+* feat - junit 6 support in https://github.com/microsoft/vscode-java-test/pull/1820
+* fix - update build script for xml size limit in https://github.com/microsoft/vscode-java-test/pull/1815
+
 ## 0.43.2
 ## What's Changed
 * fix - Update to jacoco 0.8.14 by @fbricon in https://github.com/microsoft/vscode-java-test/pull/1798
