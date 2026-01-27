@@ -31,6 +31,8 @@ public interface TestFrameworkSearcher {
 
     boolean isTestMethod(IMethodBinding methodBinding);
 
+    String getDisplayName(IMethodBinding methodBinding);
+
     boolean isTestClass(IType type) throws JavaModelException;
 
     String[] getTestMethodAnnotations();
