@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.43.2",
+    "version": "0.44.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -77,13 +77,10 @@
             "./server/junit-platform-suite-engine_6.0.1.jar",
             "./server/junit-vintage-engine_5.14.1.jar",
             "./server/org.apiguardian.api_1.1.2.jar",
-            "./server/org.eclipse.jdt.junit.core_3.14.0.v20251201-1407.jar",
-            "./server/org.eclipse.jdt.junit.runtime_3.8.0.v20251113-1434.jar",
             "./server/org.eclipse.jdt.junit4.runtime_1.4.0.v20251113-1434.jar",
             "./server/org.eclipse.jdt.junit5.runtime_1.2.0.v20251113-1434.jar",
             "./server/org.eclipse.jdt.junit6.runtime_1.0.0.v20251112-1701.jar",
             "./server/org.jacoco.core_0.8.14.202510111229.jar",
-            "./server/org.junit_4.13.2.v20240929-1000.jar",
             "./server/org.opentest4j_1.3.0.jar"
         ],
         "viewsWelcome": [
@@ -560,7 +557,7 @@
         "fs-extra": "^10.1.0",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.6.3",
-        "lodash": "^4.17.21",
+        "lodash": "^4.17.23",
         "lru-cache": "^7.17.0",
         "vscode-extension-telemetry-wrapper": "^0.14.0",
         "vscode-languageclient": "6.0.0-next.9",
