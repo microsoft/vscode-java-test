@@ -147,7 +147,8 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             arguments.add("-test");
             final IMethod method = (IMethod) JavaCore.create(this.args.testNames[0]);
             String testName = method.getElementName();
-            if (this.args.testKind == TestKind.JUnit5 && method.getParameters().length > 0) {
+            if ((this.args.testKind == TestKind.JUnit5 || this.args.testKind == TestKind.JUnit6) &&
+                    method.getParameters().length > 0) {
                 final ICompilationUnit unit = method.getCompilationUnit();
                 if (unit == null) {
                     throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,

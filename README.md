@@ -23,6 +23,7 @@ A lightweight extension to run and debug Java test cases in Visual Studio Code. 
 
 - JUnit 4 (v4.8.0+)
 - JUnit 5 (v5.1.0+)
+- JUnit 6 (v6.0.1+)
 - TestNG (v6.9.13.3+)
 
 > Note: JUnit 3 styled tests are not supported in this extension (i.e. extends `junit.framework.TestCase`).
@@ -106,9 +107,13 @@ There are other VS Code embedded commands for testing, which can be found by sea
 
 There are some other VS Code embedded settings for testing, which can be found by searching `testing` in the Settings view.
 ## Project Setup
+### JUnit 6
+
+Please refer to [Getting Started](https://docs.junit.org/6.0.1/overview.html#overview-getting-started) from the JUnit 6's official document for getting started documentation.
+
 ### JUnit 5
 
-Please refer to [Getting Started](https://junit.org/junit5/docs/current/user-guide/#overview-getting-started) from the JUnit 5's official document for getting started documentation.
+Please refer to [Getting Started](https://docs.junit.org/5.14.1/overview.html) from the JUnit 5's official document for getting started documentation.
 
 > Note: If your project does not use build tools(Maven/Gradle/...), please make sure [junit-platform-console-standalone.jar](https://search.maven.org/search?q=g:org.junit.platform%20AND%20a:junit-platform-console-standalone) is on your project classpath.
 

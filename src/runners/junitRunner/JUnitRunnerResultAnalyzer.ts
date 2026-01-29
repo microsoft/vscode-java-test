@@ -324,6 +324,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             'org.eclipse.jdt.internal.junit.runner.',
             'org.eclipse.jdt.internal.junit4.runner.',
             'org.eclipse.jdt.internal.junit5.runner.',
+            'org.eclipse.jdt.internal.junit6.runner.',
             'org.eclipse.jdt.internal.junit.ui.',
             'junit.framework.TestCase',
             'junit.framework.TestResult',
@@ -349,7 +350,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const isDynamic: boolean = result[4] === 'true';
             const parentIndex: string = result[5];
             const displayName: string = result[6].replace(/\\,/g, ',');
-            const uniqueId: string | undefined = this.testContext.kind === TestKind.JUnit5 ?
+            const uniqueId: string | undefined = (this.testContext.kind === TestKind.JUnit5 || this.testContext.kind === TestKind.JUnit6) ?
                 result[8]?.replace(/\\,/g, ',') : undefined;
 
             let testItem: TestItem | undefined;
@@ -398,7 +399,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 }
 
                 if (testItem) {
-                    if (dataCache.get(testItem)?.testKind === TestKind.JUnit5 &&
+                    if ((dataCache.get(testItem)?.testKind === TestKind.JUnit5 ||
+                        dataCache.get(testItem)?.testKind === TestKind.JUnit6) &&
                         this.getLabelWithoutCodicon(testItem.label) !== displayName) {
                         testItem.description = displayName;
                     } else {
