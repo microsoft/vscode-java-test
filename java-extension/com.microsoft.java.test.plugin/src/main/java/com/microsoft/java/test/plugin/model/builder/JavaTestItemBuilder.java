@@ -15,13 +15,14 @@ import com.microsoft.java.test.plugin.model.JavaTestItem;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.TestItemUtils;
-
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.manipulation.JavaElementLabelsCore;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
@@ -36,6 +37,7 @@ public class JavaTestItemBuilder {
     private IJavaElement element;
     private TestLevel level;
     private TestKind kind;
+    private String displayName;
 
     public JavaTestItemBuilder setJavaElement(IJavaElement element) {
         this.element = element;
@@ -52,31 +54,50 @@ public class JavaTestItemBuilder {
         return this;
     }
 
+    public JavaTestItemBuilder setDisplayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+
     public JavaTestItem build() throws JavaModelException {
         if (this.element == null || this.level == null || this.kind == null) {
             throw new IllegalArgumentException("Failed to build Java test item due to missing arguments");
         }
 
-        final String displayName;
         String uri = null;
-        if (this.element instanceof IJavaProject) {
-            final IJavaProject javaProject = (IJavaProject) this.element;
-            final IProject project = javaProject.getProject();
-            if (ProjectUtils.isVisibleProject(project)) {
-                displayName = project.getName();
+        if (this.displayName == null) {
+            if (this.element instanceof IJavaProject) {
+                final IJavaProject javaProject = (IJavaProject) this.element;
+                final IProject project = javaProject.getProject();
+                if (ProjectUtils.isVisibleProject(project)) {
+                    displayName = project.getName();
+                } else {
+                    final IPath realPath = ProjectUtils.getProjectRealFolder(project);
+                    displayName = realPath.lastSegment();
+                    uri = realPath.toFile().toURI().toString();
+                }
+            } else if (this.element instanceof IPackageFragment &&
+                    ((IPackageFragment) this.element).isDefaultPackage()) {
+                displayName = DEFAULT_PACKAGE_NAME;
+                final IResource resource = getResource((IPackageFragment) this.element);
+                if (resource == null || !resource.exists()) {
+                    return null;
+                }
+                uri = JDTUtils.getFileURI(resource);
             } else {
-                final IPath realPath = ProjectUtils.getProjectRealFolder(project);
-                displayName = realPath.lastSegment();
-                uri = realPath.toFile().toURI().toString();
+                displayName = JavaElementLabelsCore.getElementLabel(this.element, JavaElementLabelsCore.ALL_DEFAULT);
             }
-        } else if (this.element instanceof IPackageFragment && ((IPackageFragment) this.element).isDefaultPackage()) {
-            displayName = DEFAULT_PACKAGE_NAME;
-        } else {
-            displayName = JavaElementLabelsCore.getElementLabel(this.element, JavaElementLabelsCore.ALL_DEFAULT);
         }
         final String fullName = TestItemUtils.parseFullName(this.element, this.level, this.kind);
         if (uri == null) {
-            uri = JDTUtils.getFileURI(this.element.getResource());
+            IResource resource = this.element.getResource();
+            if (resource == null && this.element instanceof IPackageFragment) {
+                resource = getResource((IPackageFragment) this.element);
+            }
+            if (resource == null || !resource.exists()) {
+                return null;
+            }
+            uri = JDTUtils.getFileURI(resource);
         }
         Range range = null;
         if (this.level == TestLevel.CLASS || this.level == TestLevel.METHOD) {
@@ -88,5 +109,23 @@ public class JavaTestItemBuilder {
         result.setJdtHandler(this.element.getHandleIdentifier());
 
         return result;
+    }
+
+    private IResource getResource(IPackageFragment packageFragment) {
+        if (packageFragment == null) {
+            return null;
+        }
+        IResource resource = packageFragment.getResource();
+        if (resource == null) {
+            final IJavaElement e = packageFragment.getParent();
+            if (e instanceof PackageFragmentRoot) {
+                final PackageFragmentRoot root = (PackageFragmentRoot) e;
+                resource = root.getResource();
+                if (resource == null) {
+                    resource = root.resource(root);
+                }
+            }
+        }
+        return resource;
     }
 }

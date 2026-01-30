@@ -81,4 +81,6 @@ export namespace JUnitTestPart {
     export const TEST_TEMPLATE_INVOCATION: string = 'test-template-invocation:';
     export const DYNAMIC_CONTAINER: string = 'dynamic-container:';
     export const DYNAMIC_TEST: string = 'dynamic-test:';
+    export const SPEC: string = 'spec:';
+    export const FEATURE: string = 'feature:';
 }
