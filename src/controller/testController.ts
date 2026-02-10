@@ -177,6 +177,8 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     let coverageProvider: JavaTestCoverageProvider | undefined;
     if (request.profile?.kind === TestRunProfileKind.Coverage) {
         coverageProvider = new JavaTestCoverageProvider();
+        // QUESTION: Fix this?
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         request.profile.loadDetailedCoverage = (_testRun: TestRun, fileCoverage: FileCoverage, _token: CancellationToken): Promise<FileCoverageDetail[]> => {
             return Promise.resolve(coverageProvider!.getCoverageDetails(fileCoverage.uri));
         };
@@ -265,7 +267,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         }
                     }
                     if (request.profile?.kind === TestRunProfileKind.Coverage) {
-                        await coverageProvider!.provideFileCoverage(run, projectName);
+                        await coverageProvider!.provideFileCoverage(testContext);
                     }
                 }
             }
