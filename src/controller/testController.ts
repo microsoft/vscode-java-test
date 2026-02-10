@@ -265,7 +265,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         }
                     }
                     if (request.profile?.kind === TestRunProfileKind.Coverage) {
-                        await coverageProvider!.provideFileCoverage(run, projectName);
+                        await coverageProvider!.provideFileCoverage(testContext);
                     }
                 }
             }

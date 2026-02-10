@@ -350,6 +350,14 @@
                                     "type": "boolean",
                                     "description": "%configuration.java.test.config.coverage.appendResult.description%",
                                     "default": true
+                                },
+                                "excludes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "%configuration.java.test.config.coverage.excludes.description%",
+                                    "default": []
                                 }
                             }
                         }
@@ -510,6 +518,14 @@
                                         "type": "boolean",
                                         "description": "%configuration.java.test.config.coverage.appendResult.description%",
                                         "default": true
+                                    },
+                                    "excludes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "%configuration.java.test.config.coverage.excludes.description%",
+                                        "default": []
                                     }
                                 }
                             }
@@ -559,6 +575,7 @@
         "iconv-lite": "^0.6.3",
         "lodash": "^4.17.23",
         "lru-cache": "^7.17.0",
+        "minimatch": "^3.1.2",
         "vscode-extension-telemetry-wrapper": "^0.14.0",
         "vscode-languageclient": "6.0.0-next.9",
         "vscode-tas-client": "^0.1.75"

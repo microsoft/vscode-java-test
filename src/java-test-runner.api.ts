@@ -353,6 +353,14 @@ export interface IExecutionConfig {
          * @since 0.41.0
          */
         appendResult?: boolean;
+
+        /**
+         * A list of source files that should be excluded from coverage analysis.
+         * They can use any valid [minimatch](https://www.npmjs.com/package/minimatch)
+         * pattern.
+         * @since 0.44.0
+         */
+        excludes?: string[];
     }
 
     /**

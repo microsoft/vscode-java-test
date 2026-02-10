@@ -36,6 +36,7 @@
     "configuration.java.test.config.javaExec.description": "The path to java executable to use. For example: `C:\\Program Files\\jdk\\bin\\java.exe`. If unset project JDK's java executable is used.",
     "configuration.java.test.config.coverage.description": "The configurations for test coverage.",
     "configuration.java.test.config.coverage.appendResult.description": "Whether the coverage result is appended.",
+    "configuration.java.test.config.coverage.excludes.description": "A list of source files that should be excluded from coverage analysis. They can use any valid [minimatch](https://www.npmjs.com/package/minimatch) pattern.",
     "contributes.viewsWelcome.inLightWeightMode": "No test cases are listed because the Java Language Server is currently running in [LightWeight Mode](https://aka.ms/vscode-java-lightweight). To show test cases, click on the button to switch to Standard Mode.\n[Switch to Standard Mode](command:java.server.mode.switch?%5B%22Standard%22,true%5D)",
     "contributes.viewsWelcome.enableTests": "Click below button to configure a test framework for your project.\n[Enable Java Tests](command:_java.test.enableTests)"
 }

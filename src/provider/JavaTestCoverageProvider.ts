@@ -1,19 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, TestRun, Uri } from 'vscode';
+import * as minimatch from 'minimatch';
+import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, Uri } from 'vscode';
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { JavaTestRunnerDelegateCommands } from '../constants';
+import { IRunTestContext } from '../java-test-runner.api';
 
 export class JavaTestCoverageProvider {
 
     private coverageDetails: Map<Uri, FileCoverageDetail[]> = new Map<Uri, FileCoverageDetail[]>();
 
-    public async provideFileCoverage(run: TestRun, projectName: string): Promise<void> {
+    public async provideFileCoverage({testRun: run, projectName, testConfig}: IRunTestContext): Promise<void> {
         const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
             projectName, getJacocoReportBasePath(projectName)) || [];
-        for (const sourceFileCoverage of sourceFileCoverages) {
+        const excludePatterns: minimatch.Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((pattern: string) =>
+            new minimatch.Minimatch(pattern, {flipNegate: true, nonegate: true}));
+        const filteredCoverages: ISourceFileCoverage[] = excludePatterns.length > 0
+            ? sourceFileCoverages.filter((sourceFileCoverage: ISourceFileCoverage) => {
+                const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
+                return !excludePatterns.some((exclusion: minimatch.Minimatch) => exclusion.match(uri.fsPath));
+            })
+            : sourceFileCoverages;
+        for (const sourceFileCoverage of filteredCoverages) {
             const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
             const detailedCoverage: FileCoverageDetail[] = [];
             for (const lineCoverage of sourceFileCoverage.lineCoverages) {
