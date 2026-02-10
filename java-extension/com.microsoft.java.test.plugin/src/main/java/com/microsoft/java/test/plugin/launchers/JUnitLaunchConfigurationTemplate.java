@@ -23,6 +23,7 @@ public class JUnitLaunchConfigurationTemplate {
           "<booleanAttribute key=\"org.eclipse.jdt.junit.KEEPRUNNING_ATTR\" value=\"false\"/>\n" +
           "<stringAttribute key=\"org.eclipse.jdt.junit.TEST_KIND\" value=\"${testKind}\"/>\n" +
           "<stringAttribute key=\"org.eclipse.jdt.launching.MAIN_TYPE\" value=\"${mainType}\"/>\n" +
+          "<stringAttribute key=\"org.eclipse.jdt.launching.PROJECT_ATTR\" value=\"${projectName}\"/>\n" +
           "<stringAttribute key=\"org.eclipse.jdt.launching.VM_ARGUMENTS\" value=\"-ea\"/>\n" +
         "</launchConfiguration>\n";
     //@formatter:on

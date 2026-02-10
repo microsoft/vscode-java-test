@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import * as os from 'os';
 import { DebugConfiguration, TestItem, TestRunProfileKind } from 'vscode';
 import { sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
 import { JavaTestRunnerDelegateCommands } from '../constants';
@@ -60,7 +59,7 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
             ],
             args: [
                 ...launchArguments.programArguments,
-                ...(testContext.kind === TestKind.JUnit5 ? parseTags(config) : [])
+                ...(testContext.kind === TestKind.JUnit5 || testContext.kind === TestKind.JUnit6 ? parseTags(config) : [])
             ],
         });
     }
@@ -69,9 +68,6 @@ export async function resolveLaunchConfigurationForRunner(runner: BaseRunner, te
         let agentArg: string = `-javaagent:${getJacocoAgentPath(debugConfiguration)}=destfile=${getJacocoDataFilePath(launchArguments.projectName)}`;
         if (config?.coverage?.appendResult === false) {
             agentArg += ',append=false';
-        }
-        if (os.platform() === 'win32') {
-            agentArg = `"${agentArg}"`;
         }
         (debugConfiguration.vmArgs as string[]).push(agentArg);
     }

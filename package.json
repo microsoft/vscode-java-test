@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/Microsoft/vscode-java-test"
     },
-    "version": "0.43.2",
+    "version": "0.44.0",
     "publisher": "vscjava",
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-java-test/issues"
@@ -55,24 +55,33 @@
     "main": "./main.js",
     "contributes": {
         "javaExtensions": [
-            "./server/junit-jupiter-api_5.11.0.jar",
-            "./server/junit-jupiter-engine_5.11.0.jar",
-            "./server/junit-jupiter-migrationsupport_5.11.0.jar",
-            "./server/junit-jupiter-params_5.11.0.jar",
-            "./server/junit-platform-commons_1.11.0.jar",
-            "./server/junit-platform-engine_1.11.0.jar",
-            "./server/junit-platform-launcher_1.11.0.jar",
-            "./server/junit-platform-runner_1.11.0.jar",
-            "./server/junit-platform-suite-api_1.11.0.jar",
-            "./server/junit-platform-suite-commons_1.11.0.jar",
-            "./server/junit-platform-suite-engine_1.11.0.jar",
-            "./server/junit-vintage-engine_5.11.0.jar",
+            "./server/com.microsoft.java.test.plugin-0.43.1.jar",
+            "./server/junit-jupiter-api_5.14.1.jar",
+            "./server/junit-jupiter-api_6.0.1.jar",
+            "./server/junit-jupiter-engine_5.14.1.jar",
+            "./server/junit-jupiter-engine_6.0.1.jar",
+            "./server/junit-jupiter-migrationsupport_5.14.1.jar",
+            "./server/junit-jupiter-params_5.14.1.jar",
+            "./server/junit-jupiter-params_6.0.1.jar",
+            "./server/junit-platform-commons_1.14.1.jar",
+            "./server/junit-platform-commons_6.0.1.jar",
+            "./server/junit-platform-engine_1.14.1.jar",
+            "./server/junit-platform-engine_6.0.1.jar",
+            "./server/junit-platform-launcher_1.14.1.jar",
+            "./server/junit-platform-launcher_6.0.1.jar",
+            "./server/junit-platform-runner_1.14.1.jar",
+            "./server/junit-platform-suite-api_1.14.1.jar",
+            "./server/junit-platform-suite-api_6.0.1.jar",
+            "./server/junit-platform-suite-commons_1.14.1.jar",
+            "./server/junit-platform-suite-engine_1.14.1.jar",
+            "./server/junit-platform-suite-engine_6.0.1.jar",
+            "./server/junit-vintage-engine_5.14.1.jar",
             "./server/org.apiguardian.api_1.1.2.jar",
-            "./server/org.eclipse.jdt.junit4.runtime_1.3.100.v20231214-1952.jar",
-            "./server/org.eclipse.jdt.junit5.runtime_1.1.300.v20231214-1952.jar",
-            "./server/org.opentest4j_1.3.0.jar",
+            "./server/org.eclipse.jdt.junit4.runtime_1.4.0.v20251113-1434.jar",
+            "./server/org.eclipse.jdt.junit5.runtime_1.2.0.v20251113-1434.jar",
+            "./server/org.eclipse.jdt.junit6.runtime_1.0.0.v20251112-1701.jar",
             "./server/org.jacoco.core_0.8.14.202510111229.jar",
-            "./server/com.microsoft.java.test.plugin-0.43.1.jar"
+            "./server/org.opentest4j_1.3.0.jar"
         ],
         "viewsWelcome": [
             {
@@ -557,14 +566,14 @@
         "sinon": "^14.0.2",
         "ts-loader": "^9.4.2",
         "typescript": "^4.9.4",
-        "webpack": "^5.94.0",
+        "webpack": "^5.105.0",
         "webpack-cli": "^4.10.0"
     },
     "dependencies": {
         "fs-extra": "^10.1.0",
         "get-port": "^4.2.0",
         "iconv-lite": "^0.6.3",
-        "lodash": "^4.17.21",
+        "lodash": "^4.17.23",
         "lru-cache": "^7.17.0",
         "vscode-extension-telemetry-wrapper": "^0.14.0",
         "vscode-languageclient": "6.0.0-next.9",
