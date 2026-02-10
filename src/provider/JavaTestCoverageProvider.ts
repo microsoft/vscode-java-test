@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as minimatch from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { BranchCoverage, DeclarationCoverage, FileCoverage, FileCoverageDetail, Position, StatementCoverage, Uri } from 'vscode';
 import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
@@ -15,12 +15,12 @@ export class JavaTestCoverageProvider {
     public async provideFileCoverage({testRun: run, projectName, testConfig}: IRunTestContext): Promise<void> {
         const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
             projectName, getJacocoReportBasePath(projectName)) || [];
-        const excludePatterns: minimatch.Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((pattern: string) =>
-            new minimatch.Minimatch(pattern, {flipNegate: true, nonegate: true}));
+        const excludePatterns: Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((pattern: string) =>
+            new Minimatch(pattern, {nonegate: true}));
         const filteredCoverages: ISourceFileCoverage[] = excludePatterns.length > 0
             ? sourceFileCoverages.filter((sourceFileCoverage: ISourceFileCoverage) => {
                 const uri: Uri = Uri.parse(sourceFileCoverage.uriString);
-                return !excludePatterns.some((exclusion: minimatch.Minimatch) => exclusion.match(uri.fsPath));
+                return !excludePatterns.some((exclusion: Minimatch) => exclusion.match(uri.fsPath));
             })
             : sourceFileCoverages;
         for (const sourceFileCoverage of filteredCoverages) {
