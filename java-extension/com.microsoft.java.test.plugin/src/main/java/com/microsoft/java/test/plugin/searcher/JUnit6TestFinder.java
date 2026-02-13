@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.RecordDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.internal.junit.JUnitCorePlugin;
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder;
 import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine;
 
@@ -66,6 +67,157 @@ public class JUnit6TestFinder implements ITestFinder {
      * JUnit 6 test runtime dependencies.
      */
     private static final String JUNIT6_LOADER = "org.eclipse.jdt.junit.loader.junit6";
+
+    private static class Annotation {
+
+        private static final Annotation RUN_WITH = new Annotation("org.junit.runner.RunWith"); //$NON-NLS-1$
+
+        private static final Annotation TEST_4 = new Annotation("org.junit.Test"); //$NON-NLS-1$
+
+        private static final Annotation SUITE = new Annotation("org.junit.platform.suite.api.Suite"); //$NON-NLS-1$
+
+        private static final Annotation TESTABLE = new Annotation(JUnitCorePlugin.JUNIT5_TESTABLE_ANNOTATION_NAME);
+
+        private static final Annotation NESTED = new Annotation(JUnitCorePlugin.JUNIT5_JUPITER_NESTED_ANNOTATION_NAME);
+
+        private final String fName;
+
+        private Annotation(String name) {
+            fName = name;
+        }
+
+        String getName() {
+            return fName;
+        }
+
+        boolean annotatesAtLeastOneInnerClass(ITypeBinding type) {
+            if (type == null) {
+                return false;
+            }
+            if (annotatesDeclaredTypes(type)) {
+                return true;
+            }
+            final ITypeBinding superClass = type.getSuperclass();
+            if (annotatesAtLeastOneInnerClass(superClass)) {
+                return true;
+            }
+            final ITypeBinding[] interfaces = type.getInterfaces();
+            for (final ITypeBinding intf : interfaces) {
+                if (annotatesAtLeastOneInnerClass(intf)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean annotatesDeclaredTypes(ITypeBinding type) {
+            final ITypeBinding[] declaredTypes = type.getDeclaredTypes();
+            for (final ITypeBinding declaredType : declaredTypes) {
+                if (isNestedClass(declaredType)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean isNestedClass(ITypeBinding type) {
+            final int modifiers = type.getModifiers();
+            if (type.isInterface() || Modifier.isPrivate(modifiers) || Modifier.isStatic(modifiers)) {
+                return false;
+            }
+            if (annotates(type.getAnnotations())) {
+                return true;
+            }
+            return false;
+        }
+
+        boolean annotatesTypeOrSuperTypes(ITypeBinding type) {
+            while (type != null) {
+                if (annotates(type.getAnnotations())) {
+                    return true;
+                }
+                type = type.getSuperclass();
+            }
+            return false;
+        }
+
+        boolean annotatesAtLeastOneMethod(ITypeBinding type) {
+            if (type == null) {
+                return false;
+            }
+            if (annotatesDeclaredMethods(type)) {
+                return true;
+            }
+            final ITypeBinding superClass = type.getSuperclass();
+            if (annotatesAtLeastOneMethod(superClass)) {
+                return true;
+            }
+            final ITypeBinding[] interfaces = type.getInterfaces();
+            for (final ITypeBinding intf : interfaces) {
+                if (annotatesAtLeastOneMethod(intf)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean annotatesDeclaredMethods(ITypeBinding type) {
+            final IMethodBinding[] declaredMethods = type.getDeclaredMethods();
+            for (final IMethodBinding curr : declaredMethods) {
+                if (annotates(curr.getAnnotations())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // See JUnitLaunchConfigurationTab#isAnnotatedWithTestable also.
+        private boolean annotates(IAnnotationBinding[] annotations) {
+            for (final IAnnotationBinding annotation : annotations) {
+                if (annotation == null) {
+                    continue;
+                }
+                if (matchesName(annotation.getAnnotationType())) {
+                    return true;
+                }
+                if (TESTABLE.getName().equals(fName) || NESTED.getName().equals(fName)) {
+                    final Set<ITypeBinding> hierarchy = new HashSet<>();
+                    if (matchesNameInAnnotationHierarchy(annotation, hierarchy)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private boolean matchesName(ITypeBinding annotationType) {
+            if (annotationType != null) {
+                final String qualifiedName = annotationType.getQualifiedName();
+                if (qualifiedName.equals(fName)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean matchesNameInAnnotationHierarchy(IAnnotationBinding annotation, Set<ITypeBinding> hierarchy) {
+            final ITypeBinding type = annotation.getAnnotationType();
+            if (type != null) {
+                for (final IAnnotationBinding annotationBinding : type.getAnnotations()) {
+                    if (annotationBinding != null) {
+                        final ITypeBinding annotationType = annotationBinding.getAnnotationType();
+                        if (annotationType != null && hierarchy.add(annotationType)) {
+                            if (matchesName(annotationType) ||
+                                    matchesNameInAnnotationHierarchy(annotationBinding, hierarchy)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
 
     public JUnit6TestFinder() {
     }
@@ -172,32 +324,20 @@ public class JUnit6TestFinder implements ITestFinder {
         return range != null && range.getOffset() != -1;
     }
 
-    private boolean isTest(ITypeBinding typeBinding) {
-        if (typeBinding == null || Modifier.isAbstract(typeBinding.getModifiers())) {
+    private boolean isTest(ITypeBinding binding) {
+        if (binding == null || Modifier.isAbstract(binding.getModifiers())) {
             return false;
         }
 
-        // Check if the type itself has test methods
-        if (hasTestMethods(typeBinding)) {
+        if (Annotation.RUN_WITH.annotatesTypeOrSuperTypes(binding) ||
+                Annotation.SUITE.annotatesTypeOrSuperTypes(binding) ||
+                Annotation.TEST_4.annotatesAtLeastOneMethod(binding) ||
+                Annotation.TESTABLE.annotatesAtLeastOneMethod(binding) ||
+                Annotation.TESTABLE.annotatesTypeOrSuperTypes(binding) ||
+                Annotation.NESTED.annotatesAtLeastOneInnerClass(binding)) {
             return true;
         }
-
-        // Check nested classes with @Nested annotation
-        for (final ITypeBinding nestedType : typeBinding.getDeclaredTypes()) {
-            if (isNestedTestClass(nestedType)) {
-                return true;
-            }
-        }
-
-        // Check superclass
-        final ITypeBinding superclass = typeBinding.getSuperclass();
-        if (superclass != null && !superclass.getQualifiedName().equals("java.lang.Object")) {
-            if (isTest(superclass)) {
-                return true;
-            }
-        }
-
-        return false;
+        return CoreTestSearchEngine.isTestImplementor(binding);
     }
 
     private boolean hasTestMethods(ITypeBinding typeBinding) {

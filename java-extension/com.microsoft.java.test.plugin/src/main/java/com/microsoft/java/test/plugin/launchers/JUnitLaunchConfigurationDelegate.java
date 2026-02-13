@@ -151,34 +151,39 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     method.getParameters().length > 0) {
                 final ICompilationUnit unit = method.getCompilationUnit();
                 if (unit == null) {
-                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            "Cannot get compilation unit of method" + method.getElementName(), null)); //$NON-NLS-1$
-                }
-                final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
-                        false /*fromCache*/, new NullProgressMonitor());
-                final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method, root);
-                if (methodDeclaration == null) {
-                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                    // binary method
+                    if (method.getDeclaringType() == null) {
+                        throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                                "Cannot get compilation unit of method" + method.getElementName(), null)); //$NON-NLS-1$
+                    }
+                } else {
+                    final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
+                            false /* fromCache */, new NullProgressMonitor());
+                    final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method,
+                            root);
+                    if (methodDeclaration == null) {
+                        throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
                             "Cannot get method declaration of method" + method.getElementName(), null)); //$NON-NLS-1$
-                }
+                    }
 
-                final List<String> parameters = new LinkedList<>();
-                for (final Object obj : methodDeclaration.parameters()) {
-                    if (obj instanceof SingleVariableDeclaration) {
-                        final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
-                                .getType().resolveBinding();
-                        if (paramTypeBinding == null) {
-                            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                                    "Cannot set set argument for method" + methodDeclaration.toString(), null));
-                        } else if (paramTypeBinding.isPrimitive()) {
-                            parameters.add(paramTypeBinding.getQualifiedName());
-                        } else {
-                            parameters.add(paramTypeBinding.getBinaryName());
+                    final List<String> parameters = new LinkedList<>();
+                    for (final Object obj : methodDeclaration.parameters()) {
+                        if (obj instanceof SingleVariableDeclaration) {
+                            final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj).getType()
+                                    .resolveBinding();
+                            if (paramTypeBinding == null) {
+                                throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                                        "Cannot set set argument for method" + methodDeclaration.toString(), null));
+                            } else if (paramTypeBinding.isPrimitive()) {
+                                parameters.add(paramTypeBinding.getQualifiedName());
+                            } else {
+                                parameters.add(paramTypeBinding.getBinaryName());
+                            }
                         }
                     }
-                }
-                if (parameters.size() > 0) {
-                    testName += "(" + String.join(",", parameters) + ")";
+                    if (parameters.size() > 0) {
+                        testName += "(" + String.join(",", parameters) + ")";
+                    }
                 }
             }
             arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
