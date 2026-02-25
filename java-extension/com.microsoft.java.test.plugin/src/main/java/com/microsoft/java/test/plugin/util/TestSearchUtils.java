@@ -183,7 +183,8 @@ public class TestSearchUtils {
                 } else {
                     // 1. We suppose a class can only use one test framework
                     // 2. If more accurate kind is available, use it.
-                    if (classItem.getTestKind() == TestKind.JUnit5 && kind == TestKind.JUnit) {
+                    if ((classItem.getTestKind() == TestKind.JUnit5 ||
+                            classItem.getTestKind() == TestKind.JUnit6) && kind == TestKind.JUnit) {
                         classItem.setTestKind(TestKind.JUnit);
                     }
                 }
@@ -386,7 +387,20 @@ public class TestSearchUtils {
         final List<JavaTestItem> testMethods = new LinkedList<>();
         searchers = searchers.stream().filter(s -> {
             try {
-                return CoreTestSearchEngine.isAccessibleClass(type, s.getJdtTestKind());
+                if (CoreTestSearchEngine.isAccessibleClass(type, s.getJdtTestKind())) {
+                    return true;
+                }
+                // For JUnit 6, Eclipse JDT's isAccessibleClass() only applies the
+                // relaxed @Nested class rules (non-static, non-public inner classes)
+                // when testKindId equals JUNIT5_TEST_KIND_ID. For JUNIT6_TEST_KIND_ID,
+                // it falls into the else branch requiring static + public, which
+                // incorrectly rejects valid @Nested test classes. Fall back to
+                // JUnit 5 accessibility check since JUnit 6 shares the same rules.
+                if (s.getTestKind() == TestKind.JUnit6) {
+                    return CoreTestSearchEngine.isAccessibleClass(type,
+                            org.eclipse.jdt.internal.junit.launcher.TestKindRegistry.JUNIT5_TEST_KIND_ID);
+                }
+                return false;
             } catch (JavaModelException e) {
                 return false;
             }
@@ -425,9 +439,15 @@ public class TestSearchUtils {
                         .build();
             } else if (TestFrameworkUtils.JUNIT5_TEST_SEARCHER.isTestClass(type)) {
                 // to handle @Nested and @Testable classes
+                // Determine whether it's JUnit 6 or JUnit 5 based on project-level detection,
+                // since JUnit 6 extends JUnit 5 and both searchers match the same annotations.
+                final List<TestKind> projectKinds = TestKindProvider.getTestKindsFromCache(
+                        type.getJavaProject());
+                final TestKind kind = projectKinds.contains(TestKind.JUnit6) ?
+                        TestKind.JUnit6 : TestKind.JUnit5;
                 classItem = new JavaTestItemBuilder().setJavaElement(type)
                     .setLevel(TestLevel.CLASS)
-                    .setKind(TestKind.JUnit5)
+                    .setKind(kind)
                     .build();
             }
         }
