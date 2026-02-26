@@ -398,7 +398,7 @@ public class TestSearchUtils {
                 // JUnit 5 accessibility check since JUnit 6 shares the same rules.
                 if (s.getTestKind() == TestKind.JUnit6) {
                     return CoreTestSearchEngine.isAccessibleClass(type,
-                            org.eclipse.jdt.internal.junit.launcher.TestKindRegistry.JUNIT5_TEST_KIND_ID);
+                            TestFrameworkUtils.JUNIT5_TEST_SEARCHER.getJdtTestKind());
                 }
                 return false;
             } catch (JavaModelException e) {
