@@ -34,6 +34,14 @@ export async function loadJavaProjects(): Promise<void> {
         return project.testKind !== TestKind.None;
     });
 
+    // Remove projects that no longer exist
+    const projectIds: Set<string> = new Set(testProjects.map((p: IJavaTestItem) => p.id));
+    testController?.items.forEach((root: TestItem) => {
+        if (!projectIds.has(root.id)) {
+            testController?.items.delete(root.id);
+        }
+    });
+
     for (const project of testProjects) {
         if (testController?.items.get(project.id)) {
             continue;

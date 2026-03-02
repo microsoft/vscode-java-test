@@ -7,7 +7,7 @@ import { dispose as disposeTelemetryWrapper, initializeFromJsonFile, instrumentO
 import { navigateToTestOrTarget } from './commands/navigation/navigationCommands';
 import { generateTests } from './commands/generationCommands';
 import { runTestsFromJavaProjectExplorer } from './commands/projectExplorerCommands';
-import { refreshExplorer, runTestsFromTestExplorer } from './commands/testExplorerCommands';
+import { refreshExplorer, refreshProject, runTestsFromTestExplorer } from './commands/testExplorerCommands';
 import { openStackTrace } from './commands/testReportCommands';
 import { Context, ExtensionName, JavaTestRunnerCommands, VSCodeCommands } from './constants';
 import { createTestController, testController, watchers } from './controller/testController';
@@ -76,11 +76,11 @@ async function doActivate(_operationId: string, context: ExtensionContext): Prom
 
         if (extensionApi.onDidClasspathUpdate) {
             const onDidClasspathUpdate: Event<Uri> = extensionApi.onDidClasspathUpdate;
-            context.subscriptions.push(onDidClasspathUpdate(async () => {
+            context.subscriptions.push(onDidClasspathUpdate(async (uri: Uri) => {
                 // workaround: wait more time to make sure Language Server has updated all caches
                 setTimeout(() => {
                     testSourceProvider.clear();
-                    refreshExplorer();
+                    refreshProject(uri);
                 }, 1000 /* ms */);
             }));
         }

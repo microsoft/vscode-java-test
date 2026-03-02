@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { DebugConfiguration, TestItem, TestRunRequest } from 'vscode';
+import { DebugConfiguration, TestItem, TestRunRequest, Uri } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
-import { runTests, testController } from '../controller/testController';
+import { loadChildren, runTests, testController } from '../controller/testController';
 import { loadJavaProjects } from '../controller/utils';
 import { showTestItemsInCurrentFile } from '../extension';
 
@@ -39,10 +39,33 @@ export async function runTestsFromTestExplorer(testItem: TestItem, launchConfigu
 
 export async function refreshExplorer(): Promise<void> {
     sendInfo('', { name: 'refreshTests' });
-    testController?.items.forEach((root: TestItem) => {
-        testController?.items.delete(root.id);
-    });
 
     await loadJavaProjects();
+    await showTestItemsInCurrentFile();
+}
+
+/**
+ * Refresh only the project subtree that matches the given classpath-change URI.
+ * Falls back to a full (incremental) refresh if no matching project is found.
+ */
+export async function refreshProject(classpathUri: Uri): Promise<void> {
+    sendInfo('', { name: 'refreshProject' });
+    const uriString: string = classpathUri.toString();
+
+    // Find the project root whose URI is a prefix of the classpath URI
+    let matchedProject: TestItem | undefined;
+    testController?.items.forEach((root: TestItem) => {
+        if (root.uri && uriString.startsWith(root.uri.toString())) {
+            matchedProject = root;
+        }
+    });
+
+    if (matchedProject) {
+        // Re-resolve only the matched project's children
+        await loadChildren(matchedProject);
+    } else {
+        // No matching project found – do incremental full refresh
+        await loadJavaProjects();
+    }
     await showTestItemsInCurrentFile();
 }
