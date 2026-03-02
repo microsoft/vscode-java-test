@@ -41,6 +41,14 @@ export async function refreshExplorer(): Promise<void> {
     sendInfo('', { name: 'refreshTests' });
 
     await loadJavaProjects();
+
+    // Force re-resolution of all existing project roots
+    const loadPromises: Promise<void>[] = [];
+    testController?.items.forEach((root: TestItem) => {
+        loadPromises.push(loadChildren(root));
+    });
+    await Promise.all(loadPromises);
+
     await showTestItemsInCurrentFile();
 }
 
@@ -52,11 +60,16 @@ export async function refreshProject(classpathUri: Uri): Promise<void> {
     sendInfo('', { name: 'refreshProject' });
     const uriString: string = classpathUri.toString();
 
-    // Find the project root whose URI is a prefix of the classpath URI
+    // Find the project root with the longest matching URI prefix (most specific match)
     let matchedProject: TestItem | undefined;
+    let matchedUriLength: number = 0;
     testController?.items.forEach((root: TestItem) => {
-        if (root.uri && uriString.startsWith(root.uri.toString())) {
-            matchedProject = root;
+        if (root.uri) {
+            const rootUriString: string = root.uri.toString();
+            if (uriString.startsWith(rootUriString) && rootUriString.length > matchedUriLength) {
+                matchedProject = root;
+                matchedUriLength = rootUriString.length;
+            }
         }
     });
 
