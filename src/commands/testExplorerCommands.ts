@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { DebugConfiguration, TestItem, TestRunRequest } from 'vscode';
+import { DebugConfiguration, TestItem, TestRunRequest, Uri } from 'vscode';
 import { sendInfo } from 'vscode-extension-telemetry-wrapper';
-import { runTests, testController } from '../controller/testController';
+import { loadChildren, runTests, testController } from '../controller/testController';
 import { loadJavaProjects } from '../controller/utils';
 import { showTestItemsInCurrentFile } from '../extension';
 
@@ -39,10 +39,46 @@ export async function runTestsFromTestExplorer(testItem: TestItem, launchConfigu
 
 export async function refreshExplorer(): Promise<void> {
     sendInfo('', { name: 'refreshTests' });
-    testController?.items.forEach((root: TestItem) => {
-        testController?.items.delete(root.id);
-    });
 
     await loadJavaProjects();
+
+    // Force re-resolution of all existing project roots
+    const loadPromises: Promise<void>[] = [];
+    testController?.items.forEach((root: TestItem) => {
+        loadPromises.push(loadChildren(root));
+    });
+    await Promise.all(loadPromises);
+
+    await showTestItemsInCurrentFile();
+}
+
+/**
+ * Refresh only the project subtree that matches the given classpath-change URI.
+ * Falls back to a full (incremental) refresh if no matching project is found.
+ */
+export async function refreshProject(classpathUri: Uri): Promise<void> {
+    sendInfo('', { name: 'refreshProject' });
+    const uriString: string = classpathUri.toString();
+
+    // Find the project root with the longest matching URI prefix (most specific match)
+    let matchedProject: TestItem | undefined;
+    let matchedUriLength: number = 0;
+    testController?.items.forEach((root: TestItem) => {
+        if (root.uri) {
+            const rootUriString: string = root.uri.toString();
+            if (uriString.startsWith(rootUriString) && rootUriString.length > matchedUriLength) {
+                matchedProject = root;
+                matchedUriLength = rootUriString.length;
+            }
+        }
+    });
+
+    if (matchedProject) {
+        // Re-resolve only the matched project's children
+        await loadChildren(matchedProject);
+    } else {
+        // No matching project found – do incremental full refresh
+        await loadJavaProjects();
+    }
     await showTestItemsInCurrentFile();
 }
