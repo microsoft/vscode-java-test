@@ -60,15 +60,20 @@ export async function refreshProject(classpathUri: Uri): Promise<void> {
     sendInfo('', { name: 'refreshProject' });
     const uriString: string = classpathUri.toString();
 
-    // Find the project root with the longest matching URI prefix (most specific match)
+    // Find the project root with the longest matching URI prefix (most specific match),
+    // or find a project whose URI is a child of the classpath URI (e.g. workspace root changed).
     let matchedProject: TestItem | undefined;
     let matchedUriLength: number = 0;
+    let childProjectMatched: boolean = false;
     testController?.items.forEach((root: TestItem) => {
         if (root.uri) {
             const rootUriString: string = root.uri.toString();
             if (uriString.startsWith(rootUriString) && rootUriString.length > matchedUriLength) {
                 matchedProject = root;
                 matchedUriLength = rootUriString.length;
+            } else if (rootUriString.startsWith(uriString)) {
+                // The classpath URI is an ancestor of this project (e.g. workspace root)
+                childProjectMatched = true;
             }
         }
     });
@@ -76,9 +81,18 @@ export async function refreshProject(classpathUri: Uri): Promise<void> {
     if (matchedProject) {
         // Re-resolve only the matched project's children
         await loadChildren(matchedProject);
+    } else if (childProjectMatched) {
+        // The classpath URI is an ancestor containing test projects – refresh all children
+        const loadPromises: Promise<void>[] = [];
+        testController?.items.forEach((root: TestItem) => {
+            if (root.uri && root.uri.toString().startsWith(uriString)) {
+                loadPromises.push(loadChildren(root));
+            }
+        });
+        await Promise.all(loadPromises);
     } else {
-        // No matching project found – do incremental full refresh
-        await loadJavaProjects();
+        // URI doesn't match any known test project – skip to avoid unnecessary full refresh
+        return;
     }
     await showTestItemsInCurrentFile();
 }
