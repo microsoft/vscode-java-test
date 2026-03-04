@@ -53,21 +53,31 @@ export async function refreshExplorer(): Promise<void> {
 }
 
 /**
+ * Ensure the URI string ends with '/' so that startsWith comparisons
+ * are path-segment-aware (e.g. ".../app/" won't prefix-match ".../app2/").
+ */
+function ensureTrailingSeparator(uriString: string): string {
+    return uriString.endsWith('/') ? uriString : uriString + '/';
+}/**
  * Refresh only the project subtree that matches the given classpath-change URI.
- * Falls back to a full (incremental) refresh if no matching project is found.
+ * If the URI is an ancestor of known test projects, refreshes all matching children.
+ * If the URI doesn't correspond to any known test project, the refresh is skipped
+ * to avoid unnecessary full reloads (e.g. for non-test projects like Gradle's buildSrc).
  */
 export async function refreshProject(classpathUri: Uri): Promise<void> {
     sendInfo('', { name: 'refreshProject' });
-    const uriString: string = classpathUri.toString();
+    const uriString: string = ensureTrailingSeparator(classpathUri.toString());
 
     // Find the project root with the longest matching URI prefix (most specific match),
     // or find a project whose URI is a child of the classpath URI (e.g. workspace root changed).
+    // All comparisons use separator-terminated URIs to avoid false positives
+    // (e.g. "file:///ws/app" must not match "file:///ws/app2").
     let matchedProject: TestItem | undefined;
     let matchedUriLength: number = 0;
     let childProjectMatched: boolean = false;
     testController?.items.forEach((root: TestItem) => {
         if (root.uri) {
-            const rootUriString: string = root.uri.toString();
+            const rootUriString: string = ensureTrailingSeparator(root.uri.toString());
             if (uriString.startsWith(rootUriString) && rootUriString.length > matchedUriLength) {
                 matchedProject = root;
                 matchedUriLength = rootUriString.length;
@@ -85,7 +95,7 @@ export async function refreshProject(classpathUri: Uri): Promise<void> {
         // The classpath URI is an ancestor containing test projects – refresh all children
         const loadPromises: Promise<void>[] = [];
         testController?.items.forEach((root: TestItem) => {
-            if (root.uri && root.uri.toString().startsWith(uriString)) {
+            if (root.uri && ensureTrailingSeparator(root.uri.toString()).startsWith(uriString)) {
                 loadPromises.push(loadChildren(root));
             }
         });
