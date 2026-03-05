@@ -5,10 +5,11 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { MarkdownString, Range, TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
+import { MarkdownString, Range, TestController, TestMessage, TestRunRequest, tests, Uri, workspace } from 'vscode';
 import { JUnitRunnerResultAnalyzer } from '../../src/runners/junitRunner/JUnitRunnerResultAnalyzer';
 import { generateTestItem } from './utils';
-import { TestKind, IRunTestContext } from '../../src/java-test-runner.api';
+import { TestKind, TestLevel, IRunTestContext } from '../../src/java-test-runner.api';
+import { dataCache } from '../../src/controller/testItemDataCache';
 
 // tslint:disable: only-arrow-functions
 // tslint:disable: no-object-literal-type-assertion
@@ -541,6 +542,52 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
 
         sinon.assert.calledWith(startedSpy, dummy);
         sinon.assert.calledWith(passedSpy, dummy);
+    });
+
+    test("test JUnit 5 @Suite class passed result", () => {
+        // Create a class-level test item for the Suite class
+        const suiteItem = testController.createTestItem('junit@junit5.suite.MyTestSuite', 'MyTestSuite', Uri.file('/mock/test/MyTestSuite.java'));
+        suiteItem.range = new Range(0, 0, 5, 0);
+        dataCache.set(suiteItem, {
+            jdtHandler: '',
+            fullName: 'junit5.suite.MyTestSuite',
+            projectName: 'junit',
+            testLevel: TestLevel.Class,
+            testKind: TestKind.JUnit5,
+        });
+
+        const testRunRequest = new TestRunRequest([suiteItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const startedSpy = sinon.spy(testRun, 'started');
+        const passedSpy = sinon.spy(testRun, 'passed');
+
+        // This is the output format when running a @Suite class with junit-platform-suite engine.
+        // The suite container uses [engine:junit-platform-suite]/[suite:...] format.
+        // Child tests use [engine:junit-platform-suite]/[suite:...]/[engine:junit-jupiter]/[class:...]/[method:...].
+        const testRunnerOutput = `%TESTC  2 v2
+%TSTTREE1,junit5.suite.MyTestSuite,true,1,false,-1,MyTestSuite,,[engine:junit-platform-suite]/[suite:junit5.suite.MyTestSuite]
+%TSTTREE2,junit5.AppTest,true,1,false,1,AppTest,,[engine:junit-platform-suite]/[suite:junit5.suite.MyTestSuite]/[engine:junit-jupiter]/[class:junit5.AppTest]
+%TSTTREE3,testGetGreeting(junit5.AppTest),false,1,false,2,testGetGreeting(),,[engine:junit-platform-suite]/[suite:junit5.suite.MyTestSuite]/[engine:junit-jupiter]/[class:junit5.AppTest]/[method:testGetGreeting()]
+%TESTS  3,testGetGreeting(junit5.AppTest)
+%TESTE  3,testGetGreeting(junit5.AppTest)
+%RUNTIME15`;
+
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [suiteItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        // The suite item should be in triggeredTestsMapping and the child test items
+        // should be dynamically created under it. Verify tests started and passed.
+        assert.ok(startedSpy.called, 'at least one test should have started');
+        assert.ok(passedSpy.called, 'at least one test should have passed');
     });
 
 });
