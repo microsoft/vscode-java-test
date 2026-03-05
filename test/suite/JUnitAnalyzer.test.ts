@@ -556,6 +556,22 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
             testKind: TestKind.JUnit5,
         });
 
+        // Pre-create child items under the suite so that triggeredTestsMapping
+        // can find them and the global createTestItem is never called.
+        const classItem = testController.createTestItem('junit@junit5.AppTest', 'AppTest', Uri.file('/mock/test/AppTest.java'));
+        classItem.range = new Range(0, 0, 10, 0);
+        dataCache.set(classItem, {
+            jdtHandler: '',
+            fullName: 'junit5.AppTest',
+            projectName: 'junit',
+            testLevel: TestLevel.Class,
+            testKind: TestKind.JUnit5,
+        });
+
+        const methodItem = generateTestItem(testController, 'junit@junit5.AppTest#testGetGreeting()', TestKind.JUnit5);
+        classItem.children.replace([methodItem]);
+        suiteItem.children.replace([classItem]);
+
         const testRunRequest = new TestRunRequest([suiteItem], []);
         const testRun = testController.createTestRun(testRunRequest);
         const startedSpy = sinon.spy(testRun, 'started');
@@ -564,12 +580,17 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         // This is the output format when running a @Suite class with junit-platform-suite engine.
         // The suite container uses [engine:junit-platform-suite]/[suite:...] format.
         // Child tests use [engine:junit-platform-suite]/[suite:...]/[engine:junit-jupiter]/[class:...]/[method:...].
+        // The protocol nests %TESTS/%TESTE for suite → class → method.
         const testRunnerOutput = `%TESTC  2 v2
 %TSTTREE1,junit5.suite.MyTestSuite,true,1,false,-1,MyTestSuite,,[engine:junit-platform-suite]/[suite:junit5.suite.MyTestSuite]
 %TSTTREE2,junit5.AppTest,true,1,false,1,AppTest,,[engine:junit-platform-suite]/[suite:junit5.suite.MyTestSuite]/[engine:junit-jupiter]/[class:junit5.AppTest]
 %TSTTREE3,testGetGreeting(junit5.AppTest),false,1,false,2,testGetGreeting(),,[engine:junit-platform-suite]/[suite:junit5.suite.MyTestSuite]/[engine:junit-jupiter]/[class:junit5.AppTest]/[method:testGetGreeting()]
+%TESTS  1,junit5.suite.MyTestSuite
+%TESTS  2,junit5.AppTest
 %TESTS  3,testGetGreeting(junit5.AppTest)
 %TESTE  3,testGetGreeting(junit5.AppTest)
+%TESTE  2,junit5.AppTest
+%TESTE  1,junit5.suite.MyTestSuite
 %RUNTIME15`;
 
         const runnerContext: IRunTestContext = {
@@ -584,10 +605,12 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
         analyzer.analyzeData(testRunnerOutput);
 
-        // The suite item should be in triggeredTestsMapping and the child test items
-        // should be dynamically created under it. Verify tests started and passed.
-        assert.ok(startedSpy.called, 'at least one test should have started');
-        assert.ok(passedSpy.called, 'at least one test should have passed');
+        // Verify the suite item itself started and passed (the core regression in #1828)
+        sinon.assert.calledWith(startedSpy, suiteItem);
+        sinon.assert.calledWith(passedSpy, suiteItem, sinon.match.number);
+        // Verify the method-level child also started and passed
+        sinon.assert.calledWith(startedSpy, methodItem);
+        sinon.assert.calledWith(passedSpy, methodItem, sinon.match.number);
     });
 
 });
