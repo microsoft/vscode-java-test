@@ -61,6 +61,7 @@ import org.eclipse.lsp4j.Location;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -223,14 +224,26 @@ public class TestSearchUtils {
             }
         }
 
-        final List<JavaTestItem> result = new LinkedList<>();
+        // Merge packages that share the same ID (e.g. same package name across different source sets)
+        final Map<String, JavaTestItem> mergedPackages = new LinkedHashMap<>();
         for (final JavaTestItem item : testItemMapping.values()) {
             if (item.getTestLevel() == TestLevel.PACKAGE) {
-                result.add(item);
+                final JavaTestItem existing = mergedPackages.get(item.getId());
+                if (existing != null) {
+                    if (item.getChildren() != null) {
+                        for (final JavaTestItem child : item.getChildren()) {
+                            if (existing.getChildren() == null || !existing.getChildren().contains(child)) {
+                                existing.addChild(child);
+                            }
+                        }
+                    }
+                } else {
+                    mergedPackages.put(item.getId(), item);
+                }
             }
         }
 
-        return result;
+        return new LinkedList<>(mergedPackages.values());
     }
 
     /**
