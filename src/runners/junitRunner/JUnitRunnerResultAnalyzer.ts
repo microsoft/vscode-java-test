@@ -191,7 +191,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     protected getTestId(message: string): string {
-        if (message.includes('engine:junit5') || message.includes('engine:junit-jupiter') || message.includes('engine:jqwik')) {
+        if (message.includes('engine:junit5') || message.includes('engine:junit-jupiter') || message.includes('engine:jqwik') || message.includes('engine:junit-platform-suite')) {
             return this.getTestIdForJunit5Method(message);
         } else {
             return this.getTestIdForNonJunit5Method(message);
@@ -218,6 +218,11 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
             if (part.startsWith(JUnitTestPart.CLASS)) {
                 className = part.substring(JUnitTestPart.CLASS.length);
+            } else if (part.startsWith(JUnitTestPart.SUITE)) {
+                // Only use suite name as className if no class: part has been seen yet
+                if (!className) {
+                    className = part.substring(JUnitTestPart.SUITE.length);
+                }
             } else if (part.startsWith(JUnitTestPart.METHOD)) {
                 const rawMethodName: string = part.substring(JUnitTestPart.METHOD.length);
                 // If the method name exists then we want to include the '#' qualifier.
