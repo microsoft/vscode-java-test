@@ -559,7 +559,7 @@
         "@types/vscode": "1.88.0",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
         "@typescript-eslint/parser": "^5.60.1",
-        "@vscode/test-electron": "^2.3.8",
+        "@vscode/test-electron": "^2.5.2",
         "eslint": "^8.43.0",
         "glob": "^7.2.3",
         "mocha": "^11.1.0",
