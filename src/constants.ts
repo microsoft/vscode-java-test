@@ -73,6 +73,7 @@ export namespace Context {
 export namespace JUnitTestPart {
     export const CLASS: string = 'class:';
     export const NESTED_CLASS: string = 'nested-class:';
+    export const SUITE: string = 'suite:';
     export const METHOD: string = 'method:';
     export const TEST_FACTORY: string = 'test-factory:';
     // Property id is for jqwik
