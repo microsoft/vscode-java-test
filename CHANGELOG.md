@@ -4,6 +4,16 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.45.0
+## What's Changed
+* feat - Support excluding source paths from coverage reporting in https://github.com/microsoft/vscode-java-test/pull/1809
+* feat - Add @Suite support on JUnit 5 in https://github.com/microsoft/vscode-java-test/pull/1846
+* enhancement - Refresh test unit treeview with specific path in https://github.com/microsoft/vscode-java-test/pull/1842
+* fix - Fix JUnit 6 support in https://github.com/microsoft/vscode-java-test/pull/1840
+* fix - Identify naming in JUnit in https://github.com/microsoft/vscode-java-test/pull/1847
+* fix - Trigger UI except other LSP event in https://github.com/microsoft/vscode-java-test/pull/1844
+* fix - Remove erroneous double-quoting of -javaagent arg on Windows in https://github.com/microsoft/vscode-java-test/pull/1832
+
 ## 0.44.0
 ## What's Changed
 * feat - junit 6 support in https://github.com/microsoft/vscode-java-test/pull/1820
