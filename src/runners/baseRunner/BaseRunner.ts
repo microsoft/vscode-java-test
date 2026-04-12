@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import getPort from 'get-port';
 import * as iconv from 'iconv-lite';
 import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
@@ -133,10 +132,13 @@ export abstract class BaseRunner implements ITestRunnerInternal {
 
     protected async startSocketServer(): Promise<void> {
         this.server = createServer();
-        const socketPort: number = await getPort();
         await new Promise<void>((resolve: () => void): void => {
-            this.server.listen(socketPort, Configurations.LOCAL_HOST, resolve);
+            this.server.listen(0, Configurations.LOCAL_HOST, resolve);
         });
+    }
+
+    public getServerAddress(): AddressInfo | string | null {
+        return this.server?.address() ?? null;
     }
 
     protected getRunnerCommandParams(): string[] {
