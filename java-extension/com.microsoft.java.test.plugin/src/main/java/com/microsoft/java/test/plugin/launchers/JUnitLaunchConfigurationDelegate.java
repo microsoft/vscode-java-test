@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -60,9 +61,56 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     private static final Set<String> testNameArgs = new HashSet<>(
         Arrays.asList("-test", "-classNames", "-packageNameFile", "-testNameFile"));
 
+    // org.eclipse.jdt.internal.junit.IJUnitStatusConstants.ERR_JUNIT_NOT_ON_PATH
+    private static final int ERR_JUNIT_NOT_ON_PATH = 20006;
+
     public JUnitLaunchConfigurationDelegate(Argument args) {
         super();
         this.args = args;
+    }
+
+    /**
+     * Workaround for https://github.com/redhat-developer/vscode-java/issues/4396
+     *
+     * Eclipse JDT's CoreTestSearchEngine.hasJUnit5TestAnnotation() was changed to use
+     * NameLookup.findType() with ACCEPT_ANNOTATIONS + checkRestrictions=true, which fails
+     * to find @Testable in standalone/fat Multi-Release JARs
+     * (e.g., junit-platform-console-standalone-1.13.4.jar).
+     *
+     * This override calls the superclass preLaunchCheck() normally, but catches the specific
+     * "JUnit not on path" false negative and falls back to project.findType() which works.
+     *
+     * See upstream: https://github.com/eclipse-jdt/eclipse.jdt.ui/issues/2959
+     */
+    @Override
+    protected void preLaunchCheck(ILaunchConfiguration configuration, ILaunch launch,
+            IProgressMonitor monitor) throws CoreException {
+        try {
+            super.preLaunchCheck(configuration, launch, monitor);
+        } catch (CoreException e) {
+            if (e.getStatus().getCode() == ERR_JUNIT_NOT_ON_PATH) {
+                final IJavaProject javaProject = getJavaProject(configuration);
+                if (javaProject != null && hasJUnitOnClasspath(javaProject)) {
+                    // JUnit is actually on the classpath via a standalone/fat JAR,
+                    // suppress the false negative from the upstream check.
+                    return;
+                }
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Fallback check using the old-style project.findType() which correctly resolves
+     * types inside standalone/fat Multi-Release JARs.
+     */
+    private boolean hasJUnitOnClasspath(IJavaProject javaProject) {
+        try {
+            return javaProject.findType("org.junit.jupiter.api.Test") != null
+                || javaProject.findType("org.junit.platform.commons.annotation.Testable") != null;
+        } catch (JavaModelException e) {
+            return false;
+        }
     }
 
     public Response<JUnitLaunchArguments> getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
