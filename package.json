@@ -1,589 +1,588 @@
 {
-    "name": "vscode-java-test",
-    "displayName": "Test Runner for Java",
-    "description": "%description%",
-    "repository": {
-        "url": "https://github.com/Microsoft/vscode-java-test"
-    },
-    "version": "0.45.0",
-    "publisher": "vscjava",
-    "bugs": {
-        "url": "https://github.com/Microsoft/vscode-java-test/issues"
-    },
-    "homepage": "https://github.com/Microsoft/vscode-java-test",
-    "preview": false,
-    "icon": "resources/logo.png",
-    "keywords": [
-        "java",
-        "test",
-        "junit",
-        "testng",
-        "debug"
-    ],
-    "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
-    "engines": {
-        "vscode": "^1.88.0"
-    },
-    "categories": [
-        "Testing"
-    ],
-    "capabilities": {
-        "virtualWorkspaces": false,
-        "untrustedWorkspaces": {
-            "supported": false
-        }
-    },
-    "activationEvents": [
-        "onLanguage:java",
-        "workspaceContains:pom.xml",
-        "workspaceContains:*/pom.xml",
-        "workspaceContains:build.gradle",
-        "workspaceContains:*/build.gradle",
-        "workspaceContains:settings.gradle",
-        "workspaceContains:*/settings.gradle",
-        "workspaceContains:build.gradle.kts",
-        "workspaceContains:*/build.gradle.kts",
-        "workspaceContains:settings.gradle.kts",
-        "workspaceContains:*/settings.gradle.kts",
-        "workspaceContains:.classpath",
-        "workspaceContains:*/.classpath",
-        "onCommand:java.test.editor.run",
-        "onCommand:java.test.editor.debug",
-        "onCommand:java.test.runFromJavaProjectExplorer",
-        "onCommand:java.test.debugFromJavaProjectExplorer"
-    ],
-    "main": "./main.js",
-    "contributes": {
-        "javaExtensions": [
-            "./server/com.microsoft.java.test.plugin-0.43.1.jar",
-            "./server/junit-jupiter-api_5.14.3.jar",
-            "./server/junit-jupiter-api_6.0.1.jar",
-            "./server/junit-jupiter-engine_5.14.3.jar",
-            "./server/junit-jupiter-engine_6.0.1.jar",
-            "./server/junit-jupiter-migrationsupport_5.14.1.jar",
-            "./server/junit-jupiter-params_5.14.3.jar",
-            "./server/junit-jupiter-params_6.0.1.jar",
-            "./server/junit-platform-commons_1.14.3.jar",
-            "./server/junit-platform-commons_6.0.1.jar",
-            "./server/junit-platform-engine_1.14.3.jar",
-            "./server/junit-platform-engine_6.0.1.jar",
-            "./server/junit-platform-launcher_1.14.3.jar",
-            "./server/junit-platform-launcher_6.0.1.jar",
-            "./server/junit-platform-runner_1.14.1.jar",
-            "./server/junit-platform-suite-api_1.14.1.jar",
-            "./server/junit-platform-suite-api_6.0.1.jar",
-            "./server/junit-platform-suite-commons_1.14.1.jar",
-            "./server/junit-platform-suite-engine_1.14.1.jar",
-            "./server/junit-platform-suite-engine_6.0.1.jar",
-            "./server/junit-vintage-engine_5.14.1.jar",
-            "./server/org.apiguardian.api_1.1.2.jar",
-            "./server/org.eclipse.jdt.junit4.runtime_1.4.0.v20251113-1434.jar",
-            "./server/org.eclipse.jdt.junit5.runtime_1.2.0.v20251113-1434.jar",
-            "./server/org.eclipse.jdt.junit6.runtime_1.0.0.v20251112-1701.jar",
-            "./server/org.jacoco.core_0.8.14.202510111229.jar",
-            "./server/org.opentest4j_1.3.0.jar"
-        ],
-        "viewsWelcome": [
-            {
-                "view": "testing",
-                "contents": "%contributes.viewsWelcome.inLightWeightMode%",
-                "when": "java:serverMode == LightWeight"
-            },
-            {
-                "view": "testing",
-                "contents": "Click below button to configure a test framework for your project.\n[Enable Java Tests](command:_java.test.enableTests)",
-                "when": "java:needSetupTests"
-            }
-        ],
-        "menus": {
-            "view/item/context": [
-                {
-                    "command": "java.test.runFromJavaProjectExplorer",
-                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)(?!.*?\\b\\+resource\\b)/",
-                    "group": "8_execution@10"
-                },
-                {
-                    "command": "java.test.debugFromJavaProjectExplorer",
-                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)(?!.*?\\b\\+resource\\b)/",
-                    "group": "8_execution@20"
-                },
-                {
-                    "command": "java.test.runFromJavaProjectExplorer",
-                    "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)(?!.*?\\b\\+resource\\b)/",
-                    "group": "inline@run_0"
-                }
-            ],
-            "commandPalette": [
-                {
-                    "command": "java.test.runFromJavaProjectExplorer",
-                    "when": "false"
-                },
-                {
-                    "command": "java.test.debugFromJavaProjectExplorer",
-                    "when": "false"
-                },
-                {
-                    "command": "java.test.editor.run",
-                    "when": "java:serverMode != LightWeight"
-                },
-                {
-                    "command": "java.test.editor.debug",
-                    "when": "java:serverMode != LightWeight"
-                },
-                {
-                    "command": "java.test.goToTest",
-                    "when": "java:testRunnerActivated && resourceExtname == .java"
-                },
-                {
-                    "command": "java.test.goToTestSubject",
-                    "when": "java:testRunnerActivated && resourceExtname == .java"
-                }
-            ],
-            "editor/context": [
-                {
-                    "command": "java.test.goToTest",
-                    "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]main[/|\\\\]java[/|\\\\].*\\.java/",
-                    "group": "navigation@100"
-                },
-                {
-                    "command": "java.test.goToTestSubject",
-                    "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]test[/|\\\\]java[/|\\\\].*\\.java/",
-                    "group": "navigation@100"
-                }
-            ]
-        },
-        "commands": [
-            {
-                "command": "java.test.goToTest",
-                "title": "%contributes.commands.java.test.goToTest.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.goToTestSubject",
-                "title": "%contributes.commands.java.test.goToTestSubject.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.runFromJavaProjectExplorer",
-                "title": "%contributes.commands.java.test.runFromJavaProjectExplorer.title%",
-                "icon": "$(play)",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.debugFromJavaProjectExplorer",
-                "title": "%contributes.commands.java.test.debugFromJavaProjectExplorer.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.editor.run",
-                "title": "%contributes.commands.java.test.editor.run.title%",
-                "category": "Java"
-            },
-            {
-                "command": "java.test.editor.debug",
-                "title": "%contributes.commands.java.test.editor.debug.title%",
-                "category": "Java"
-            }
-        ],
-        "configuration": {
-            "title": "Test Runner for Java",
-            "properties": {
-                "java.test.defaultConfig": {
-                    "type": "string",
-                    "description": "%configuration.java.test.defaultConfig.description%",
-                    "scope": "resource"
-                },
-                "java.test.config": {
-                    "type": [
-                        "object",
-                        "array"
-                    ],
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "%configuration.java.test.config.name.description%",
-                            "pattern": "^((?!default).)*$",
-                            "default": ""
-                        },
-                        "workingDirectory": {
-                            "type": "string",
-                            "description": "%configuration.java.test.config.workingDirectory.description%",
-                            "default": "${workspaceFolder}"
-                        },
-                        "classPaths": {
-                            "type": "array",
-                            "items": {
-                                "anyOf": [
-                                    {
-                                        "enum": [
-                                            "$Auto",
-                                            "$Runtime",
-                                            "$Test",
-                                            "!<path>"
-                                        ],
-                                        "enumDescriptions": [
-                                            "%configuration.java.test.config.classPaths.auto.description%",
-                                            "%configuration.java.test.config.classPaths.runtime.description%",
-                                            "%configuration.java.test.config.classPaths.test.description%",
-                                            "%configuration.java.test.config.classPaths.exclude.description%"
-                                        ]
-                                    },
-                                    "string"
-                                ]
-                            },
-                            "description": "%configuration.java.test.config.classPaths.description%",
-                            "default": []
-                        },
-                        "modulePaths": {
-                            "type": "array",
-                            "items": {
-                                "anyOf": [
-                                    {
-                                        "enum": [
-                                            "$Auto",
-                                            "$Runtime",
-                                            "$Test",
-                                            "!<path>"
-                                        ],
-                                        "enumDescriptions": [
-                                            "%configuration.java.test.config.modulePaths.auto.description%",
-                                            "%configuration.java.test.config.modulePaths.runtime.description%",
-                                            "%configuration.java.test.config.modulePaths.test.description%",
-                                            "%configuration.java.test.config.modulePaths.exclude.description%"
-                                        ]
-                                    },
-                                    "string"
-                                ]
-                            },
-                            "description": "%configuration.java.test.config.modulePaths.description%",
-                            "default": []
-                        },
-                        "javaExec": {
-                            "type": "string",
-                            "markdownDescription": "%configuration.java.test.config.javaExec.description%",
-                            "default": ""
-                        },
-                        "encoding": {
-                            "type": "string",
-                            "description": "%configuration.java.test.config.encoding.description%",
-                            "default": ""
-                        },
-                        "vmArgs": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "%configuration.java.test.config.vmArgs.description%",
-                            "default": []
-                        },
-                        "args": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "%configuration.java.test.config.args.description%",
-                            "default": []
-                        },
-                        "env": {
-                            "type": "object",
-                            "description": "%configuration.java.test.config.env.description%",
-                            "default": {}
-                        },
-                        "envFile": {
-                            "type": "string",
-                            "description": "%configuration.java.test.config.envFile.description%",
-                            "default": "${workspaceFolder}/.env"
-                        },
-                        "sourcePaths": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "%configuration.java.test.config.sourcePaths.description%",
-                            "default": []
-                        },
-                        "preLaunchTask": {
-                            "type": "string",
-                            "description": "%configuration.java.test.config.preLaunchTask.description%",
-                            "default": ""
-                        },
-                        "postDebugTask": {
-                            "type": "string",
-                            "description": "%configuration.java.test.config.postDebugTask.description%",
-                            "default": ""
-                        },
-                        "testKind": {
-                            "type": "string",
-                            "markdownDescription": "%configuration.java.test.config.testKind.description%",
-                            "enum": [
-                                "junit",
-                                "testng"
-                            ],
-                            "default": "junit"
-                        },
-                        "filters": {
-                            "type": "object",
-                            "description": "%configuration.java.test.config.filters.description%",
-                            "default": {},
-                            "properties": {
-                                "tags": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    },
-                                    "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
-                                    "default": []
-                                }
-                            }
-                        },
-                        "when": {
-                            "type": "string",
-                            "markdownDescription": "%configuration.java.test.config.when.description%",
-                            "default": ""
-                        },
-                        "coverage": {
-                            "type": "object",
-                            "description": "%configuration.java.test.config.coverage.description%",
-                            "default": {},
-                            "properties": {
-                                "appendResult": {
-                                    "type": "boolean",
-                                    "description": "%configuration.java.test.config.coverage.appendResult.description%",
-                                    "default": true
-                                },
-                                "excludes": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    },
-                                    "description": "%configuration.java.test.config.coverage.excludes.description%",
-                                    "default": []
-                                }
-                            }
-                        }
-                    },
-                    "description": "%configuration.java.test.config.description%",
-                    "items": {
-                        "type": "object",
-                        "description": "%configuration.java.test.config.item.description%",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "%configuration.java.test.config.name.description%",
-                                "pattern": "^((?!default).)*$",
-                                "default": ""
-                            },
-                            "workingDirectory": {
-                                "type": "string",
-                                "description": "%configuration.java.test.config.workingDirectory.description%",
-                                "default": "${workspaceFolder}"
-                            },
-                            "classPaths": {
-                                "type": "array",
-                                "items": {
-                                    "anyOf": [
-                                        {
-                                            "enum": [
-                                                "$Auto",
-                                                "$Runtime",
-                                                "$Test",
-                                                "!<path>"
-                                            ],
-                                            "enumDescriptions": [
-                                                "%configuration.java.test.config.classPaths.auto.description%",
-                                                "%configuration.java.test.config.classPaths.runtime.description%",
-                                                "%configuration.java.test.config.classPaths.test.description%",
-                                                "%configuration.java.test.config.classPaths.exclude.description%"
-                                            ]
-                                        },
-                                        "string"
-                                    ]
-                                },
-                                "description": "%configuration.java.test.config.classPaths.description%",
-                                "default": []
-                            },
-                            "modulePaths": {
-                                "type": "array",
-                                "items": {
-                                    "anyOf": [
-                                        {
-                                            "enum": [
-                                                "$Auto",
-                                                "$Runtime",
-                                                "$Test",
-                                                "!<path>"
-                                            ],
-                                            "enumDescriptions": [
-                                                "%configuration.java.test.config.modulePaths.auto.description%",
-                                                "%configuration.java.test.config.modulePaths.runtime.description%",
-                                                "%configuration.java.test.config.modulePaths.test.description%",
-                                                "%configuration.java.test.config.modulePaths.exclude.description%"
-                                            ]
-                                        },
-                                        "string"
-                                    ]
-                                },
-                                "description": "%configuration.java.test.config.modulePaths.description%",
-                                "default": []
-                            },
-                            "javaExec": {
-                                "type": "string",
-                                "markdownDescription": "%configuration.java.test.config.javaExec.description%",
-                                "default": ""
-                            },
-                            "encoding": {
-                                "type": "string",
-                                "description": "%configuration.java.test.config.encoding.description%",
-                                "default": ""
-                            },
-                            "vmArgs": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "description": "%configuration.java.test.config.vmArgs.description%",
-                                "default": []
-                            },
-                            "args": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "description": "%configuration.java.test.config.args.description%",
-                                "default": []
-                            },
-                            "env": {
-                                "type": "object",
-                                "description": "%configuration.java.test.config.env.description%",
-                                "default": {}
-                            },
-                            "envFile": {
-                                "type": "string",
-                                "description": "%configuration.java.test.config.envFile.description%",
-                                "default": "${workspaceFolder}/.env"
-                            },
-                            "sourcePaths": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "description": "%configuration.java.test.config.sourcePaths.description%",
-                                "default": []
-                            },
-                            "preLaunchTask": {
-                                "type": "string",
-                                "description": "%configuration.java.test.config.preLaunchTask.description%",
-                                "default": ""
-                            },
-                            "postDebugTask": {
-                                "type": "string",
-                                "description": "%configuration.java.test.config.postDebugTask.description%",
-                                "default": ""
-                            },
-                            "testKind": {
-                                "type": "string",
-                                "markdownDescription": "%configuration.java.test.config.testKind.description%",
-                                "enum": [
-                                    "junit",
-                                    "testng"
-                                ],
-                                "default": "junit"
-                            },
-                            "filters": {
-                                "type": "object",
-                                "description": "%configuration.java.test.config.filters.description%",
-                                "default": {},
-                                "properties": {
-                                    "tags": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        },
-                                        "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
-                                        "default": []
-                                    }
-                                }
-                            },
-                            "when": {
-                                "type": "string",
-                                "markdownDescription": "%configuration.java.test.config.when.description%",
-                                "default": ""
-                            },
-                            "coverage": {
-                                "type": "object",
-                                "description": "%configuration.java.test.config.coverage.description%",
-                                "default": {},
-                                "properties": {
-                                    "appendResult": {
-                                        "type": "boolean",
-                                        "description": "%configuration.java.test.config.coverage.appendResult.description%",
-                                        "default": true
-                                    },
-                                    "excludes": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        },
-                                        "description": "%configuration.java.test.config.coverage.excludes.description%",
-                                        "default": []
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "scope": "resource"
-                }
-            }
-        }
-    },
-    "scripts": {
-        "compile": "tsc -p ./",
-        "watch": "webpack --mode development --watch",
-        "test": "npm run compile && node ./out/test/index.js",
-        "lint": "eslint -c .eslintrc.js --ext .ts ./src",
-        "build-plugin": "node scripts/buildJdtlsExt.js",
-        "vscode:prepublish": "webpack --mode production"
-    },
-    "extensionDependencies": [
-        "redhat.java",
-        "vscjava.vscode-java-debug"
-    ],
-    "devDependencies": {
-        "@types/fs-extra": "^9.0.13",
-        "@types/glob": "^7.2.0",
-        "@types/lodash": "^4.14.191",
-        "@types/lru-cache": "^7.10.10",
-        "@types/mocha": "^9.1.1",
-        "@types/node": "^16.18.13",
-        "@types/sinon": "^10.0.13",
-        "@types/vscode": "1.88.0",
-        "@typescript-eslint/eslint-plugin": "^5.60.1",
-        "@typescript-eslint/parser": "^5.60.1",
-        "@vscode/test-electron": "^2.5.2",
-        "eslint": "^8.43.0",
-        "glob": "^7.2.3",
-        "mocha": "^11.1.0",
-        "sinon": "^14.0.2",
-        "ts-loader": "^9.4.2",
-        "typescript": "^4.9.4",
-        "webpack": "^5.105.0",
-        "webpack-cli": "^4.10.0"
-    },
-    "dependencies": {
-        "@microsoft/applicationinsights-common": "^3.4.1",
-        "fs-extra": "^10.1.0",
-        "iconv-lite": "^0.6.3",
-        "lodash": "^4.18.1",
-        "lru-cache": "^7.17.0",
-        "vscode-extension-telemetry-wrapper": "^0.15.1",
-        "vscode-languageclient": "6.0.0-next.9",
-        "vscode-tas-client": "^0.1.75"
-    },
-    "overrides": {
-        "serialize-javascript": ">=7.0.5",
-        "mocha": {
-            "glob": ">=10.5.0",
-            "brace-expansion": ">=2.0.3"
-        }
+  "name": "vscode-java-test",
+  "displayName": "Test Runner for Java",
+  "description": "%description%",
+  "repository": {
+    "url": "https://github.com/Microsoft/vscode-java-test"
+  },
+  "version": "0.45.0",
+  "publisher": "vscjava",
+  "bugs": {
+    "url": "https://github.com/Microsoft/vscode-java-test/issues"
+  },
+  "homepage": "https://github.com/Microsoft/vscode-java-test",
+  "preview": false,
+  "icon": "resources/logo.png",
+  "keywords": [
+    "java",
+    "test",
+    "junit",
+    "testng",
+    "debug"
+  ],
+  "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
+  "engines": {
+    "vscode": "^1.88.0"
+  },
+  "categories": [
+    "Testing"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": false,
+    "untrustedWorkspaces": {
+      "supported": false
     }
+  },
+  "activationEvents": [
+    "onLanguage:java",
+    "workspaceContains:pom.xml",
+    "workspaceContains:*/pom.xml",
+    "workspaceContains:build.gradle",
+    "workspaceContains:*/build.gradle",
+    "workspaceContains:settings.gradle",
+    "workspaceContains:*/settings.gradle",
+    "workspaceContains:build.gradle.kts",
+    "workspaceContains:*/build.gradle.kts",
+    "workspaceContains:settings.gradle.kts",
+    "workspaceContains:*/settings.gradle.kts",
+    "workspaceContains:.classpath",
+    "workspaceContains:*/.classpath",
+    "onCommand:java.test.editor.run",
+    "onCommand:java.test.editor.debug",
+    "onCommand:java.test.runFromJavaProjectExplorer",
+    "onCommand:java.test.debugFromJavaProjectExplorer"
+  ],
+  "main": "./main.js",
+  "contributes": {
+    "javaExtensions": [
+      "./server/com.microsoft.java.test.plugin-0.43.1.jar",
+      "./server/junit-jupiter-api_5.14.3.jar",
+      "./server/junit-jupiter-api_6.0.1.jar",
+      "./server/junit-jupiter-engine_5.14.3.jar",
+      "./server/junit-jupiter-engine_6.0.1.jar",
+      "./server/junit-jupiter-migrationsupport_5.14.1.jar",
+      "./server/junit-jupiter-params_5.14.3.jar",
+      "./server/junit-jupiter-params_6.0.1.jar",
+      "./server/junit-platform-commons_1.14.3.jar",
+      "./server/junit-platform-commons_6.0.1.jar",
+      "./server/junit-platform-engine_1.14.3.jar",
+      "./server/junit-platform-engine_6.0.1.jar",
+      "./server/junit-platform-launcher_1.14.3.jar",
+      "./server/junit-platform-launcher_6.0.1.jar",
+      "./server/junit-platform-runner_1.14.1.jar",
+      "./server/junit-platform-suite-api_1.14.1.jar",
+      "./server/junit-platform-suite-api_6.0.1.jar",
+      "./server/junit-platform-suite-commons_1.14.1.jar",
+      "./server/junit-platform-suite-engine_1.14.1.jar",
+      "./server/junit-platform-suite-engine_6.0.1.jar",
+      "./server/junit-vintage-engine_5.14.1.jar",
+      "./server/org.apiguardian.api_1.1.2.jar",
+      "./server/org.eclipse.jdt.junit4.runtime_1.4.0.v20251113-1434.jar",
+      "./server/org.eclipse.jdt.junit5.runtime_1.2.0.v20251113-1434.jar",
+      "./server/org.eclipse.jdt.junit6.runtime_1.0.0.v20251112-1701.jar",
+      "./server/org.jacoco.core_0.8.14.202510111229.jar",
+      "./server/org.opentest4j_1.3.0.jar"
+    ],
+    "viewsWelcome": [
+      {
+        "view": "testing",
+        "contents": "%contributes.viewsWelcome.inLightWeightMode%",
+        "when": "java:serverMode == LightWeight"
+      },
+      {
+        "view": "testing",
+        "contents": "Click below button to configure a test framework for your project.\n[Enable Java Tests](command:_java.test.enableTests)",
+        "when": "java:needSetupTests"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "java.test.runFromJavaProjectExplorer",
+          "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)(?!.*?\\b\\+resource\\b)/",
+          "group": "8_execution@10"
+        },
+        {
+          "command": "java.test.debugFromJavaProjectExplorer",
+          "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)(?!.*?\\b\\+resource\\b)/",
+          "group": "8_execution@20"
+        },
+        {
+          "command": "java.test.runFromJavaProjectExplorer",
+          "when": "view == javaProjectExplorer && viewItem =~ /java:(type|package|packageRoot)(?=.*?\\b\\+uri\\b)(?=.*?\\b\\+test\\b)(?!.*?\\b\\+resource\\b)/",
+          "group": "inline@run_0"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "java.test.runFromJavaProjectExplorer",
+          "when": "false"
+        },
+        {
+          "command": "java.test.debugFromJavaProjectExplorer",
+          "when": "false"
+        },
+        {
+          "command": "java.test.editor.run",
+          "when": "java:serverMode != LightWeight"
+        },
+        {
+          "command": "java.test.editor.debug",
+          "when": "java:serverMode != LightWeight"
+        },
+        {
+          "command": "java.test.goToTest",
+          "when": "java:testRunnerActivated && resourceExtname == .java"
+        },
+        {
+          "command": "java.test.goToTestSubject",
+          "when": "java:testRunnerActivated && resourceExtname == .java"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "java.test.goToTest",
+          "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]main[/|\\\\]java[/|\\\\].*\\.java/",
+          "group": "navigation@100"
+        },
+        {
+          "command": "java.test.goToTestSubject",
+          "when": "java:testRunnerActivated && resourcePath =~ /.*src[/|\\\\]test[/|\\\\]java[/|\\\\].*\\.java/",
+          "group": "navigation@100"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "java.test.goToTest",
+        "title": "%contributes.commands.java.test.goToTest.title%",
+        "category": "Java"
+      },
+      {
+        "command": "java.test.goToTestSubject",
+        "title": "%contributes.commands.java.test.goToTestSubject.title%",
+        "category": "Java"
+      },
+      {
+        "command": "java.test.runFromJavaProjectExplorer",
+        "title": "%contributes.commands.java.test.runFromJavaProjectExplorer.title%",
+        "icon": "$(play)",
+        "category": "Java"
+      },
+      {
+        "command": "java.test.debugFromJavaProjectExplorer",
+        "title": "%contributes.commands.java.test.debugFromJavaProjectExplorer.title%",
+        "category": "Java"
+      },
+      {
+        "command": "java.test.editor.run",
+        "title": "%contributes.commands.java.test.editor.run.title%",
+        "category": "Java"
+      },
+      {
+        "command": "java.test.editor.debug",
+        "title": "%contributes.commands.java.test.editor.debug.title%",
+        "category": "Java"
+      }
+    ],
+    "configuration": {
+      "title": "Test Runner for Java",
+      "properties": {
+        "java.test.defaultConfig": {
+          "type": "string",
+          "description": "%configuration.java.test.defaultConfig.description%",
+          "scope": "resource"
+        },
+        "java.test.config": {
+          "type": [
+            "object",
+            "array"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "%configuration.java.test.config.name.description%",
+              "pattern": "^((?!default).)*$",
+              "default": ""
+            },
+            "workingDirectory": {
+              "type": "string",
+              "description": "%configuration.java.test.config.workingDirectory.description%",
+              "default": "${workspaceFolder}"
+            },
+            "classPaths": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "$Auto",
+                      "$Runtime",
+                      "$Test",
+                      "!<path>"
+                    ],
+                    "enumDescriptions": [
+                      "%configuration.java.test.config.classPaths.auto.description%",
+                      "%configuration.java.test.config.classPaths.runtime.description%",
+                      "%configuration.java.test.config.classPaths.test.description%",
+                      "%configuration.java.test.config.classPaths.exclude.description%"
+                    ]
+                  },
+                  "string"
+                ]
+              },
+              "description": "%configuration.java.test.config.classPaths.description%",
+              "default": []
+            },
+            "modulePaths": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "$Auto",
+                      "$Runtime",
+                      "$Test",
+                      "!<path>"
+                    ],
+                    "enumDescriptions": [
+                      "%configuration.java.test.config.modulePaths.auto.description%",
+                      "%configuration.java.test.config.modulePaths.runtime.description%",
+                      "%configuration.java.test.config.modulePaths.test.description%",
+                      "%configuration.java.test.config.modulePaths.exclude.description%"
+                    ]
+                  },
+                  "string"
+                ]
+              },
+              "description": "%configuration.java.test.config.modulePaths.description%",
+              "default": []
+            },
+            "javaExec": {
+              "type": "string",
+              "markdownDescription": "%configuration.java.test.config.javaExec.description%",
+              "default": ""
+            },
+            "encoding": {
+              "type": "string",
+              "description": "%configuration.java.test.config.encoding.description%",
+              "default": ""
+            },
+            "vmArgs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "%configuration.java.test.config.vmArgs.description%",
+              "default": []
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "%configuration.java.test.config.args.description%",
+              "default": []
+            },
+            "env": {
+              "type": "object",
+              "description": "%configuration.java.test.config.env.description%",
+              "default": {}
+            },
+            "envFile": {
+              "type": "string",
+              "description": "%configuration.java.test.config.envFile.description%",
+              "default": "${workspaceFolder}/.env"
+            },
+            "sourcePaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "%configuration.java.test.config.sourcePaths.description%",
+              "default": []
+            },
+            "preLaunchTask": {
+              "type": "string",
+              "description": "%configuration.java.test.config.preLaunchTask.description%",
+              "default": ""
+            },
+            "postDebugTask": {
+              "type": "string",
+              "description": "%configuration.java.test.config.postDebugTask.description%",
+              "default": ""
+            },
+            "testKind": {
+              "type": "string",
+              "markdownDescription": "%configuration.java.test.config.testKind.description%",
+              "enum": [
+                "junit",
+                "testng"
+              ],
+              "default": "junit"
+            },
+            "filters": {
+              "type": "object",
+              "description": "%configuration.java.test.config.filters.description%",
+              "default": {},
+              "properties": {
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
+                  "default": []
+                }
+              }
+            },
+            "when": {
+              "type": "string",
+              "markdownDescription": "%configuration.java.test.config.when.description%",
+              "default": ""
+            },
+            "coverage": {
+              "type": "object",
+              "description": "%configuration.java.test.config.coverage.description%",
+              "default": {},
+              "properties": {
+                "appendResult": {
+                  "type": "boolean",
+                  "description": "%configuration.java.test.config.coverage.appendResult.description%",
+                  "default": true
+                },
+                "excludes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "%configuration.java.test.config.coverage.excludes.description%",
+                  "default": []
+                }
+              }
+            }
+          },
+          "description": "%configuration.java.test.config.description%",
+          "items": {
+            "type": "object",
+            "description": "%configuration.java.test.config.item.description%",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "%configuration.java.test.config.name.description%",
+                "pattern": "^((?!default).)*$",
+                "default": ""
+              },
+              "workingDirectory": {
+                "type": "string",
+                "description": "%configuration.java.test.config.workingDirectory.description%",
+                "default": "${workspaceFolder}"
+              },
+              "classPaths": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "$Auto",
+                        "$Runtime",
+                        "$Test",
+                        "!<path>"
+                      ],
+                      "enumDescriptions": [
+                        "%configuration.java.test.config.classPaths.auto.description%",
+                        "%configuration.java.test.config.classPaths.runtime.description%",
+                        "%configuration.java.test.config.classPaths.test.description%",
+                        "%configuration.java.test.config.classPaths.exclude.description%"
+                      ]
+                    },
+                    "string"
+                  ]
+                },
+                "description": "%configuration.java.test.config.classPaths.description%",
+                "default": []
+              },
+              "modulePaths": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "$Auto",
+                        "$Runtime",
+                        "$Test",
+                        "!<path>"
+                      ],
+                      "enumDescriptions": [
+                        "%configuration.java.test.config.modulePaths.auto.description%",
+                        "%configuration.java.test.config.modulePaths.runtime.description%",
+                        "%configuration.java.test.config.modulePaths.test.description%",
+                        "%configuration.java.test.config.modulePaths.exclude.description%"
+                      ]
+                    },
+                    "string"
+                  ]
+                },
+                "description": "%configuration.java.test.config.modulePaths.description%",
+                "default": []
+              },
+              "javaExec": {
+                "type": "string",
+                "markdownDescription": "%configuration.java.test.config.javaExec.description%",
+                "default": ""
+              },
+              "encoding": {
+                "type": "string",
+                "description": "%configuration.java.test.config.encoding.description%",
+                "default": ""
+              },
+              "vmArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "%configuration.java.test.config.vmArgs.description%",
+                "default": []
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "%configuration.java.test.config.args.description%",
+                "default": []
+              },
+              "env": {
+                "type": "object",
+                "description": "%configuration.java.test.config.env.description%",
+                "default": {}
+              },
+              "envFile": {
+                "type": "string",
+                "description": "%configuration.java.test.config.envFile.description%",
+                "default": "${workspaceFolder}/.env"
+              },
+              "sourcePaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "%configuration.java.test.config.sourcePaths.description%",
+                "default": []
+              },
+              "preLaunchTask": {
+                "type": "string",
+                "description": "%configuration.java.test.config.preLaunchTask.description%",
+                "default": ""
+              },
+              "postDebugTask": {
+                "type": "string",
+                "description": "%configuration.java.test.config.postDebugTask.description%",
+                "default": ""
+              },
+              "testKind": {
+                "type": "string",
+                "markdownDescription": "%configuration.java.test.config.testKind.description%",
+                "enum": [
+                  "junit",
+                  "testng"
+                ],
+                "default": "junit"
+              },
+              "filters": {
+                "type": "object",
+                "description": "%configuration.java.test.config.filters.description%",
+                "default": {},
+                "properties": {
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "markdownDescription": "%configuration.java.test.config.filters.tags.description%",
+                    "default": []
+                  }
+                }
+              },
+              "when": {
+                "type": "string",
+                "markdownDescription": "%configuration.java.test.config.when.description%",
+                "default": ""
+              },
+              "coverage": {
+                "type": "object",
+                "description": "%configuration.java.test.config.coverage.description%",
+                "default": {},
+                "properties": {
+                  "appendResult": {
+                    "type": "boolean",
+                    "description": "%configuration.java.test.config.coverage.appendResult.description%",
+                    "default": true
+                  },
+                  "excludes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "%configuration.java.test.config.coverage.excludes.description%",
+                    "default": []
+                  }
+                }
+              }
+            }
+          },
+          "scope": "resource"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "webpack --mode development --watch",
+    "test": "npm run compile && node ./out/test/index.js",
+    "lint": "eslint -c .eslintrc.js --ext .ts ./src",
+    "build-plugin": "node scripts/buildJdtlsExt.js",
+    "vscode:prepublish": "webpack --mode production"
+  },
+  "extensionDependencies": [
+    "redhat.java",
+    "vscjava.vscode-java-debug"
+  ],
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/glob": "^7.2.0",
+    "@types/lodash": "^4.14.191",
+    "@types/lru-cache": "^7.10.10",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^16.18.13",
+    "@types/sinon": "^10.0.13",
+    "@types/vscode": "1.88.0",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^8.43.0",
+    "glob": "^7.2.3",
+    "mocha": "^11.1.0",
+    "sinon": "^14.0.2",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.4",
+    "webpack": "^5.105.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "dependencies": {
+    "fs-extra": "^10.1.0",
+    "iconv-lite": "^0.6.3",
+    "lodash": "^4.18.1",
+    "lru-cache": "^7.17.0",
+    "vscode-extension-telemetry-wrapper": "^0.15.2",
+    "vscode-languageclient": "6.0.0-next.9",
+    "vscode-tas-client": "^0.1.75"
+  },
+  "overrides": {
+    "serialize-javascript": ">=7.0.5",
+    "mocha": {
+      "glob": ">=10.5.0",
+      "brace-expansion": ">=2.0.3"
+    }
+  }
 }
