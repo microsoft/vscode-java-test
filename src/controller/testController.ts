@@ -650,8 +650,21 @@ function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
             && !([...methods].some((m: TestItem) => dataCache.get(m)?.uniqueId))) {
             classMapping.set(clazz.id, clazz);
         } else {
+            // Methods restricted to a single invocation (uniqueId) must still run in their
+            // own launch since the underlying protocol carries at most one uniqueId per JVM.
+            // Every other method of the same class can share one launch so that
+            // @BeforeAll / @AfterAll and any cached fixture (e.g. Spring ApplicationContext)
+            // are reused across the selection. See issue #1836.
+            const groupable: TestItem[] = [];
             for (const method of methods.values()) {
-                testMethods.push([method]);
+                if (dataCache.get(method)?.uniqueId) {
+                    testMethods.push([method]);
+                } else {
+                    groupable.push(method);
+                }
+            }
+            if (groupable.length > 0) {
+                testMethods.push(groupable);
             }
         }
     }
