@@ -276,6 +276,14 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                                     if (token.isCancellationRequested) {
                                         break;
                                     }
+                                    // Each per-item launch hands its progress to the debugger
+                                    // via __progressId, and the debugger calls done() when the
+                                    // session ends. The next iteration must therefore obtain a
+                                    // fresh progress reporter — mirroring the same isCancelled
+                                    // reset that the outer per-kind loop performs at line ~240.
+                                    if (option.progressReporter?.isCancelled()) {
+                                        option.progressReporter = progressProvider?.createProgressReporter(option.isDebug ? 'Debug Tests' : 'Run Tests');
+                                    }
                                     await runItemInIsolatedLaunch(item, testContext, option, run, token);
                                 }
                             } else {
