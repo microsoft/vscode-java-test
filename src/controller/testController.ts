@@ -260,6 +260,10 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
                         } catch (error) {
+                            const message: TestMessage = new TestMessage(error.message || 'Failed to run tests.');
+                            for (const item of testContext.testItems) {
+                                run.errored(item, message);
+                            }
                             window.showErrorMessage(error.message || 'Failed to run tests.');
                             option.progressReporter?.done();
                         } finally {
