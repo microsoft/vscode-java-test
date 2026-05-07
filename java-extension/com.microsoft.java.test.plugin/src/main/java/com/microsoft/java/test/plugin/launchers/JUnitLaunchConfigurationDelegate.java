@@ -151,12 +151,17 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     // Language Server (Language Support for Java(TM) by Red Hat). When
                     // that bundle predates eclipse.jdt.ui#2975, batching multiple
                     // methods into a single JVM would surface as a ClassNotFoundException
-                    // at test time. Fail fast here with an actionable message instead.
+                    // at test time. Fail fast here with a marker the TypeScript side
+                    // recognises so it can transparently fall back to launching each
+                    // method in its own JVM (the legacy per-method path). The actionable
+                    // text after the marker is preserved as a defensive fallback in case
+                    // the fallback path itself also fails for an unrelated reason.
                     throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            "Running multiple test methods together in a single JVM requires a newer " +
-                                    "Eclipse Java Language Server (org.eclipse.jdt.junit.runtime). " +
-                                    "Please update the 'Language Support for Java(TM) by Red Hat' " +
-                                    "extension and retry, or run the selected methods one at a time.",
+                            JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX
+                                    + "Running multiple test methods together in a single JVM requires a newer "
+                                    + "Eclipse Java Language Server (org.eclipse.jdt.junit.runtime). "
+                                    + "Please update the 'Language Support for Java(TM) by Red Hat' "
+                                    + "extension and retry, or run the selected methods one at a time.",
                             null));
                 }
                 // Multi-method launch: hand the full selection to RemoteTestRunner via

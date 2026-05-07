@@ -63,6 +63,19 @@ public class JUnitLaunchUtils {
     private static final String JUNIT_RUNTIME_BUNDLE = "org.eclipse.jdt.junit.runtime";
 
     /**
+     * Stable prefix prepended to the {@link CoreException} thrown when the
+     * resolved {@code org.eclipse.jdt.junit.runtime} bundle is too old to
+     * understand the {@code Class:method} multi-method launch protocol. The
+     * TypeScript side detects this prefix and silently falls back to launching
+     * every selected method in its own JVM (the legacy per-method path),
+     * keeping the user experience identical to the pre-batching behaviour on
+     * older Eclipse Java Language Server releases. Do NOT change the value
+     * without updating the corresponding constant on the client side.
+     */
+    public static final String MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX =
+            "MULTI_METHOD_LAUNCH_UNSUPPORTED: ";
+
+    /**
      * Minimum {@code org.eclipse.jdt.junit.runtime} version that recognises the
      * {@code Class:method} multi-method launch protocol introduced by
      * <a href="https://github.com/eclipse-jdt/eclipse.jdt.ui/pull/2975">eclipse.jdt.ui#2975</a>.

@@ -12,6 +12,7 @@ import { testSourceProvider } from '../provider/testSourceProvider';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { JUnitRunner } from '../runners/junitRunner/JunitRunner';
 import { TestNGRunner } from '../runners/testngRunner/TestNGRunner';
+import { JUnitLaunchProtocol } from '../constants';
 import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
@@ -260,12 +261,31 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
                         } catch (error) {
-                            const message: TestMessage = new TestMessage(error.message || 'Failed to run tests.');
-                            for (const item of testContext.testItems) {
-                                run.errored(item, message);
+                            const message: string = error?.message || 'Failed to run tests.';
+                            if (typeof error?.message === 'string'
+                                && error.message.startsWith(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX)
+                                && testContext.testItems.length > 1) {
+                                // Silent fallback for older Eclipse Java Language Server
+                                // releases (predating eclipse.jdt.ui#2975): re-launch every
+                                // selected method in its own JVM. From here on the cancel
+                                // handler must defer to the per-item debug sessions, just
+                                // as it would for a normal multi-group run.
+                                delegatedToDebugger = true;
+                                const itemsToRetry: TestItem[] = [...testContext.testItems];
+                                for (const item of itemsToRetry) {
+                                    if (token.isCancellationRequested) {
+                                        break;
+                                    }
+                                    await runItemInIsolatedLaunch(item, testContext, option, run, token);
+                                }
+                            } else {
+                                const testMessage: TestMessage = new TestMessage(message);
+                                for (const item of testContext.testItems) {
+                                    run.errored(item, testMessage);
+                                }
+                                window.showErrorMessage(message);
+                                option.progressReporter?.done();
                             }
-                            window.showErrorMessage(error.message || 'Failed to run tests.');
-                            option.progressReporter?.done();
                         } finally {
                             await runner.tearDown();
                         }
@@ -721,6 +741,54 @@ function getRunnerByContext(testContext: IRunTestContext): BaseRunner | undefine
             return new TestNGRunner(testContext);
         default:
             return undefined;
+    }
+}
+
+/**
+ * Run a single test item through its own setup → resolve → run → tearDown
+ * cycle. Used as a silent fallback when the bundled JDT-LS does not yet
+ * understand the {@code Class:method} multi-method launch protocol
+ * (eclipse.jdt.ui#2975) — every selected method is re-launched in its own JVM,
+ * matching the pre-batching behaviour. Errors during the fallback are
+ * surfaced per-item so unrelated failures (e.g. compilation errors) are still
+ * reported to the user; the multi-method marker itself is filtered out so the
+ * scary "requires a newer..." text never reaches the popup.
+ */
+async function runItemInIsolatedLaunch(
+    item: TestItem,
+    parentContext: IRunTestContext,
+    option: IRunOption,
+    run: TestRun,
+    token: CancellationToken,
+): Promise<void> {
+    const singleContext: IRunTestContext = {
+        ...parentContext,
+        testItems: [item],
+    };
+    const runner: BaseRunner | undefined = getRunnerByContext(singleContext);
+    if (!runner) {
+        run.errored(item, new TestMessage(`Failed to get suitable runner for the test kind: ${singleContext.kind}.`));
+        return;
+    }
+    try {
+        await runner.setup();
+        const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, singleContext.testConfig)
+            ?? await resolveLaunchConfigurationForRunner(runner, singleContext, singleContext.testConfig);
+        resolvedConfiguration.__progressId = option.progressReporter?.getId();
+        trackTestFrameworkVersion(singleContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
+        await runner.run(resolvedConfiguration, token, option.progressReporter);
+    } catch (error) {
+        const rawMessage: string = error?.message || 'Failed to run tests.';
+        // Strip the internal marker if it ever bubbles up here (e.g. the user
+        // somehow ends up with a single-method batch that still hits the
+        // capability gate) so the popup stays user-readable.
+        const message: string = rawMessage.startsWith(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX)
+            ? rawMessage.substring(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX.length)
+            : rawMessage;
+        run.errored(item, new TestMessage(message));
+        window.showErrorMessage(message);
+    } finally {
+        await runner.tearDown();
     }
 }
 

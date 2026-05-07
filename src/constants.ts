@@ -66,6 +66,22 @@ export namespace Context {
     export const ACTIVATION_CONTEXT_KEY: string = 'java:testRunnerActivated';
 }
 
+export namespace JUnitLaunchProtocol {
+    /**
+     * Stable prefix prepended to the launch-resolution error thrown by the
+     * Java plugin when the bundled {@code org.eclipse.jdt.junit.runtime}
+     * predates the {@code Class:method} multi-method launch protocol
+     * introduced by eclipse.jdt.ui#2975. The TypeScript runner detects this
+     * prefix and silently re-launches every selected method in its own JVM
+     * (the legacy per-method path), keeping the user experience identical to
+     * the pre-batching behaviour on older Eclipse Java Language Server
+     * releases. Keep in sync with
+     * {@code JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX} on the
+     * Java side.
+     */
+    export const MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX: string = 'MULTI_METHOD_LAUNCH_UNSUPPORTED: ';
+}
+
 /**
  * The different part keys returned by the JUnit test runner,
  * which are used to identify the test cases.
