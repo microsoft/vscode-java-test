@@ -631,7 +631,7 @@ function removeNonRerunTestInvocations(testItems: TestItem[]): void {
  * Because the current test runner cannot run class and methods for the same time,
  * in the returned array, all the classes are in one group and each method is a group.
  */
-function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
+export function mergeTestMethods(testItems: TestItem[]): TestItem[][] { // export for unit test
     if (testItems.length <= 1) {
         return [testItems];
     }
