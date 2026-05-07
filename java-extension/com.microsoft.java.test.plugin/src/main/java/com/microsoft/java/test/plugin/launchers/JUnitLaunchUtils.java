@@ -66,15 +66,9 @@ public class JUnitLaunchUtils {
      * Minimum {@code org.eclipse.jdt.junit.runtime} version that recognises the
      * {@code Class:method} multi-method launch protocol introduced by
      * <a href="https://github.com/eclipse-jdt/eclipse.jdt.ui/pull/2975">eclipse.jdt.ui#2975</a>.
-     *
-     * <p>TODO: bump this placeholder to the first published bundle version once
-     * the upstream change is included in an Eclipse Platform release that ships
-     * with redhat.java. Until then the placeholder is permissive (every real
-     * bundle compares as supported), so that local development against a
-     * freshly-built JDT-LS continues to work.
      */
     private static final Version MIN_JDT_JUNIT_RUNTIME_VERSION_FOR_MULTI_METHOD =
-            Version.parseVersion("0.0.0");
+            Version.parseVersion("3.8.100");
 
     private JUnitLaunchUtils() {}
 
