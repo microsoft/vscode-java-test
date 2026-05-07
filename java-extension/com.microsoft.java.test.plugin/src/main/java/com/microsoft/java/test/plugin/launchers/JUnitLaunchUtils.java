@@ -22,6 +22,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IJavaElement;
@@ -34,6 +35,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -51,7 +54,45 @@ public class JUnitLaunchUtils {
     private static final String JUNIT5_LOADER = "org.eclipse.jdt.junit.loader.junit5";
     private static final String JUNIT4_LOADER = "org.eclipse.jdt.junit.loader.junit4";
 
+    /**
+     * Bundle that hosts {@code RemoteTestRunner}, the consumer of the
+     * {@code -testNameFile} content. This jar is shipped by the Eclipse Java
+     * Language Server (i.e. the "Language Support for Java(TM) by Red Hat"
+     * extension), not by vscode-java-test itself.
+     */
+    private static final String JUNIT_RUNTIME_BUNDLE = "org.eclipse.jdt.junit.runtime";
+
+    /**
+     * Minimum {@code org.eclipse.jdt.junit.runtime} version that recognises the
+     * {@code Class:method} multi-method launch protocol introduced by
+     * <a href="https://github.com/eclipse-jdt/eclipse.jdt.ui/pull/2975">eclipse.jdt.ui#2975</a>.
+     *
+     * <p>TODO: bump this placeholder to the first published bundle version once
+     * the upstream change is included in an Eclipse Platform release that ships
+     * with redhat.java. Until then the placeholder is permissive (every real
+     * bundle compares as supported), so that local development against a
+     * freshly-built JDT-LS continues to work.
+     */
+    private static final Version MIN_JDT_JUNIT_RUNTIME_VERSION_FOR_MULTI_METHOD =
+            Version.parseVersion("0.0.0");
+
     private JUnitLaunchUtils() {}
+
+    /**
+     * @return {@code true} when the resolved {@code org.eclipse.jdt.junit.runtime}
+     * bundle is new enough to parse the {@code Class:method} multi-method launch
+     * protocol; {@code false} otherwise. When this returns {@code false}, callers
+     * must not batch multiple methods into a single JVM via the
+     * {@code -testNameFile} mechanism — the legacy per-method launch path should
+     * be used instead.
+     */
+    public static boolean supportsMultiMethodLaunch() {
+        final Bundle bundle = Platform.getBundle(JUNIT_RUNTIME_BUNDLE);
+        if (bundle == null) {
+            return false;
+        }
+        return bundle.getVersion().compareTo(MIN_JDT_JUNIT_RUNTIME_VERSION_FOR_MULTI_METHOD) >= 0;
+    }
 
     /**
      * Resolve the arguments to launch the Eclipse test runner
