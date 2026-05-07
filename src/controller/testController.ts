@@ -265,22 +265,17 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             if (typeof error?.message === 'string'
                                 && error.message.startsWith(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX)
                                 && testContext.testItems.length > 1) {
-                                // Silent fallback for older Eclipse Java Language Server
-                                // releases (predating eclipse.jdt.ui#2975): re-launch every
-                                // selected method in its own JVM. From here on the cancel
-                                // handler must defer to the per-item debug sessions, just
-                                // as it would for a normal multi-group run.
+                                // Silent fallback for legacy JDT-LS (pre eclipse.jdt.ui#2975):
+                                // re-launch every selected method in its own JVM.
                                 delegatedToDebugger = true;
                                 const itemsToRetry: TestItem[] = [...testContext.testItems];
                                 for (const item of itemsToRetry) {
                                     if (token.isCancellationRequested) {
                                         break;
                                     }
-                                    // Each per-item launch hands its progress to the debugger
-                                    // via __progressId, and the debugger calls done() when the
-                                    // session ends. The next iteration must therefore obtain a
-                                    // fresh progress reporter — mirroring the same isCancelled
-                                    // reset that the outer per-kind loop performs at line ~240.
+                                    // Each per-item launch hands progress to the debugger via
+                                    // __progressId; the debugger dones the reporter on session
+                                    // end. Reset like the outer per-kind loop does (~line 240).
                                     if (option.progressReporter?.isCancelled()) {
                                         option.progressReporter = progressProvider?.createProgressReporter(option.isDebug ? 'Debug Tests' : 'Run Tests');
                                     }
@@ -682,11 +677,10 @@ export function mergeTestMethods(testItems: TestItem[]): TestItem[][] { // expor
             && !([...methods].some((m: TestItem) => dataCache.get(m)?.uniqueId))) {
             classMapping.set(clazz.id, clazz);
         } else {
-            // Methods restricted to a single invocation (uniqueId) must still run in their
-            // own launch since the underlying protocol carries at most one uniqueId per JVM.
-            // Every other method of the same class can share one launch so that
-            // @BeforeAll / @AfterAll and any cached fixture (e.g. Spring ApplicationContext)
-            // are reused across the selection. See issue #1836.
+            // uniqueId methods must run alone (the protocol carries at most one
+            // uniqueId per JVM); the rest can share a JVM so @BeforeAll/@AfterAll
+            // and cached fixtures (e.g. Spring ApplicationContext) are reused.
+            // See issue #1836.
             const groupable: TestItem[] = [];
             for (const method of methods.values()) {
                 if (dataCache.get(method)?.uniqueId) {
@@ -753,14 +747,9 @@ function getRunnerByContext(testContext: IRunTestContext): BaseRunner | undefine
 }
 
 /**
- * Run a single test item through its own setup → resolve → run → tearDown
- * cycle. Used as a silent fallback when the bundled JDT-LS does not yet
- * understand the {@code Class:method} multi-method launch protocol
- * (eclipse.jdt.ui#2975) — every selected method is re-launched in its own JVM,
- * matching the pre-batching behaviour. Errors during the fallback are
- * surfaced per-item so unrelated failures (e.g. compilation errors) are still
- * reported to the user; the multi-method marker itself is filtered out so the
- * scary "requires a newer..." text never reaches the popup.
+ * Run a single test item through its own setup → resolve → run → tearDown cycle.
+ * Used as the silent fallback when the bundled JDT-LS lacks the
+ * {@code Class:method} multi-method protocol (eclipse.jdt.ui#2975).
  */
 async function runItemInIsolatedLaunch(
     item: TestItem,
@@ -787,9 +776,7 @@ async function runItemInIsolatedLaunch(
         await runner.run(resolvedConfiguration, token, option.progressReporter);
     } catch (error) {
         const rawMessage: string = error?.message || 'Failed to run tests.';
-        // Strip the internal marker if it ever bubbles up here (e.g. the user
-        // somehow ends up with a single-method batch that still hits the
-        // capability gate) so the popup stays user-readable.
+        // Strip the internal marker if it ever bubbles up here so the popup stays user-readable.
         const message: string = rawMessage.startsWith(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX)
             ? rawMessage.substring(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX.length)
             : rawMessage;

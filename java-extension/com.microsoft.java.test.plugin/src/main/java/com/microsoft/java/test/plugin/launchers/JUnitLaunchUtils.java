@@ -55,30 +55,24 @@ public class JUnitLaunchUtils {
     private static final String JUNIT4_LOADER = "org.eclipse.jdt.junit.loader.junit4";
 
     /**
-     * Bundle that hosts {@code RemoteTestRunner}, the consumer of the
-     * {@code -testNameFile} content. This jar is shipped by the Eclipse Java
-     * Language Server (i.e. the "Language Support for Java(TM) by Red Hat"
-     * extension), not by vscode-java-test itself.
+     * Bundle that hosts {@code RemoteTestRunner}, the consumer of {@code -testNameFile}.
+     * Shipped by the Eclipse Java Language Server, not by vscode-java-test itself.
      */
     private static final String JUNIT_RUNTIME_BUNDLE = "org.eclipse.jdt.junit.runtime";
 
     /**
-     * Stable prefix prepended to the {@link CoreException} thrown when the
-     * resolved {@code org.eclipse.jdt.junit.runtime} bundle is too old to
-     * understand the {@code Class:method} multi-method launch protocol. The
-     * TypeScript side detects this prefix and silently falls back to launching
-     * every selected method in its own JVM (the legacy per-method path),
-     * keeping the user experience identical to the pre-batching behaviour on
-     * older Eclipse Java Language Server releases. Do NOT change the value
-     * without updating the corresponding constant on the client side.
+     * Marker prepended to the launch-resolution error when the bundled
+     * {@code org.eclipse.jdt.junit.runtime} is too old for the
+     * {@code Class:method} multi-method launch protocol. Detected by the
+     * TypeScript side to fall back to per-method launches. Keep in sync with
+     * the constant on the client side.
      */
     public static final String MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX =
             "MULTI_METHOD_LAUNCH_UNSUPPORTED: ";
 
     /**
-     * Minimum {@code org.eclipse.jdt.junit.runtime} version that recognises the
-     * {@code Class:method} multi-method launch protocol introduced by
-     * <a href="https://github.com/eclipse-jdt/eclipse.jdt.ui/pull/2975">eclipse.jdt.ui#2975</a>.
+     * Minimum {@code org.eclipse.jdt.junit.runtime} version that supports the
+     * {@code Class:method} multi-method launch protocol (eclipse.jdt.ui#2975).
      */
     private static final Version MIN_JDT_JUNIT_RUNTIME_VERSION_FOR_MULTI_METHOD =
             Version.parseVersion("3.8.100");
@@ -87,11 +81,7 @@ public class JUnitLaunchUtils {
 
     /**
      * @return {@code true} when the resolved {@code org.eclipse.jdt.junit.runtime}
-     * bundle is new enough to parse the {@code Class:method} multi-method launch
-     * protocol; {@code false} otherwise. When this returns {@code false}, callers
-     * must not batch multiple methods into a single JVM via the
-     * {@code -testNameFile} mechanism — the legacy per-method launch path should
-     * be used instead.
+     * supports batching multiple methods into a single JVM via {@code -testNameFile}.
      */
     public static boolean supportsMultiMethodLaunch() {
         final Bundle bundle = Platform.getBundle(JUNIT_RUNTIME_BUNDLE);

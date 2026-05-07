@@ -146,16 +146,9 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
         } else if (this.args.testLevel == TestLevel.METHOD) {
             if (this.args.testNames.length > 1) {
                 if (!JUnitLaunchUtils.supportsMultiMethodLaunch()) {
-                    // The Class:method protocol is parsed by RemoteTestRunner inside
-                    // org.eclipse.jdt.junit.runtime, which ships with the Eclipse Java
-                    // Language Server (Language Support for Java(TM) by Red Hat). When
-                    // that bundle predates eclipse.jdt.ui#2975, batching multiple
-                    // methods into a single JVM would surface as a ClassNotFoundException
-                    // at test time. Fail fast here with a marker the TypeScript side
-                    // recognises so it can transparently fall back to launching each
-                    // method in its own JVM (the legacy per-method path). The actionable
-                    // text after the marker is preserved as a defensive fallback in case
-                    // the fallback path itself also fails for an unrelated reason.
+                    // Bundled org.eclipse.jdt.junit.runtime predates eclipse.jdt.ui#2975.
+                    // Fail fast with a marker so the TypeScript side can fall back to
+                    // per-method launches transparently.
                     throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
                             JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX
                                     + "Running multiple test methods together in a single JVM requires a newer "
@@ -164,11 +157,9 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                                     + "extension and retry, or run the selected methods one at a time.",
                             null));
                 }
-                // Multi-method launch: hand the full selection to RemoteTestRunner via
-                // -testNameFile using the new "Class:method" line format. The runner
-                // will then load every selected method inside a single test JVM, so
-                // per-class @BeforeAll/@AfterAll and any cached Spring
-                // ApplicationContext are reused across the selection.
+                // Multi-method launch via "Class:method" lines: all selected methods share
+                // one JVM so per-class @BeforeAll/@AfterAll and cached fixtures (e.g.
+                // Spring ApplicationContext) are reused. See issue #1836.
                 final String fileName = createMethodTestNamesFile(this.args.testNames);
                 arguments.add("-testNameFile");
                 arguments.add(fileName);
