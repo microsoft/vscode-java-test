@@ -56,7 +56,7 @@ suite('testController - mergeTestMethods', () => {
         clazz.children.add(method2);
         clazz.children.add(method3);
 
-        // select only 2 of 3 methods - they must share one launch (the core PR #1862 change)
+        // select only 2 of 3 methods - they must share one launch (the core change for issue #1836)
         const result = mergeTestMethods([method1, method2]);
 
         assert.deepStrictEqual(result, [[], [method1, method2]]);

@@ -274,8 +274,8 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                                         break;
                                     }
                                     // Each per-item launch hands progress to the debugger via
-                                    // __progressId; the debugger dones the reporter on session
-                                    // end. Reset like the outer per-kind loop does (~line 240).
+                                    // __progressId; the debugger calls done() on the reporter
+                                    // on session end. Reset like the outer per-kind loop does (~line 240).
                                     if (option.progressReporter?.isCancelled()) {
                                         option.progressReporter = progressProvider?.createProgressReporter(option.isDebug ? 'Debug Tests' : 'Run Tests');
                                     }
@@ -622,9 +622,16 @@ function removeNonRerunTestInvocations(testItems: TestItem[]): void {
 }
 
 /**
- * Eliminate the test methods if they are contained in the test class.
- * Because the current test runner cannot run class and methods for the same time,
- * in the returned array, all the classes are in one group and each method is a group.
+ * Eliminate the test methods if they are contained in the test class, then group the
+ * remaining method-level selections so they can share JVM launches where possible.
+ *
+ * The returned array is structured as:
+ *   - The first group contains all class-level selections (run together).
+ *   - Each subsequent group contains methods from the same parent class that can
+ *     be launched in a single JVM, so per-class @BeforeAll/@AfterAll and cached
+ *     fixtures (e.g. Spring ApplicationContext) are reused. See issue #1836.
+ *   - Methods restricted to a single invocation (uniqueId) are kept in their own
+ *     group, since the underlying protocol carries at most one uniqueId per JVM.
  */
 export function mergeTestMethods(testItems: TestItem[]): TestItem[][] { // export for unit test
     if (testItems.length <= 1) {

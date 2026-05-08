@@ -200,7 +200,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                             .getType().resolveBinding();
                     if (paramTypeBinding == null) {
                         throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                                "Cannot set set argument for method" + methodDeclaration.toString(), null));
+                                "Cannot set argument for method" + methodDeclaration.toString(), null));
                     } else if (paramTypeBinding.isPrimitive()) {
                         parameters.add(paramTypeBinding.getQualifiedName());
                     } else {
