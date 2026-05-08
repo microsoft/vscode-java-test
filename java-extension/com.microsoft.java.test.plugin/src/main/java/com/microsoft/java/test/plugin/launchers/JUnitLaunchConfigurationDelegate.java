@@ -150,11 +150,11 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                     // Fail fast with a marker so the TypeScript side can fall back to
                     // per-method launches transparently.
                     throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX
-                                    + "Running multiple test methods together in a single JVM requires a newer "
-                                    + "Eclipse Java Language Server (org.eclipse.jdt.junit.runtime). "
-                                    + "Please update the 'Language Support for Java(TM) by Red Hat' "
-                                    + "extension and retry, or run the selected methods one at a time.",
+                            JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX +
+                                    "Running multiple test methods together in a single JVM requires a newer " +
+                                    "Eclipse Java Language Server (org.eclipse.jdt.junit.runtime). " +
+                                    "Please update the 'Language Support for Java(TM) by Red Hat' " +
+                                    "extension and retry, or run the selected methods one at a time.",
                             null));
                 }
                 // Multi-method launch via "Class:method" lines: all selected methods share
