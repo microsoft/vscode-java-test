@@ -12,6 +12,7 @@ import { testSourceProvider } from '../provider/testSourceProvider';
 import { BaseRunner } from '../runners/baseRunner/BaseRunner';
 import { JUnitRunner } from '../runners/junitRunner/JunitRunner';
 import { TestNGRunner } from '../runners/testngRunner/TestNGRunner';
+import { JUnitLaunchProtocol } from '../constants';
 import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
@@ -260,8 +261,34 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             trackTestFrameworkVersion(testContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
                             await runner.run(resolvedConfiguration, token, option.progressReporter);
                         } catch (error) {
-                            window.showErrorMessage(error.message || 'Failed to run tests.');
-                            option.progressReporter?.done();
+                            const message: string = error?.message || 'Failed to run tests.';
+                            if (typeof error?.message === 'string'
+                                && error.message.startsWith(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX)
+                                && testContext.testItems.length > 1) {
+                                // Silent fallback for legacy JDT-LS (pre eclipse.jdt.ui#2975):
+                                // re-launch every selected method in its own JVM.
+                                delegatedToDebugger = true;
+                                const itemsToRetry: TestItem[] = [...testContext.testItems];
+                                for (const item of itemsToRetry) {
+                                    if (token.isCancellationRequested) {
+                                        break;
+                                    }
+                                    // Each per-item launch hands progress to the debugger via
+                                    // __progressId; the debugger calls done() on the reporter
+                                    // on session end. Reset like the outer per-kind loop does (~line 240).
+                                    if (option.progressReporter?.isCancelled()) {
+                                        option.progressReporter = progressProvider?.createProgressReporter(option.isDebug ? 'Debug Tests' : 'Run Tests');
+                                    }
+                                    await runItemInIsolatedLaunch(item, testContext, option, run, token);
+                                }
+                            } else {
+                                const testMessage: TestMessage = new TestMessage(message);
+                                for (const item of testContext.testItems) {
+                                    run.errored(item, testMessage);
+                                }
+                                window.showErrorMessage(message);
+                                option.progressReporter?.done();
+                            }
                         } finally {
                             await runner.tearDown();
                         }
@@ -595,11 +622,18 @@ function removeNonRerunTestInvocations(testItems: TestItem[]): void {
 }
 
 /**
- * Eliminate the test methods if they are contained in the test class.
- * Because the current test runner cannot run class and methods for the same time,
- * in the returned array, all the classes are in one group and each method is a group.
+ * Eliminate the test methods if they are contained in the test class, then group the
+ * remaining method-level selections so they can share JVM launches where possible.
+ *
+ * The returned array is structured as:
+ *   - The first group contains all class-level selections (run together).
+ *   - Each subsequent group contains methods from the same parent class that can
+ *     be launched in a single JVM, so per-class @BeforeAll/@AfterAll and cached
+ *     fixtures (e.g. Spring ApplicationContext) are reused. See issue #1836.
+ *   - Methods restricted to a single invocation (uniqueId) are kept in their own
+ *     group, since the underlying protocol carries at most one uniqueId per JVM.
  */
-function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
+export function mergeTestMethods(testItems: TestItem[]): TestItem[][] { // export for unit test
     if (testItems.length <= 1) {
         return [testItems];
     }
@@ -650,8 +684,20 @@ function mergeTestMethods(testItems: TestItem[]): TestItem[][] {
             && !([...methods].some((m: TestItem) => dataCache.get(m)?.uniqueId))) {
             classMapping.set(clazz.id, clazz);
         } else {
+            // uniqueId methods must run alone (the protocol carries at most one
+            // uniqueId per JVM); the rest can share a JVM so @BeforeAll/@AfterAll
+            // and cached fixtures (e.g. Spring ApplicationContext) are reused.
+            // See issue #1836.
+            const groupable: TestItem[] = [];
             for (const method of methods.values()) {
-                testMethods.push([method]);
+                if (dataCache.get(method)?.uniqueId) {
+                    testMethods.push([method]);
+                } else {
+                    groupable.push(method);
+                }
+            }
+            if (groupable.length > 0) {
+                testMethods.push(groupable);
             }
         }
     }
@@ -704,6 +750,47 @@ function getRunnerByContext(testContext: IRunTestContext): BaseRunner | undefine
             return new TestNGRunner(testContext);
         default:
             return undefined;
+    }
+}
+
+/**
+ * Run a single test item through its own setup → resolve → run → tearDown cycle.
+ * Used as the silent fallback when the bundled JDT-LS lacks the
+ * {@code Class:method} multi-method protocol (eclipse.jdt.ui#2975).
+ */
+async function runItemInIsolatedLaunch(
+    item: TestItem,
+    parentContext: IRunTestContext,
+    option: IRunOption,
+    run: TestRun,
+    token: CancellationToken,
+): Promise<void> {
+    const singleContext: IRunTestContext = {
+        ...parentContext,
+        testItems: [item],
+    };
+    const runner: BaseRunner | undefined = getRunnerByContext(singleContext);
+    if (!runner) {
+        run.errored(item, new TestMessage(`Failed to get suitable runner for the test kind: ${singleContext.kind}.`));
+        return;
+    }
+    try {
+        await runner.setup();
+        const resolvedConfiguration: DebugConfiguration = mergeConfigurations(option.launchConfiguration, singleContext.testConfig)
+            ?? await resolveLaunchConfigurationForRunner(runner, singleContext, singleContext.testConfig);
+        resolvedConfiguration.__progressId = option.progressReporter?.getId();
+        trackTestFrameworkVersion(singleContext.kind, resolvedConfiguration.classPaths, resolvedConfiguration.modulePaths);
+        await runner.run(resolvedConfiguration, token, option.progressReporter);
+    } catch (error) {
+        const rawMessage: string = error?.message || 'Failed to run tests.';
+        // Strip the internal marker if it ever bubbles up here so the popup stays user-readable.
+        const message: string = rawMessage.startsWith(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX)
+            ? rawMessage.substring(JUnitLaunchProtocol.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX.length)
+            : rawMessage;
+        run.errored(item, new TestMessage(message));
+        window.showErrorMessage(message);
+    } finally {
+        await runner.tearDown();
     }
 }
 

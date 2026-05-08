@@ -66,6 +66,17 @@ export namespace Context {
     export const ACTIVATION_CONTEXT_KEY: string = 'java:testRunnerActivated';
 }
 
+export namespace JUnitLaunchProtocol {
+    /**
+     * Marker prepended to the launch-resolution error when the bundled JDT-LS
+     * predates the {@code Class:method} multi-method launch protocol
+     * (eclipse.jdt.ui#2975). Detected by the runner to fall back silently to
+     * per-method launches. Must match
+     * {@code JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX} on the Java side.
+     */
+    export const MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX: string = 'MULTI_METHOD_LAUNCH_UNSUPPORTED: ';
+}
+
 /**
  * The different part keys returned by the JUnit test runner,
  * which are used to identify the test cases.

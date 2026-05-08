@@ -22,6 +22,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IJavaElement;
@@ -34,6 +35,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -51,7 +54,42 @@ public class JUnitLaunchUtils {
     private static final String JUNIT5_LOADER = "org.eclipse.jdt.junit.loader.junit5";
     private static final String JUNIT4_LOADER = "org.eclipse.jdt.junit.loader.junit4";
 
+    /**
+     * Bundle that hosts {@code RemoteTestRunner}, the consumer of {@code -testNameFile}.
+     * Shipped by the Eclipse Java Language Server, not by vscode-java-test itself.
+     */
+    private static final String JUNIT_RUNTIME_BUNDLE = "org.eclipse.jdt.junit.runtime";
+
+    /**
+     * Marker prepended to the launch-resolution error when the bundled
+     * {@code org.eclipse.jdt.junit.runtime} is too old for the
+     * {@code Class:method} multi-method launch protocol. Detected by the
+     * TypeScript side to fall back to per-method launches. Keep in sync with
+     * the constant on the client side.
+     */
+    public static final String MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX =
+            "MULTI_METHOD_LAUNCH_UNSUPPORTED: ";
+
+    /**
+     * Minimum {@code org.eclipse.jdt.junit.runtime} version that supports the
+     * {@code Class:method} multi-method launch protocol (eclipse.jdt.ui#2975).
+     */
+    private static final Version MIN_JDT_JUNIT_RUNTIME_VERSION_FOR_MULTI_METHOD =
+            Version.parseVersion("3.8.100");
+
     private JUnitLaunchUtils() {}
+
+    /**
+     * @return {@code true} when the resolved {@code org.eclipse.jdt.junit.runtime}
+     * supports batching multiple methods into a single JVM via {@code -testNameFile}.
+     */
+    public static boolean supportsMultiMethodLaunch() {
+        final Bundle bundle = Platform.getBundle(JUNIT_RUNTIME_BUNDLE);
+        if (bundle == null) {
+            return false;
+        }
+        return bundle.getVersion().compareTo(MIN_JDT_JUNIT_RUNTIME_VERSION_FOR_MULTI_METHOD) >= 0;
+    }
 
     /**
      * Resolve the arguments to launch the Eclipse test runner

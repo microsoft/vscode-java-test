@@ -144,50 +144,75 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             arguments.add("-testNameFile");
             arguments.add(fileName);
         } else if (this.args.testLevel == TestLevel.METHOD) {
-            arguments.add("-test");
-            final IMethod method = (IMethod) JavaCore.create(this.args.testNames[0]);
-            String testName = method.getElementName();
-            if ((this.args.testKind == TestKind.JUnit5 || this.args.testKind == TestKind.JUnit6) &&
-                    method.getParameters().length > 0) {
-                final ICompilationUnit unit = method.getCompilationUnit();
-                if (unit == null) {
+            if (this.args.testNames.length > 1) {
+                if (!JUnitLaunchUtils.supportsMultiMethodLaunch()) {
+                    // Bundled org.eclipse.jdt.junit.runtime predates eclipse.jdt.ui#2975.
+                    // Fail fast with a marker so the TypeScript side can fall back to
+                    // per-method launches transparently.
                     throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            "Cannot get compilation unit of method" + method.getElementName(), null)); //$NON-NLS-1$
+                            JUnitLaunchUtils.MULTI_METHOD_LAUNCH_UNSUPPORTED_PREFIX +
+                                    "Running multiple test methods together in a single JVM requires a newer " +
+                                    "Eclipse Java Language Server (org.eclipse.jdt.junit.runtime). " +
+                                    "Please update the 'Language Support for Java(TM) by Red Hat' " +
+                                    "extension and retry, or run the selected methods one at a time.",
+                            null));
                 }
-                final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
-                        false /*fromCache*/, new NullProgressMonitor());
-                final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method, root);
-                if (methodDeclaration == null) {
-                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            "Cannot get method declaration of method" + method.getElementName(), null)); //$NON-NLS-1$
-                }
+                // Multi-method launch via "Class:method" lines: all selected methods share
+                // one JVM so per-class @BeforeAll/@AfterAll and cached fixtures (e.g.
+                // Spring ApplicationContext) are reused. See issue #1836.
+                final String fileName = createMethodTestNamesFile(this.args.testNames);
+                arguments.add("-testNameFile");
+                arguments.add(fileName);
+            } else {
+                arguments.add("-test");
+                arguments.add(resolveMethodTestName(this.args.testNames[0]));
 
-                final List<String> parameters = new LinkedList<>();
-                for (final Object obj : methodDeclaration.parameters()) {
-                    if (obj instanceof SingleVariableDeclaration) {
-                        final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
-                                .getType().resolveBinding();
-                        if (paramTypeBinding == null) {
-                            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                                    "Cannot set set argument for method" + methodDeclaration.toString(), null));
-                        } else if (paramTypeBinding.isPrimitive()) {
-                            parameters.add(paramTypeBinding.getQualifiedName());
-                        } else {
-                            parameters.add(paramTypeBinding.getBinaryName());
-                        }
-                    }
+                if (StringUtils.isNotBlank(this.args.uniqueId)) {
+                    arguments.add("-uniqueId");
+                    arguments.add(this.args.uniqueId);
                 }
-                if (parameters.size() > 0) {
-                    testName += "(" + String.join(",", parameters) + ")";
-                }
-            }
-            arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
-
-            if (StringUtils.isNotBlank(this.args.uniqueId)) {
-                arguments.add("-uniqueId");
-                arguments.add(this.args.uniqueId);
             }
         }
+    }
+
+    private String resolveMethodTestName(String handleId) throws CoreException {
+        final IMethod method = (IMethod) JavaCore.create(handleId);
+        String testName = method.getElementName();
+        if ((this.args.testKind == TestKind.JUnit5 || this.args.testKind == TestKind.JUnit6) &&
+                method.getParameters().length > 0) {
+            final ICompilationUnit unit = method.getCompilationUnit();
+            if (unit == null) {
+                throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                        "Cannot get compilation unit of method" + method.getElementName(), null)); //$NON-NLS-1$
+            }
+            final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
+                    false /*fromCache*/, new NullProgressMonitor());
+            final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method, root);
+            if (methodDeclaration == null) {
+                throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                        "Cannot get method declaration of method" + method.getElementName(), null)); //$NON-NLS-1$
+            }
+
+            final List<String> parameters = new LinkedList<>();
+            for (final Object obj : methodDeclaration.parameters()) {
+                if (obj instanceof SingleVariableDeclaration) {
+                    final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
+                            .getType().resolveBinding();
+                    if (paramTypeBinding == null) {
+                        throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                                "Cannot set argument for method" + methodDeclaration.toString(), null));
+                    } else if (paramTypeBinding.isPrimitive()) {
+                        parameters.add(paramTypeBinding.getQualifiedName());
+                    } else {
+                        parameters.add(paramTypeBinding.getBinaryName());
+                    }
+                }
+            }
+            if (parameters.size() > 0) {
+                testName += "(" + String.join(",", parameters) + ")";
+            }
+        }
+        return method.getDeclaringType().getFullyQualifiedName() + ':' + testName;
     }
 
     private String createTestNamesFile(String[] testNames) throws CoreException {
@@ -198,6 +223,24 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
                         new FileOutputStream(file), StandardCharsets.UTF_8));) {
                 for (final String testName : testNames) {
                     bw.write(testName.substring(testName.indexOf("@") + 1));
+                    bw.newLine();
+                }
+            }
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            throw new CoreException(new Status(
+                    IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR, "", e)); //$NON-NLS-1$
+        }
+    }
+
+    private String createMethodTestNamesFile(String[] testNames) throws CoreException {
+        try {
+            final File file = File.createTempFile("testNames", ".txt"); //$NON-NLS-1$ //$NON-NLS-2$
+            file.deleteOnExit();
+            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(file), StandardCharsets.UTF_8));) {
+                for (final String handleId : testNames) {
+                    bw.write(resolveMethodTestName(handleId));
                     bw.newLine();
                 }
             }
