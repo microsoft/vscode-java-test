@@ -37,7 +37,7 @@ public class TestItemUtils {
                         sourceRange.getLength() - nameRange.getOffset() + sourceRange.getOffset());
             }
         }
-        return null;
+        return JDTUtils.newRange();
     }
 
     public static String parseFullName(IJavaElement element, TestLevel level, TestKind kind) {
