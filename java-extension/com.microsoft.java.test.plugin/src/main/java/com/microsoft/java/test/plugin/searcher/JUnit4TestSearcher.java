@@ -77,4 +77,9 @@ public class JUnit4TestSearcher extends BaseFrameworkSearcher {
 
         return types;
     }
+
+    @Override
+    public String getDisplayName(IMethodBinding methodBinding) {
+        return null;
+    }
 }
