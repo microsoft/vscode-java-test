@@ -138,7 +138,7 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
             return [{
                 groupId: 'org.junit.platform',
                 artifactId: 'junit-platform-console-standalone',
-                defaultVersion: '1.9.3',
+                defaultVersion: '6.1.0',
             }];
         case TestKind.JUnit:
             return [{
@@ -172,18 +172,41 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
 
 async function getLatestVersion(groupId: string, artifactId: string): Promise<string | undefined> {
     try {
-        const response: any = await getHttpsAsJSON(getQueryLink(groupId, artifactId));
+        const xml: string = await getHttpsAsText(getMetadataLink(groupId, artifactId));
 
-        if (!response.response?.docs?.[0]?.latestVersion) {
-            sendError(new Error('Invalid format for the latest version response'));
-            return undefined;
+        // Prefer the <release> tag (Maven's authoritative pointer to the latest non-snapshot version).
+        const releaseMatch: RegExpMatchArray | null = xml.match(/<release>([^<]+)<\/release>/);
+        if (releaseMatch && isStableVersion(releaseMatch[1])) {
+            return releaseMatch[1];
         }
-        return response.response.docs[0].latestVersion;
+
+        // Fallback: scan <version> entries (chronologically ordered) for the newest stable version,
+        // in case <release> is missing or points to a milestone / RC.
+        const versionRegex: RegExp = /<version>([^<]+)<\/version>/g;
+        const versions: string[] = [];
+        let match: RegExpExecArray | null;
+        while ((match = versionRegex.exec(xml)) !== null) {
+            versions.push(match[1]);
+        }
+        for (let i: number = versions.length - 1; i >= 0; i--) {
+            if (isStableVersion(versions[i])) {
+                return versions[i];
+            }
+        }
+
+        sendError(new Error(`No stable version found in maven-metadata.xml for ${groupId}:${artifactId}`));
     } catch (e) {
         sendError(new Error(`Failed to fetch the latest version for ${groupId}:${artifactId}`));
     }
 
     return undefined;
+}
+
+function isStableVersion(version: string): boolean {
+    // A stable Maven version is composed solely of dot-separated numeric segments
+    // (e.g. 6.1.0, 4.13.2). Anything with a qualifier such as -M3, -RC1, -beta-1
+    // or -SNAPSHOT is treated as a pre-release.
+    return /^\d+(\.\d+)*$/.test(version);
 }
 
 async function downloadJar(
@@ -274,9 +297,9 @@ async function updateProjectSettings(projectUri: Uri, libFolder: string): Promis
     window.showInformationMessage(`Test libraries have been downloaded into '${relativePath}/'.`);
 }
 
-async function getHttpsAsJSON(link: string): Promise<any> {
+async function getHttpsAsText(link: string): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/typedef
-    const response: string = await new Promise<string>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
         let result: string = '';
         https.get(link, {
             headers: {
@@ -295,7 +318,6 @@ async function getHttpsAsJSON(link: string): Promise<any> {
             res.on('error', reject);
         });
     });
-    return JSON.parse(response);
 }
 
 async function getTotalBytes(url: string): Promise<number> {
@@ -315,8 +337,8 @@ async function getTotalBytes(url: string): Promise<number> {
     });
 }
 
-function getQueryLink(groupId: string, artifactId: string): string {
-    return `https://search.maven.org/solrsearch/select?q=id:%22${groupId}:${artifactId}%22&rows=1&wt=json`;
+function getMetadataLink(groupId: string, artifactId: string): string {
+    return `https://repo1.maven.org/maven2/${groupId.split('.').join('/')}/${artifactId}/maven-metadata.xml`;
 }
 
 function getDownloadLink(groupId: string, artifactId: string, version: string): string {
