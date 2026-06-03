@@ -1,0 +1,111 @@
+name: Health Check - Maven Central Data Sources
+
+# Verifies that the upstream Maven Central data sources used by the
+# "Enable Java Tests" download flow (see scripts/checkVersionSources.js)
+# are still healthy. This catches situations like microsoft/vscode-java-test#1866,
+# where the legacy search.maven.org Solr index was silently frozen and
+# kept returning a pre-release as the "latest" stable version.
+#
+# - Runs on every PR and push to main so a code change cannot break the lookup.
+# - Runs weekly so purely upstream changes are caught within days.
+# - Can be triggered manually from the Actions tab.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Monday 09:00 UTC.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-version-sources:
+    name: Check Maven Central version sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run version source health check
+        run: node scripts/checkVersionSources.js
+
+      - name: Open issue on scheduled failure
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = '[health-check] Maven Central data source check failed';
+            const labelName = 'ci-health';
+            const body = [
+              'The scheduled health check for the Maven Central data sources used by',
+              '`scripts/checkVersionSources.js` failed.',
+              '',
+              `Failed run: ${runUrl}`,
+              '',
+              'This typically means one of the following:',
+              '- An upstream `maven-metadata.xml` is no longer reachable (HTTP 4xx/5xx).',
+              '- An upstream `<release>` tag has drifted to a pre-release version',
+              '  (e.g. `-M3`, `-RC1`, `-beta-1`).',
+              '- A jar download URL is no longer reachable.',
+              '',
+              'See microsoft/vscode-java-test#1866 for the original failure mode.',
+              '',
+              'Please investigate before users start hitting the broken download.',
+            ].join('\n');
+
+            // Ensure the label exists so issues.create({ labels: [...] }) does not 422.
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName,
+                color: 'd93f0b',
+                description: 'Automated CI health-check failure',
+              });
+              core.info(`Created label "${labelName}".`);
+            } catch (err) {
+              if (err.status === 422) {
+                core.info(`Label "${labelName}" already exists.`);
+              } else {
+                throw err;
+              }
+            }
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: labelName,
+              per_page: 100,
+            });
+            const alreadyOpen = existing.find((issue) => issue.title === title);
+            if (alreadyOpen) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: alreadyOpen.number,
+                body: `Health check failed again. Run: ${runUrl}`,
+              });
+              core.info(`Commented on existing issue #${alreadyOpen.number}.`);
+            } else {
+              const { data: created } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [labelName],
+              });
+              core.info(`Opened issue #${created.number}.`);
+            }
