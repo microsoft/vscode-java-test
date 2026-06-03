@@ -173,30 +173,37 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
 async function getLatestVersion(groupId: string, artifactId: string): Promise<string | undefined> {
     try {
         const xml: string = await getHttpsAsText(getMetadataLink(groupId, artifactId));
-
-        // Prefer the <release> tag (Maven's authoritative pointer to the latest non-snapshot version).
-        const releaseMatch: RegExpMatchArray | null = xml.match(/<release>([^<]+)<\/release>/);
-        if (releaseMatch && isStableVersion(releaseMatch[1])) {
-            return releaseMatch[1];
+        const version: string | undefined = parseLatestStableVersion(xml);
+        if (version === undefined) {
+            sendError(new Error(`No stable version found in maven-metadata.xml for ${groupId}:${artifactId}`));
         }
-
-        // Fallback: scan <version> entries (chronologically ordered) for the newest stable version,
-        // in case <release> is missing or points to a milestone / RC.
-        const versionRegex: RegExp = /<version>([^<]+)<\/version>/g;
-        const versions: string[] = [];
-        let match: RegExpExecArray | null;
-        while ((match = versionRegex.exec(xml)) !== null) {
-            versions.push(match[1]);
-        }
-        for (let i: number = versions.length - 1; i >= 0; i--) {
-            if (isStableVersion(versions[i])) {
-                return versions[i];
-            }
-        }
-
-        sendError(new Error(`No stable version found in maven-metadata.xml for ${groupId}:${artifactId}`));
+        return version;
     } catch (e) {
         sendError(new Error(`Failed to fetch the latest version for ${groupId}:${artifactId}`));
+    }
+
+    return undefined;
+}
+
+function parseLatestStableVersion(xml: string): string | undefined {
+    // Prefer the <release> tag (Maven's authoritative pointer to the latest non-snapshot version).
+    const releaseMatch: RegExpMatchArray | null = xml.match(/<release>([^<]+)<\/release>/);
+    if (releaseMatch && isStableVersion(releaseMatch[1])) {
+        return releaseMatch[1];
+    }
+
+    // Fallback: scan <version> entries (chronologically ordered) for the newest stable version,
+    // in case <release> is missing or points to a milestone / RC.
+    const versionRegex: RegExp = /<version>([^<]+)<\/version>/g;
+    const versions: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = versionRegex.exec(xml)) !== null) {
+        versions.push(match[1]);
+    }
+    for (let i: number = versions.length - 1; i >= 0; i--) {
+        if (isStableVersion(versions[i])) {
+            return versions[i];
+        }
     }
 
     return undefined;
@@ -350,4 +357,10 @@ interface IArtifactMetadata {
     artifactId: string;
     version?: string;
     defaultVersion: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/typedef
+export const exportedForTesting = {
+    parseLatestStableVersion,
+    isStableVersion,
 }
