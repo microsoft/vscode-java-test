@@ -179,7 +179,8 @@ async function getLatestVersion(groupId: string, artifactId: string): Promise<st
         }
         return version;
     } catch (e) {
-        sendError(new Error(`Failed to fetch the latest version for ${groupId}:${artifactId}`));
+        const detail: string = (e instanceof Error) ? e.message : String(e);
+        sendError(new Error(`Failed to fetch the latest version for ${groupId}:${artifactId}: ${detail}`));
     }
 
     return undefined;
@@ -308,13 +309,17 @@ async function getHttpsAsText(link: string): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/typedef
     return new Promise<string>((resolve, reject) => {
         let result: string = '';
-        https.get(link, {
+        const req: ClientRequest = https.get(link, {
             headers: {
                 'User-Agent': 'vscode-JavaTestRunner/0.1',
             },
         }, (res: http.IncomingMessage) => {
-            if (res.statusCode !== 200) {
-                return reject(new Error(`Request failed with status code: ${res.statusCode}`));
+            const statusCode: number = res.statusCode ?? 0;
+            if (statusCode < 200 || statusCode >= 300) {
+                // Drain the socket so it can be returned to the agent pool
+                // instead of hanging until the server times us out.
+                res.resume();
+                return reject(new Error(`Request to ${link} failed with status code: ${statusCode}`));
             }
             res.on('data', (chunk: any) => {
                 result = result.concat(chunk.toString());
@@ -324,6 +329,10 @@ async function getHttpsAsText(link: string): Promise<string> {
             });
             res.on('error', reject);
         });
+        // https.get returns a ClientRequest that emits 'error' for failures that
+        // happen before any response is received (DNS, TCP reset, TLS handshake,
+        // etc.). Without this listener the promise would hang forever.
+        req.on('error', reject);
     });
 }
 

@@ -47,6 +47,7 @@ jobs:
           script: |
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const title = '[health-check] Maven Central data source check failed';
+            const labelName = 'ci-health';
             const body = [
               'The scheduled health check for the Maven Central data sources used by',
               '`scripts/checkVersionSources.js` failed.',
@@ -64,11 +65,29 @@ jobs:
               'Please investigate before users start hitting the broken download.',
             ].join('\n');
 
+            // Ensure the label exists so issues.create({ labels: [...] }) does not 422.
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName,
+                color: 'd93f0b',
+                description: 'Automated CI health-check failure',
+              });
+              core.info(`Created label "${labelName}".`);
+            } catch (err) {
+              if (err.status === 422) {
+                core.info(`Label "${labelName}" already exists.`);
+              } else {
+                throw err;
+              }
+            }
+
             const { data: existing } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              labels: 'ci-health',
+              labels: labelName,
               per_page: 100,
             });
             const alreadyOpen = existing.find((issue) => issue.title === title);
@@ -86,7 +105,7 @@ jobs:
                 repo: context.repo.repo,
                 title,
                 body,
-                labels: ['ci-health'],
+                labels: [labelName],
               });
               core.info(`Opened issue #${created.number}.`);
             }
