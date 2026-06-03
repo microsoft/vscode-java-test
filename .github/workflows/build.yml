@@ -41,6 +41,15 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
+    # buildJdtlsExt.js regenerates contributes.javaExtensions from server/.
+    # If the committed list is stale (e.g. someone bumped a Maven dep in
+    # java-extension/ without re-running the build), the regenerated file
+    # will differ. Fail the build with the diff so the drift can't slip
+    # into a release unnoticed (cf. the 5.14.3/1.14.3 -> 5.14.4/1.14.4
+    # mismatch this script was added to guard against).
+    - name: Verify javaExtensions is in sync with server/
+      run: git diff --exit-code --ignore-cr-at-eol -- package.json
+
     - name: prepublish
       run: npm run vscode:prepublish
 
@@ -78,6 +87,9 @@ jobs:
     - name: Build OSGi bundle
       run: npm run build-plugin
 
+    - name: Verify javaExtensions is in sync with server/
+      run: git diff --exit-code --ignore-cr-at-eol -- package.json
+
     - name: prepublish
       run: npm run vscode:prepublish
 
@@ -114,6 +126,9 @@ jobs:
 
     - name: Build OSGi bundle
       run: npm run build-plugin
+
+    - name: Verify javaExtensions is in sync with server/
+      run: git diff --exit-code --ignore-cr-at-eol -- package.json
 
     - name: prepublish
       run: npm run vscode:prepublish
