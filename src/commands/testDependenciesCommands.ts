@@ -78,7 +78,7 @@ async function setupUnmanagedFolder(projectUri: Uri, testKind?: TestKind): Promi
                     message: `Downloading ${jar.artifactId}.jar...`,
                 });
                 if (!jar.version) {
-                    jar.version = await getLatestVersion(jar.groupId, jar.artifactId) || jar.defaultVersion;
+                    jar.version = await getLatestVersion(jar.groupId, jar.artifactId, jar.versionLine) || jar.defaultVersion;
                 }
                 await downloadJar(libFolder, jar.groupId, jar.artifactId, jar.version, metadata.length, progress, token);
             }
@@ -135,10 +135,22 @@ async function getLibFolder(projectUri: Uri): Promise<string> {
 function getJarIds(testKind: TestKind): IArtifactMetadata[] {
     switch (testKind) {
         case TestKind.JUnit5:
+            // Pin to the JUnit Platform 1.x line. JUnit Platform 6.x ships
+            // alongside 1.x under the same GAV, but it requires a compatible
+            // JDT-LS runner; users who explicitly choose "JUnit Jupiter 5"
+            // are opting into the 1.x line and should get its newest stable.
+            return [{
+                groupId: 'org.junit.platform',
+                artifactId: 'junit-platform-console-standalone',
+                defaultVersion: '1.14.4',
+                versionLine: '1',
+            }];
+        case TestKind.JUnit6:
             return [{
                 groupId: 'org.junit.platform',
                 artifactId: 'junit-platform-console-standalone',
                 defaultVersion: '6.1.0',
+                versionLine: '6',
             }];
         case TestKind.JUnit:
             return [{
@@ -170,12 +182,17 @@ function getJarIds(testKind: TestKind): IArtifactMetadata[] {
     }
 }
 
-async function getLatestVersion(groupId: string, artifactId: string): Promise<string | undefined> {
+async function getLatestVersion(
+    groupId: string,
+    artifactId: string,
+    versionLine?: string,
+): Promise<string | undefined> {
     try {
         const xml: string = await getHttpsAsText(getMetadataLink(groupId, artifactId));
-        const version: string | undefined = parseLatestStableVersion(xml);
+        const version: string | undefined = parseLatestStableVersion(xml, versionLine);
         if (version === undefined) {
-            sendError(new Error(`No stable version found in maven-metadata.xml for ${groupId}:${artifactId}`));
+            const scope: string = versionLine ? ` in the ${versionLine}.x line` : '';
+            sendError(new Error(`No stable version found${scope} in maven-metadata.xml for ${groupId}:${artifactId}`));
         }
         return version;
     } catch (e) {
@@ -186,12 +203,22 @@ async function getLatestVersion(groupId: string, artifactId: string): Promise<st
     return undefined;
 }
 
-function parseLatestStableVersion(xml: string): string | undefined {
-    // Prefer the <release> tag (Maven's authoritative pointer to the latest non-snapshot version).
-    const releaseMatch: RegExpMatchArray | null = xml.match(/<release>([^<]+)<\/release>/);
-    if (releaseMatch && isStableVersion(releaseMatch[1])) {
-        return releaseMatch[1];
+function parseLatestStableVersion(xml: string, versionLine?: string): string | undefined {
+    // When the caller pins a version line (e.g. '1' for the JUnit Platform 1.x line),
+    // skip the <release> shortcut — it points to the globally latest stable, which may
+    // be in a different line. Scan <version> entries directly for the newest stable
+    // version whose major segment matches.
+    if (versionLine === undefined) {
+        // Prefer the <release> tag (Maven's authoritative pointer to the latest non-snapshot version).
+        const releaseMatch: RegExpMatchArray | null = xml.match(/<release>([^<]+)<\/release>/);
+        if (releaseMatch && isStableVersion(releaseMatch[1])) {
+            return releaseMatch[1];
+        }
     }
+
+    const lineRegex: RegExp | undefined = versionLine !== undefined
+        ? new RegExp(`^${versionLine.replace(/\./g, '\\.')}(\\.|$)`)
+        : undefined;
 
     // Fallback: scan <version> entries (chronologically ordered) for the newest stable version,
     // in case <release> is missing or points to a milestone / RC.
@@ -202,9 +229,14 @@ function parseLatestStableVersion(xml: string): string | undefined {
         versions.push(match[1]);
     }
     for (let i: number = versions.length - 1; i >= 0; i--) {
-        if (isStableVersion(versions[i])) {
-            return versions[i];
+        const candidate: string = versions[i];
+        if (!isStableVersion(candidate)) {
+            continue;
         }
+        if (lineRegex && !lineRegex.test(candidate)) {
+            continue;
+        }
+        return candidate;
     }
 
     return undefined;
@@ -366,6 +398,13 @@ interface IArtifactMetadata {
     artifactId: string;
     version?: string;
     defaultVersion: string;
+    /**
+     * If set, constrains getLatestVersion() to the newest stable version whose
+     * leading segment matches this string. Used when an artifact maintains
+     * multiple coexisting release lines under the same GAV (e.g.
+     * junit-platform-console-standalone publishes both the 1.x and 6.x lines).
+     */
+    versionLine?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/typedef

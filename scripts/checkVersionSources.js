@@ -32,7 +32,20 @@
 
 const ARTIFACTS = [
     // JUnit 5 / Jupiter (the path that originally surfaced #1866).
-    { groupId: 'org.junit.platform', artifactId: 'junit-platform-console-standalone' },
+    // The console-standalone GAV publishes two coexisting release lines
+    // (1.x for legacy Jupiter 5, 6.x for Jupiter 6). The extension routes
+    // TestKind.JUnit5 to the 1.x line and TestKind.JUnit6 to the 6.x line,
+    // so the health check covers both.
+    {
+        groupId: 'org.junit.platform',
+        artifactId: 'junit-platform-console-standalone',
+        versionLine: '1',
+    },
+    {
+        groupId: 'org.junit.platform',
+        artifactId: 'junit-platform-console-standalone',
+        versionLine: '6',
+    },
 
     // JUnit 4 + its hamcrest-core dependency.
     { groupId: 'junit', artifactId: 'junit' },
@@ -90,11 +103,16 @@ async function fetchWithRetry(url, init) {
     throw lastError;
 }
 
-function parseLatestStableVersion(xml) {
-    const releaseMatch = xml.match(/<release>([^<]+)<\/release>/);
-    if (releaseMatch && STABLE_VERSION_REGEX.test(releaseMatch[1])) {
-        return releaseMatch[1];
+function parseLatestStableVersion(xml, versionLine) {
+    if (versionLine === undefined) {
+        const releaseMatch = xml.match(/<release>([^<]+)<\/release>/);
+        if (releaseMatch && STABLE_VERSION_REGEX.test(releaseMatch[1])) {
+            return releaseMatch[1];
+        }
     }
+    const lineRegex = versionLine !== undefined
+        ? new RegExp(`^${versionLine.replace(/\./g, '\\.')}(\\.|$)`)
+        : undefined;
     const versions = [];
     const versionRegex = /<version>([^<]+)<\/version>/g;
     let match;
@@ -102,16 +120,22 @@ function parseLatestStableVersion(xml) {
         versions.push(match[1]);
     }
     for (let i = versions.length - 1; i >= 0; i--) {
-        if (STABLE_VERSION_REGEX.test(versions[i])) {
-            return versions[i];
+        const candidate = versions[i];
+        if (!STABLE_VERSION_REGEX.test(candidate)) {
+            continue;
         }
+        if (lineRegex && !lineRegex.test(candidate)) {
+            continue;
+        }
+        return candidate;
     }
     return undefined;
 }
 
 async function checkArtifact(artifact) {
-    const { groupId, artifactId, pinnedVersion } = artifact;
-    console.log(`\n== ${groupId}:${artifactId} ==`);
+    const { groupId, artifactId, pinnedVersion, versionLine } = artifact;
+    const scope = versionLine ? ` (${versionLine}.x line)` : '';
+    console.log(`\n== ${groupId}:${artifactId}${scope} ==`);
 
     const metaUrl = metadataUrl(groupId, artifactId);
     console.log(`  GET  ${metaUrl}`);
@@ -121,24 +145,23 @@ async function checkArtifact(artifact) {
     }
     const xml = await metaResponse.text();
 
-    const releaseMatch = xml.match(/<release>([^<]+)<\/release>/);
-    if (releaseMatch) {
-        const rawRelease = releaseMatch[1];
-        if (!STABLE_VERSION_REGEX.test(rawRelease)) {
-            // Production falls back to the <versions> list when <release>
-            // points to a pre-release, so this is non-fatal — but still
-            // noisy enough to be worth surfacing in the log.
-            console.warn(`  ! <release> is a pre-release: "${rawRelease}". Falling back to <versions> scan.`);
+    if (versionLine === undefined) {
+        const releaseMatch = xml.match(/<release>([^<]+)<\/release>/);
+        if (releaseMatch) {
+            const rawRelease = releaseMatch[1];
+            if (!STABLE_VERSION_REGEX.test(rawRelease)) {
+                console.warn(`  ! <release> is a pre-release: "${rawRelease}". Falling back to <versions> scan.`);
+            }
+        } else {
+            console.warn('  ! <release> tag missing — relying entirely on <versions> fallback.');
         }
-    } else {
-        console.warn('  ! <release> tag missing — relying entirely on <versions> fallback.');
     }
 
-    const latestStable = parseLatestStableVersion(xml);
+    const latestStable = parseLatestStableVersion(xml, versionLine);
     if (!latestStable) {
-        throw new Error('No stable version found in maven-metadata.xml.');
+        throw new Error(`No stable version found${scope} in maven-metadata.xml.`);
     }
-    console.log(`  ok   latest stable version = ${latestStable}`);
+    console.log(`  ok   latest stable version${scope} = ${latestStable}`);
 
     const versionsToProbe = pinnedVersion && pinnedVersion !== latestStable
         ? [latestStable, pinnedVersion]
