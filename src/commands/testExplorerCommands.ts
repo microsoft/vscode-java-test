@@ -101,7 +101,10 @@ export async function refreshProject(classpathUri: Uri): Promise<void> {
         });
         await Promise.all(loadPromises);
     } else {
-        // URI doesn't match any known test project – skip to avoid unnecessary full refresh
+        // Bootstrap: first-time enable tests on an empty Test Explorer.
+        if (testController?.items.size === 0) {
+            await refreshExplorer();
+        }
         return;
     }
     await showTestItemsInCurrentFile();
