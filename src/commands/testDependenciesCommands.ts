@@ -98,7 +98,11 @@ async function setupUnmanagedFolder(projectUri: Uri, testKind?: TestKind): Promi
 
 async function getTestKind(): Promise<TestKind | undefined> {
     const framework: any = await window.showQuickPick([{
-        label: 'JUnit Jupiter',
+        label: 'JUnit Jupiter 6',
+        description: 'Recommended',
+        value: TestKind.JUnit6,
+    }, {
+        label: 'JUnit Jupiter 5',
         value: TestKind.JUnit5,
     }, {
         label: 'JUnit',
