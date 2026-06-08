@@ -81,6 +81,9 @@
             "./server/org.eclipse.jdt.junit5.runtime_1.2.0.v20251113-1434.jar",
             "./server/org.eclipse.jdt.junit6.runtime_1.0.0.v20251112-1701.jar",
             "./server/org.jacoco.core_0.8.14.202510111229.jar",
+            "./server/org.objectweb.asm.commons_9.9.1.jar",
+            "./server/org.objectweb.asm.tree_9.9.1.jar",
+            "./server/org.objectweb.asm_9.9.1.jar",
             "./server/org.opentest4j_1.3.0.jar"
         ],
         "viewsWelcome": [
