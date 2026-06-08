@@ -30,7 +30,10 @@ const bundleList = [
     'junit-platform-suite-commons_',
     'junit-platform-suite-engine_',
     'org.apiguardian.api_',
-    'org.jacoco.core_'
+    'org.jacoco.core_',
+    'org.objectweb.asm_',
+    'org.objectweb.asm.commons_',
+    'org.objectweb.asm.tree_'
 ];
 // Set MAVEN_OPTS to disable XML entity size limits for JDK XML parser
 const env = { ...process.env };
