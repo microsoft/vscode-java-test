@@ -6,15 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 0.45.1
 ## What's Changed
-* feat - Run multiple selected test methods in a single JVM in https://github.com/microsoft/vscode-java-test/pull/1862
-* feat - Expose JUnit Jupiter 6 as a separate Enable Tests option in https://github.com/microsoft/vscode-java-test/pull/1871
+* perf - Run multiple selected test methods in a single JVM in https://github.com/microsoft/vscode-java-test/pull/1862
+* perf - Expose JUnit Jupiter 6 as a separate Enable Tests option in https://github.com/microsoft/vscode-java-test/pull/1871
 * fix - Use OS auto-port allocation for the test runner socket server in https://github.com/microsoft/vscode-java-test/pull/1855
 * fix - Use maven-metadata.xml to look up latest test framework version in https://github.com/microsoft/vscode-java-test/pull/1868
 * fix - Sync javaExtensions to the actual JUnit jar versions in server/ in https://github.com/microsoft/vscode-java-test/pull/1869
 * fix - Refresh Test Explorer after first-time Enable Java Tests in https://github.com/microsoft/vscode-java-test/pull/1870
 * fix - Ship org.objectweb.asm bundles to satisfy Jacoco 0.8.14 in https://github.com/microsoft/vscode-java-test/pull/1872
-* chore - Update telemetry wrapper to 0.15.1 in https://github.com/microsoft/vscode-java-test/pull/1861
-* chore(deps) - Update vulnerable dependencies in https://github.com/microsoft/vscode-java-test/pull/1857, https://github.com/microsoft/vscode-java-test/pull/1858, https://github.com/microsoft/vscode-java-test/pull/1856, https://github.com/microsoft/vscode-java-test/pull/1863, https://github.com/microsoft/vscode-java-test/pull/1864, https://github.com/microsoft/vscode-java-test/pull/1876, https://github.com/microsoft/vscode-java-test/pull/1877
 
 ## 0.45.0
 ## What's Changed
