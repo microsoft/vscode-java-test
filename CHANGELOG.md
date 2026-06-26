@@ -4,10 +4,10 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## 0.45.1
+## 0.46.0
 ## What's Changed
-* perf - Run multiple selected test methods in a single JVM in https://github.com/microsoft/vscode-java-test/pull/1862
-* perf - Expose JUnit Jupiter 6 as a separate Enable Tests option in https://github.com/microsoft/vscode-java-test/pull/1871
+* feat - Run multiple selected test methods in a single JVM in https://github.com/microsoft/vscode-java-test/pull/1862
+* feat - Expose JUnit Jupiter 6 as a separate Enable Tests option in https://github.com/microsoft/vscode-java-test/pull/1871
 * fix - Use OS auto-port allocation for the test runner socket server in https://github.com/microsoft/vscode-java-test/pull/1855
 * fix - Use maven-metadata.xml to look up latest test framework version in https://github.com/microsoft/vscode-java-test/pull/1868
 * fix - Sync javaExtensions to the actual JUnit jar versions in server/ in https://github.com/microsoft/vscode-java-test/pull/1869
