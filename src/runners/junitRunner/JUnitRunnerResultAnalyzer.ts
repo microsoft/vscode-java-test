@@ -191,7 +191,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     protected getTestId(message: string): string {
-        if (message.includes('engine:junit5') || message.includes('engine:junit-jupiter') || message.includes('engine:jqwik') || message.includes('engine:junit-platform-suite')) {
+        if (message.includes('engine:junit5') || message.includes('engine:junit-jupiter') || message.includes('engine:jqwik') || message.includes('engine:spock') || message.includes('engine:junit-platform-suite')) {
             return this.getTestIdForJunit5Method(message);
         } else {
             return this.getTestIdForNonJunit5Method(message);
@@ -223,6 +223,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 if (!className) {
                     className = part.substring(JUnitTestPart.SUITE.length);
                 }
+            } else if (part.startsWith(JUnitTestPart.SPEC)) {
+                className = part.substring(JUnitTestPart.SPEC.length);
             } else if (part.startsWith(JUnitTestPart.METHOD)) {
                 const rawMethodName: string = part.substring(JUnitTestPart.METHOD.length);
                 // If the method name exists then we want to include the '#' qualifier.
@@ -231,6 +233,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 const rawMethodName: string = part.substring(JUnitTestPart.TEST_FACTORY.length);
                 // If the method name exists then we want to include the '#' qualifier.
                 methodName = `#${this.getJUnit5MethodName(rawMethodName)}`;
+            } else if (part.startsWith(JUnitTestPart.FEATURE)) {
+                const rawMethodName: string = part.substring(JUnitTestPart.FEATURE.length);
+                // If the method name exists then we want to include the '#' qualifier.
+                methodName = '#' + rawMethodName + '()';
             } else if (part.startsWith(JUnitTestPart.NESTED_CLASS)) {
                 const nestedClassName: string = part.substring(JUnitTestPart.NESTED_CLASS.length);
                 className = `${className}$${nestedClassName}`;
