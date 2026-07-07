@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><?pde version="3.8"?><target name="JDTLS.EXT" sequenceNumber="40">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?pde version="3.8"?><target name="JDTLS.EXT" sequenceNumber="41">
     <locations>
         <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
             <unit id="org.eclipse.equinox.core.feature.feature.group" version="0.0.0"/>
@@ -20,7 +20,7 @@
             <unit id="org.eclipse.buildship.core" version="0.0.0"/>
             <unit id="org.eclipse.lsp4j" version="0.0.0"/>
             <unit id="org.apache.commons.lang3" version="0.0.0"/>
-            <repository location="https://download.eclipse.org/jdtls/snapshots/repository/1.61.0.202607070104/"/>
+            <repository location="https://download.eclipse.org/jdtls/snapshots/repository/1.61.0.202606300051/"/>
         </location>
         <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven">
             <dependencies>
