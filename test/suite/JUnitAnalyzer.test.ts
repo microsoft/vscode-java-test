@@ -89,6 +89,44 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         assert.ok((testMessage.message as MarkdownString).value.includes('junit4.TestAnnotation.shouldFail([TestAnnotation.java:15](command:_java.test.openStackTrace?%5B%22at%20junit4.TestAnnotation.shouldFail(TestAnnotation.java%3A15)%22%2C%22junit%22%5D))'));
     });
 
+    test("control protocol frames should not be echoed to the output", () => {
+        const testItem = generateTestItem(testController, 'junit@junit4.TestAnnotation#shouldFail', TestKind.JUnit);
+        const testRunRequest = new TestRunRequest([testItem], []);
+        const testRun = testController.createTestRun(testRunRequest);
+        const appendOutputSpy = sinon.spy(testRun, 'appendOutput');
+        const testRunnerOutput = `%TESTC  1 v2
+%TSTTREE1,shouldFail(junit4.TestAnnotation),false,1,false,-1,shouldFail(junit4.TestAnnotation),,
+%TESTS  1,shouldFail(junit4.TestAnnotation)
+Hello from System.out
+%FAILED 1,shouldFail(junit4.TestAnnotation)
+%TRACES 
+java.lang.AssertionError
+at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
+%TRACEE 
+%TESTE  1,shouldFail(junit4.TestAnnotation)
+%RUNTIME20;`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit,
+            projectName: 'junit',
+            testItems: [testItem],
+            testRun: testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        const echoed: string[] = appendOutputSpy.getCalls().map((call) => call.args[0] as string);
+        // No Eclipse RemoteTestRunner control frame should reach the output channel.
+        for (const output of echoed) {
+            assert.ok(!/^%[A-Z]/.test(output), `Control frame leaked to output: ${output}`);
+        }
+        // Genuine program output and stack trace content should still be forwarded.
+        assert.ok(echoed.some((output) => output.includes('Hello from System.out')), 'Program output was dropped');
+        assert.ok(echoed.some((output) => output.includes('java.lang.AssertionError')), 'Stack trace content was dropped');
+    });
+
     test("test stacktrace should be simplified", () => {
         const testItem = generateTestItem(testController, 'junit@App#name', TestKind.JUnit);
         const testRunRequest = new TestRunRequest([testItem], []);
