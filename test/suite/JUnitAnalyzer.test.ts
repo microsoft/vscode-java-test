@@ -70,7 +70,8 @@ at org.junit.Assert.assertTrue(Assert.java:53)
 at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
 %TRACEE 
 %TESTE  1,shouldFail(junit4.TestAnnotation)
-%RUNTIME20`;
+%RUNTIME20
+`;
         const runnerContext: IRunTestContext = {
             isDebug: false,
             kind: TestKind.JUnit,
@@ -150,6 +151,7 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         assert.ok(echoedLines.includes('%OK'), 'Percent-prefixed program output was dropped');
         assert.ok(echoedLines.includes('%ABC'), 'Percent-prefixed program output was dropped');
         assert.ok(echoedLines.includes('java.lang.AssertionError'), 'Stack trace content was dropped');
+        assert.ok(!echoedLines.includes(''), 'Trailing newline produced a blank output line');
     });
 
     test("test stacktrace should be simplified", () => {

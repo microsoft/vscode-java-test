@@ -54,7 +54,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
-        for (const line of lines) {
+        const endsWithNewLine: boolean = /\r?\n$/.test(data);
+        for (let i: number = 0; i < lines.length; i++) {
+            const line: string = lines[i];
+            if (i === lines.length - 1 && endsWithNewLine && line === '') {
+                continue;
+            }
             this.processData(line);
             // Hide Eclipse RemoteTestRunner protocol frames already consumed by processData().
             // Forward everything else, including stdout/stderr and trace payload lines.
