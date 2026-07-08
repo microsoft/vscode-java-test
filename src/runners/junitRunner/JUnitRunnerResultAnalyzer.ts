@@ -13,6 +13,9 @@ import { IRunTestContext, TestKind, TestLevel, TestResultState } from '../../jav
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
+    private static readonly CONTROL_FRAME_PREFIX: RegExp = /^%[A-Z]+(?:\d+)?(?:\s|,|;)/;
+    private static readonly NUMERIC_CONTROL_FRAME: RegExp = /^%[A-Z]+\d+$/;
+
     private testOutputMapping: Map<string, ITestInfo> = new Map();
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
     private projectName: string;
@@ -70,7 +73,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
      * This avoids dropping legitimate output such as "%OK".
      */
     private isControlMessage(line: string): boolean {
-        return /^%[A-Z]+(?:\d+(?:$|\s|,|;)|(?:\s|,|;))/.test(line)
+        return JUnitRunnerResultAnalyzer.CONTROL_FRAME_PREFIX.test(line)
+            || JUnitRunnerResultAnalyzer.NUMERIC_CONTROL_FRAME.test(line)
             || this.isBareControlMessage(line);
     }
 

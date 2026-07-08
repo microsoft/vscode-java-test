@@ -126,17 +126,30 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         analyzer.analyzeData(testRunnerOutput);
 
         const echoed: string[] = appendOutputSpy.getCalls().map((call) => call.args[0] as string);
-        // No Eclipse RemoteTestRunner control frame should reach the output channel.
-        const controlFrameRegExp = /^%[A-Z]+(?:\d+(?:$|\s|,|;)|(?:\s|,|;))$|^%(?:TRACES|TRACEE|EXPECTS|EXPECTE|ACTUALS|ACTUALE)$/;
-        for (const output of echoed) {
-            const outputLine = output.replace(/\r?\n$/, '');
-            assert.ok(!controlFrameRegExp.test(outputLine), `Control frame leaked to output: ${output}`);
+        const echoedLines: string[] = echoed.map((output) => output.replace(/\r?\n$/, ''));
+
+        const controlFrames: string[] = [
+            '%TESTC  1 v2',
+            '%TSTTREE1,shouldFail(junit4.TestAnnotation),false,1,false,-1,shouldFail(junit4.TestAnnotation),,',
+            '%TESTS  1,shouldFail(junit4.TestAnnotation)',
+            '%FAILED 1,shouldFail(junit4.TestAnnotation)',
+            '%EXPECTS',
+            '%EXPECTE',
+            '%ACTUALS',
+            '%ACTUALE',
+            '%TRACES',
+            '%TRACEE',
+            '%TESTE  1,shouldFail(junit4.TestAnnotation)',
+            '%RUNTIME20',
+        ];
+        for (const frame of controlFrames) {
+            assert.ok(!echoedLines.includes(frame), `Control frame leaked to output: ${frame}`);
         }
         // Genuine program output and stack trace content should still be forwarded.
-        assert.ok(echoed.some((output) => output.includes('Hello from System.out')), 'Program output was dropped');
-        assert.ok(echoed.some((output) => output.includes('%OK')), 'Percent-prefixed program output was dropped');
-        assert.ok(echoed.some((output) => output.includes('%ABC')), 'Percent-prefixed program output was dropped');
-        assert.ok(echoed.some((output) => output.includes('java.lang.AssertionError')), 'Stack trace content was dropped');
+        assert.ok(echoedLines.includes('Hello from System.out'), 'Program output was dropped');
+        assert.ok(echoedLines.includes('%OK'), 'Percent-prefixed program output was dropped');
+        assert.ok(echoedLines.includes('%ABC'), 'Percent-prefixed program output was dropped');
+        assert.ok(echoedLines.includes('java.lang.AssertionError'), 'Stack trace content was dropped');
     });
 
     test("test stacktrace should be simplified", () => {
