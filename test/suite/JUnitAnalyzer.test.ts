@@ -101,6 +101,7 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
 Hello from System.out
 %OK
 %ABC
+%STATUS 200
 %FAILED 1,shouldFail(junit4.TestAnnotation)
 %EXPECTS
 expected
@@ -150,6 +151,7 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         assert.ok(echoedLines.includes('Hello from System.out'), 'Program output was dropped');
         assert.ok(echoedLines.includes('%OK'), 'Percent-prefixed program output was dropped');
         assert.ok(echoedLines.includes('%ABC'), 'Percent-prefixed program output was dropped');
+        assert.ok(echoedLines.includes('%STATUS 200'), 'Percent-prefixed program output was dropped');
         assert.ok(echoedLines.includes('java.lang.AssertionError'), 'Stack trace content was dropped');
         assert.ok(!echoedLines.includes(''), 'Trailing newline produced a blank output line');
     });

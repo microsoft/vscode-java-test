@@ -13,8 +13,23 @@ import { IRunTestContext, TestKind, TestLevel, TestResultState } from '../../jav
 
 export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
-    private static readonly CONTROL_FRAME_PREFIX: RegExp = /^%[A-Z]+(?:\d+)?(?:\s|,|;)/;
-    private static readonly NUMERIC_CONTROL_FRAME: RegExp = /^%[A-Z]+\d+$/;
+    private static readonly CONTROL_MESSAGE_PREFIXES: string[] = [
+        '%TSTTREE',
+        '%TESTS',
+        '%TESTE',
+        '%FAILED',
+        '%ERROR',
+        '%EXPECTS',
+        '%EXPECTE',
+        '%ACTUALS',
+        '%ACTUALE',
+        '%TRACES',
+        '%TRACEE',
+        '%TESTC',
+        '%RUNTIME',
+        '%MENTER',
+        '%MEXIT',
+    ];
 
     private testOutputMapping: Map<string, ITestInfo> = new Map();
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
@@ -71,25 +86,11 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     /**
      * Whether the given line is an Eclipse RemoteTestRunner control message.
-     * Control messages start with '%' followed by an upper-case message id,
-     * an optional index, and either a protocol separator (whitespace, comma, or semicolon)
-     * or the end of the line for numeric-suffixed frames such as "%RUNTIME15".
-     * Some payload delimiters, such as "%TRACES", are bare control frames with no suffix.
-     * This avoids dropping legitimate output such as "%OK".
+     * Only known protocol frame prefixes are filtered so user output that merely starts
+     * with '%' (for example, "%OK" or "%STATUS 200") remains visible.
      */
     private isControlMessage(line: string): boolean {
-        return JUnitRunnerResultAnalyzer.CONTROL_FRAME_PREFIX.test(line)
-            || JUnitRunnerResultAnalyzer.NUMERIC_CONTROL_FRAME.test(line)
-            || this.isBareControlMessage(line);
-    }
-
-    private isBareControlMessage(line: string): boolean {
-        return line === MessageId.ExpectStart
-            || line === MessageId.ExpectEnd
-            || line === MessageId.ActualStart
-            || line === MessageId.ActualEnd
-            || line === MessageId.TraceStart
-            || line === MessageId.TraceEnd;
+        return JUnitRunnerResultAnalyzer.CONTROL_MESSAGE_PREFIXES.some((prefix: string) => line.startsWith(prefix));
     }
 
     public processData(data: string): void {
