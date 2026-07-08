@@ -87,7 +87,7 @@ function updateVersion() {
 }
 
 function downloadJacocoAgent() {
-    const version = "0.8.14";
+    const version = "0.8.15";
     const jacocoAgentUrl = `https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/${version}/org.jacoco.agent-${version}-runtime.jar`;
     const jacocoAgentPath = path.resolve('server', 'jacocoagent.jar');
     if (!fs.existsSync(jacocoAgentPath)) {
