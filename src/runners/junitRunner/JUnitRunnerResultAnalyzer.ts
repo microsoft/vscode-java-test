@@ -53,10 +53,8 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         const lines: string[] = data.split(/\r?\n/);
         for (const line of lines) {
             this.processData(line);
-            // Only forward genuine program output to the Test Results output channel.
-            // Lines that start with an Eclipse RemoteTestRunner control marker (e.g. %TSTTREE,
-            // %TESTS, %TRACES, %TESTC, %RUNTIME) are protocol frames already consumed by
-            // processData(); echoing them verbatim shows up as noise in the output.
+            // Hide Eclipse RemoteTestRunner protocol frames already consumed by processData().
+            // Forward everything else, including stdout/stderr and trace payload lines.
             if (!this.isControlMessage(line)) {
                 this.testContext.testRun.appendOutput(line + '\r\n');
             }
@@ -65,11 +63,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
     /**
      * Whether the given line is an Eclipse RemoteTestRunner control message.
-     * All control messages start with '%' followed by an upper-case message id
-     * (e.g. %TSTTREE, %TESTS, %TESTE, %FAILED, %TRACES, %TESTC, %RUNTIME).
+     * Control messages start with '%' followed by an upper-case message id,
+     * an optional index, and a protocol separator (whitespace, comma, or semicolon).
+     * This avoids dropping legitimate output such as "%OK".
      */
     private isControlMessage(line: string): boolean {
-        return /^%[A-Z]/.test(line);
+        return /^%[A-Z]+(?:\d+)?(?:\s|,|;)/.test(line);
     }
 
     public processData(data: string): void {
