@@ -6,9 +6,6 @@ import * as os from 'os';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 
-const REDHAT_JAVA_EXTENSION = 'redhat.java@1.56.2026063009';
-const JAVA_DEBUG_EXTENSION = 'vscjava.vscode-java-debug@0.59.2026061007';
-
 async function main(): Promise<void> {
     try {
         const vscodeExecutablePath = await downloadAndUnzipVSCode();
@@ -22,9 +19,9 @@ async function main(): Promise<void> {
         if (process.platform === 'win32') {
             options.shell = true;
         }
-        cp.spawnSync(cli, [...args, '--install-extension', REDHAT_JAVA_EXTENSION], options);
+        cp.spawnSync(cli, [...args, '--install-extension', 'redhat.java', '--pre-release'], options);
 
-        cp.spawnSync(cli, [...args, '--install-extension', JAVA_DEBUG_EXTENSION], options);
+        cp.spawnSync(cli, [...args, '--install-extension', 'vscjava.vscode-java-debug', '--pre-release'], options);
 
         // The folder containing the Extension Manifest package.json
         // Passed to `--extensionDevelopmentPath`

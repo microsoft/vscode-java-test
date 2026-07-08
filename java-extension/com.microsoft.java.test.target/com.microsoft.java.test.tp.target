@@ -20,7 +20,7 @@
             <unit id="org.eclipse.buildship.core" version="0.0.0"/>
             <unit id="org.eclipse.lsp4j" version="0.0.0"/>
             <unit id="org.apache.commons.lang3" version="0.0.0"/>
-            <repository location="https://download.eclipse.org/jdtls/snapshots/repository/1.61.0.202606300051/"/>
+            <repository location="https://download.eclipse.org/jdtls/snapshots/repository/latest/"/>
         </location>
         <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven">
             <dependencies>
