@@ -43,9 +43,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     private tracingItem: TestItem | undefined;
     private traces: MarkdownString;
     private assertionFailure: TestMessage | undefined;
-    private recordingType: RecordingType;
-    private expectString: string;
-    private actualString: string;
+    private recordingType: RecordingType = RecordingType.None;
+    private expectString: string = '';
+    private actualString: string = '';
 
     constructor(protected testContext: IRunTestContext) {
         super(testContext);
@@ -76,9 +76,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 continue;
             }
             this.processData(line);
-            // Hide Eclipse RemoteTestRunner protocol frames already consumed by processData().
-            // Forward everything else, including stdout/stderr and trace payload lines.
-            if (!this.isControlMessage(line)) {
+            // Hide Eclipse RemoteTestRunner protocol frames/payload already consumed by processData().
+            // Forward everything else, including stdout/stderr.
+            if (!this.isControlMessage(line) && !this.isRecordingProtocolPayload()) {
                 this.testContext.testRun.appendOutput(line + '\r\n');
             }
         }
@@ -91,6 +91,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
      */
     private isControlMessage(line: string): boolean {
         return JUnitRunnerResultAnalyzer.CONTROL_MESSAGE_PREFIXES.some((prefix: string) => line.startsWith(prefix));
+    }
+
+    private isRecordingProtocolPayload(): boolean {
+        return this.recordingType !== RecordingType.None;
     }
 
     public processData(data: string): void {
