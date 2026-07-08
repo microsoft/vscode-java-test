@@ -146,15 +146,15 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         for (const frame of controlFrames) {
             assert.ok(!echoedLines.includes(frame), `Control frame leaked to output: ${frame}`);
         }
-        // Genuine program output should still be forwarded.
+        // Genuine program output and stack trace content should still be forwarded.
         assert.ok(echoedLines.includes('Hello from System.out'), 'Program output was dropped');
         assert.ok(echoedLines.includes('%OK'), 'Percent-prefixed program output was dropped');
         assert.ok(echoedLines.includes('%ABC'), 'Percent-prefixed program output was dropped');
         assert.ok(echoedLines.includes('%STATUS 200'), 'Percent-prefixed program output was dropped');
         assert.ok(!echoedLines.includes('expected'), 'Expected-value protocol payload leaked to output');
         assert.ok(!echoedLines.includes('actual'), 'Actual-value protocol payload leaked to output');
-        assert.ok(!echoedLines.includes('java.lang.AssertionError'), 'Trace protocol payload leaked to output');
-        assert.ok(!echoedLines.includes('at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)'), 'Trace protocol payload leaked to output');
+        assert.ok(echoedLines.includes('java.lang.AssertionError'), 'Stack trace content was dropped');
+        assert.ok(echoedLines.includes('at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)'), 'Stack trace content was dropped');
         assert.notStrictEqual(echoedLines[echoedLines.length - 1], '', 'Trailing newline produced a blank output line');
     });
 

@@ -76,9 +76,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 continue;
             }
             this.processData(line);
-            // Hide Eclipse RemoteTestRunner protocol frames/payload already consumed by processData().
-            // Forward everything else, including stdout/stderr.
-            if (!this.isControlMessage(line) && !this.isRecordingProtocolPayload()) {
+            // Hide Eclipse RemoteTestRunner protocol frames and comparison payload already consumed by processData().
+            // Forward everything else, including stdout/stderr and stack trace payload lines.
+            if (!this.isControlMessage(line) && !this.isRecordingComparisonPayload()) {
                 this.testContext.testRun.appendOutput(line + '\r\n');
             }
         }
@@ -93,8 +93,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         return JUnitRunnerResultAnalyzer.CONTROL_MESSAGE_PREFIXES.some((prefix: string) => line.startsWith(prefix));
     }
 
-    private isRecordingProtocolPayload(): boolean {
-        return this.recordingType !== RecordingType.None;
+    private isRecordingComparisonPayload(): boolean {
+        return this.recordingType === RecordingType.ExpectMessage
+            || this.recordingType === RecordingType.ActualMessage;
     }
 
     public processData(data: string): void {
