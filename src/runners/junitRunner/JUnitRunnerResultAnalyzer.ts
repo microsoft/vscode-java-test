@@ -64,11 +64,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     /**
      * Whether the given line is an Eclipse RemoteTestRunner control message.
      * Control messages start with '%' followed by an upper-case message id,
-     * an optional index, and a protocol separator (whitespace, comma, or semicolon).
+     * an optional index, and either a protocol separator (whitespace, comma, or semicolon)
+     * or the end of the line for numeric-suffixed frames such as "%RUNTIME15".
      * This avoids dropping legitimate output such as "%OK".
      */
     private isControlMessage(line: string): boolean {
-        return /^%[A-Z]+(?:\d+)?(?:\s|,|;)/.test(line);
+        return /^%[A-Z]+(?:\d+(?:$|\s|,|;)|(?:\s|,|;))/.test(line);
     }
 
     public processData(data: string): void {

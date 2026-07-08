@@ -70,7 +70,7 @@ at org.junit.Assert.assertTrue(Assert.java:53)
 at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
 %TRACEE 
 %TESTE  1,shouldFail(junit4.TestAnnotation)
-%RUNTIME20;`;
+%RUNTIME20`;
         const runnerContext: IRunTestContext = {
             isDebug: false,
             kind: TestKind.JUnit,
@@ -122,7 +122,8 @@ at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
         const echoed: string[] = appendOutputSpy.getCalls().map((call) => call.args[0] as string);
         // No Eclipse RemoteTestRunner control frame should reach the output channel.
         for (const output of echoed) {
-            assert.ok(!/^%[A-Z]+(?:\d+)?(?:\s|,|;)/.test(output), `Control frame leaked to output: ${output}`);
+            const outputLine = output.replace(/\r?\n$/, '');
+            assert.ok(!/^%[A-Z]+(?:\d+(?:$|\s|,|;)|(?:\s|,|;))/.test(outputLine), `Control frame leaked to output: ${output}`);
         }
         // Genuine program output and stack trace content should still be forwarded.
         assert.ok(echoed.some((output) => output.includes('Hello from System.out')), 'Program output was dropped');
