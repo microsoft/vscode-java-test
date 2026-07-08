@@ -66,10 +66,21 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
      * Control messages start with '%' followed by an upper-case message id,
      * an optional index, and either a protocol separator (whitespace, comma, or semicolon)
      * or the end of the line for numeric-suffixed frames such as "%RUNTIME15".
+     * Some payload delimiters, such as "%TRACES", are bare control frames with no suffix.
      * This avoids dropping legitimate output such as "%OK".
      */
     private isControlMessage(line: string): boolean {
-        return /^%[A-Z]+(?:\d+(?:$|\s|,|;)|(?:\s|,|;))/.test(line);
+        return /^%[A-Z]+(?:\d+(?:$|\s|,|;)|(?:\s|,|;))/.test(line)
+            || this.isBareControlMessage(line);
+    }
+
+    private isBareControlMessage(line: string): boolean {
+        return line === MessageId.ExpectStart
+            || line === MessageId.ExpectEnd
+            || line === MessageId.ActualStart
+            || line === MessageId.ActualEnd
+            || line === MessageId.TraceStart
+            || line === MessageId.TraceEnd;
     }
 
     public processData(data: string): void {
