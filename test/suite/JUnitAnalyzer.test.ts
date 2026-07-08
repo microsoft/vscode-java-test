@@ -106,7 +106,7 @@ java.lang.AssertionError
 at junit4.TestAnnotation.shouldFail(TestAnnotation.java:15)
 %TRACEE 
 %TESTE  1,shouldFail(junit4.TestAnnotation)
-%RUNTIME20;`;
+%RUNTIME20`;
         const runnerContext: IRunTestContext = {
             isDebug: false,
             kind: TestKind.JUnit,
