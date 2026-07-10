@@ -96,6 +96,7 @@ async function getLaunchArguments(testContext: IRunTestContext): Promise<IJUnitL
         testLevel,
         testContext.kind,
         getTestNames(testContext),
+        getTestHandles(testContext),
         uniqueId
     );
 }
@@ -118,13 +119,32 @@ function getTestNames(testContext: IRunTestContext): string[] {
     }).filter(Boolean) as string[];
 }
 
-async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestLevel, testKind: TestKind, testNames: string[], uniqueId: string | undefined): Promise<IJUnitLaunchArguments> {
+function getTestHandles(testContext: IRunTestContext): string[] {
+    if (dataCache.get(testContext.testItems[0])?.testLevel !== TestLevel.Class ||
+        testContext.testItems.length < 2) {
+        return [];
+    }
+
+    const handles: (string | undefined)[] = testContext.testItems.map((item: TestItem) => {
+        return dataCache.get(item)?.jdtHandler;
+    });
+    if (handles.some((handle: string | undefined) => !handle)) {
+        const error: Error = new Error('Failed to resolve all selected test classes. Refresh the Test Explorer and retry.');
+        sendError(error);
+        throw error;
+    }
+    return handles as string[];
+}
+
+async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestLevel, testKind: TestKind,
+    testNames: string[], testHandles: string[], uniqueId: string | undefined): Promise<IJUnitLaunchArguments> {
     const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             projectName,
             testLevel,
             testKind,
             testNames,
+            testHandles,
             uniqueId
         }),
     );

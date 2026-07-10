@@ -28,8 +28,11 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -63,6 +66,30 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     public JUnitLaunchConfigurationDelegate(Argument args) {
         super();
         this.args = args;
+    }
+
+    @Override
+    protected IMember[] evaluateTests(ILaunchConfiguration configuration, IProgressMonitor monitor)
+            throws CoreException {
+        if (this.args.testLevel != TestLevel.CLASS || this.args.testNames == null ||
+                this.args.testNames.length < 2 || this.args.testHandles == null) {
+            return super.evaluateTests(configuration, monitor);
+        }
+        if (this.args.testHandles.length != this.args.testNames.length) {
+            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
+                    "Cannot resolve all selected test classes. Refresh the Test Explorer and retry."));
+        }
+
+        final List<IMember> testTypes = new ArrayList<>();
+        for (final String handle : this.args.testHandles) {
+            final IJavaElement element = JavaCore.create(handle);
+            if (!(element instanceof IType) || !element.exists()) {
+                throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
+                        "Cannot resolve a selected test class. Refresh the Test Explorer and retry."));
+            }
+            testTypes.add((IType) element);
+        }
+        return testTypes.toArray(new IMember[testTypes.size()]);
     }
 
     public Response<JUnitLaunchArguments> getJUnitLaunchArguments(ILaunchConfiguration configuration, String mode,
