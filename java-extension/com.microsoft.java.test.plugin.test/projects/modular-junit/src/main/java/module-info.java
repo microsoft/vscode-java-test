@@ -1,0 +1,2 @@
+module com.example.modular {
+}
