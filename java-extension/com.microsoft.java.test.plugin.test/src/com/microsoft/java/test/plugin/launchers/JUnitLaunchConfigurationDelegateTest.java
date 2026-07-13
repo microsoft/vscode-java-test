@@ -16,7 +16,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -27,6 +29,7 @@ import org.junit.Test;
 
 import com.microsoft.java.test.plugin.AbstractProjectsManagerBasedTest;
 import com.microsoft.java.test.plugin.model.Response;
+import com.google.gson.Gson;
 
 public class JUnitLaunchConfigurationDelegateTest extends AbstractProjectsManagerBasedTest {
 	
@@ -53,17 +56,17 @@ public class JUnitLaunchConfigurationDelegateTest extends AbstractProjectsManage
         assertNotNull(firstTest);
         assertNotNull(secondTest);
 
-        final String launchRequest = String.format(
-                "{\"projectName\":%s,\"testLevel\":5,\"testKind\":0,\"testNames\":[%s,%s],"
-                        + "\"testHandles\":[%s,%s]}",
-                toJsonString(javaProject.getElementName()),
-                toJsonString(firstTest.getFullyQualifiedName()),
-                toJsonString(secondTest.getFullyQualifiedName()),
-                toJsonString(firstTest.getHandleIdentifier()),
-                toJsonString(secondTest.getHandleIdentifier()));
+        final Map<String, Object> request = new LinkedHashMap<>();
+        request.put("projectName", javaProject.getElementName());
+        request.put("testLevel", 5);
+        request.put("testKind", 0);
+        request.put("testNames", Arrays.asList(
+                firstTest.getFullyQualifiedName(), secondTest.getFullyQualifiedName()));
+        request.put("testHandles", Arrays.asList(
+                firstTest.getHandleIdentifier(), secondTest.getHandleIdentifier()));
 
         final Response<JUnitLaunchArguments> response = JUnitLaunchUtils.resolveLaunchArgument(
-                Arrays.asList(launchRequest), new NullProgressMonitor());
+                Arrays.asList(new Gson().toJson(request)), new NullProgressMonitor());
 
         assertEquals(0, response.getStatus());
         final List<String> vmArguments = Arrays.asList(response.getBody().vmArguments);
@@ -79,7 +82,4 @@ public class JUnitLaunchConfigurationDelegateTest extends AbstractProjectsManage
         assertEquals("--add-opens", vmArguments.get(vmArguments.indexOf(secondPackageOpen) - 1));
     }
 
-    private static String toJsonString(String value) {
-        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
-    }
 }

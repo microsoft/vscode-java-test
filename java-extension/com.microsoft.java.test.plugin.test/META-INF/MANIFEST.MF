@@ -10,6 +10,7 @@ Bundle-Localization: plugin
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.jdt.ls.core,
  com.microsoft.java.test.plugin,
+ com.google.gson,
  org.junit,
  org.apache.commons.commons-io;bundle-version="2.12.0",
  org.eclipse.core.resources,
