@@ -4,7 +4,7 @@
 import * as iconv from 'iconv-lite';
 import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
-import { CancellationToken, debug, DebugConfiguration, DebugSession, Disposable } from 'vscode';
+import { CancellationToken, debug, DebugAdapterTracker, DebugConfiguration, DebugSession, Disposable, ProviderResult } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { Configurations } from '../../constants';
 import { IProgressReporter } from '../../debugger.api';
@@ -55,6 +55,34 @@ export abstract class BaseRunner implements ITestRunnerInternal {
         // Run from integrated terminal will terminate the debug session immediately after launching,
         // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
+
+        // The debuggee's stdout/stderr are delivered by java-debug as standard DAP `output` events,
+        // which by default only surface in the Debug Console. Attach a tracker to the test's own debug
+        // session and forward those output events into the Test Results view, so the program output shows
+        // up next to the test results instead of being split across two separate surfaces.
+        this.disposables.push(debug.registerDebugAdapterTrackerFactory('java', {
+            createDebugAdapterTracker: (session: DebugSession): ProviderResult<DebugAdapterTracker> => {
+                if (session.name !== launchConfiguration.name) {
+                    return undefined;
+                }
+                return {
+                    onDidSendMessage: (message: any): void => {
+                        if (message?.type === 'event' && message.event === 'output') {
+                            const category: string | undefined = message.body?.category;
+                            // `telemetry` output events are not meant for the user.
+                            if (category === 'telemetry') {
+                                return;
+                            }
+                            const output: string | undefined = message.body?.output;
+                            if (output) {
+                                // Let the analyzer attribute the output to the running test when possible.
+                                this.runnerResultAnalyzer.appendProgramOutput(output);
+                            }
+                        }
+                    },
+                };
+            },
+        }));
 
         let debugSession: DebugSession | undefined;
         this.disposables.push(debug.onDidStartDebugSession((session: DebugSession) => {

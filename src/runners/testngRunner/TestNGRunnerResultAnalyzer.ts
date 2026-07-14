@@ -55,8 +55,6 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
     public processData(data: string): void {
         const outputData: ITestNGOutputData = JSON.parse(data) as ITestNGOutputData;
 
-        this.testContext.testRun.appendOutput(this.unescape(data).replace(/\r?\n/g, '\r\n'));
-
         const id: string = `${this.projectName}@${outputData.attributes.name}`;
         if (outputData.name === TEST_START) {
             this.initializeCache();
@@ -68,6 +66,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.currentTestState = TestResultState.Running;
             this.testContext.testRun.started(item);
             this.updateParentOnChildStart(item);
+            this.markItemStarted(item);
         } else if (outputData.name === TEST_FAIL) {
             const item: TestItem | undefined = this.getTestItem(id);
             if (!item) {
@@ -105,6 +104,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             const duration: number = Number.parseInt(outputData.attributes.duration, 10);
             setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration);
+            this.markItemFinished(item);
             const itemData: ITestItemData | undefined = dataCache.get(item);
             if (itemData?.testLevel === TestLevel.Method) {
                 this.updateParentOnChildComplete(item, this.currentTestState);
@@ -119,15 +119,6 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
         this.currentItem = this.triggeredTestsMapping.get(testId);
         return this.currentItem;
-    }
-
-    protected unescape(content: string): string {
-        return content.replace(/\\r/gm, '\r')
-            .replace(/\\f/gm, '\f')
-            .replace(/\\n/gm, '\n')
-            .replace(/\\t/gm, '\t')
-            .replace(/\\b/gm, '\b')
-            .replace(/\\"/gm, '"');
     }
 
     protected initializeCache(): void {

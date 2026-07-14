@@ -10,11 +10,44 @@ export abstract class RunnerResultAnalyzer {
     // Track parent test item states to update them when all children complete
     protected parentStates: Map<TestItem, ParentItemState> = new Map();
 
+    // Test items that are currently executing. Used to attribute program output
+    // (captured from the debug session) to the running test when it is unambiguous.
+    private runningItems: Set<TestItem> = new Set();
+
     constructor(protected testContext: IRunTestContext) { }
 
     public abstract analyzeData(data: string): void;
     public abstract processData(data: string): void;
     protected testMessageLocation: Location | undefined;
+
+    /**
+     * Record that a test item has started executing.
+     */
+    protected markItemStarted(item: TestItem): void {
+        this.runningItems.add(item);
+    }
+
+    /**
+     * Record that a test item has finished executing.
+     */
+    protected markItemFinished(item: TestItem): void {
+        this.runningItems.delete(item);
+    }
+
+    /**
+     * Forward program output (captured from the test's debug session as DAP `output`
+     * events) into the Test Results view. When exactly one test is currently running,
+     * the output is attributed to that test item so it shows up under the test in the
+     * explorer; otherwise (idle, or several tests running in parallel where attribution
+     * would only be a guess) it is appended to the run as a whole.
+     */
+    public appendProgramOutput(output: string): void {
+        const normalized: string = output.replace(/\r?\n/g, '\r\n');
+        const item: TestItem | undefined = this.runningItems.size === 1
+            ? this.runningItems.values().next().value
+            : undefined;
+        this.testContext.testRun.appendOutput(normalized, undefined, item);
+    }
 
     /**
      * Return a string array which contains the stacktraces that need to be filtered.

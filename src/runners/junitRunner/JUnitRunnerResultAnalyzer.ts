@@ -52,8 +52,14 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
         for (const line of lines) {
+            // The socket stream carries only the JUnit runner's control protocol
+            // (`%`-prefixed frames plus stack-trace / expected-actual payloads).
+            // The control frames are noise, and the failure payloads are already
+            // surfaced structurally as TestMessages on the failed items, so nothing
+            // here is echoed to the Test Results output. The user-facing program
+            // output is instead forwarded from the debug session's DAP `output`
+            // events (see BaseRunner).
             this.processData(line);
-            this.testContext.testRun.appendOutput(line + '\r\n');
         }
     }
 
@@ -70,6 +76,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.setDurationAtStart(this.getCurrentState(item));
             setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState);
             this.updateParentOnChildStart(item);
+            this.markItemStarted(item);
         } else if (data.startsWith(MessageId.TestEnd)) {
             const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestEnd.length));
             if (!item) {
@@ -79,6 +86,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.calcDurationAtEnd(currentState);
             this.determineResultStateAtEnd(data, currentState);
             setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
+            this.markItemFinished(item);
             const itemData: ITestItemData | undefined = dataCache.get(item);
             if (itemData?.testLevel === TestLevel.Method) {
                 this.updateParentOnChildComplete(item, currentState.resultState);
