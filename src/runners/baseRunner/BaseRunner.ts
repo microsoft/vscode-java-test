@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as iconv from 'iconv-lite';
+import { randomUUID } from 'crypto';
 import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
 import { CancellationToken, debug, DebugAdapterTracker, DebugConfiguration, DebugSession, Disposable, ProviderResult } from 'vscode';
@@ -11,6 +12,8 @@ import { IProgressReporter } from '../../debugger.api';
 import { ITestRunnerInternal } from '../ITestRunner';
 import { RunnerResultAnalyzer } from './RunnerResultAnalyzer';
 import { IExecutionConfig, IRunTestContext } from '../../java-test-runner.api';
+
+const JAVA_TEST_RUN_ID: string = '__javaTestRunId';
 
 export abstract class BaseRunner implements ITestRunnerInternal {
     protected server: Server;
@@ -56,37 +59,26 @@ export abstract class BaseRunner implements ITestRunnerInternal {
         // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
 
-        // The debuggee's stdout/stderr are delivered by java-debug as standard DAP `output` events,
-        // which by default only surface in the Debug Console. Attach a tracker to the test's own debug
-        // session and forward those output events into the Test Results view, so the program output shows
-        // up next to the test results instead of being split across two separate surfaces.
+        const testRunId: string = randomUUID();
+        launchConfiguration[JAVA_TEST_RUN_ID] = testRunId;
+        const isTestSession: (session: DebugSession) => boolean = (session: DebugSession): boolean =>
+            session.configuration[JAVA_TEST_RUN_ID] === testRunId;
+
+        // Mirror the test session's user-visible Debug Console output in Test Results.
         this.disposables.push(debug.registerDebugAdapterTrackerFactory('java', {
             createDebugAdapterTracker: (session: DebugSession): ProviderResult<DebugAdapterTracker> => {
-                if (session.name !== launchConfiguration.name) {
+                if (!isTestSession(session)) {
                     return undefined;
                 }
                 return {
-                    onDidSendMessage: (message: any): void => {
-                        if (message?.type === 'event' && message.event === 'output') {
-                            const category: string | undefined = message.body?.category;
-                            // `telemetry` output events are not meant for the user.
-                            if (category === 'telemetry') {
-                                return;
-                            }
-                            const output: string | undefined = message.body?.output;
-                            if (output) {
-                                // Let the analyzer attribute the output to the running test when possible.
-                                this.runnerResultAnalyzer.appendProgramOutput(output);
-                            }
-                        }
-                    },
+                    onDidSendMessage: (message: any): void => this.handleDebugAdapterMessage(message),
                 };
             },
         }));
 
         let debugSession: DebugSession | undefined;
         this.disposables.push(debug.onDidStartDebugSession((session: DebugSession) => {
-            if (session.name === launchConfiguration.name) {
+            if (!debugSession && isTestSession(session)) {
                 debugSession = session;
             }
         }));
@@ -108,7 +100,7 @@ export abstract class BaseRunner implements ITestRunnerInternal {
             return await new Promise<void>((resolve: () => void): void => {
                 this.disposables.push(
                     debug.onDidTerminateDebugSession((session: DebugSession): void => {
-                        if (launchConfiguration.name === session.name) {
+                        if (session.id === debugSession?.id) {
                             debugSession = undefined;
                             this.tearDown();
                             if (data.length > 0) {
@@ -123,6 +115,19 @@ export abstract class BaseRunner implements ITestRunnerInternal {
             this.tearDown();
             return;
         }));
+    }
+
+    protected handleDebugAdapterMessage(message: any): void {
+        if (message?.type !== 'event' || message.event !== 'output' || message.body?.category === 'telemetry') {
+            return;
+        }
+
+        const output: unknown = message.body?.output;
+        if (typeof output !== 'string' || output.length === 0) {
+            return;
+        }
+
+        this.testContext.testRun.appendOutput(output.replace(/\r?\n/g, '\r\n'));
     }
 
     public async tearDown(): Promise<void> {

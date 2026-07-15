@@ -76,7 +76,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.setDurationAtStart(this.getCurrentState(item));
             setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState);
             this.updateParentOnChildStart(item);
-            this.markItemStarted(item);
         } else if (data.startsWith(MessageId.TestEnd)) {
             const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestEnd.length));
             if (!item) {
@@ -86,7 +85,6 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.calcDurationAtEnd(currentState);
             this.determineResultStateAtEnd(data, currentState);
             setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
-            this.markItemFinished(item);
             const itemData: ITestItemData | undefined = dataCache.get(item);
             if (itemData?.testLevel === TestLevel.Method) {
                 this.updateParentOnChildComplete(item, currentState.resultState);
