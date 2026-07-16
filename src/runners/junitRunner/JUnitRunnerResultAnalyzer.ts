@@ -17,6 +17,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     private triggeredTestsMapping: Map<string, TestItem> = new Map();
     private projectName: string;
     private incompleteTestSuite: ITestInfo[] = [];
+    private enqueuedTests: Set<TestItem> = new Set();
 
     // tests may be run concurrently, so each item's current state needs to be remembered
     private currentStates: Map<TestItem, CurrentItemState> = new Map();
@@ -67,27 +68,29 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
         if (data.startsWith(MessageId.TestTree)) {
             this.enlistToTestMapping(data.substring(MessageId.TestTree.length).trim());
         } else if (data.startsWith(MessageId.TestStart)) {
-            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestStart.length));
-            if (!item) {
+            const testInfo: ITestInfo | undefined = this.getTestInfo(data.substr(MessageId.TestStart.length));
+            if (!testInfo?.testItem) {
                 return;
             }
-            this.initializeParentState(item, this.triggeredTestsMapping);
+            const item: TestItem = testInfo.testItem;
             this.setCurrentState(item, TestResultState.Running, 0);
             this.setDurationAtStart(this.getCurrentState(item));
-            setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState);
-            this.updateParentOnChildStart(item);
+            if (!testInfo.isSuite) {
+                setTestState(this.testContext.testRun, item, this.getCurrentState(item).resultState);
+            }
         } else if (data.startsWith(MessageId.TestEnd)) {
-            const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestEnd.length));
-            if (!item) {
+            const testInfo: ITestInfo | undefined = this.getTestInfo(data.substr(MessageId.TestEnd.length));
+            if (!testInfo?.testItem) {
                 return;
             }
+            const item: TestItem = testInfo.testItem;
             const currentState: CurrentItemState = this.getCurrentState(item);
             this.calcDurationAtEnd(currentState);
             this.determineResultStateAtEnd(data, currentState);
-            setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
-            const itemData: ITestItemData | undefined = dataCache.get(item);
-            if (itemData?.testLevel === TestLevel.Method) {
-                this.updateParentOnChildComplete(item, currentState.resultState);
+            if (!testInfo.isSuite ||
+                currentState.resultState === TestResultState.Failed ||
+                currentState.resultState === TestResultState.Errored) {
+                setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
             }
         } else if (data.startsWith(MessageId.TestFailed)) {
             const item: TestItem | undefined = this.getTestItem(data.substr(MessageId.TestFailed.length));
@@ -121,14 +124,16 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 return;
             }
             const currentResultState: TestResultState = this.getCurrentState(this.tracingItem).resultState;
-            if (this.assertionFailure) {
-                this.tryAppendMessage(this.tracingItem, this.assertionFailure, currentResultState);
-            }
-            if (this.traces?.value) {
-                this.tryAppendMessage(this.tracingItem, new TestMessage(this.traces), currentResultState);
-            }
-            if (currentResultState === TestResultState.Errored) {
-                setTestState(this.testContext.testRun, this.tracingItem, currentResultState);
+            if (currentResultState !== TestResultState.Skipped) {
+                if (this.assertionFailure) {
+                    this.tryAppendMessage(this.tracingItem, this.assertionFailure, currentResultState);
+                }
+                if (this.traces?.value) {
+                    this.tryAppendMessage(this.tracingItem, new TestMessage(this.traces), currentResultState);
+                }
+                if (currentResultState === TestResultState.Errored) {
+                    setTestState(this.testContext.testRun, this.tracingItem, currentResultState);
+                }
             }
             this.recordingType = RecordingType.None;
         } else if (data.startsWith(MessageId.ExpectStart)) {
@@ -192,8 +197,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     }
 
     protected getTestItem(message: string): TestItem | undefined {
+        return this.getTestInfo(message)?.testItem;
+    }
+
+    private getTestInfo(message: string): ITestInfo | undefined {
         const index: string = message.substring(0, message.indexOf(',')).trim();
-        return this.testOutputMapping.get(index)?.testItem;
+        return this.testOutputMapping.get(index);
     }
 
     protected getTestId(message: string): string {
@@ -406,6 +415,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                         testId,
                         testCount,
                         testItem,
+                        isSuite,
                     });
                 }
 
@@ -424,7 +434,12 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 testId,
                 testCount,
                 testItem,
+                isSuite,
             });
+            if (!isSuite && testItem && !this.enqueuedTests.has(testItem)) {
+                this.enqueuedTests.add(testItem);
+                this.testContext.testRun.enqueued(testItem);
+            }
         }
     }
 
@@ -526,6 +541,7 @@ interface ITestInfo {
     testId: string;
     testCount: number;
     testItem: TestItem | undefined;
+    isSuite: boolean;
 }
 
 enum RecordingType {

@@ -407,6 +407,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         const testItem = generateTestItem(testController, 'junit@junit5.ParameterizedAnnotationTest#testMultiArguments(String, String, String)', TestKind.JUnit5, new Range(10, 0, 16, 0));
         const testRunRequest = new TestRunRequest([testItem], []);
         const testRun = testController.createTestRun(testRunRequest);
+        const enqueuedSpy = sinon.spy(testRun, 'enqueued');
         const startedSpy = sinon.spy(testRun, 'started');
         const passedSpy = sinon.spy(testRun, 'passed');
         const testRunnerOutput = `%TESTC  0 v2
@@ -434,6 +435,8 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         stub.returns(dummy);
         analyzer.analyzeData(testRunnerOutput);
 
+        assert.strictEqual(enqueuedSpy.calledWith(testItem), false);
+        sinon.assert.calledWith(enqueuedSpy, dummy);
         sinon.assert.calledWith(startedSpy, dummy);
         sinon.assert.calledWith(passedSpy, dummy);
     });
@@ -574,6 +577,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
 
         const testRunRequest = new TestRunRequest([suiteItem], []);
         const testRun = testController.createTestRun(testRunRequest);
+        const enqueuedSpy = sinon.spy(testRun, 'enqueued');
         const startedSpy = sinon.spy(testRun, 'started');
         const passedSpy = sinon.spy(testRun, 'passed');
 
@@ -605,12 +609,59 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
         analyzer.analyzeData(testRunnerOutput);
 
-        // Verify the suite item itself started and passed (the core regression in #1828)
-        sinon.assert.calledWith(startedSpy, suiteItem);
-        sinon.assert.calledWith(passedSpy, suiteItem, sinon.match.number);
-        // Verify the method-level child also started and passed
+        assert.strictEqual(enqueuedSpy.calledWith(suiteItem), false);
+        assert.strictEqual(enqueuedSpy.calledWith(classItem), false);
+        sinon.assert.calledWith(enqueuedSpy, methodItem);
+        assert.strictEqual(startedSpy.calledWith(suiteItem), false);
+        assert.strictEqual(passedSpy.calledWith(suiteItem), false);
+        assert.strictEqual(startedSpy.calledWith(classItem), false);
+        assert.strictEqual(passedSpy.calledWith(classItem), false);
         sinon.assert.calledWith(startedSpy, methodItem);
         sinon.assert.calledWith(passedSpy, methodItem, sinon.match.number);
+    });
+
+    test("does not report an assumption-aborted suite as a test case", () => {
+        const suiteItem = testController.createTestItem(
+            'junit@junit5.AbortedSuite',
+            'AbortedSuite',
+            Uri.file('/mock/test/AbortedSuite.java'),
+        );
+        dataCache.set(suiteItem, {
+            jdtHandler: '',
+            fullName: 'junit5.AbortedSuite',
+            projectName: 'junit',
+            testLevel: TestLevel.Class,
+            testKind: TestKind.JUnit5,
+        });
+
+        const testRun = testController.createTestRun(new TestRunRequest([suiteItem], []));
+        const enqueuedSpy = sinon.spy(testRun, 'enqueued');
+        const startedSpy = sinon.spy(testRun, 'started');
+        const skippedSpy = sinon.spy(testRun, 'skipped');
+        const testRunnerOutput = `%TESTC  0 v2
+%TSTTREE1,junit5.AbortedSuite,true,0,false,-1,AbortedSuite,,[engine:junit-jupiter]/[class:junit5.AbortedSuite]
+%TESTS  1,junit5.AbortedSuite
+%FAILED 1,@AssumptionFailure: junit5.AbortedSuite
+%TRACES
+org.opentest4j.TestAbortedException: aborted
+%TRACEE
+%TESTE  1,@AssumptionFailure: junit5.AbortedSuite
+%RUNTIME10`;
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.JUnit5,
+            projectName: 'junit',
+            testItems: [suiteItem],
+            testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+
+        const analyzer = new JUnitRunnerResultAnalyzer(runnerContext);
+        analyzer.analyzeData(testRunnerOutput);
+
+        assert.strictEqual(enqueuedSpy.calledWith(suiteItem), false);
+        assert.strictEqual(startedSpy.calledWith(suiteItem), false);
+        assert.strictEqual(skippedSpy.calledWith(suiteItem), false);
     });
 
 });
