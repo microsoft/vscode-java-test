@@ -52,8 +52,14 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     public analyzeData(data: string): void {
         const lines: string[] = data.split(/\r?\n/);
         for (const line of lines) {
+            // The socket stream carries only the JUnit runner's control protocol
+            // (`%`-prefixed frames plus stack-trace / expected-actual payloads).
+            // The control frames are noise, and the failure payloads are already
+            // surfaced structurally as TestMessages on the failed items, so nothing
+            // here is echoed to the Test Results output. The user-facing program
+            // output is instead forwarded from the debug session's DAP `output`
+            // events (see BaseRunner).
             this.processData(line);
-            this.testContext.testRun.appendOutput(line + '\r\n');
         }
     }
 

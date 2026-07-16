@@ -10,6 +10,7 @@ import { IRunTestContext, TestLevel, TestResultState } from '../../java-test-run
 const TEST_START: string = 'testStarted';
 const TEST_FAIL: string = 'testFailed';
 const TEST_FINISH: string = 'testFinished';
+const TEST_ERROR: string = 'error';
 
 export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
 
@@ -47,7 +48,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             try {
                 this.processData(match[1]);
             } catch (error) {
-                this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${match[1]}\n`);
+                this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${match[1]}\r\n`);
             }
         }
     }
@@ -55,9 +56,17 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
     public processData(data: string): void {
         const outputData: ITestNGOutputData = JSON.parse(data) as ITestNGOutputData;
 
-        this.testContext.testRun.appendOutput(this.unescape(data).replace(/\r?\n/g, '\r\n'));
+        if (outputData.name === TEST_ERROR) {
+            this.processRunnerError(outputData.attributes);
+            return;
+        }
 
-        const id: string = `${this.projectName}@${outputData.attributes.name}`;
+        const attributes: ITestNGAttributes | undefined = outputData.attributes;
+        if (!attributes?.name) {
+            return;
+        }
+
+        const id: string = `${this.projectName}@${attributes.name}`;
         if (outputData.name === TEST_START) {
             this.initializeCache();
             const item: TestItem | undefined = this.getTestItem(id);
@@ -76,11 +85,11 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             this.currentTestState = TestResultState.Failed;
             const testMessages: TestMessage[] = [];
 
-            if (outputData.attributes.trace) {
+            if (attributes.trace) {
                 const markdownTrace: MarkdownString = new MarkdownString();
                 markdownTrace.isTrusted = true;
                 markdownTrace.supportHtml = true;
-                for (const line of outputData.attributes.trace.split(/\r?\n/)) {
+                for (const line of attributes.trace.split(/\r?\n/)) {
                     this.processStackTrace(line, markdownTrace, this.currentItem, this.projectName);
                 }
 
@@ -93,17 +102,17 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 }
                 testMessages.push(testMessage);
             }
-            const duration: number = Number.parseInt(outputData.attributes.duration, 10);
+            const duration: number | undefined = this.parseDuration(attributes.duration);
             setTestState(this.testContext.testRun, item, this.currentTestState, testMessages, duration);
         } else if (outputData.name === TEST_FINISH) {
-            const item: TestItem | undefined = this.getTestItem(data);
+            const item: TestItem | undefined = this.getTestItem(id);
             if (!item) {
                 return;
             }
             if (this.currentTestState === TestResultState.Running) {
                 this.currentTestState = TestResultState.Passed;
             }
-            const duration: number = Number.parseInt(outputData.attributes.duration, 10);
+            const duration: number | undefined = this.parseDuration(attributes.duration);
             setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration);
             const itemData: ITestItemData | undefined = dataCache.get(item);
             if (itemData?.testLevel === TestLevel.Method) {
@@ -121,18 +130,29 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
         return this.currentItem;
     }
 
-    protected unescape(content: string): string {
-        return content.replace(/\\r/gm, '\r')
-            .replace(/\\f/gm, '\f')
-            .replace(/\\n/gm, '\n')
-            .replace(/\\t/gm, '\t')
-            .replace(/\\b/gm, '\b')
-            .replace(/\\"/gm, '"');
-    }
-
     protected initializeCache(): void {
         this.currentTestState = TestResultState.Queued;
         this.currentItem = undefined;
+    }
+
+    private processRunnerError(attributes: ITestNGAttributes | undefined): void {
+        let message: string = attributes?.message || 'Failed to run TestNG tests.';
+        if (attributes?.trace) {
+            message += `\n${attributes.trace}`;
+        }
+        const testMessage: TestMessage = new TestMessage(message);
+        for (const item of this.testContext.testItems) {
+            this.testContext.testRun.errored(item, testMessage);
+        }
+    }
+
+    private parseDuration(duration: string | undefined): number | undefined {
+        if (!duration) {
+            return undefined;
+        }
+
+        const parsed: number = Number.parseInt(duration, 10);
+        return Number.isNaN(parsed) ? undefined : parsed;
     }
 
     protected getStacktraceFilter(): string[] {
@@ -151,20 +171,14 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
 }
 
 interface ITestNGOutputData {
-    attributes: ITestNGAttributes;
-    type: TestOutputType;
+    attributes?: ITestNGAttributes;
     name: string;
-}
-
-enum TestOutputType {
-    Info,
-    Error,
 }
 
 interface ITestNGAttributes {
-    name: string;
-    duration: string;
-    location: string;
-    message: string;
-    trace: string;
+    name?: string;
+    duration?: string;
+    location?: string;
+    message?: string;
+    trace?: string;
 }

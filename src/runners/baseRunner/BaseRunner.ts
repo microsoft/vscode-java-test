@@ -2,15 +2,18 @@
 // Licensed under the MIT license.
 
 import * as iconv from 'iconv-lite';
+import { randomUUID } from 'crypto';
 import { AddressInfo, createServer, Server, Socket } from 'net';
 import * as os from 'os';
-import { CancellationToken, debug, DebugConfiguration, DebugSession, Disposable } from 'vscode';
+import { CancellationToken, debug, DebugAdapterTracker, DebugConfiguration, DebugSession, Disposable, ProviderResult } from 'vscode';
 import { sendError } from 'vscode-extension-telemetry-wrapper';
 import { Configurations } from '../../constants';
 import { IProgressReporter } from '../../debugger.api';
 import { ITestRunnerInternal } from '../ITestRunner';
 import { RunnerResultAnalyzer } from './RunnerResultAnalyzer';
 import { IExecutionConfig, IRunTestContext } from '../../java-test-runner.api';
+
+const JAVA_TEST_RUN_ID: string = '__javaTestRunId';
 
 export abstract class BaseRunner implements ITestRunnerInternal {
     protected server: Server;
@@ -56,9 +59,26 @@ export abstract class BaseRunner implements ITestRunnerInternal {
         // So we force to use internal console here to make sure the session is still under debugger's control.
         launchConfiguration.console = 'internalConsole';
 
+        const testRunId: string = randomUUID();
+        launchConfiguration[JAVA_TEST_RUN_ID] = testRunId;
+        const isTestSession: (session: DebugSession) => boolean = (session: DebugSession): boolean =>
+            session.configuration[JAVA_TEST_RUN_ID] === testRunId;
+
+        // Mirror the test session's user-visible Debug Console output in Test Results.
+        this.disposables.push(debug.registerDebugAdapterTrackerFactory('java', {
+            createDebugAdapterTracker: (session: DebugSession): ProviderResult<DebugAdapterTracker> => {
+                if (!isTestSession(session)) {
+                    return undefined;
+                }
+                return {
+                    onDidSendMessage: (message: any): void => this.handleDebugAdapterMessage(message),
+                };
+            },
+        }));
+
         let debugSession: DebugSession | undefined;
         this.disposables.push(debug.onDidStartDebugSession((session: DebugSession) => {
-            if (session.name === launchConfiguration.name) {
+            if (!debugSession && isTestSession(session)) {
                 debugSession = session;
             }
         }));
@@ -80,7 +100,7 @@ export abstract class BaseRunner implements ITestRunnerInternal {
             return await new Promise<void>((resolve: () => void): void => {
                 this.disposables.push(
                     debug.onDidTerminateDebugSession((session: DebugSession): void => {
-                        if (launchConfiguration.name === session.name) {
+                        if (session.id === debugSession?.id) {
                             debugSession = undefined;
                             this.tearDown();
                             if (data.length > 0) {
@@ -95,6 +115,19 @@ export abstract class BaseRunner implements ITestRunnerInternal {
             this.tearDown();
             return;
         }));
+    }
+
+    protected handleDebugAdapterMessage(message: any): void {
+        if (message?.type !== 'event' || message.event !== 'output' || message.body?.category === 'telemetry') {
+            return;
+        }
+
+        const output: unknown = message.body?.output;
+        if (typeof output !== 'string' || output.length === 0) {
+            return;
+        }
+
+        this.testContext.testRun.appendOutput(output.replace(/\r?\n/g, '\r\n'));
     }
 
     public async tearDown(): Promise<void> {
