@@ -620,7 +620,7 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <2>
         sinon.assert.calledWith(passedSpy, methodItem, sinon.match.number);
     });
 
-    test("does not report an assumption-aborted suite as a test case", () => {
+    test("reports an assumption-aborted suite when it has no test cases", () => {
         const suiteItem = testController.createTestItem(
             'junit@junit5.AbortedSuite',
             'AbortedSuite',
@@ -661,7 +661,7 @@ org.opentest4j.TestAbortedException: aborted
 
         assert.strictEqual(enqueuedSpy.calledWith(suiteItem), false);
         assert.strictEqual(startedSpy.calledWith(suiteItem), false);
-        assert.strictEqual(skippedSpy.calledWith(suiteItem), false);
+        sinon.assert.calledOnceWithExactly(skippedSpy, suiteItem);
     });
 
 });

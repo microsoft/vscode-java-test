@@ -18,6 +18,7 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
     private projectName: string;
     private incompleteTestSuite: ITestInfo[] = [];
     private enqueuedTests: Set<TestItem> = new Set();
+    private suiteItems: Set<TestItem> = new Set();
 
     // tests may be run concurrently, so each item's current state needs to be remembered
     private currentStates: Map<TestItem, CurrentItemState> = new Map();
@@ -87,9 +88,10 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
             const currentState: CurrentItemState = this.getCurrentState(item);
             this.calcDurationAtEnd(currentState);
             this.determineResultStateAtEnd(data, currentState);
-            if (!testInfo.isSuite ||
-                currentState.resultState === TestResultState.Failed ||
-                currentState.resultState === TestResultState.Errored) {
+            const shouldReportSuite: boolean = currentState.resultState === TestResultState.Failed ||
+                currentState.resultState === TestResultState.Errored ||
+                (currentState.resultState === TestResultState.Skipped && testInfo.testCount === 0);
+            if (!testInfo.isSuite || shouldReportSuite) {
                 setTestState(this.testContext.testRun, item, currentState.resultState, undefined, currentState.duration);
             }
         } else if (data.startsWith(MessageId.TestFailed)) {
@@ -124,7 +126,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 return;
             }
             const currentResultState: TestResultState = this.getCurrentState(this.tracingItem).resultState;
-            if (currentResultState !== TestResultState.Skipped) {
+            const isSkippedSuite: boolean = currentResultState === TestResultState.Skipped &&
+                this.suiteItems.has(this.tracingItem);
+            if (!isSkippedSuite) {
                 if (this.assertionFailure) {
                     this.tryAppendMessage(this.tracingItem, this.assertionFailure, currentResultState);
                 }
@@ -436,6 +440,9 @@ export class JUnitRunnerResultAnalyzer extends RunnerResultAnalyzer {
                 testItem,
                 isSuite,
             });
+            if (isSuite && testItem) {
+                this.suiteItems.add(testItem);
+            }
             if (!isSuite && testItem && !this.enqueuedTests.has(testItem)) {
                 this.enqueuedTests.add(testItem);
                 this.testContext.testRun.enqueued(testItem);
