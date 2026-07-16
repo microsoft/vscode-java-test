@@ -184,6 +184,10 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
             return Promise.resolve(coverageProvider!.getCoverageDetails(fileCoverage.uri));
         };
     }
+    const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
+    if (testRunner) {
+        enqueueTestMethods(testItems, run);
+    }
 
     try {
         await new Promise<void>(async (resolve: () => void): Promise<void> => {
@@ -195,7 +199,6 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                 disposables.forEach((d: Disposable) => d.dispose());
                 return resolve();
             });
-            enqueueTestMethods(testItems, run);
             // TODO: first group by project, then merge test methods.
             const queue: TestItem[][] = mergeTestMethods(testItems);
             for (const testsInQueue of queue) {
@@ -219,7 +222,6 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         profile: request.profile,
                         testConfig: await loadRunConfig(itemsPerProject, workspaceFolder),
                     };
-                    const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
                     if (testRunner) {
                         await executeWithTestRunner(option, testRunner, testContext, run, disposables);
                         disposables.forEach((d: Disposable) => d.dispose());

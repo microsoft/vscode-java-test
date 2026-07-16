@@ -4,12 +4,17 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as sinon from 'sinon';
 import { AddressInfo } from 'net';
 import { BaseRunner } from '../../src/runners/baseRunner/BaseRunner';
 import { RunnerResultAnalyzer } from '../../src/runners/baseRunner/RunnerResultAnalyzer';
 import { IRunTestContext, TestKind } from '../../src/java-test-runner.api';
 
 class TestableBaseRunner extends BaseRunner {
+    public handleMessage(message: any): void {
+        this.handleDebugAdapterMessage(message);
+    }
+
     protected getAnalyzer(): RunnerResultAnalyzer {
         return {} as RunnerResultAnalyzer;
     }
@@ -61,6 +66,54 @@ suite('BaseRunner Tests', () => {
             } finally {
                 await runner.tearDown();
             }
+        });
+    });
+
+    suite('handleDebugAdapterMessage', () => {
+        test('forwards non-telemetry output at run level with CRLF newlines', () => {
+            const appendOutput = sinon.spy();
+            const runner = new TestableBaseRunner({
+                kind: TestKind.JUnit,
+                isDebug: false,
+                projectName: 'test-project',
+                testItems: [],
+                testRun: { appendOutput } as any,
+                workspaceFolder: {} as any,
+            } as IRunTestContext);
+
+            runner.handleMessage({
+                type: 'event',
+                event: 'output',
+                body: {
+                    category: 'console',
+                    output: 'first\nsecond\r\n',
+                },
+            });
+
+            sinon.assert.calledOnceWithExactly(appendOutput, 'first\r\nsecond\r\n');
+        });
+
+        test('ignores telemetry output', () => {
+            const appendOutput = sinon.spy();
+            const runner = new TestableBaseRunner({
+                kind: TestKind.JUnit,
+                isDebug: false,
+                projectName: 'test-project',
+                testItems: [],
+                testRun: { appendOutput } as any,
+                workspaceFolder: {} as any,
+            } as IRunTestContext);
+
+            runner.handleMessage({
+                type: 'event',
+                event: 'output',
+                body: {
+                    category: 'telemetry',
+                    output: 'internal event',
+                },
+            });
+
+            sinon.assert.notCalled(appendOutput);
         });
     });
 });
