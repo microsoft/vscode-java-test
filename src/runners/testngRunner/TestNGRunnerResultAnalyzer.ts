@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Location, MarkdownString, TestItem, TestMessage } from 'vscode';
-import { dataCache, ITestItemData } from '../../controller/testItemDataCache';
+import { dataCache } from '../../controller/testItemDataCache';
 import { RunnerResultAnalyzer } from '../baseRunner/RunnerResultAnalyzer';
 import { setTestState } from '../utils';
 import { IRunTestContext, TestLevel, TestResultState } from '../../java-test-runner.api';
@@ -33,6 +33,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             if (testLevel === TestLevel.Method) {
                 this.triggeredTestsMapping.set(item.id, item);
+                this.testContext.testRun.enqueued(item);
             } else {
                 item.children.forEach((child: TestItem) => {
                     queue.push(child);
@@ -73,10 +74,8 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             if (!item) {
                 return;
             }
-            this.initializeParentState(item, this.triggeredTestsMapping);
             this.currentTestState = TestResultState.Running;
             this.testContext.testRun.started(item);
-            this.updateParentOnChildStart(item);
         } else if (outputData.name === TEST_FAIL) {
             const item: TestItem | undefined = this.getTestItem(id);
             if (!item) {
@@ -114,10 +113,6 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             }
             const duration: number | undefined = this.parseDuration(attributes.duration);
             setTestState(this.testContext.testRun, item, this.currentTestState, undefined, duration);
-            const itemData: ITestItemData | undefined = dataCache.get(item);
-            if (itemData?.testLevel === TestLevel.Method) {
-                this.updateParentOnChildComplete(item, this.currentTestState);
-            }
         }
     }
 
@@ -141,7 +136,9 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             message += `\n${attributes.trace}`;
         }
         const testMessage: TestMessage = new TestMessage(message);
-        for (const item of this.testContext.testItems) {
+        const testCases: Set<TestItem> = new Set(this.triggeredTestsMapping.values());
+        const items: Iterable<TestItem> = testCases.size > 0 ? testCases : this.testContext.testItems;
+        for (const item of items) {
             this.testContext.testRun.errored(item, testMessage);
         }
     }

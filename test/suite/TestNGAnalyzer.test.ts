@@ -7,8 +7,9 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { TestController, TestMessage, TestRunRequest, tests, workspace } from 'vscode';
 import { TestNGRunnerResultAnalyzer } from '../../src/runners/testngRunner/TestNGRunnerResultAnalyzer';
-import { IRunTestContext, TestKind } from '../../src/java-test-runner.api';
+import { IRunTestContext, TestKind, TestLevel } from '../../src/java-test-runner.api';
 import { generateTestItem } from './utils';
+import { dataCache } from '../../src/controller/testItemDataCache';
 
 // tslint:disable: only-arrow-functions
 suite('TestNG Runner Analyzer Tests', () => {
@@ -69,5 +70,81 @@ suite('TestNG Runner Analyzer Tests', () => {
         analyzer.analyzeData('@@<TestRunner-{"name":"reporterAttached"}-TestRunner>');
 
         sinon.assert.notCalled(appendOutputSpy);
+    });
+
+    test('reports method results without assigning a result state to the class', () => {
+        const classItem = testController.createTestItem('testng@example.SampleTest', 'SampleTest');
+        dataCache.set(classItem, {
+            jdtHandler: '',
+            fullName: 'example.SampleTest',
+            projectName: 'testng',
+            testLevel: TestLevel.Class,
+            testKind: TestKind.TestNG,
+        });
+        const testItem = generateTestItem(testController, 'testng@example.SampleTest#test', TestKind.TestNG);
+        classItem.children.add(testItem);
+
+        const testRun = testController.createTestRun(new TestRunRequest([classItem], []));
+        const enqueuedSpy = sinon.spy(testRun, 'enqueued');
+        const startedSpy = sinon.spy(testRun, 'started');
+        const passedSpy = sinon.spy(testRun, 'passed');
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.TestNG,
+            projectName: 'testng',
+            testItems: [classItem],
+            testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+        const analyzer = new TestNGRunnerResultAnalyzer(runnerContext);
+
+        analyzer.processData(JSON.stringify({
+            name: 'testStarted',
+            attributes: { name: 'example.SampleTest#test' },
+        }));
+        analyzer.processData(JSON.stringify({
+            name: 'testFinished',
+            attributes: { name: 'example.SampleTest#test', duration: '10' },
+        }));
+
+        sinon.assert.calledWith(enqueuedSpy, testItem);
+        assert.strictEqual(enqueuedSpy.calledWith(classItem), false);
+        sinon.assert.calledWith(startedSpy, testItem);
+        sinon.assert.calledWith(passedSpy, testItem, 10);
+        assert.strictEqual(startedSpy.calledWith(classItem), false);
+        assert.strictEqual(passedSpy.calledWith(classItem), false);
+    });
+
+    test('reports runner errors on method cases instead of their class', () => {
+        const classItem = testController.createTestItem('testng@example.SampleTest', 'SampleTest');
+        dataCache.set(classItem, {
+            jdtHandler: '',
+            fullName: 'example.SampleTest',
+            projectName: 'testng',
+            testLevel: TestLevel.Class,
+            testKind: TestKind.TestNG,
+        });
+        const testItem = generateTestItem(testController, 'testng@example.SampleTest#test', TestKind.TestNG);
+        classItem.children.add(testItem);
+
+        const testRun = testController.createTestRun(new TestRunRequest([classItem], []));
+        const erroredSpy = sinon.spy(testRun, 'errored');
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.TestNG,
+            projectName: 'testng',
+            testItems: [classItem],
+            testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+        const analyzer = new TestNGRunnerResultAnalyzer(runnerContext);
+
+        analyzer.processData(JSON.stringify({
+            name: 'error',
+            attributes: { message: 'Failed to run TestNG tests' },
+        }));
+
+        sinon.assert.calledWith(erroredSpy, testItem, sinon.match.instanceOf(TestMessage));
+        assert.strictEqual(erroredSpy.calledWith(classItem), false);
     });
 });
