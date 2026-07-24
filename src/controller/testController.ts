@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, Location, MarkdownString, RelativePattern, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
@@ -19,6 +20,7 @@ import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, ITestItemData } from './testItemDataCache';
 import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
+import { getJacocoReportBasePath } from '../utils/coverageUtils';
 import { testRunnerService } from './testRunnerService';
 import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
 import { processStackTraceLine } from '../runners/utils';
@@ -209,6 +211,7 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         window.showErrorMessage(`Failed to get workspace folder from test item: ${itemsPerProject[0].label}.`);
                         continue;
                     }
+                    const isCoverageRun: boolean = request.profile?.kind === TestRunProfileKind.Coverage;
                     const testContext: IRunTestContext = {
                         isDebug: option.isDebug,
                         kind: TestKind.None,
@@ -218,12 +221,24 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         workspaceFolder,
                         profile: request.profile,
                         testConfig: await loadRunConfig(itemsPerProject, workspaceFolder),
+                        coverage: isCoverageRun ? { outputDirectory: getJacocoReportBasePath(projectName) } : undefined,
                     };
                     const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
                     if (testRunner) {
+                        if (isCoverageRun && testContext.coverage) {
+                            // A delegated coverage run writes JaCoCo `.exec` files into this
+                            // directory; clear it first so the run never merges stale data
+                            // from a previous run. JDTLS analyzes the fresh files below.
+                            await fse.remove(testContext.coverage.outputDirectory);
+                        }
                         await executeWithTestRunner(option, testRunner, testContext, run, disposables);
                         disposables.forEach((d: Disposable) => d.dispose());
                         disposables = [];
+                        if (isCoverageRun) {
+                            // The delegate path returns before reaching the shared
+                            // coverage collection below, so analyze the `.exec` files here.
+                            await coverageProvider!.provideFileCoverage(testContext);
+                        }
                         continue;
                     }
                     const testKindMapping: Map<TestKind, TestItem[]> = mapTestItemsByKind(itemsPerProject);

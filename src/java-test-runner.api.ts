@@ -210,6 +210,17 @@ export interface IRunTestContext {
      * The configuration for this test run.
      */
     testConfig?: IExecutionConfig;
+
+    /**
+     * Coverage settings for this test run, present only for Coverage-kind runs.
+     */
+    coverage?: {
+        /**
+         * Directory where a delegated test JVM should write JaCoCo `.exec`
+         * execution data. JDTLS loads and analyzes these files after the run.
+         */
+        outputDirectory: string;
+    };
 }
 
 /**
