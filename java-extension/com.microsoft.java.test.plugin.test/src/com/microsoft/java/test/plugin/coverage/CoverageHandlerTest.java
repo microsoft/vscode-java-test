@@ -29,6 +29,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class CoverageHandlerTest extends AbstractProjectsManagerBasedTest {
 
@@ -75,6 +76,25 @@ public class CoverageHandlerTest extends AbstractProjectsManagerBasedTest {
                         .getCoverageDetail(new NullProgressMonitor());
 
         assertEquals(rootCoverage.size(), nestedCoverage.size());
+    }
+
+    @Test
+    public void testGetCoverageDetailFailsWithoutExecutionData() throws Exception {
+        importProjects(Collections.singleton("coverage-test"));
+        final IJavaProject javaProject = ProjectUtils.getJavaProject("coverage-test");
+        final File emptyDir = new File(javaProject.getProject().getLocation().toFile(), "no-exec");
+        emptyDir.mkdirs();
+
+        // Analyzing no execution data reports every line as uncovered, which is
+        // indistinguishable from a run that genuinely covered nothing. A run whose
+        // agent never attached has to be reported as an error instead of as 0%.
+        try {
+            new CoverageHandler(javaProject, emptyDir.getAbsolutePath())
+                    .getCoverageDetail(new NullProgressMonitor());
+            fail("Expected the absence of execution data to be reported as an error.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains(emptyDir.getAbsolutePath()));
+        }
     }
 
 }

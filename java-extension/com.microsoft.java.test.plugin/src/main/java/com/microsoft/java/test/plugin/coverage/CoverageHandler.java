@@ -77,7 +77,12 @@ public class CoverageHandler {
 
         final List<File> executionDataFiles = findExecutionDataFiles(reportBasePath);
         if (executionDataFiles.isEmpty()) {
-            return Collections.emptyList();
+            // Analyzing nothing yields a report where every line is uncovered, which is
+            // indistinguishable from tests that genuinely covered nothing. Fail loudly
+            // instead, so a run that never attached the agent cannot be read as 0%.
+            throw new IllegalStateException("No JaCoCo execution data (*.exec) was found under " +
+                    reportBasePath + ". The tests may not have started, or the test runner may " +
+                    "not have attached the coverage agent.");
         }
         final ExecFileLoader execFileLoader = new ExecFileLoader();
         for (final File executionDataFile : executionDataFiles) {
