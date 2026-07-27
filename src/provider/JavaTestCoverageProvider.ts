@@ -11,9 +11,9 @@ export class JavaTestCoverageProvider {
 
     private coverageDetails: Map<Uri, FileCoverageDetail[]> = new Map<Uri, FileCoverageDetail[]>();
 
-    public async provideFileCoverage({testRun: run, projectName, testConfig}: IRunTestContext): Promise<void> {
+    public async provideFileCoverage({testRun: run, projectName, testConfig, coverage}: IRunTestContext): Promise<void> {
         const sourceFileCoverages: ISourceFileCoverage[] = await executeJavaLanguageServerCommand<void>(JavaTestRunnerDelegateCommands.GET_COVERAGE_DETAIL,
-            projectName, getJacocoReportBasePath(projectName)) || [];
+            projectName, coverage?.outputDirectory ?? getJacocoReportBasePath(projectName)) || [];
         const sourceFileCoverageExclusions: minimatch.Minimatch[] = (testConfig?.coverage?.excludes ?? []).map((exclusion: string) =>
             new minimatch.Minimatch(exclusion, {flipNegate: true, nonegate: true}));
         const sourceFileCoveragesToReport: ISourceFileCoverage[] = [];

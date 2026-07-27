@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, Location, MarkdownString, RelativePattern, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
@@ -19,6 +20,7 @@ import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, ITestItemData } from './testItemDataCache';
 import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
+import { getDelegatedJacocoReportBasePath, getJacocoReportBasePath } from '../utils/coverageUtils';
 import { testRunnerService } from './testRunnerService';
 import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
 import { processStackTraceLine } from '../runners/utils';
@@ -212,6 +214,8 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         window.showErrorMessage(`Failed to get workspace folder from test item: ${itemsPerProject[0].label}.`);
                         continue;
                     }
+                    const isCoverageRun: boolean = request.profile?.kind === TestRunProfileKind.Coverage;
+                    const testRunner: TestRunner | undefined = testRunnerService.getRunner(request.profile?.label, request.profile?.kind);
                     const testContext: IRunTestContext = {
                         isDebug: option.isDebug,
                         kind: TestKind.None,
@@ -221,11 +225,30 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         workspaceFolder,
                         profile: request.profile,
                         testConfig: await loadRunConfig(itemsPerProject, workspaceFolder),
+                        // A delegated runner writes its execution data to a directory of its
+                        // own so that the two runners never merge each other's `.exec` files.
+                        coverage: isCoverageRun ? {
+                            outputDirectory: testRunner ?
+                                getDelegatedJacocoReportBasePath(projectName) :
+                                getJacocoReportBasePath(projectName),
+                        } : undefined,
                     };
+                    if (isCoverageRun && testContext.coverage &&
+                            testContext.testConfig?.coverage?.appendResult === false) {
+                        // JaCoCo appends to existing execution data by default. An explicit
+                        // `appendResult: false` means this run must not see any earlier data,
+                        // so drop what a previous run left behind.
+                        await fse.remove(testContext.coverage.outputDirectory);
+                    }
                     if (testRunner) {
                         await executeWithTestRunner(option, testRunner, testContext, run, disposables);
                         disposables.forEach((d: Disposable) => d.dispose());
                         disposables = [];
+                        if (isCoverageRun) {
+                            // The delegate path returns before reaching the shared
+                            // coverage collection below, so analyze the `.exec` files here.
+                            await coverageProvider!.provideFileCoverage(testContext);
+                        }
                         continue;
                     }
                     const testKindMapping: Map<TestKind, TestItem[]> = mapTestItemsByKind(itemsPerProject);
