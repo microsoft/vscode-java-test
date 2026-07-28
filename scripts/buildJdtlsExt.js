@@ -38,7 +38,10 @@ const bundleList = [
 // Set MAVEN_OPTS to disable XML entity size limits for JDK XML parser
 const env = { ...process.env };
 env.MAVEN_OPTS = (env.MAVEN_OPTS || '') + ' -Djdk.xml.maxGeneralEntitySizeLimit=0 -Djdk.xml.totalEntitySizeLimit=0 -DentityExpansionLimit=0';
-cp.execSync(`${mvnw()} clean verify`, { cwd: serverDir, stdio: [0, 1, 2], env });
+// `eclipse.p2.mirrors=false` stops p2 from following download.eclipse.org's mirror
+// redirect, which hands out a different third party host per request and makes the
+// set of addresses the build contacts impossible to express as an allow list.
+cp.execSync(`${mvnw()} clean verify -Declipse.p2.mirrors=false`, { cwd: serverDir, stdio: [0, 1, 2], env });
 copy(path.join(serverDir, 'com.microsoft.java.test.plugin/target'), path.resolve('server'), (file) => path.extname(file) === '.jar');
 copy(path.join(serverDir, 'com.microsoft.java.test.runner/target'), path.resolve('server'), (file) => file.endsWith('jar-with-dependencies.jar'));
 copy(path.join(serverDir, 'com.microsoft.java.test.plugin.site/target/repository/plugins'), path.resolve('server'), (file) => {
