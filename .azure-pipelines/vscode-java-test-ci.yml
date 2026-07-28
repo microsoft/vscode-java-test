@@ -51,28 +51,14 @@ extends:
                   jdkArchitectureOption: x64
                   jdkSourceOption: PreInstalled
               - template: /.azure-pipelines/npm-cfs.yml@self
-              - task: Npm@1
+              - script: npm install
                 displayName: npm install
-                inputs:
-                  verbose: false
-              - task: Npm@1
+              - script: npm run lint
                 displayName: npm run lint
-                inputs:
-                  command: custom
-                  verbose: false
-                  customCommand: run lint
-              - task: Npm@1
+              - script: npm run build-plugin
                 displayName: npm run build-plugin
-                inputs:
-                  command: custom
-                  verbose: false
-                  customCommand: run build-plugin
-              - task: Npm@1
+              - script: npm run vscode:prepublish
                 displayName: npm run vscode:prepublish
-                inputs:
-                  command: custom
-                  verbose: false
-                  customCommand: run vscode:prepublish
               - task: Bash@3
                 displayName: vsce package
                 inputs:
