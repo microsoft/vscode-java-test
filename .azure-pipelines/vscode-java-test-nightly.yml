@@ -2,6 +2,7 @@ name: $(Date:yyyyMMdd).$(Rev:r)
 variables:
   - name: Codeql.Enabled
     value: true
+  - template: /.azure-pipelines/npm-cfs-variables.yml@self
 schedules:
   - cron: 0 2 * * *
     branches:
@@ -65,6 +66,7 @@ extends:
                   jdkDestinationDirectory: $(Agent.ToolsDirectory)/ms-jdk21
               - script: java --version
                 displayName: 'Check Java installation'
+              - template: /.azure-pipelines/npm-cfs.yml@self
               - task: Npm@1
                 displayName: npm install
                 inputs:
