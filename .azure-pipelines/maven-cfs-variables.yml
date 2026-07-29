@@ -1,0 +1,47 @@
+# Variables that route Maven through the Central Feed Service (CFS), as required by
+# SFI Network Isolation. Consumed by every pipeline in this directory that builds the
+# Java side of the extension:
+#
+#   variables:
+#     - template: /.azure-pipelines/maven-cfs-variables.yml@self
+#
+# There is deliberately no companion steps template. Everything the redirect needs is
+# already understood by Maven and its wrapper as environment variables, so no task has
+# to rewrite a settings file and nothing in the checked-out tree is modified. Pipeline
+# variables are exported to every step in the job, which is what makes this work for
+# the Maven runs these builds start indirectly -- from an npm script or a gulp task --
+# and never name on a command line of their own.
+#
+# The one thing that cannot live here is the credential. System.AccessToken is a
+# secret, and secret variables are not exported to the environment, not even through
+# a variable that merely references one. It is therefore mapped with `env:` on the
+# steps that run Maven; grep for MVNW_PASSWORD to find them. That also keeps the token
+# out of the environment of every unrelated task in the job.
+#
+# Two independent egress paths have to be closed, and only the first is obvious.
+variables:
+  # The feed's maven/v1 endpoint, read by cfs-settings.xml and by the wrapper below.
+  # Committing it matches npm-cfs-variables.yml: a feed address is not a secret, and
+  # the token that makes it usable never leaves the agent.
+  - name: CFS_MAVEN_URL
+    value: https://pkgs.dev.azure.com/mseng/VSJava/_packaging/vscjava/maven/v1
+
+  # Path one: artifact resolution. The `mvn` launcher prepends MAVEN_ARGS to every
+  # invocation, so build scripts keep calling `mvnw` with no extra flags of their own.
+  # Supported by Maven 3.9 and newer, which is what the wrapper here pins.
+  - name: MAVEN_ARGS
+    value: -s $(Build.SourcesDirectory)/.azure-pipelines/cfs-settings.xml
+
+  # Path two: the Maven distribution itself. The wrapper downloads it from
+  # distributionUrl before Maven exists, so settings.xml cannot influence that request.
+  # MVNW_REPOURL substitutes everything ahead of /org/apache/maven/ in that URL, which
+  # is why .mvn/wrapper/maven-wrapper.properties still names the public host and needs
+  # no edit: contributors keep a wrapper that works, agents resolve it from the feed.
+  #
+  # The wrapper ignores both of these unless MVNW_PASSWORD is also set, which happens
+  # on the Maven steps; with no credential it would fall back to an unauthenticated
+  # fetch and fail on 401 rather than reach a public host.
+  - name: MVNW_REPOURL
+    value: $(CFS_MAVEN_URL)
+  - name: MVNW_USERNAME
+    value: AzureDevOps

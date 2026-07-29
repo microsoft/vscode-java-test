@@ -91,11 +91,40 @@ function updateVersion() {
 
 function downloadJacocoAgent() {
     const version = "0.8.15";
-    const jacocoAgentUrl = `https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/${version}/org.jacoco.agent-${version}-runtime.jar`;
     const jacocoAgentPath = path.resolve('server', 'jacocoagent.jar');
-    if (!fs.existsSync(jacocoAgentPath)) {
-        cp.execSync(`curl -L ${jacocoAgentUrl} -o ${jacocoAgentPath}`);
+    if (fs.existsSync(jacocoAgentPath)) {
+        return;
     }
+
+    // Resolved through Maven rather than downloaded by URL so that it follows whatever
+    // repository the build is already pointed at: the public central for contributors,
+    // and the CFS mirror that .azure-pipelines/maven-cfs.yml installs on the build
+    // agents, which SFI Network Isolation requires. A direct download reaches the
+    // public host from every environment and cannot be redirected by settings.xml,
+    // because it is not Maven making the request.
+    //
+    // `-N` keeps this on the parent pom, whose packaging is `pom`, so Tycho has no
+    // module to build and skips target platform resolution -- without it this would
+    // repeat the expensive p2 work the real build already did.
+    const outputDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'jacoco-agent-'));
+    try {
+        cp.execSync(
+            `${mvnw()} -B -N org.apache.maven.plugins:maven-dependency-plugin:3.6.1:copy`
+            + ` -Dartifact=org.jacoco:org.jacoco.agent:${version}:jar:runtime`
+            + ` -DoutputDirectory="${outputDirectory}" -Dmdep.stripVersion=true`,
+            { cwd: serverDir, stdio: [0, 1, 2], env });
+
+        // The plugin derives the file name from the coordinate, so it is read back
+        // rather than reproduced here.
+        const downloaded = fs.readdirSync(outputDirectory).filter((file) => path.extname(file) === '.jar');
+        if (downloaded.length !== 1) {
+            throw new Error(`Expected one jacoco agent jar, got ${downloaded.length}.`);
+        }
+        fse.copySync(path.join(outputDirectory, downloaded[0]), jacocoAgentPath);
+    } finally {
+        fse.removeSync(outputDirectory);
+    }
+
     if (!fs.existsSync(jacocoAgentPath)) {
         throw new Error('Failed to download jacoco agent.');
     }
