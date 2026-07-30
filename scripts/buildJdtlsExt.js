@@ -98,10 +98,10 @@ function downloadJacocoAgent() {
 
     // Resolved through Maven rather than downloaded by URL so that it follows whatever
     // repository the build is already pointed at: the public central for contributors,
-    // and the CFS mirror that .azure-pipelines/maven-cfs.yml installs on the build
-    // agents, which SFI Network Isolation requires. A direct download reaches the
-    // public host from every environment and cannot be redirected by settings.xml,
-    // because it is not Maven making the request.
+    // and the CFS mirror that .azure-pipelines/maven-cfs-variables.yml installs on
+    // the build agents, which SFI Network Isolation requires. A direct download
+    // reaches the public host from every environment and cannot be redirected by
+    // settings.xml, because it is not Maven making the request.
     //
     // `-N` keeps this on the parent pom, whose packaging is `pom`, so Tycho has no
     // module to build and skips target platform resolution -- without it this would
