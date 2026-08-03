@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven settings for the build pipelines in this directory. SFI Network Isolation
+  requires builds to resolve artifacts through the Central Feed Service (CFS) instead
+  of reaching a public host, and this file is the artifact-resolution half of that.
+
+  It is applied through MAVEN_ARGS rather than by passing -s at each call site; see
+  maven-cfs-variables.yml for why. Because MAVEN_ARGS is set only on the build agents,
+  a developer running ./mvnw locally is unaffected and keeps using their own settings.
+
+  The mirror is scoped to `central` rather than `external:*` deliberately. Tycho
+  resolves p2 repositories through the same mirror configuration, and CFS cannot serve
+  p2, so a wildcard mirror would break target platform resolution.
+
+  The two ids must stay equal: that pairing is how Maven attaches the credential to
+  the mirror. Neither value below is a secret. The URL is a feed address, and the
+  password is an environment reference that is only resolved on the agent. If either
+  variable is missing the build fails against an unusable repository rather than
+  quietly falling back to the public central, which is the outcome this change exists
+  to prevent.
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <mirrors>
+    <mirror>
+      <id>vscjava</id>
+      <name>Central Feed Service</name>
+      <url>${env.CFS_MAVEN_URL}</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+  <servers>
+    <server>
+      <id>vscjava</id>
+      <username>AzureDevOps</username>
+      <password>${env.SYSTEM_ACCESSTOKEN}</password>
+    </server>
+  </servers>
+</settings>
