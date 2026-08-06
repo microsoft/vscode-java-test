@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -40,9 +41,11 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
 
     protected static final String DISPLAY_NAME_ANNOTATION_JUNIT5 = "org.junit.jupiter.api.DisplayName";
 
+    protected static final String SPOCK_FEATURE_METADATA = "org.spockframework.runtime.model.FeatureMetadata";
+
     public JUnit5TestSearcher() {
         super();
-        this.testMethodAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE };
+        this.testMethodAnnotations = new String[] { JUNIT_PLATFORM_TESTABLE, SPOCK_FEATURE_METADATA };
     }
 
     @Override
@@ -132,5 +135,20 @@ public class JUnit5TestSearcher extends BaseFrameworkSearcher {
             return Collections.emptySet();
         }
         return types;
+    }
+
+    @Override
+    public String getDisplayName(IMethodBinding methodBinding) {
+        for (final IAnnotationBinding annotation : methodBinding.getAnnotations()) {
+            if (matchesName(annotation.getAnnotationType(), SPOCK_FEATURE_METADATA)) {
+                final IMemberValuePairBinding[] pairs = annotation.getDeclaredMemberValuePairs();
+                for (final IMemberValuePairBinding pair : pairs) {
+                    if ("name".equals(pair.getName()) && (pair.getValue() instanceof String)) {
+                        return (String) pair.getValue();
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
