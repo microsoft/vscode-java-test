@@ -74,6 +74,10 @@ extends:
                 displayName: npm run lint
               - script: npm run build-plugin
                 displayName: npm run build-plugin
+                # The JDT LS snapshot p2 site has no mirrors, and Tycho 4.0.5
+                # does not retry a direct connection reset. A task retry reuses
+                # the Maven/p2 cache and fetches only the missing artifact.
+                retryCountOnTaskFailure: 2
                 # System.AccessToken is a secret, and Azure Pipelines does not export secret
                 # variables to the environment -- not even through a variable that merely
                 # references one. It is mapped here, on the step that actually runs Maven,
