@@ -1,0 +1,16 @@
+# Prepares Maven's standard user settings location for Maven clients running inside
+# the Tycho test JVM. The outer Maven process uses MAVEN_ARGS, but embedded m2e does
+# not see those command-line arguments and resolves settings from user.home instead.
+steps:
+  - task: PowerShell@2
+    displayName: Configure Maven test importer
+    inputs:
+      targetType: inline
+      pwsh: true
+      script: |-
+        $m2Directory = Join-Path '$(JAVA_TEST_MAVEN_USER_HOME)' '.m2'
+        New-Item -ItemType Directory -Path $m2Directory -Force | Out-Null
+        Copy-Item `
+          -LiteralPath '$(Build.SourcesDirectory)/.azure-pipelines/cfs-settings.xml' `
+          -Destination (Join-Path $m2Directory 'settings.xml') `
+          -Force

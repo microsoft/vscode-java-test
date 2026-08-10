@@ -18,7 +18,7 @@
 # steps that run Maven; grep for MVNW_PASSWORD to find them. That also keeps the token
 # out of the environment of every unrelated task in the job.
 #
-# Two independent egress paths have to be closed, and only the first is obvious.
+# Three independent egress paths have to be closed, and only the first is obvious.
 variables:
   # The feed's maven/v1 endpoint, read by cfs-settings.xml and by the wrapper below.
   # Committing it matches npm-cfs-variables.yml: a feed address is not a secret, and
@@ -26,13 +26,24 @@ variables:
   - name: CFS_MAVEN_URL
     value: https://pkgs.dev.azure.com/mseng/VSJava/_packaging/vscjava/maven/v1
 
-  # Path one: artifact resolution. The `mvn` launcher prepends MAVEN_ARGS to every
-  # invocation, so build scripts keep calling `mvnw` with no extra flags of their own.
-  # Supported by Maven 3.9 and newer, which is what the wrapper here pins.
+  # Path one: artifact resolution by Maven itself. The `mvn` launcher prepends
+  # MAVEN_ARGS to every invocation, so build scripts keep calling `mvnw` with no extra
+  # flags of their own. Supported by Maven 3.9 and newer, which is what the wrapper here
+  # pins.
+  #
+  # Path two: plugin tests import sample Maven projects through JDT LS's embedded m2e.
+  # That Maven client runs inside Tycho's test JVM and does not read MAVEN_ARGS. Give
+  # the test JVM an isolated user.home whose .m2/settings.xml is prepared by
+  # maven-cfs.yml. m2e then discovers the CFS mirror through Maven's standard settings
+  # lookup, with no test or product source changes.
+  - name: JAVA_TEST_MAVEN_USER_HOME
+    value: $(Agent.TempDirectory)/java-test-maven-home-$(Build.BuildId)
   - name: MAVEN_ARGS
-    value: -s $(Build.SourcesDirectory)/.azure-pipelines/cfs-settings.xml
+    value: >-
+      -s $(Build.SourcesDirectory)/.azure-pipelines/cfs-settings.xml
+      -Dtycho.testArgLine=-Duser.home=$(JAVA_TEST_MAVEN_USER_HOME)
 
-  # Path two: the Maven distribution itself. The wrapper downloads it from
+  # Path three: the Maven distribution itself. The wrapper downloads it from
   # distributionUrl before Maven exists, so settings.xml cannot influence that request.
   # MVNW_REPOURL substitutes everything ahead of /org/apache/maven/ in that URL, which
   # is why .mvn/wrapper/maven-wrapper.properties still names the public host and needs
