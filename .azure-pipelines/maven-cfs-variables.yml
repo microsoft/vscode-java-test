@@ -30,15 +30,18 @@ variables:
   # MAVEN_ARGS to every invocation, so build scripts keep calling `mvnw` with no extra
   # flags of their own. Supported by Maven 3.9 and newer, which is what the wrapper here
   # pins.
-  - name: JAVA_TEST_MAVEN_USER_SETTINGS
-    value: $(Build.SourcesDirectory)/.azure-pipelines/cfs-settings.xml
-  - name: MAVEN_ARGS
-    value: -s $(JAVA_TEST_MAVEN_USER_SETTINGS)
-
+  #
   # Path two: plugin tests import sample Maven projects through JDT LS's embedded m2e.
-  # That Maven client runs inside the test JVM and does not read MAVEN_ARGS.
-  # AbstractProjectsManagerBasedTest maps JAVA_TEST_MAVEN_USER_SETTINGS to m2e's user
-  # settings before any project is imported.
+  # That Maven client runs inside Tycho's test JVM and does not read MAVEN_ARGS. Give
+  # the test JVM an isolated user.home whose .m2/settings.xml is prepared by
+  # maven-cfs.yml. m2e then discovers the CFS mirror through Maven's standard settings
+  # lookup, with no test or product source changes.
+  - name: JAVA_TEST_MAVEN_USER_HOME
+    value: $(Agent.TempDirectory)/java-test-maven-home-$(Build.BuildId)
+  - name: MAVEN_ARGS
+    value: >-
+      -s $(Build.SourcesDirectory)/.azure-pipelines/cfs-settings.xml
+      -Dtycho.testArgLine=-Duser.home=$(JAVA_TEST_MAVEN_USER_HOME)
 
   # Path three: the Maven distribution itself. The wrapper downloads it from
   # distributionUrl before Maven exists, so settings.xml cannot influence that request.

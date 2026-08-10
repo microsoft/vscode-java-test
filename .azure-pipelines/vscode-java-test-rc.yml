@@ -67,6 +67,7 @@ extends:
                 displayName: npm install
               - script: npm run lint
                 displayName: npm run lint
+              - template: /.azure-pipelines/maven-cfs.yml@self
               - script: npm run build-plugin
                 displayName: npm run build-plugin
                 # System.AccessToken is a secret, and Azure Pipelines does not export secret

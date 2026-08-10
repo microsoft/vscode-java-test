@@ -48,7 +48,6 @@ import org.eclipse.jdt.ls.core.internal.preferences.ClientPreferences;
 import org.eclipse.jdt.ls.core.internal.preferences.PreferenceManager;
 import org.eclipse.jdt.ls.core.internal.preferences.Preferences;
 import org.eclipse.jdt.ls.core.internal.preferences.StandardPreferenceManager;
-import org.eclipse.m2e.core.MavenPlugin;
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mock;
@@ -61,7 +60,6 @@ import org.mockito.Mockito;
 public abstract class AbstractProjectsManagerBasedTest {
 
 	public static final String TEST_PROJECT_NAME = "TestProject";
-	private static final String MAVEN_USER_SETTINGS_ENV = "JAVA_TEST_MAVEN_USER_SETTINGS";
 
 	protected StandardProjectsManager projectsManager;
 	@Mock
@@ -79,28 +77,10 @@ public abstract class AbstractProjectsManagerBasedTest {
 			preferenceManager = mock(StandardPreferenceManager.class);
 		}
 		initPreferenceManager(true);
-		configureMavenUserSettings(preferences);
 
 		oldPreferenceManager = JavaLanguageServerPlugin.getPreferencesManager();
 		JavaLanguageServerPlugin.setPreferencesManager(preferenceManager);
 		projectsManager = new StandardProjectsManager(preferenceManager);
-	}
-
-	private void configureMavenUserSettings(Preferences preferences) throws CoreException, IOException {
-		String settingsPath = System.getenv(MAVEN_USER_SETTINGS_ENV);
-		if (StringUtils.isBlank(settingsPath)) {
-			return;
-		}
-
-		File settingsFile = new File(settingsPath);
-		if (!settingsFile.isFile()) {
-			throw new IOException("Maven user settings file does not exist: " + settingsPath);
-		}
-
-		String canonicalPath = settingsFile.getCanonicalPath();
-		preferences.setMavenUserSettings(canonicalPath);
-		// The preference manager is mocked in these tests, so apply the setting to m2e directly.
-		MavenPlugin.getMavenConfiguration().setUserSettingsFile(canonicalPath);
 	}
 
 	protected void initPreferences(Preferences preferences) throws IOException {
