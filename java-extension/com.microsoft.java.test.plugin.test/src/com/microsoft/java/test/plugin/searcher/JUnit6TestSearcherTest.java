@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.junit.launcher.TestKindRegistry;
 import org.junit.Test;
 
 import com.microsoft.java.test.plugin.AbstractProjectsManagerBasedTest;
@@ -47,6 +48,6 @@ public class JUnit6TestSearcherTest extends AbstractProjectsManagerBasedTest {
                 nestedType, new NullProgressMonitor());
         assertTrue(discoveredTypes.contains(nestedType));
         assertEquals(TestKind.JUnit6, searcher.getTestKind());
-        assertEquals("org.eclipse.jdt.junit.loader.junit6", searcher.getJdtTestKind());
+        assertEquals(TestKindRegistry.JUNIT6_TEST_KIND_ID, searcher.getJdtTestKind());
     }
 }
