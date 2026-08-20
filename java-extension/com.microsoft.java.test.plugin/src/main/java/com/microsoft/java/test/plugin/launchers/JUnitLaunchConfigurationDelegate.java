@@ -46,8 +46,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,13 +94,8 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             IProgressMonitor monitor) {
         final ILaunch launch = new Launch(configuration, mode, null);
 
-        // TODO: Make the getVMRunnerConfiguration() in super class protected.
         try {
-            final Method getVMRunnerConfiguration = getClass().getSuperclass().getDeclaredMethod(
-                    "getVMRunnerConfiguration", ILaunchConfiguration.class, ILaunch.class, String.class,
-                    IProgressMonitor.class);
-            getVMRunnerConfiguration.setAccessible(true);
-            final VMRunnerConfiguration config = (VMRunnerConfiguration) getVMRunnerConfiguration.invoke(this,
+            final VMRunnerConfiguration config = getVMRunnerConfiguration(
                     configuration, launch, mode, new NullProgressMonitor());
             final IJavaProject javaProject = getJavaProject(configuration);
             final JUnitLaunchArguments launchArguments = new JUnitLaunchArguments();
@@ -115,8 +108,7 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             launchArguments.programArguments = parseParameters(config.getProgramArguments());
 
             return new Response<>(launchArguments, null);
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException |
-                InvocationTargetException | CoreException e) {
+        } catch (CoreException e) {
             JUnitPlugin.logException("failed to resolve the classpath.", e);
             final String msg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
             return new Response<>(null, msg);
