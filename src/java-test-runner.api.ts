@@ -21,6 +21,87 @@ export type parseTestIdFromParts = (parts: TestIdParts) => string;
  */
 export type parsePartsFromTestId = (id: string) => TestIdParts;
 
+/**
+ * @todo Proposed API
+ * The optional features this extension supports, so that consumers can
+ * feature-detect before relying on them. Versions released before capability
+ * declaration expose no `capabilities` member at all, so consumers must treat
+ * an absent member as "no optional capability supported".
+ */
+export type capabilities = readonly string[];
+
+/**
+ * @todo Proposed API
+ * Capability name: this extension populates {@link IRunTestContext.coverage}
+ * with a version 1 `jacoco-exec` {@link CoverageRequest} and analyzes the
+ * execution data a delegated runner produces for it.
+ *
+ * The trailing `@1` pins {@link CoverageRequest.version}. An incompatible
+ * revision of the contract is advertised under a new capability name, so a
+ * delegated runner never has to guess which shape it is handed.
+ *
+ * A delegated runner must not register a Coverage test profile unless the
+ * host advertises this capability, otherwise the profile can only fail.
+ */
+export const JACOCO_EXEC_COVERAGE_CAPABILITY: string = 'jacoco-exec@1';
+
+/**
+ * @todo Proposed API
+ * Asks a delegated runner to produce JaCoCo execution data for a test run.
+ *
+ * This is deliberately a minimal, versioned artifact request: it says which
+ * artifact to produce, where to put it, and which tool to produce it with, and
+ * nothing else. Report formats, source lookup, analysis scope and the user's
+ * coverage settings stay on the side that performs the analysis.
+ *
+ * Contract:
+ * - The host creates {@link executionDataDirectory} before the run and owns its
+ *   lifetime. A runner must never create, clear or delete it; doing so races
+ *   with other runs.
+ * - The directory belongs to a single test run and is shared by every project
+ *   and every batch within it. A runner may write as many `.exec` files as it
+ *   likes anywhere below it, and owns making their paths unique. The host
+ *   merges the whole tree recursively.
+ * - A runner must attach the agent at {@link agentJar} rather than one of its
+ *   own. Only that jar is guaranteed to match the analyzer the host will use.
+ * - A runner must not pass `append=false` to the agent. A single project and
+ *   task can be launched more than once within one test run, and each launch
+ *   has to add to the previous one instead of replacing it.
+ * - The host analyzes once, after the whole run finishes. A runner never has to
+ *   merge, convert or report anything.
+ *
+ * Cancellation is not part of this request; it stays on
+ * {@link IRunTestContext.cancellationToken}.
+ */
+export interface CoverageRequest {
+    /**
+     * The artifact to produce. Only JaCoCo execution data is defined today; the
+     * field exists so a different artifact can be requested later without
+     * reshaping {@link IRunTestContext}.
+     */
+    format: 'jacoco-exec';
+
+    /**
+     * The revision of this contract, matching the `@1` in
+     * {@link JACOCO_EXEC_COVERAGE_CAPABILITY}. A runner that does not recognize
+     * the value must refuse the run instead of guessing.
+     */
+    version: 1;
+
+    /**
+     * Directory that receives this run's `.exec` files. Unique per test run and
+     * shared by every project and batch in that run.
+     */
+    executionDataDirectory: vscode.Uri;
+
+    /**
+     * The JaCoCo agent to attach, for example as
+     * `-javaagent:<agentJar>=destfile=<file>`. Supplied by the host so the agent
+     * and the analyzer are always the same JaCoCo version.
+     */
+    agentJar: vscode.Uri;
+}
+
 
 /**
  * @todo Proposed API
@@ -210,6 +291,22 @@ export interface IRunTestContext {
      * The configuration for this test run.
      */
     testConfig?: IExecutionConfig;
+
+    /**
+     * Cancelled when the user cancels the test run. Absent on hosts released
+     * before this member existed, where {@link testRun}'s own token is the
+     * closest equivalent.
+     *
+     * A runner must observe this and must still report the run as finished
+     * afterwards, so a cancelled run releases whatever the runner serializes on.
+     */
+    cancellationToken?: vscode.CancellationToken;
+
+    /**
+     * Set only for Coverage-kind runs, and only when the host is delegating the
+     * production of execution data to the runner. See {@link CoverageRequest}.
+     */
+    coverage?: CoverageRequest;
 }
 
 /**
