@@ -12,7 +12,7 @@ import { IJavaTestItem, ProjectType } from '../types';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 import { getRequestDelay, lruCache, MovingAverage } from './debouncing';
 import { runnableTag, testController } from './testController';
-import { dataCache } from './testItemDataCache';
+import { dataCache, invalidateResolutionVersion } from './testItemDataCache';
 import { TestKind, TestLevel } from '../java-test-runner.api';
 
 /**
@@ -217,15 +217,11 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
         return [];
     }
 
+    const expectedTypeIds: Set<string> = new Set(testTypes.map((testType: IJavaTestItem) => testType.id));
+    removeOutdatedTestItemsForDocument(belongingPackage, uri, expectedTypeIds);
+
     const tests: TestItem[] = [];
-    if (testTypes.length === 0) {
-        // Remove the children with the same uri when no test items is found
-        belongingPackage.children.forEach((typeItem: TestItem) => {
-            if (path.relative(typeItem.uri?.fsPath || '', uri.fsPath) === '') {
-                belongingPackage!.children.delete(typeItem.id);
-            }
-        });
-    } else {
+    if (testTypes.length > 0) {
         for (const testType of testTypes) {
             // here we do not directly call synchronizeItemsRecursively() because testTypes here are just part of the
             // children of the belonging package, we don't want to delete other children unexpectedly.
@@ -238,6 +234,7 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
             }
             tests.push(testTypeItem);
             synchronizeItemsRecursively(testTypeItem, testType.children);
+            testTypeItem.canResolveChildren = false;
         }
     }
 
@@ -246,6 +243,38 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
     }
 
     return tests;
+}
+
+export function removeOutdatedTestItemsForDocument(belongingPackage: TestItem, uri: Uri,
+    expectedTypeIds: Set<string>): void {
+    const belongingProject: TestItem | undefined = belongingPackage.parent;
+    if (!belongingProject) {
+        return;
+    }
+
+    belongingProject.children.forEach((packageItem: TestItem) => {
+        packageItem.children.forEach((typeItem: TestItem) => {
+            if (path.relative(typeItem.uri?.fsPath || '', uri.fsPath) !== '') {
+                return;
+            }
+
+            invalidateResolutionRecursively(typeItem);
+            if (!expectedTypeIds.has(typeItem.id)) {
+                packageItem.children.delete(typeItem.id);
+            }
+        });
+
+        if (packageItem !== belongingPackage && packageItem.children.size === 0) {
+            belongingProject.children.delete(packageItem.id);
+        }
+    });
+}
+
+function invalidateResolutionRecursively(item: TestItem): void {
+    invalidateResolutionVersion(item);
+    item.children.forEach((child: TestItem) => {
+        invalidateResolutionRecursively(child);
+    });
 }
 
 /**

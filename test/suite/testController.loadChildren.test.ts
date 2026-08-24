@@ -88,14 +88,43 @@ suite('testController - loadChildren', () => {
     test('should invalidate descendant resolutions during a forced refresh', async () => {
         const project: TestItem = createTestItem(testController, 'project', TestLevel.Project);
         const testClass: TestItem = createTestItem(testController, 'testClass', TestLevel.Class);
-        testClass.canResolveChildren = false;
         project.children.add(testClass);
-        sinon.stub(controllerUtils, 'findTestPackagesAndTypes').resolves([]);
+        let completeMethodSearch!: (items: IJavaTestItem[]) => void;
+        sinon.stub(controllerUtils, 'findDirectTestChildrenForClass').returns(new Promise((resolve) => {
+            completeMethodSearch = resolve;
+        }));
+        sinon.stub(controllerUtils, 'findTestPackagesAndTypes').resolves([{
+            children: [],
+            uri: undefined,
+            range: undefined,
+            jdtHandler: 'testClass-handler',
+            fullName: 'testClass',
+            label: 'testClass',
+            id: 'testClass',
+            projectName: 'project',
+            testKind: TestKind.JUnit5,
+            testLevel: TestLevel.Class,
+        }]);
 
+        const staleClassResolution: Promise<void> = loadChildren(testClass);
         await loadChildren(project, undefined, true);
+        completeMethodSearch([{
+            children: [],
+            uri: undefined,
+            range: undefined,
+            jdtHandler: 'staleMethod-handler',
+            fullName: 'staleMethod',
+            label: 'staleMethod',
+            id: 'staleMethod',
+            projectName: 'project',
+            testKind: TestKind.JUnit5,
+            testLevel: TestLevel.Method,
+        }]);
+        await staleClassResolution;
 
         assert.strictEqual(project.canResolveChildren, false);
         assert.strictEqual(testClass.canResolveChildren, true);
+        assert.strictEqual(testClass.children.get('staleMethod'), undefined);
     });
 
     test('should leave a cancelled item unresolved', async () => {

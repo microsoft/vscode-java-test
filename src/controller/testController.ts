@@ -16,7 +16,7 @@ import { JUnitLaunchProtocol } from '../constants';
 import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
-import { dataCache, ITestItemData } from './testItemDataCache';
+import { dataCache, getResolutionVersion, invalidateResolutionVersion, ITestItemData } from './testItemDataCache';
 import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 import { testRunnerService } from './testRunnerService';
@@ -83,7 +83,8 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
         return;
     }
 
-    const resolution: Promise<void> = resolveTestItemChildren(item, data, token);
+    const resolutionVersion: number = getResolutionVersion(item);
+    const resolution: Promise<void> = resolveTestItemChildren(item, data, resolutionVersion, token);
     pendingTestItemResolutions.set(item, resolution);
     try {
         await resolution;
@@ -94,11 +95,11 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
     }
 });
 
-async function resolveTestItemChildren(item: TestItem, data: ITestItemData,
+async function resolveTestItemChildren(item: TestItem, data: ITestItemData, resolutionVersion: number,
     token?: CancellationToken): Promise<void> {
     if (data.testLevel === TestLevel.Project) {
         const packageAndTypes: IJavaTestItem[] = await findTestPackagesAndTypes(data.jdtHandler, token);
-        if (token?.isCancellationRequested) {
+        if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
             return;
         }
         synchronizeItemsRecursively(item, packageAndTypes);
@@ -110,16 +111,20 @@ async function resolveTestItemChildren(item: TestItem, data: ITestItemData,
             return;
         }
         const testMethods: IJavaTestItem[] = await findDirectTestChildrenForClass(data.jdtHandler, token);
-        if (token?.isCancellationRequested) {
+        if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
             return;
         }
         synchronizeItemsRecursively(item, testMethods);
     }
 
+    if (resolutionVersion !== getResolutionVersion(item)) {
+        return;
+    }
     item.canResolveChildren = false;
 }
 
 function invalidateTestItemResolution(item: TestItem): void {
+    invalidateResolutionVersion(item);
     const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
     if (testLevel !== undefined && testLevel <= TestLevel.Class) {
         item.canResolveChildren = true;
