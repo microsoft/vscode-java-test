@@ -27,6 +27,7 @@ import { parsePartsFromTestId } from '../utils/testItemUtils';
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
 export const runnableTag: TestTag = new TestTag('runnable');
+const pendingTestItemResolutions: WeakMap<TestItem, Promise<void>> = new WeakMap();
 
 export function createTestController(): void {
     testController?.dispose();
@@ -51,7 +52,7 @@ export function creatTestProfile(name: string, kind: TestRunProfileKind): void {
     testController?.createRunProfile(name, kind, runHandler, false, runnableTag);
 }
 
-export const loadChildren: (item: TestItem, token?: CancellationToken) => any = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken) => {
+export const loadChildren: (item: TestItem, token?: CancellationToken, force?: boolean) => Promise<void> = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken, force: boolean = false) => {
     if (!item) {
         await loadJavaProjects();
         return;
@@ -61,8 +62,45 @@ export const loadChildren: (item: TestItem, token?: CancellationToken) => any = 
     if (!data) {
         return;
     }
+
+    if (!force && !item.canResolveChildren) {
+        return;
+    }
+
+    const pendingResolution: Promise<void> | undefined = pendingTestItemResolutions.get(item);
+    if (pendingResolution) {
+        await pendingResolution;
+        if (!force && !item.canResolveChildren) {
+            return;
+        }
+    }
+
+    if (force) {
+        invalidateTestItemResolution(item);
+    }
+
+    if (token?.isCancellationRequested) {
+        return;
+    }
+
+    const resolution: Promise<void> = resolveTestItemChildren(item, data, token);
+    pendingTestItemResolutions.set(item, resolution);
+    try {
+        await resolution;
+    } finally {
+        if (pendingTestItemResolutions.get(item) === resolution) {
+            pendingTestItemResolutions.delete(item);
+        }
+    }
+});
+
+async function resolveTestItemChildren(item: TestItem, data: ITestItemData,
+    token?: CancellationToken): Promise<void> {
     if (data.testLevel === TestLevel.Project) {
         const packageAndTypes: IJavaTestItem[] = await findTestPackagesAndTypes(data.jdtHandler, token);
+        if (token?.isCancellationRequested) {
+            return;
+        }
         synchronizeItemsRecursively(item, packageAndTypes);
     } else if (data.testLevel === TestLevel.Package) {
         // unreachable code
@@ -72,9 +110,24 @@ export const loadChildren: (item: TestItem, token?: CancellationToken) => any = 
             return;
         }
         const testMethods: IJavaTestItem[] = await findDirectTestChildrenForClass(data.jdtHandler, token);
+        if (token?.isCancellationRequested) {
+            return;
+        }
         synchronizeItemsRecursively(item, testMethods);
     }
-});
+
+    item.canResolveChildren = false;
+}
+
+function invalidateTestItemResolution(item: TestItem): void {
+    const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
+    if (testLevel !== undefined && testLevel <= TestLevel.Class) {
+        item.canResolveChildren = true;
+    }
+    item.children.forEach((child: TestItem) => {
+        invalidateTestItemResolution(child);
+    });
+}
 
 async function startWatchingWorkspace(): Promise<void> {
     if (!workspace.workspaceFolders) {
