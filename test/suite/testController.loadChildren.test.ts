@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, TestController, TestItem, tests } from 'vscode';
 import { loadChildren } from '../../src/controller/testController';
-import { dataCache } from '../../src/controller/testItemDataCache';
+import { dataCache, invalidateResolutionVersion } from '../../src/controller/testItemDataCache';
 import * as controllerUtils from '../../src/controller/utils';
 import { TestKind, TestLevel } from '../../src/java-test-runner.api';
 import { IJavaTestItem } from '../../src/types';
@@ -71,6 +71,43 @@ suite('testController - loadChildren', () => {
         await Promise.all([firstResolution, secondResolution]);
 
         assert.ok(findTestsStub.calledOnce);
+        assert.strictEqual(project.canResolveChildren, false);
+    });
+
+    test('should share a retry after an in-progress resolution is invalidated', async () => {
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project);
+        let completeInitialSearch!: (items: IJavaTestItem[]) => void;
+        let completeRetrySearch!: (items: IJavaTestItem[]) => void;
+        let signalRetryStarted!: () => void;
+        const initialSearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeInitialSearch = resolve;
+        });
+        const retrySearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeRetrySearch = resolve;
+        });
+        const retryStarted: Promise<void> = new Promise((resolve) => {
+            signalRetryStarted = resolve;
+        });
+        const findTestsStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes');
+        findTestsStub.onFirstCall().returns(initialSearch);
+        findTestsStub.onSecondCall().callsFake(() => {
+            signalRetryStarted();
+            return retrySearch;
+        });
+
+        const initialResolution: Promise<void> = loadChildren(project);
+        const firstWaiter: Promise<void> = loadChildren(project);
+        const secondWaiter: Promise<void> = loadChildren(project);
+        invalidateResolutionVersion(project);
+        completeInitialSearch([]);
+        await retryStarted;
+
+        assert.strictEqual(findTestsStub.callCount, 2);
+
+        completeRetrySearch([]);
+        await Promise.all([initialResolution, firstWaiter, secondWaiter]);
+
+        assert.strictEqual(findTestsStub.callCount, 2);
         assert.strictEqual(project.canResolveChildren, false);
     });
 

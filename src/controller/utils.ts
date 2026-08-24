@@ -114,6 +114,15 @@ export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJav
     }
 }
 
+export function markTestClassesResolvedRecursively(item: TestItem): void {
+    if (dataCache.get(item)?.testLevel === TestLevel.Class) {
+        item.canResolveChildren = false;
+    }
+    item.children.forEach((child: TestItem) => {
+        markTestClassesResolvedRecursively(child);
+    });
+}
+
 export function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestItem): TestItem {
     let childItem: TestItem | undefined = parent.children.get(childData.id);
     if (childItem) {
@@ -234,7 +243,7 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
             }
             tests.push(testTypeItem);
             synchronizeItemsRecursively(testTypeItem, testType.children);
-            testTypeItem.canResolveChildren = false;
+            markTestClassesResolvedRecursively(testTypeItem);
         }
     }
 
@@ -252,6 +261,7 @@ export function removeOutdatedTestItemsForDocument(belongingPackage: TestItem, u
         return;
     }
 
+    invalidateResolutionVersion(belongingProject);
     belongingProject.children.forEach((packageItem: TestItem) => {
         packageItem.children.forEach((typeItem: TestItem) => {
             if (path.relative(typeItem.uri?.fsPath || '', uri.fsPath) !== '') {
@@ -271,7 +281,9 @@ export function removeOutdatedTestItemsForDocument(belongingPackage: TestItem, u
 }
 
 function invalidateResolutionRecursively(item: TestItem): void {
-    invalidateResolutionVersion(item);
+    if (dataCache.get(item)?.testLevel === TestLevel.Class) {
+        invalidateResolutionVersion(item);
+    }
     item.children.forEach((child: TestItem) => {
         invalidateResolutionRecursively(child);
     });

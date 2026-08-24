@@ -63,13 +63,23 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
         return;
     }
 
+    if (token?.isCancellationRequested) {
+        return;
+    }
+
     if (!force && !item.canResolveChildren) {
         return;
     }
 
-    const pendingResolution: Promise<void> | undefined = pendingTestItemResolutions.get(item);
-    if (pendingResolution) {
+    let pendingResolution: Promise<void> | undefined;
+    while ((pendingResolution = pendingTestItemResolutions.get(item))) {
         await pendingResolution;
+        if (pendingTestItemResolutions.get(item) === pendingResolution) {
+            pendingTestItemResolutions.delete(item);
+        }
+        if (token?.isCancellationRequested) {
+            return;
+        }
         if (!force && !item.canResolveChildren) {
             return;
         }
@@ -77,10 +87,6 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
 
     if (force) {
         invalidateTestItemResolution(item);
-    }
-
-    if (token?.isCancellationRequested) {
-        return;
     }
 
     const resolutionVersion: number = getResolutionVersion(item);
@@ -124,8 +130,10 @@ async function resolveTestItemChildren(item: TestItem, data: ITestItemData, reso
 }
 
 function invalidateTestItemResolution(item: TestItem): void {
-    invalidateResolutionVersion(item);
     const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
+    if (testLevel === TestLevel.Project || testLevel === TestLevel.Class) {
+        invalidateResolutionVersion(item);
+    }
     if (testLevel !== undefined && testLevel <= TestLevel.Class) {
         item.canResolveChildren = true;
     }
