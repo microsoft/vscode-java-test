@@ -90,27 +90,31 @@ export async function getProjectType(item: IJavaTestItem): Promise<ProjectType> 
  * - If an existing child is not contained in the childrenData parameter, it will be deleted
  * - If a child does not exist, create it, otherwise, update it as well as its metadata.
  */
-export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJavaTestItem[] | undefined): void {
-    if (childrenData) {
-        // remove the out-of-date children
-        parent.children.forEach((child: TestItem) => {
-            if (dataCache.get(child)?.testLevel === TestLevel.Invocation) {
-                // only remove the invocation items before a new test session starts
-                return;
-            }
-            const existingItem: IJavaTestItem | undefined = childrenData.find((data: IJavaTestItem) => data.id === child.id);
-            if (!existingItem) {
-                parent.children.delete(child.id);
-            }
-        });
-        // update/create children
-        for (const child of childrenData) {
-            const childItem: TestItem = updateOrCreateTestItem(parent, child);
-            if (child.testLevel <= TestLevel.Class) {
-                childItem.canResolveChildren = true;
-            }
-            synchronizeItemsRecursively(childItem, child.children);
+export function synchronizeItemsRecursively(parent: TestItem, childrenData: IJavaTestItem[] | undefined,
+    childrenAreComplete: boolean = false): void {
+    if (!childrenData && !childrenAreComplete) {
+        return;
+    }
+
+    const children: IJavaTestItem[] = childrenData ?? [];
+    // remove the out-of-date children
+    parent.children.forEach((child: TestItem) => {
+        if (dataCache.get(child)?.testLevel === TestLevel.Invocation) {
+            // only remove the invocation items before a new test session starts
+            return;
         }
+        const existingItem: IJavaTestItem | undefined = children.find((data: IJavaTestItem) => data.id === child.id);
+        if (!existingItem) {
+            parent.children.delete(child.id);
+        }
+    });
+    // update/create children
+    for (const child of children) {
+        const childItem: TestItem = updateOrCreateTestItem(parent, child);
+        if (child.testLevel <= TestLevel.Class) {
+            childItem.canResolveChildren = true;
+        }
+        synchronizeItemsRecursively(childItem, child.children, childrenAreComplete);
     }
 }
 
@@ -134,6 +138,7 @@ export function updateOrCreateTestItem(parent: TestItem, childData: IJavaTestIte
 }
 
 function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
+    const previousJdtHandler: string | undefined = dataCache.get(testItem)?.jdtHandler;
     testItem.range = asRange(metaInfo.range);
     testItem.label = metaInfo.label;
     dataCache.set(testItem, {
@@ -143,6 +148,10 @@ function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
         testLevel: metaInfo.testLevel,
         testKind: metaInfo.testKind,
     });
+    if (previousJdtHandler !== undefined && previousJdtHandler !== metaInfo.jdtHandler &&
+            (metaInfo.testLevel === TestLevel.Project || metaInfo.testLevel === TestLevel.Class)) {
+        invalidateResolutionVersion(testItem);
+    }
 }
 
 /**
@@ -242,7 +251,7 @@ export async function updateItemForDocument(uri: Uri, testTypes?: IJavaTestItem[
                 updateTestItem(testTypeItem, testType);
             }
             tests.push(testTypeItem);
-            synchronizeItemsRecursively(testTypeItem, testType.children);
+            synchronizeItemsRecursively(testTypeItem, testType.children, true);
             markTestClassesResolvedRecursively(testTypeItem);
         }
     }

@@ -58,8 +58,7 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
         return;
     }
 
-    const data: ITestItemData | undefined = dataCache.get(item);
-    if (!data) {
+    if (!dataCache.get(item)) {
         return;
     }
 
@@ -87,6 +86,10 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
             continue;
         }
 
+        const data: ITestItemData | undefined = dataCache.get(item);
+        if (!data) {
+            return;
+        }
         const resolutionVersion: number = getResolutionVersion(item);
         const resolution: Promise<void> = resolveTestItemChildren(item, data, resolutionVersion, token);
         pendingTestItemResolutions.set(item, resolution);

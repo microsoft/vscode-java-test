@@ -3,9 +3,10 @@
 
 import * as assert from 'assert';
 import { TestController, TestItem, tests, Uri } from 'vscode';
-import { markTestClassesResolvedRecursively, removeOutdatedTestItemsForDocument } from '../../src/controller/utils';
+import { markTestClassesResolvedRecursively, removeOutdatedTestItemsForDocument, synchronizeItemsRecursively } from '../../src/controller/utils';
 import { dataCache, getResolutionVersion } from '../../src/controller/testItemDataCache';
 import { TestKind, TestLevel } from '../../src/java-test-runner.api';
+import { IJavaTestItem } from '../../src/types';
 
 function createTestItem(testController: TestController, id: string, testLevel: TestLevel,
     parent?: TestItem, uri?: Uri): TestItem {
@@ -73,6 +74,38 @@ suite('controllerUtils - updateItemForDocument', () => {
 
         markTestClassesResolvedRecursively(testClass);
 
+        assert.strictEqual(testClass.canResolveChildren, false);
+        assert.strictEqual(nestedClass.canResolveChildren, false);
+    });
+
+    test('should clear missing children from a complete file snapshot', () => {
+        const testClass: TestItem = createTestItem(
+            testController, 'document-update-project@test.TestClass', TestLevel.Class);
+        const staleMethod: TestItem = createTestItem(
+            testController, 'document-update-project@test.TestClass#staleMethod', TestLevel.Method, testClass);
+        const nestedClass: TestItem = createTestItem(
+            testController, 'document-update-project@test.TestClass$NestedTest', TestLevel.Class, testClass);
+        const staleNestedMethod: TestItem = createTestItem(
+            testController, 'document-update-project@test.TestClass$NestedTest#staleMethod',
+            TestLevel.Method, nestedClass);
+        const nestedClassData: IJavaTestItem = {
+            uri: undefined,
+            range: undefined,
+            jdtHandler: 'updated-nested-handler',
+            fullName: 'test.TestClass$NestedTest',
+            label: 'NestedTest',
+            id: nestedClass.id,
+            projectName: 'project',
+            testKind: TestKind.JUnit5,
+            testLevel: TestLevel.Class,
+        };
+
+        synchronizeItemsRecursively(testClass, [nestedClassData], true);
+        markTestClassesResolvedRecursively(testClass);
+
+        assert.strictEqual(testClass.children.get(staleMethod.id), undefined);
+        assert.ok(testClass.children.get(nestedClass.id));
+        assert.strictEqual(nestedClass.children.get(staleNestedMethod.id), undefined);
         assert.strictEqual(testClass.canResolveChildren, false);
         assert.strictEqual(nestedClass.canResolveChildren, false);
     });

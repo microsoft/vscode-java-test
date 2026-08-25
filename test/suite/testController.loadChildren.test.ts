@@ -167,6 +167,56 @@ suite('testController - loadChildren', () => {
         assert.strictEqual(project.canResolveChildren, false);
     });
 
+    test('should re-read class metadata when its handler changes during a retry', async () => {
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project);
+        const testClass: TestItem = createTestItem(testController, 'testClass', TestLevel.Class);
+        project.children.add(testClass);
+        let completeInitialSearch!: (items: IJavaTestItem[]) => void;
+        let completeRetrySearch!: (items: IJavaTestItem[]) => void;
+        let signalRetryStarted!: () => void;
+        const initialSearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeInitialSearch = resolve;
+        });
+        const retrySearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeRetrySearch = resolve;
+        });
+        const retryStarted: Promise<void> = new Promise((resolve) => {
+            signalRetryStarted = resolve;
+        });
+        const findMethodsStub = sinon.stub(controllerUtils, 'findDirectTestChildrenForClass');
+        findMethodsStub.onFirstCall().returns(initialSearch);
+        findMethodsStub.onSecondCall().callsFake(() => {
+            signalRetryStarted();
+            return retrySearch;
+        });
+        findMethodsStub.onThirdCall().resolves([]);
+
+        const resolution: Promise<void> = loadChildren(testClass);
+        invalidateResolutionVersion(testClass);
+        completeInitialSearch([]);
+        await retryStarted;
+
+        controllerUtils.synchronizeItemsRecursively(project, [{
+            children: [],
+            uri: undefined,
+            range: undefined,
+            jdtHandler: 'updated-handler',
+            fullName: 'testClass',
+            label: 'testClass',
+            id: 'testClass',
+            projectName: 'project',
+            testKind: TestKind.JUnit5,
+            testLevel: TestLevel.Class,
+        }]);
+        completeRetrySearch([]);
+        await resolution;
+
+        assert.deepStrictEqual(
+            findMethodsStub.getCalls().map((call: sinon.SinonSpyCall) => call.args[0]),
+            ['testClass-handler', 'testClass-handler', 'updated-handler']);
+        assert.strictEqual(testClass.canResolveChildren, false);
+    });
+
     test('should reuse resolved class children', async () => {
         const testClass: TestItem = createTestItem(testController, 'testClass', TestLevel.Class);
         const findMethodsStub = sinon.stub(controllerUtils, 'findDirectTestChildrenForClass').resolves([]);
