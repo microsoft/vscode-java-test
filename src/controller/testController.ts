@@ -67,36 +67,39 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
         return;
     }
 
-    if (!force && !item.canResolveChildren) {
+    if (force) {
+        invalidateTestItemResolution(item);
+    } else if (!item.canResolveChildren) {
         return;
     }
 
-    let pendingResolution: Promise<void> | undefined;
-    while ((pendingResolution = pendingTestItemResolutions.get(item))) {
-        await pendingResolution;
-        if (pendingTestItemResolutions.get(item) === pendingResolution) {
-            pendingTestItemResolutions.delete(item);
-        }
+    while (item.canResolveChildren) {
         if (token?.isCancellationRequested) {
             return;
         }
-        if (!force && !item.canResolveChildren) {
-            return;
+
+        const pendingResolution: Promise<void> | undefined = pendingTestItemResolutions.get(item);
+        if (pendingResolution) {
+            await pendingResolution;
+            if (pendingTestItemResolutions.get(item) === pendingResolution) {
+                pendingTestItemResolutions.delete(item);
+            }
+            continue;
         }
-    }
 
-    if (force) {
-        invalidateTestItemResolution(item);
-    }
+        const resolutionVersion: number = getResolutionVersion(item);
+        const resolution: Promise<void> = resolveTestItemChildren(item, data, resolutionVersion, token);
+        pendingTestItemResolutions.set(item, resolution);
+        try {
+            await resolution;
+        } finally {
+            if (pendingTestItemResolutions.get(item) === resolution) {
+                pendingTestItemResolutions.delete(item);
+            }
+        }
 
-    const resolutionVersion: number = getResolutionVersion(item);
-    const resolution: Promise<void> = resolveTestItemChildren(item, data, resolutionVersion, token);
-    pendingTestItemResolutions.set(item, resolution);
-    try {
-        await resolution;
-    } finally {
-        if (pendingTestItemResolutions.get(item) === resolution) {
-            pendingTestItemResolutions.delete(item);
+        if (token?.isCancellationRequested || resolutionVersion === getResolutionVersion(item)) {
+            return;
         }
     }
 });

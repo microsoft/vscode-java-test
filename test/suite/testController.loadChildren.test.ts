@@ -111,6 +111,62 @@ suite('testController - loadChildren', () => {
         assert.strictEqual(project.canResolveChildren, false);
     });
 
+    test('should retry its own resolution after invalidation', async () => {
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project);
+        let completeInitialSearch!: (items: IJavaTestItem[]) => void;
+        const initialSearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeInitialSearch = resolve;
+        });
+        const findTestsStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes');
+        findTestsStub.onFirstCall().returns(initialSearch);
+        findTestsStub.onSecondCall().resolves([]);
+
+        const resolution: Promise<void> = loadChildren(project);
+        invalidateResolutionVersion(project);
+        completeInitialSearch([]);
+        await resolution;
+
+        assert.strictEqual(findTestsStub.callCount, 2);
+        assert.strictEqual(project.canResolveChildren, false);
+    });
+
+    test('should coalesce concurrent forced refreshes into the latest resolution', async () => {
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project);
+        project.canResolveChildren = false;
+        let completeInitialSearch!: (items: IJavaTestItem[]) => void;
+        let completeLatestSearch!: (items: IJavaTestItem[]) => void;
+        let signalLatestSearchStarted!: () => void;
+        const initialSearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeInitialSearch = resolve;
+        });
+        const latestSearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeLatestSearch = resolve;
+        });
+        const latestSearchStarted: Promise<void> = new Promise((resolve) => {
+            signalLatestSearchStarted = resolve;
+        });
+        const findTestsStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes');
+        findTestsStub.onFirstCall().returns(initialSearch);
+        findTestsStub.onSecondCall().callsFake(() => {
+            signalLatestSearchStarted();
+            return latestSearch;
+        });
+
+        const firstRefresh: Promise<void> = loadChildren(project, undefined, true);
+        const secondRefresh: Promise<void> = loadChildren(project, undefined, true);
+        const thirdRefresh: Promise<void> = loadChildren(project, undefined, true);
+        completeInitialSearch([]);
+        await latestSearchStarted;
+
+        assert.strictEqual(findTestsStub.callCount, 2);
+
+        completeLatestSearch([]);
+        await Promise.all([firstRefresh, secondRefresh, thirdRefresh]);
+
+        assert.strictEqual(findTestsStub.callCount, 2);
+        assert.strictEqual(project.canResolveChildren, false);
+    });
+
     test('should reuse resolved class children', async () => {
         const testClass: TestItem = createTestItem(testController, 'testClass', TestLevel.Class);
         const findMethodsStub = sinon.stub(controllerUtils, 'findDirectTestChildrenForClass').resolves([]);
