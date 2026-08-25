@@ -17,7 +17,7 @@ import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, getResolutionVersion, invalidateResolutionVersion, ITestItemData } from './testItemDataCache';
-import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
+import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, removeOutdatedTestItemsForDocument, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 import { testRunnerService } from './testRunnerService';
 import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
@@ -199,11 +199,7 @@ async function startWatchingWorkspace(): Promise<void> {
                         return;
                     }
 
-                    belongingPackage.children.forEach((item: TestItem) => {
-                        if (item.uri?.toString() === uri.toString()) {
-                            belongingPackage.children.delete(item.id);
-                        }
-                    });
+                    removeOutdatedTestItemsForDocument(belongingPackage, uri, new Set<string>());
 
                     if (belongingPackage.children.size === 0) {
                         belongingProject.children.delete(belongingPackage.id);

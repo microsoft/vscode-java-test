@@ -3,7 +3,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, TestController, TestItem, tests } from 'vscode';
+import { CancellationTokenSource, TestController, TestItem, tests, Uri } from 'vscode';
 import { loadChildren } from '../../src/controller/testController';
 import { dataCache, invalidateResolutionVersion } from '../../src/controller/testItemDataCache';
 import * as controllerUtils from '../../src/controller/utils';
@@ -11,9 +11,11 @@ import { TestKind, TestLevel } from '../../src/java-test-runner.api';
 import { IJavaTestItem } from '../../src/types';
 import { setupTestEnv } from './utils';
 
-function createTestItem(testController: TestController, id: string, testLevel: TestLevel): TestItem {
-    const item: TestItem = testController.createTestItem(id, id);
+function createTestItem(testController: TestController, id: string, testLevel: TestLevel,
+    parent?: TestItem, uri?: Uri): TestItem {
+    const item: TestItem = testController.createTestItem(id, id, uri);
     item.canResolveChildren = true;
+    parent?.children.add(item);
     dataCache.set(item, {
         jdtHandler: `${id}-handler`,
         fullName: id,
@@ -54,6 +56,64 @@ suite('testController - loadChildren', () => {
         await loadChildren(project, undefined, true);
 
         assert.ok(findTestsStub.calledTwice);
+        assert.strictEqual(project.canResolveChildren, false);
+    });
+
+    test('should discard stale project discovery after a file is deleted', async () => {
+        const uri: Uri = Uri.file('/mock/test/DeletedTest.java');
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project);
+        testController.items.add(project);
+        const testPackage: TestItem = createTestItem(
+            testController, 'project@test', TestLevel.Package, project);
+        const deletedClass: TestItem = createTestItem(
+            testController, 'project@test.DeletedTest', TestLevel.Class, testPackage, uri);
+        let completeStaleSearch!: (items: IJavaTestItem[]) => void;
+        let signalStaleSearchStarted!: () => void;
+        const staleSearch: Promise<IJavaTestItem[]> = new Promise((resolve) => {
+            completeStaleSearch = resolve;
+        });
+        const staleSearchStarted: Promise<void> = new Promise((resolve) => {
+            signalStaleSearchStarted = resolve;
+        });
+        const findTestsStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes');
+        findTestsStub.onFirstCall().callsFake(() => {
+            signalStaleSearchStarted();
+            return staleSearch;
+        });
+        findTestsStub.onSecondCall().resolves([]);
+
+        const resolution: Promise<void> = loadChildren(project);
+        await staleSearchStarted;
+        controllerUtils.removeOutdatedTestItemsForDocument(testPackage, uri, new Set<string>());
+        if (testPackage.children.size === 0) {
+            project.children.delete(testPackage.id);
+        }
+        completeStaleSearch([{
+            children: [{
+                uri: uri.toString(),
+                range: undefined,
+                jdtHandler: 'stale-class-handler',
+                fullName: 'test.DeletedTest',
+                label: 'DeletedTest',
+                id: deletedClass.id,
+                projectName: 'project',
+                testKind: TestKind.JUnit5,
+                testLevel: TestLevel.Class,
+            }],
+            uri: undefined,
+            range: undefined,
+            jdtHandler: 'stale-package-handler',
+            fullName: 'test',
+            label: 'test',
+            id: testPackage.id,
+            projectName: 'project',
+            testKind: TestKind.JUnit5,
+            testLevel: TestLevel.Package,
+        }]);
+        await resolution;
+
+        assert.strictEqual(findTestsStub.callCount, 2);
+        assert.strictEqual(project.children.get(testPackage.id), undefined);
         assert.strictEqual(project.canResolveChildren, false);
     });
 
