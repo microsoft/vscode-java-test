@@ -45,7 +45,7 @@ export async function refreshExplorer(): Promise<void> {
     // Force re-resolution of all existing project roots
     const loadPromises: Promise<void>[] = [];
     testController?.items.forEach((root: TestItem) => {
-        loadPromises.push(loadChildren(root));
+        loadPromises.push(loadChildren(root, undefined, true));
     });
     await Promise.all(loadPromises);
 
@@ -90,13 +90,13 @@ export async function refreshProject(classpathUri: Uri): Promise<void> {
 
     if (matchedProject) {
         // Re-resolve only the matched project's children
-        await loadChildren(matchedProject);
+        await loadChildren(matchedProject, undefined, true);
     } else if (childProjectMatched) {
         // The classpath URI is an ancestor containing test projects – refresh all children
         const loadPromises: Promise<void>[] = [];
         testController?.items.forEach((root: TestItem) => {
             if (root.uri && ensureTrailingSeparator(root.uri.toString()).startsWith(uriString)) {
-                loadPromises.push(loadChildren(root));
+                loadPromises.push(loadChildren(root, undefined, true));
             }
         });
         await Promise.all(loadPromises);

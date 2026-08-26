@@ -5,7 +5,7 @@ import { Range } from 'vscode';
 import { TestKind, TestLevel } from './java-test-runner.api';
 
 export interface IJavaTestItem {
-    children: IJavaTestItem[];
+    children?: IJavaTestItem[];
     uri: string | undefined;
     range: Range | undefined;
     jdtHandler: string;

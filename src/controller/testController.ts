@@ -16,8 +16,8 @@ import { JUnitLaunchProtocol } from '../constants';
 import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
-import { dataCache, ITestItemData } from './testItemDataCache';
-import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
+import { dataCache, getResolutionVersion, invalidateResolutionVersion, ITestItemData } from './testItemDataCache';
+import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, removeOutdatedTestItemsForDocument, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 import { testRunnerService } from './testRunnerService';
 import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
@@ -27,6 +27,7 @@ import { parsePartsFromTestId } from '../utils/testItemUtils';
 export let testController: TestController | undefined;
 export const watchers: Disposable[] = [];
 export const runnableTag: TestTag = new TestTag('runnable');
+const pendingTestItemResolutions: WeakMap<TestItem, Promise<void>> = new WeakMap();
 
 export function createTestController(): void {
     testController?.dispose();
@@ -51,18 +52,68 @@ export function creatTestProfile(name: string, kind: TestRunProfileKind): void {
     testController?.createRunProfile(name, kind, runHandler, false, runnableTag);
 }
 
-export const loadChildren: (item: TestItem, token?: CancellationToken) => any = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken) => {
+export const loadChildren: (item: TestItem, token?: CancellationToken, force?: boolean) => Promise<void> = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken, force: boolean = false) => {
     if (!item) {
         await loadJavaProjects();
         return;
     }
 
-    const data: ITestItemData | undefined = dataCache.get(item);
-    if (!data) {
+    if (!dataCache.get(item)) {
         return;
     }
+
+    if (token?.isCancellationRequested) {
+        return;
+    }
+
+    if (force) {
+        invalidateTestItemResolution(item);
+    } else if (!item.canResolveChildren) {
+        return;
+    }
+
+    while (item.canResolveChildren) {
+        if (token?.isCancellationRequested) {
+            return;
+        }
+
+        const pendingResolution: Promise<void> | undefined = pendingTestItemResolutions.get(item);
+        if (pendingResolution) {
+            await pendingResolution;
+            if (pendingTestItemResolutions.get(item) === pendingResolution) {
+                pendingTestItemResolutions.delete(item);
+            }
+            continue;
+        }
+
+        const data: ITestItemData | undefined = dataCache.get(item);
+        if (!data) {
+            return;
+        }
+        const resolutionVersion: number = getResolutionVersion(item);
+        const resolution: Promise<void> = resolveTestItemChildren(item, data, resolutionVersion, token);
+        pendingTestItemResolutions.set(item, resolution);
+        try {
+            await resolution;
+        } finally {
+            if (pendingTestItemResolutions.get(item) === resolution) {
+                pendingTestItemResolutions.delete(item);
+            }
+        }
+
+        if (token?.isCancellationRequested || resolutionVersion === getResolutionVersion(item)) {
+            return;
+        }
+    }
+});
+
+async function resolveTestItemChildren(item: TestItem, data: ITestItemData, resolutionVersion: number,
+    token?: CancellationToken): Promise<void> {
     if (data.testLevel === TestLevel.Project) {
         const packageAndTypes: IJavaTestItem[] = await findTestPackagesAndTypes(data.jdtHandler, token);
+        if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
+            return;
+        }
         synchronizeItemsRecursively(item, packageAndTypes);
     } else if (data.testLevel === TestLevel.Package) {
         // unreachable code
@@ -72,9 +123,30 @@ export const loadChildren: (item: TestItem, token?: CancellationToken) => any = 
             return;
         }
         const testMethods: IJavaTestItem[] = await findDirectTestChildrenForClass(data.jdtHandler, token);
+        if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
+            return;
+        }
         synchronizeItemsRecursively(item, testMethods);
     }
-});
+
+    if (resolutionVersion !== getResolutionVersion(item)) {
+        return;
+    }
+    item.canResolveChildren = false;
+}
+
+function invalidateTestItemResolution(item: TestItem): void {
+    const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
+    if (testLevel === TestLevel.Project || testLevel === TestLevel.Class) {
+        invalidateResolutionVersion(item);
+    }
+    if (testLevel !== undefined && testLevel <= TestLevel.Class) {
+        item.canResolveChildren = true;
+    }
+    item.children.forEach((child: TestItem) => {
+        invalidateTestItemResolution(child);
+    });
+}
 
 async function startWatchingWorkspace(): Promise<void> {
     if (!workspace.workspaceFolders) {
@@ -127,11 +199,7 @@ async function startWatchingWorkspace(): Promise<void> {
                         return;
                     }
 
-                    belongingPackage.children.forEach((item: TestItem) => {
-                        if (item.uri?.toString() === uri.toString()) {
-                            belongingPackage.children.delete(item.id);
-                        }
-                    });
+                    removeOutdatedTestItemsForDocument(belongingPackage, uri, new Set<string>());
 
                     if (belongingPackage.children.size === 0) {
                         belongingProject.children.delete(belongingPackage.id);

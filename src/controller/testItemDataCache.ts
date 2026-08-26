@@ -27,6 +27,16 @@ class TestItemDataCache {
 
 export const dataCache: TestItemDataCache = new TestItemDataCache();
 
+const resolutionVersions: WeakMap<TestItem, number> = new WeakMap();
+
+export function getResolutionVersion(item: TestItem): number {
+    return resolutionVersions.get(item) ?? 0;
+}
+
+export function invalidateResolutionVersion(item: TestItem): void {
+    resolutionVersions.set(item, getResolutionVersion(item) + 1);
+}
+
 export interface ITestItemData {
     jdtHandler: string;
     fullName: string;
