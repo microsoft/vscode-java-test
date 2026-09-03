@@ -1,14 +1,16 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
+        "target": "es2018",
         "outDir": "out",
         "lib": [
             "es6",
             "DOM"
         ],
         "sourceMap": true,
+        "esModuleInterop": true,
         "rootDir": ".",
+        "strict": false,
         "noUnusedLocals": true,
         "noImplicitThis": true,
         "noImplicitAny": true,
