@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as LRUCache from 'lru-cache';
+import LRUCache from 'lru-cache';
 import { Uri } from 'vscode';
 
 export const lruCache: LRUCache<Uri, MovingAverage> = new LRUCache<Uri, MovingAverage>({max: 32});
