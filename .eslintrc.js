@@ -42,7 +42,7 @@ module.exports = {
                 'default': 'array'
             }
         ],
-        '@typescript-eslint/ban-types': [
+        '@typescript-eslint/no-restricted-types': [
             'error',
             {
                 'types': {
@@ -78,7 +78,6 @@ module.exports = {
                 'allowTypedFunctionExpressions': false
             }
         ],
-        '@typescript-eslint/indent': 'error',
         '@typescript-eslint/naming-convention': [
             'off',
             {
@@ -105,17 +104,10 @@ module.exports = {
         ],
         '@typescript-eslint/no-unused-expressions': 'error',
         '@typescript-eslint/no-use-before-define': 'off',
-        '@typescript-eslint/no-var-requires': 'error',
+        '@typescript-eslint/no-require-imports': 'error',
         '@typescript-eslint/prefer-for-of': 'error',
         '@typescript-eslint/prefer-function-type': 'error',
         '@typescript-eslint/prefer-namespace-keyword': 'error',
-        '@typescript-eslint/quotes': [
-            'error',
-            'single',
-            {
-                'avoidEscape': true
-            }
-        ],
         '@typescript-eslint/triple-slash-reference': [
             'error',
             {
@@ -184,7 +176,13 @@ module.exports = {
             'never'
         ],
         'prefer-const': 'error',
-        'quotes': 'off',
+        'quotes': [
+            'error',
+            'single',
+            {
+                'avoidEscape': true
+            }
+        ],
         'radix': 'error',
         'spaced-comment': [
             'error',

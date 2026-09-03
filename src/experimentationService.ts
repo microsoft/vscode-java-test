@@ -28,7 +28,7 @@ export function getExpService(): IExperimentationService {
 }
 
 export async function initExpService(context: ExtensionContext): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const packageJson: {[key: string]: any} = require('../package.json');
     const extensionName: string = `${packageJson['publisher']}.${packageJson['name']}`;
     const extensionVersion: string = packageJson['version'];

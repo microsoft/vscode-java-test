@@ -56,7 +56,7 @@ function filterCandidateConfigItems(configItems: IExecutionConfig[], testItems: 
 
             try {
                 return checkTestItems(testItems, context);
-            } catch (e) {
+            } catch {
                 // do something with the error
             }
         }

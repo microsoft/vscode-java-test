@@ -48,7 +48,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
         while ((match = this.regex.exec(data)) !== null) {
             try {
                 this.processData(match[1]);
-            } catch (error) {
+            } catch {
                 this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${match[1]}\r\n`);
             }
         }
