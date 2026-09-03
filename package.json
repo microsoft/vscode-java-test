@@ -553,9 +553,9 @@
     ],
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
-        "@types/glob": "^7.2.0",
         "@types/lodash": "^4.17.25",
         "@types/lru-cache": "^7.10.10",
+        "@types/minimatch": "^5.1.2",
         "@types/mocha": "^9.1.1",
         "@types/node": "^16.18.13",
         "@types/sinon": "^22.0.0",
