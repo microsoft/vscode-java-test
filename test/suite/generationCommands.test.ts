@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 import * as assert from 'assert';
-import { TextEdit, Uri, WorkspaceEdit } from 'vscode';
+import * as sinon from 'sinon';
+import { SnippetTextEdit, TextEdit, Uri, WorkspaceEdit } from 'vscode';
 import { WorkspaceEdit as ProtocolWorkspaceEdit } from 'vscode-languageserver-types';
 import { asWorkspaceEdit } from '../../src/commands/generationCommands';
 
@@ -49,8 +50,18 @@ suite('Generation Commands Tests', () => {
             ],
         };
 
-        const edit: WorkspaceEdit = asWorkspaceEdit(protocolEdit);
+        const setSpy = sinon.spy(WorkspaceEdit.prototype, 'set');
 
-        assert.ok(edit instanceof WorkspaceEdit);
+        try {
+            asWorkspaceEdit(protocolEdit);
+
+            assert.ok(setSpy.calledOnce);
+            assert.strictEqual(setSpy.firstCall.args[0].toString(), uri.toString());
+            const convertedEdit: unknown = setSpy.firstCall.args[1][0][0];
+            assert.ok(convertedEdit instanceof SnippetTextEdit);
+            assert.strictEqual(convertedEdit.snippet.value, 'class ${1:GeneratedTest} {}');
+        } finally {
+            setSpy.restore();
+        }
     });
 });

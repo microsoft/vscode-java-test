@@ -22,7 +22,7 @@
     ],
     "aiKey": "90c182a8-8dab-45d4-bfb8-1353eb55aa7f",
     "engines": {
-        "vscode": "^1.91.0"
+        "vscode": "^1.88.0"
     },
     "categories": [
         "Testing"
@@ -578,7 +578,6 @@
         "lodash": "^4.18.1",
         "lru-cache": "^7.17.0",
         "vscode-extension-telemetry-wrapper": "^0.15.3",
-        "vscode-languageclient": "10.1.0",
         "vscode-languageserver-types": "3.18.0",
         "vscode-tas-client": "^0.1.75"
     },
