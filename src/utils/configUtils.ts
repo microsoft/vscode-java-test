@@ -57,7 +57,7 @@ function filterCandidateConfigItems(configItems: IExecutionConfig[], testItems: 
             try {
                 return checkTestItems(testItems, context);
             } catch {
-                // do something with the error
+                // Ignore invalid when clauses so the configuration remains selectable.
             }
         }
 
