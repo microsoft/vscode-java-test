@@ -72,6 +72,29 @@ suite('TestNG Runner Analyzer Tests', () => {
         sinon.assert.notCalled(appendOutputSpy);
     });
 
+    test('includes parsing errors in malformed runner output diagnostics', () => {
+        const testItem = generateTestItem(testController, 'testng@example.SampleTest#test', TestKind.TestNG);
+        const testRun = testController.createTestRun(new TestRunRequest([testItem], []));
+        const appendOutputSpy = sinon.spy(testRun, 'appendOutput');
+        const runnerContext: IRunTestContext = {
+            isDebug: false,
+            kind: TestKind.TestNG,
+            projectName: 'testng',
+            testItems: [testItem],
+            testRun,
+            workspaceFolder: workspace.workspaceFolders?.[0]!,
+        };
+        const analyzer = new TestNGRunnerResultAnalyzer(runnerContext);
+
+        analyzer.analyzeData('@@<TestRunner-{invalid}-TestRunner>');
+
+        sinon.assert.calledOnce(appendOutputSpy);
+        sinon.assert.calledWith(
+            appendOutputSpy,
+            sinon.match(/^\[ERROR\] Failed to parse output data: \{invalid\}\. SyntaxError:/),
+        );
+    });
+
     test('reports method results without assigning a result state to the class', () => {
         const classItem = testController.createTestItem('testng@example.SampleTest', 'SampleTest');
         dataCache.set(classItem, {

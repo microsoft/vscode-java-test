@@ -49,7 +49,7 @@ export class TestNGRunnerResultAnalyzer extends RunnerResultAnalyzer {
             try {
                 this.processData(match[1]);
             } catch (error) {
-                this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${match[1]}\r\n`);
+                this.testContext.testRun.appendOutput(`[ERROR] Failed to parse output data: ${match[1]}. ${String(error)}\r\n`);
             }
         }
     }
