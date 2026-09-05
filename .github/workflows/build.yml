@@ -30,7 +30,7 @@ jobs:
     - name: Setup Node.js environment
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        node-version: 20
+        node-version: 22.13.0
         
     - name: Install Node.js modules
       run: npm install
@@ -76,7 +76,7 @@ jobs:
     - name: Setup Node.js environment
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        node-version: 20
+        node-version: 22.13.0
         
     - name: Install Node.js modules
       run: npm install
@@ -116,7 +116,7 @@ jobs:
     - name: Setup Node.js environment
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        node-version: 20
+        node-version: 22.13.0
 
     - name: Install Node.js modules
       run: npm install
