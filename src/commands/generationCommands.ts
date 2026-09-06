@@ -22,8 +22,8 @@ export async function generateTests(uri: Uri, cursorOffset: number): Promise<voi
 
 export function asWorkspaceEdit(protocolEdit: ProtocolWorkspaceEdit): WorkspaceEdit {
     const edit: WorkspaceEdit = new WorkspaceEdit();
-    const metadata: (annotationId?: string) => WorkspaceEditEntryMetadata | undefined = (annotationId?: string): WorkspaceEditEntryMetadata | undefined => {
-        const annotation: ChangeAnnotation | undefined = annotationId ? protocolEdit.changeAnnotations?.[annotationId] : undefined;
+    const metadata: (annotationId?: string | ChangeAnnotation) => WorkspaceEditEntryMetadata | undefined = (annotationId?: string | ChangeAnnotation): WorkspaceEditEntryMetadata | undefined => {
+        const annotation: ChangeAnnotation | undefined = typeof annotationId === 'string' ? protocolEdit.changeAnnotations?.[annotationId] : annotationId;
         return annotation && {
             label: annotation.label,
             needsConfirmation: !!annotation.needsConfirmation,

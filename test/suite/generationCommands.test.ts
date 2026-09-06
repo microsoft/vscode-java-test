@@ -64,4 +64,33 @@ suite('Generation Commands Tests', () => {
             setSpy.restore();
         }
     });
+
+    test('converts inline change annotations accepted by protocol type guards', () => {
+        const uri: Uri = Uri.file('/workspace/GeneratedTest.java');
+        const protocolEdit: unknown = {
+            documentChanges: [{
+                textDocument: { uri: uri.toString(), version: null },
+                edits: [{
+                    range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+                    newText: 'generated',
+                    annotationId: { label: 'Generate test', description: 'Creates a test class' },
+                }],
+            }],
+        };
+        assert.ok(ProtocolWorkspaceEdit.is(protocolEdit));
+        const setSpy = sinon.spy(WorkspaceEdit.prototype, 'set');
+
+        try {
+            asWorkspaceEdit(protocolEdit);
+
+            assert.ok(setSpy.calledOnce);
+            assert.deepStrictEqual(setSpy.firstCall.args[1][0][1], {
+                label: 'Generate test',
+                needsConfirmation: false,
+                description: 'Creates a test class',
+            });
+        } finally {
+            setSpy.restore();
+        }
+    });
 });
