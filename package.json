@@ -552,6 +552,7 @@
         "vscjava.vscode-java-debug"
     ],
     "devDependencies": {
+        "@stylistic/eslint-plugin": "^2.13.0",
         "@types/fs-extra": "^9.0.13",
         "@types/glob": "^7.2.0",
         "@types/lodash": "^4.17.25",
@@ -560,10 +561,10 @@
         "@types/node": "^16.18.13",
         "@types/sinon": "^22.0.0",
         "@types/vscode": "1.125.0",
-        "@typescript-eslint/eslint-plugin": "^5.60.1",
+        "@typescript-eslint/eslint-plugin": "^8.68.0",
         "@typescript-eslint/parser": "^8.68.0",
         "@vscode/test-electron": "^3.1.0",
-        "eslint": "^8.43.0",
+        "eslint": "^8.57.1",
         "glob": "^7.2.3",
         "mocha": "^11.1.0",
         "sinon": "^22.1.0",

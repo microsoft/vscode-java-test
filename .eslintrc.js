@@ -25,7 +25,8 @@ module.exports = {
         'sourceType': 'module'
     },
     'plugins': [
-        '@typescript-eslint'
+        '@typescript-eslint',
+        '@stylistic'
     ],
     'root': true,
     'ignorePatterns': [
@@ -42,7 +43,7 @@ module.exports = {
                 'default': 'array'
             }
         ],
-        '@typescript-eslint/ban-types': [
+        '@typescript-eslint/no-restricted-types': [
             'error',
             {
                 'types': {
@@ -78,7 +79,6 @@ module.exports = {
                 'allowTypedFunctionExpressions': false
             }
         ],
-        '@typescript-eslint/indent': 'error',
         '@typescript-eslint/naming-convention': [
             'off',
             {
@@ -104,18 +104,18 @@ module.exports = {
             }
         ],
         '@typescript-eslint/no-unused-expressions': 'error',
+        '@typescript-eslint/no-unused-vars': [
+            'warn',
+            {
+                'caughtErrors': 'none'
+            }
+        ],
         '@typescript-eslint/no-use-before-define': 'off',
+        '@typescript-eslint/no-require-imports': 'off',
         '@typescript-eslint/no-var-requires': 'error',
         '@typescript-eslint/prefer-for-of': 'error',
         '@typescript-eslint/prefer-function-type': 'error',
         '@typescript-eslint/prefer-namespace-keyword': 'error',
-        '@typescript-eslint/quotes': [
-            'error',
-            'single',
-            {
-                'avoidEscape': true
-            }
-        ],
         '@typescript-eslint/triple-slash-reference': [
             'error',
             {
@@ -145,6 +145,7 @@ module.exports = {
         'guard-for-in': 'error',
         'id-denylist': 'off',
         'id-match': 'off',
+        '@stylistic/indent': 'error',
         'indent': 'off',
         'max-classes-per-file': [
             'error',
@@ -184,6 +185,13 @@ module.exports = {
             'never'
         ],
         'prefer-const': 'error',
+        '@stylistic/quotes': [
+            'error',
+            'single',
+            {
+                'avoidEscape': true
+            }
+        ],
         'quotes': 'off',
         'radix': 'error',
         'spaced-comment': [
