@@ -109,7 +109,7 @@ public class TestNavigationUtils {
                     ProjectTestUtils.getSourceEntries(project);
             for (final IClasspathEntry entry : testEntries) {
                 JUnitPlugin.logInfo("[nav-diag] root isTest=" + isTest + " project=" + project.getPath() +
-                        " entry=" + entry + " roots=" + Arrays.toString(project.findPackageFragmentRoots(entry)));
+                        " entry=" + entry.getPath());
                 javaElements.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
             }
         }
