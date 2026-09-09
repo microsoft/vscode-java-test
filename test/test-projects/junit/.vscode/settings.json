@@ -1,3 +1,4 @@
 {
-    "java.server.launchMode": "Standard"
+    "java.server.launchMode": "Standard",
+    "java.jdt.ls.lombokSupport.enabled": false
 }
