@@ -18,9 +18,10 @@ jobs:
         diagnostics: [none, minimal]
     env:
       NAVIGATION_VSCODE_VERSION: '1.136.2'
-      NAVIGATION_JAVA_VERSION: '1.57.2026090408'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           distribution: temurin
@@ -33,7 +34,7 @@ jobs:
         run: |
           git restore --source=5a4ee47db5740970d213d149c495dcb23afef5d0 -- \
             java-extension/com.microsoft.java.test.plugin/src/main/java/com/microsoft/java/test/plugin/util/TestNavigationUtils.java \
-            test/suite/navigation.test.ts
+            test/suite/navigation.test.ts test/index.ts
       - run: npm install
       - run: npm run build-plugin
       - run: npm run vscode:prepublish
