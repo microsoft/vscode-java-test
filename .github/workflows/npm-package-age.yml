@@ -1,0 +1,36 @@
+name: NPM package minimum release age
+
+# Keep the enforcement logic on the protected base branch. This workflow must
+# never check out or execute code from the pull request head.
+on:
+  pull_request_target:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  npm-package-age:
+    name: NPM packages are at least 7 days old
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted base revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+
+      - name: Check NPM package release age
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MINIMUM_RELEASE_AGE_DAYS: 7
+          REQUIRE_COMMIT_STATUS: true
+        run: node scripts/checkNpmPackageAge.js

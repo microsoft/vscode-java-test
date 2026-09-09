@@ -17,16 +17,6 @@ trigger:
   branches:
     include:
       - main
-# Dependabot security updates bypass cooldown, so validate npm dependency
-# changes against CFS before they can be merged.
-pr:
-  branches:
-    include:
-      - main
-  paths:
-    include:
-      - package.json
-      - package-lock.json
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
@@ -63,7 +53,7 @@ extends:
                   jdkSourceOption: PreInstalled
               - template: /.azure-pipelines/npm-cfs.yml@self
               - script: npm install
-                displayName: npm install from CFS
+                displayName: npm install
               - script: npm run lint
                 displayName: npm run lint
               - template: /.azure-pipelines/maven-cfs.yml@self
