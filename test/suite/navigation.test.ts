@@ -23,10 +23,12 @@ suite('Test Navigation Tests', () => {
 
     test('test go to test', async () => {
         const filePath: string = path.join(PROJECT_PATH, 'src', 'main', 'java', 'junit', 'App.java');
-        await window.showTextDocument(Uri.file(filePath));
+        const editor = await window.showTextDocument(Uri.file(filePath));
         const uri: Uri = window.activeTextEditor!.document.uri;
+        console.log('[nav-diag] editor', JSON.stringify({ requested: filePath, returned: editor.document.uri.toString(), active: uri.toString() }));
         const searchResult = await executeJavaLanguageServerCommand<ITestNavigationResult>(
             JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri.toString(), true);
+        console.log('[nav-diag] go to test', JSON.stringify(searchResult));
         assert.strictEqual(searchResult?.items.length, 1);
         assert.strictEqual(searchResult?.items[0].simpleName, 'AppTest');
         assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit5.AppTest');
@@ -34,10 +36,12 @@ suite('Test Navigation Tests', () => {
 
     test('test go to test subject', async () => {
         const filePath: string = path.join(PROJECT_PATH, 'src', 'test', 'java', 'junit5', 'AppTest.java');
-        await window.showTextDocument(Uri.file(filePath));
+        const editor = await window.showTextDocument(Uri.file(filePath));
         const uri: Uri = window.activeTextEditor!.document.uri;
+        console.log('[nav-diag] editor', JSON.stringify({ requested: filePath, returned: editor.document.uri.toString(), active: uri.toString() }));
         const searchResult = await executeJavaLanguageServerCommand<ITestNavigationResult>(
             JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri.toString(), false);
+        console.log('[nav-diag] go to subject', JSON.stringify(searchResult));
         assert.strictEqual(searchResult?.items.length, 1);
         assert.strictEqual(searchResult?.items[0].simpleName, 'App');
         assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit.App');

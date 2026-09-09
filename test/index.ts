@@ -8,7 +8,7 @@ import { downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath, runTest
 
 async function main(): Promise<void> {
     try {
-        const vscodeExecutablePath = await downloadAndUnzipVSCode();
+        const vscodeExecutablePath = await downloadAndUnzipVSCode(process.env.NAVIGATION_VSCODE_VERSION);
         const [cli, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
 
         // Resolve redhat.java dependency
@@ -19,7 +19,13 @@ async function main(): Promise<void> {
         if (process.platform === 'win32') {
             options.shell = true;
         }
-        cp.spawnSync(cli, [...args, '--install-extension', 'redhat.java', '--pre-release'], options);
+        const javaVersion = process.env.NAVIGATION_JAVA_VERSION;
+        const javaArguments = javaVersion === 'stable' ? ['redhat.java'] :
+            [javaVersion ? `redhat.java@${javaVersion}` : 'redhat.java', '--pre-release'];
+        const javaInstall = cp.spawnSync(cli, [...args, '--install-extension', ...javaArguments], options);
+        if (javaInstall.status !== 0) {
+            throw new Error(`redhat.java installation failed: ${javaInstall.status}`);
+        }
 
         cp.spawnSync(cli, [...args, '--install-extension', 'vscjava.vscode-java-debug', '--pre-release'], options);
 

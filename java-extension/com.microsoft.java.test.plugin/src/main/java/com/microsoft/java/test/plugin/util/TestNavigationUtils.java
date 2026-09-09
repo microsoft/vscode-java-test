@@ -76,6 +76,10 @@ public class TestNavigationUtils {
         final IJavaSearchScope scope = getSearchScope(goToTest);
         final IJavaProject javaProject = unit.getJavaProject();
         final Set<TestNavigationItem> items = new HashSet<>();
+        JUnitPlugin.logInfo("[nav-diag] uri=" + typeUri + " unit=" + unit.getPath() +
+                " primary=" + typeName + " goToTest=" + goToTest + " query=" + nameToSearch +
+                " project=" + javaProject.getPath() + " scope=" + scope +
+                " java=" + System.getProperty("java.version"));
         searchEngine.searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
@@ -88,6 +92,7 @@ public class TestNavigationUtils {
             monitor
         );
 
+        JUnitPlugin.logInfo("[nav-diag] result count=" + items.size());
         return new TestNavigationResult(items, location);
     }
 
@@ -103,6 +108,8 @@ public class TestNavigationUtils {
             final List<IClasspathEntry> testEntries = isTest ? ProjectTestUtils.getTestEntries(project) :
                     ProjectTestUtils.getSourceEntries(project);
             for (final IClasspathEntry entry : testEntries) {
+                JUnitPlugin.logInfo("[nav-diag] root isTest=" + isTest + " project=" + project.getPath() +
+                        " entry=" + entry + " roots=" + Arrays.toString(project.findPackageFragmentRoots(entry)));
                 javaElements.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
             }
         }
@@ -140,6 +147,8 @@ public class TestNavigationUtils {
         @Override
         public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName,
                 char[][] enclosingTypeNames, String path) {
+            JUnitPlugin.logInfo("[nav-diag] candidate path=" + path + " package=" + String.valueOf(packageName) +
+                    " name=" + String.valueOf(simpleTypeName));
             if (!path.endsWith(".java")) {
                 return;
             }
@@ -148,6 +157,7 @@ public class TestNavigationUtils {
             final IFile file = javaProject.getProject().getFile(
                     fullPath.makeRelativeTo(javaProject.getProject().getFullPath()));
             if (!file.exists()) {
+                JUnitPlugin.logInfo("[nav-diag] rejected missing file=" + file.getFullPath());
                 return;
             }
             final String uri = file.getLocation().toFile().toURI().toString();
@@ -161,10 +171,12 @@ public class TestNavigationUtils {
             // for invisible project and Eclipse project, all the package root are both test and source,
             // so the search result might be itself.
             if (Objects.equals(simpleName, from)) {
+                JUnitPlugin.logInfo("[nav-diag] rejected self=" + simpleName);
                 return;
             }
 
             if (!isTest && (simpleName.endsWith("Test") || simpleName.endsWith("Tests"))) {
+                JUnitPlugin.logInfo("[nav-diag] rejected test=" + simpleName);
                 return;
             }
             final String fullyQualifiedName = String.valueOf(packageName) + "." + simpleName;

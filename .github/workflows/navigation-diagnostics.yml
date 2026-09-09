@@ -1,0 +1,41 @@
+name: Navigation diagnostics
+
+on:
+  push:
+    branches: [chagong-macos-navigation-20260909]
+
+permissions:
+  contents: read
+
+jobs:
+  navigation:
+    name: macOS / Java ${{ matrix.java }}
+    runs-on: macos-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['1.57.2026090408', stable]
+    env:
+      NAVIGATION_VSCODE_VERSION: '1.136.2'
+      NAVIGATION_JAVA_VERSION: ${{ matrix.java }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run build-plugin
+      - run: npm run vscode:prepublish
+      - run: npm test
+      - name: Navigation and runtime evidence
+        if: always()
+        shell: bash
+        run: |
+          find .vscode-test/extensions -maxdepth 1 -type d -print
+          find .vscode-test/extensions -name 'org.eclipse.jdt.core_*.jar' -o -name 'org.eclipse.jdt.ls.core_*.jar'
+          find .vscode-test/user-data -name '.log' -print -exec cat '{}' \;
