@@ -27,7 +27,15 @@ pr:
       - package-lock.json
       - java-extension/**/pom.xml
       - java-extension/.mvn/wrapper/maven-wrapper.properties
+      - java-extension/mvnw
+      - java-extension/mvnw.cmd
       - scripts/buildJdtlsExt.js
+      - .azure-pipelines/vscode-java-test-ci.yml
+      - .azure-pipelines/npm-cfs.yml
+      - .azure-pipelines/npm-cfs-variables.yml
+      - .azure-pipelines/maven-cfs.yml
+      - .azure-pipelines/maven-cfs-variables.yml
+      - .azure-pipelines/cfs-settings.xml
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
@@ -45,8 +53,30 @@ extends:
     stages:
       - stage: Build
         jobs:
+          - job: CFSValidation
+            displayName: Validate dependencies from CFS
+            condition: eq(variables['Build.Reason'], 'PullRequest')
+            steps:
+              - checkout: self
+                fetchTags: false
+              - task: JavaToolInstaller@0
+                displayName: Use Java 21
+                inputs:
+                  versionSpec: "21"
+                  jdkArchitectureOption: x64
+                  jdkSourceOption: PreInstalled
+              - template: /.azure-pipelines/npm-cfs.yml@self
+              - script: npm install
+                displayName: Validate npm dependencies from CFS
+              - template: /.azure-pipelines/maven-cfs.yml@self
+              - script: npm run build-plugin
+                displayName: Validate Maven dependencies from CFS
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                  MVNW_PASSWORD: $(System.AccessToken)
           - job: Job_1
             displayName: VSCode-Test-Runner-CI
+            condition: ne(variables['Build.Reason'], 'PullRequest')
             templateContext:
               outputs:
                 - output: pipelineArtifact
