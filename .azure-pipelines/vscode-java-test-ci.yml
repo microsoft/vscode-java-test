@@ -25,6 +25,9 @@ pr:
     include:
       - package.json
       - package-lock.json
+      - java-extension/**/pom.xml
+      - java-extension/.mvn/wrapper/maven-wrapper.properties
+      - scripts/buildJdtlsExt.js
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
