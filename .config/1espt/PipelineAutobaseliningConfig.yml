@@ -55,3 +55,13 @@ pipelines:
           lastModifiedDate: 2026-06-26
         spotbugs:
           lastModifiedDate: 2026-06-26
+  23362:
+    usedNonDefaultBranch: true
+    retail:
+      source:
+        eslint:
+          lastModifiedDate: 2026-09-14
+        armory:
+          lastModifiedDate: 2026-09-14
+        accessibilityinsights:
+          lastModifiedDate: 2026-09-14
