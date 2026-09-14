@@ -578,7 +578,7 @@
         "minimatch": "^3.1.5",
         "vscode-extension-telemetry-wrapper": "^0.15.3",
         "vscode-languageclient": "6.0.0-next.9",
-        "vscode-tas-client": "^0.1.75"
+        "vscode-tas-client": "^0.3.1"
     },
     "overrides": {
         "serialize-javascript": ">=7.0.5",
