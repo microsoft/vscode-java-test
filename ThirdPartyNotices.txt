@@ -11,13 +11,12 @@ This project incorporates components from the projects listed below. The origina
 4. Eclipse Java development tools (https://www.eclipse.org/jdt/)
 5. Eskibear/vscode-extension-telemetry-wrapper (https://github.com/Eskibear/vscode-extension-telemetry-wrapper)
 6. google/gson (https://github.com/google/gson)
-7. isaacs/node-lru-cache (https://github.com/isaacs/node-lru-cache)
-8. jacoco/jacoco (https://github.com/jacoco/jacoco)
-9. jprichardson/node-fs-extra (https://github.com/jprichardson/node-fs-extra)
-10. junit-team/junit5 (https://github.com/junit-team/junit5)
-11. lodash/lodash (https://github.com/lodash/lodash)
-12. microsoft/vscode-languageserver-node (https://github.com/microsoft/vscode-languageserver-node)
-13. ota4j-team/opentest4j (https://github.com/ota4j-team/opentest4j)
+7. jacoco/jacoco (https://github.com/jacoco/jacoco)
+8. jprichardson/node-fs-extra (https://github.com/jprichardson/node-fs-extra)
+9. junit-team/junit5 (https://github.com/junit-team/junit5)
+10. lodash/lodash (https://github.com/lodash/lodash)
+11. microsoft/vscode-languageserver-node (https://github.com/microsoft/vscode-languageserver-node)
+12. ota4j-team/opentest4j (https://github.com/ota4j-team/opentest4j)
 
 %% Apache Commons Lang NOTICES AND INFORMATION BEGIN HERE
 =========================================
@@ -955,26 +954,6 @@ END OF Eskibear/vscode-extension-telemetry-wrapper NOTICES AND INFORMATION
    limitations under the License.
 =========================================
 END OF google/gson NOTICES AND INFORMATION
-
-%% isaacs/node-lru-cache NOTICES AND INFORMATION BEGIN HERE
-=========================================
-The ISC License
-
-Copyright (c) Isaac Z. Schlueter and Contributors
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
-IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-=========================================
-END OF isaacs/node-lru-cache NOTICES AND INFORMATION
 
 %% jacoco/jacoco NOTICES AND INFORMATION BEGIN HERE
 =========================================
