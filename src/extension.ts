@@ -19,7 +19,7 @@ import { testSourceProvider } from './provider/testSourceProvider';
 import { registerAskForChoiceCommand, registerAdvanceAskForChoice, registerAskForInputCommand } from './commands/askForOptionCommands';
 import { enableTests } from './commands/testDependenciesCommands';
 import { testRunnerService } from './controller/testRunnerService';
-import { TestRunner } from './java-test-runner.api';
+import { JACOCO_EXEC_COVERAGE_CAPABILITY, TestRunner } from './java-test-runner.api';
 import { parsePartsFromTestId, parseTestIdFromParts } from './utils/testItemUtils';
 
 export let extensionContext: ExtensionContext;
@@ -39,6 +39,7 @@ export async function activate(context: ExtensionContext): Promise<any> {
         },
         parseTestIdFromParts,
         parsePartsFromTestId,
+        capabilities: Object.freeze([JACOCO_EXEC_COVERAGE_CAPABILITY]),
     };
 }
 
