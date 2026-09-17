@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as _ from 'lodash';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Disposable, FileCoverage, FileCoverageDetail, FileSystemWatcher, Location, MarkdownString, RelativePattern, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind, TestRunRequest, tests, TestTag, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { instrumentOperation, sendError, sendInfo } from 'vscode-extension-telemetry-wrapper';
@@ -19,8 +20,9 @@ import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, getResolutionVersion, invalidateResolutionVersion, ITestItemData } from './testItemDataCache';
 import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, removeOutdatedTestItemsForDocument, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
+import { createDelegatedExecutionDataDirectory, getJacocoAgentJarUri, getJacocoReportBasePath } from '../utils/coverageUtils';
 import { testRunnerService } from './testRunnerService';
-import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
+import { CoverageRequest, IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
 import { processStackTraceLine } from '../runners/utils';
 import { parsePartsFromTestId } from '../utils/testItemUtils';
 
@@ -243,12 +245,13 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
     }
 
     const run: TestRun = testController!.createTestRun(request);
+    const isCoverageRun: boolean = request.profile?.kind === TestRunProfileKind.Coverage;
     let coverageProvider: JavaTestCoverageProvider | undefined;
-    if (request.profile?.kind === TestRunProfileKind.Coverage) {
+    if (isCoverageRun) {
         coverageProvider = new JavaTestCoverageProvider();
         // QUESTION: Fix this?
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        request.profile.loadDetailedCoverage = (_testRun: TestRun, fileCoverage: FileCoverage, _token: CancellationToken): Promise<FileCoverageDetail[]> => {
+        request.profile!.loadDetailedCoverage = (_testRun: TestRun, fileCoverage: FileCoverage, _token: CancellationToken): Promise<FileCoverageDetail[]> => {
             return Promise.resolve(coverageProvider!.getCoverageDetails(fileCoverage.uri));
         };
     }
@@ -269,6 +272,19 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
             });
             // TODO: first group by project, then merge test methods.
             const queue: TestItem[][] = mergeTestMethods(testItems);
+            // A delegated runner is handed one directory for the whole run, not one per
+            // batch or per project, so that a run which fans out over several projects,
+            // tasks or retries still produces a single set of data to analyze.
+            const coverageRequest: CoverageRequest | undefined = isCoverageRun && testRunner ? {
+                format: 'jacoco-exec',
+                version: 1,
+                executionDataDirectory: await createDelegatedExecutionDataDirectory(),
+                agentJar: getJacocoAgentJarUri(),
+            } : undefined;
+            // Analysis happens once, after every batch has run, so that the last batch
+            // cannot publish a report that hides what the batches before it covered.
+            const coverageContexts: Map<string, IRunTestContext> = new Map<string, IRunTestContext>();
+            const clearedCoverageProjects: Set<string> = new Set<string>();
             for (const testsInQueue of queue) {
                 if (testsInQueue.length === 0) {
                     continue;
@@ -286,10 +302,24 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                         projectName,
                         testItems: itemsPerProject,
                         testRun: run,
+                        cancellationToken: token,
                         workspaceFolder,
                         profile: request.profile,
                         testConfig: await loadRunConfig(itemsPerProject, workspaceFolder),
+                        coverage: coverageRequest,
                     };
+                    if (isCoverageRun) {
+                        coverageContexts.set(projectName, testContext);
+                        if (!coverageRequest && testContext.testConfig?.coverage?.appendResult === false
+                                && !clearedCoverageProjects.has(projectName)) {
+                            // The built-in runner appends to one file per project, so an
+                            // explicit `appendResult: false` has to drop what earlier runs
+                            // left behind. Only once per project: clearing it again between
+                            // batches would throw away this very run's data.
+                            clearedCoverageProjects.add(projectName);
+                            await fse.remove(getJacocoReportBasePath(projectName));
+                        }
+                    }
                     if (testRunner) {
                         await executeWithTestRunner(option, testRunner, testContext, run, disposables);
                         disposables.forEach((d: Disposable) => d.dispose());
@@ -363,10 +393,13 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
                             await runner.tearDown();
                         }
                     }
-                    if (request.profile?.kind === TestRunProfileKind.Coverage) {
-                        await coverageProvider!.provideFileCoverage(testContext);
-                    }
                 }
+            }
+            if (isCoverageRun && !token.isCancellationRequested) {
+                for (const coverageContext of coverageContexts.values()) {
+                    await coverageProvider!.provideFileCoverage(coverageContext);
+                }
+                await discardExecutionData(coverageRequest, coverageContexts);
             }
             return resolve();
         });
@@ -374,6 +407,27 @@ export const runTests: (request: TestRunRequest, option: IRunOption) => any = in
         run.end();
     }
 });
+
+/**
+ * Removes a delegated run's execution data when it must not outlive the run.
+ *
+ * With the default `appendResult` the directory is deliberately kept, because
+ * the next run analyzes the whole root and merges it. An explicit
+ * `appendResult: false` means the opposite, so the data goes as soon as it has
+ * been analyzed. Discarding afterwards rather than clearing beforehand is what
+ * keeps a run from deleting data a concurrent run is still writing.
+ */
+async function discardExecutionData(coverage: CoverageRequest | undefined,
+    contexts: Map<string, IRunTestContext>): Promise<void> {
+    if (!coverage) {
+        return;
+    }
+    const isDiscarded: boolean = [...contexts.values()].some((context: IRunTestContext) =>
+        context.testConfig?.coverage?.appendResult === false);
+    if (isDiscarded) {
+        await fse.remove(coverage.executionDataDirectory.fsPath);
+    }
+}
 
 async function executeWithTestRunner(option: IRunOption, testRunner: TestRunner, testContext: IRunTestContext, run: TestRun, disposables: Disposable[]) {
     option.progressReporter?.done();
