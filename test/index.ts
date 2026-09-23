@@ -34,6 +34,8 @@ async function main(): Promise<void> {
             extensionTestsPath: path.resolve(__dirname, 'suite'),
             launchArgs: [
                 '--disable-workspace-trust',
+                '--disable-extension', 'GitHub.copilot-chat',
+                '--disable-extension', 'TypeScriptTeam.jsts-chat-features',
                 path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit'),
             ],
         });
@@ -45,6 +47,8 @@ async function main(): Promise<void> {
             extensionTestsPath: path.resolve(__dirname, 'unmanaged-folder-suite'),
             launchArgs: [
                 '--disable-workspace-trust',
+                '--disable-extension', 'GitHub.copilot-chat',
+                '--disable-extension', 'TypeScriptTeam.jsts-chat-features',
                 path.join(__dirname, '..', '..', 'test', 'test-projects', 'simple'),
             ],
         });
