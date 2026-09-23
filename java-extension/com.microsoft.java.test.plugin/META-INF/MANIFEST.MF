@@ -54,6 +54,7 @@ Require-Bundle: org.eclipse.jdt.core,
 Export-Package: com.microsoft.java.test.plugin.launchers;x-friends:="com.microsoft.java.test.plugin.test",
  com.microsoft.java.test.plugin.model;x-friends:="com.microsoft.java.test.plugin.test",
  com.microsoft.java.test.plugin.searcher;x-friends:="com.microsoft.java.test.plugin.test",
+ com.microsoft.java.test.plugin.util;x-friends:="com.microsoft.java.test.plugin.test",
  com.microsoft.java.test.plugin.coverage;x-friends:="com.microsoft.java.test.plugin.test",
  com.microsoft.java.test.plugin.coverage.model;x-friends:="com.microsoft.java.test.plugin.test"
 Bundle-ClassPath: .
