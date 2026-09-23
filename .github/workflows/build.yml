@@ -58,7 +58,7 @@ jobs:
 
     - name: Print language server Log if job failed
       if: ${{ failure() }}
-      run: find $HOME/.config/Code/User/workspaceStorage/*/redhat.java/jdt_ws/.metadata/.log -print -exec cat '{}' \;;
+      run: find .vscode-test/user-data/User/workspaceStorage/*/redhat.java/jdt_ws/.metadata/.log -print -exec cat '{}' \;;
 
   windows:
     name: Windows
@@ -98,7 +98,7 @@ jobs:
 
     - name: Print language server Log if job failed
       if: ${{ failure() }}
-      run: Get-ChildItem -Path $env:APPDATA/Code/User/workspaceStorage/*/redhat.java/jdt_ws/.metadata/.log | cat
+      run: Get-ChildItem -Path .vscode-test/user-data/User/workspaceStorage/*/redhat.java/jdt_ws/.metadata/.log | cat
 
   darwin:
     name: macOS
@@ -138,4 +138,4 @@ jobs:
 
     - name: Print language server Log if job failed
       if: ${{ failure() }}
-      run: find $HOME/Library/Application\ Support/Code/User/workspaceStorage/*/redhat.java/jdt_ws/.metadata/.log -print -exec cat '{}' \;;
+      run: find .vscode-test/user-data/User/workspaceStorage/*/redhat.java/jdt_ws/.metadata/.log -print -exec cat '{}' \;;
