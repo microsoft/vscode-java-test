@@ -12,6 +12,16 @@ public class MiniTest {
     }
 }
 
+enum HelperEnum {
+    VALUE
+}
+
+record HelperRecord(int value) {
+}
+
+@interface HelperAnnotation {
+}
+
 class SiblingTest {
     @Test
     void siblingTest() {

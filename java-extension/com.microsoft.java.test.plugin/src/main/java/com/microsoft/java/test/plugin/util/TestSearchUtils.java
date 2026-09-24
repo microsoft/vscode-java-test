@@ -43,6 +43,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -431,7 +432,8 @@ public class TestSearchUtils {
 
         final JavaTestItem fakeRoot = new JavaTestItem();
         for (final IType type : topLevelTypes) {
-            final TypeDeclaration typeDeclaration = ASTNodeSearchUtil.getTypeDeclarationNode(type, root);
+            final AbstractTypeDeclaration typeDeclaration =
+                    ASTNodeSearchUtil.getAbstractTypeDeclarationNode(type, root);
             if (typeDeclaration == null) {
                 throwIfUnsupportedPreview(unit, root);
                 continue;
