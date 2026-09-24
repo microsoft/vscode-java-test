@@ -135,8 +135,9 @@ fresh snapshot, and reassess the authorized update rather than forcing an
 overwrite or carrying prepared edits to another wiki. Do not fall back to a
 different destination.
 
-Workflow concurrency is per source repository and issue/PR, not a cross-repository
-wiki lock. Other Java tooling repositories may update the same wiki concurrently;
+Team-memory workflow concurrency is per source repository and push, or per PR for
+manual dispatch, not a cross-repository wiki lock. Other Java tooling repositories
+may update the same wiki concurrently;
 retain the runtime's optimistic-concurrency checks and reassess conflicts. Never
 force a write, delete unrelated pages, perform destination-wide cleanup, or
 replace shared navigation, assets, human content, or other repositories' citations.

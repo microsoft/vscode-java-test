@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as cp from 'child_process';
+import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
@@ -26,6 +27,12 @@ async function main(): Promise<void> {
         // The folder containing the Extension Manifest package.json
         // Passed to `--extensionDevelopmentPath`
         const extensionDevelopmentPath: string = path.resolve(__dirname, '..', '..');
+        const userDataDir: string = path.join(extensionDevelopmentPath, '.vscode-test', 'user-data');
+        await fse.ensureDir(path.join(userDataDir, 'User'));
+        await fse.writeJson(path.join(userDataDir, 'User', 'settings.json'), {
+            'chat.disableAIFeatures': true,
+            ...(process.env.JAVA_HOME && { 'java.jdt.ls.java.home': process.env.JAVA_HOME }),
+        });
 
         // Run maven test
         await runTests({
@@ -34,6 +41,9 @@ async function main(): Promise<void> {
             extensionTestsPath: path.resolve(__dirname, 'suite'),
             launchArgs: [
                 '--disable-workspace-trust',
+                '--user-data-dir', userDataDir,
+                '--disable-extension', 'GitHub.copilot-chat',
+                '--disable-extension', 'TypeScriptTeam.jsts-chat-features',
                 path.join(__dirname, '..', '..', 'test', 'test-projects', 'junit'),
             ],
         });
@@ -45,6 +55,9 @@ async function main(): Promise<void> {
             extensionTestsPath: path.resolve(__dirname, 'unmanaged-folder-suite'),
             launchArgs: [
                 '--disable-workspace-trust',
+                '--user-data-dir', userDataDir,
+                '--disable-extension', 'GitHub.copilot-chat',
+                '--disable-extension', 'TypeScriptTeam.jsts-chat-features',
                 path.join(__dirname, '..', '..', 'test', 'test-projects', 'simple'),
             ],
         });
