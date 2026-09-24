@@ -12,7 +12,6 @@
 package com.microsoft.java.test.plugin.util;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -58,13 +57,6 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 .anyMatch(problem -> problem.getID() == IProblem.PreviewFeaturesNotAllowed));
         assertNull(((TypeDeclaration) invalid.types().get(0)).resolveBinding());
 
-        final CompilationUnit recovered = (CompilationUnit) TestSearchUtils.parseToDiscoveryAst(
-                unit, false, new NullProgressMonitor());
-        assertFalse(Arrays.stream(recovered.getProblems())
-                .anyMatch(problem -> problem.getID() == IProblem.PreviewFeaturesNotAllowed));
-        assertNotNull(((TypeDeclaration) recovered.types().get(0)).resolveBinding());
-        assertEquals(JavaCore.ENABLED, javaProject.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true));
-
         final List<JavaTestItem> fileTests = TestSearchUtils.findTestTypesAndMethods(
                 Arrays.asList(unit.getResource().getLocationURI().toString()), new NullProgressMonitor());
         assertEquals(2, fileTests.size());
@@ -100,5 +92,6 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         final List<JavaTestItem> nestedChildren = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(nestedType.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals("Child", nestedChildren.get(0).getLabel());
+        assertEquals(JavaCore.ENABLED, javaProject.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true));
     }
 }

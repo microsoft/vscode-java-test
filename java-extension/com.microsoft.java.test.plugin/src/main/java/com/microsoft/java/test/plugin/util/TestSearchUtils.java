@@ -737,7 +737,7 @@ public class TestSearchUtils {
         return parseToAst(unit, fromCache, monitor, false);
     }
 
-    static ASTNode parseToDiscoveryAst(final ICompilationUnit unit, final boolean fromCache,
+    private static ASTNode parseToDiscoveryAst(final ICompilationUnit unit, final boolean fromCache,
             final IProgressMonitor monitor) {
         return parseToAst(unit, fromCache, monitor, true);
     }
