@@ -85,7 +85,7 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(type.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals(2, methods.size());
-        final IType siblingType = javaProject.findType("example.SiblingTest");
+        final IType siblingType = unit.getType("SiblingTest");
         final List<JavaTestItem> siblingMethods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(siblingType.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals(1, siblingMethods.size());
