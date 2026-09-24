@@ -22,7 +22,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -37,9 +39,11 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -170,6 +174,25 @@ public class TestSearchUtils {
                     } catch (CoreException e) {
                         JUnitPlugin.logException("failed to search tests in: " + root.getElementName(), e);
                     }
+                    if ((kind == TestKind.JUnit5 || kind == TestKind.JUnit6) &&
+                            requiresPreviewFallback(javaProject) && root.getKind() == IPackageFragmentRoot.K_SOURCE) {
+                        for (final IJavaElement child : root.getChildren()) {
+                            if (!(child instanceof IPackageFragment)) {
+                                continue;
+                            }
+                            for (final ICompilationUnit unit : ((IPackageFragment) child).getCompilationUnits()) {
+                                if (monitor != null && monitor.isCanceled()) {
+                                    return Collections.emptyList();
+                                }
+                                for (final JavaTestItem item : findTestTypesAndMethods(unit, monitor)) {
+                                    final IJavaElement testType = JavaCore.create(item.getJdtHandler());
+                                    if (testType instanceof IType && item.getTestKind() == kind) {
+                                        testTypes.add((IType) testType);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -256,7 +279,7 @@ public class TestSearchUtils {
      * @throws InterruptedException
      */
     public static List<JavaTestItem> findDirectTestChildrenForClass(List<Object> arguments, IProgressMonitor monitor)
-            throws JavaModelException, OperationCanceledException, InterruptedException {
+            throws CoreException, OperationCanceledException, InterruptedException {
         final String handlerId = (String) arguments.get(0);
 
         // wait for the LS finishing updating
@@ -271,10 +294,22 @@ public class TestSearchUtils {
         if (unit == null) {
             return Collections.emptyList();
         }
+        if (requiresPreviewFallback(unit.getJavaProject())) {
+            for (final JavaTestItem item : findTestTypesAndMethods(unit, monitor)) {
+                final JavaTestItem matchingItem = findTestItem(item, testType.getHandleIdentifier());
+                if (matchingItem != null) {
+                    return matchingItem.getChildren() == null ? Collections.emptyList() : matchingItem.getChildren();
+                }
+            }
+            return Collections.emptyList();
+        }
         final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(unit.getJavaProject());
 
         final List<JavaTestItem> result = new LinkedList<>();
         final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
+        if (root == null) {
+            return result;
+        }
         for (final IType type : unit.getAllTypes()) {
             if (monitor != null && monitor.isCanceled()) {
                 return result;
@@ -330,6 +365,21 @@ public class TestSearchUtils {
         return result;
     }
 
+    private static JavaTestItem findTestItem(JavaTestItem item, String jdtHandler) {
+        if (jdtHandler.equals(item.getJdtHandler())) {
+            return item;
+        }
+        if (item.getChildren() != null) {
+            for (final JavaTestItem child : item.getChildren()) {
+                final JavaTestItem matchingItem = findTestItem(child, jdtHandler);
+                if (matchingItem != null) {
+                    return matchingItem;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * Get all the test types and methods is the given file
      * @param arguments Contains the target file's uri
@@ -352,12 +402,17 @@ public class TestSearchUtils {
             return Collections.emptyList();
         }
 
-        final IType primaryType = unit.findPrimaryType();
-        if (primaryType == null) {
+        return findTestTypesAndMethods(unit, monitor);
+    }
+
+    private static List<JavaTestItem> findTestTypesAndMethods(ICompilationUnit unit, IProgressMonitor monitor)
+            throws CoreException {
+        final IType[] topLevelTypes = unit.getTypes();
+        if (topLevelTypes.length == 0) {
             return Collections.emptyList();
         }
 
-        final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
+        final CompilationUnit root = (CompilationUnit) parseToDiscoveryAst(unit, true /* fromCache */, monitor);
         if (root == null) {
             return Collections.emptyList();
         }
@@ -372,22 +427,27 @@ public class TestSearchUtils {
         }
 
         if (searchers.size() == 0) {
-            Collections.emptyList();
-        }
-
-        final TypeDeclaration typeDeclaration = ASTNodeSearchUtil.getTypeDeclarationNode(primaryType, root);
-        if (typeDeclaration == null) {
-            return Collections.emptyList();
-        }
-
-        final ITypeBinding binding = typeDeclaration.resolveBinding();
-        if (binding == null) {
             return Collections.emptyList();
         }
 
         final JavaTestItem fakeRoot = new JavaTestItem();
-        findTestItemsInTypeBinding(binding, fakeRoot, searchers, monitor);
-        return fakeRoot.getChildren();
+        for (final IType type : topLevelTypes) {
+            final AbstractTypeDeclaration typeDeclaration =
+                    ASTNodeSearchUtil.getAbstractTypeDeclarationNode(type, root);
+            if (typeDeclaration == null) {
+                throwIfUnsupportedPreview(unit, root);
+                continue;
+            }
+
+            final ITypeBinding binding = typeDeclaration.resolveBinding();
+            if (binding == null) {
+                throwIfUnsupportedPreview(unit, root);
+                continue;
+            }
+
+            findTestItemsInTypeBinding(binding, fakeRoot, searchers, monitor);
+        }
+        return fakeRoot.getChildren() == null ? Collections.emptyList() : fakeRoot.getChildren();
     }
 
     private static void findTestItemsInTypeBinding(ITypeBinding typeBinding, JavaTestItem parentItem,
@@ -465,13 +525,21 @@ public class TestSearchUtils {
             }
         }
 
+        final JavaTestItem nestedParent = classItem == null && requiresPreviewFallback(type.getJavaProject()) ?
+                new JavaTestItem() : classItem;
+        for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
+            findTestItemsInTypeBinding(childTypeBinding, nestedParent, searchers, monitor);
+        }
+        if (classItem == null && nestedParent != null && nestedParent.getChildren() != null) {
+            classItem = new JavaTestItemBuilder().setJavaElement(type)
+                    .setLevel(TestLevel.CLASS)
+                    .setKind(nestedParent.getChildren().get(0).getTestKind())
+                    .build();
+            classItem.setChildren(nestedParent.getChildren());
+        }
         // set the class item as the child of its declaring type
         if (classItem != null && parentItem != null) {
             parentItem.addChild(classItem);
-        }
-
-        for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
-            findTestItemsInTypeBinding(childTypeBinding, classItem, searchers, monitor);
         }
     }
 
@@ -668,10 +736,20 @@ public class TestSearchUtils {
 
     public static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
             final IProgressMonitor monitor) {
+        return parseToAst(unit, fromCache, monitor, false);
+    }
+
+    private static ASTNode parseToDiscoveryAst(final ICompilationUnit unit, final boolean fromCache,
+            final IProgressMonitor monitor) {
+        return parseToAst(unit, fromCache, monitor, true);
+    }
+
+    private static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
+            final IProgressMonitor monitor, final boolean forDiscovery) {
         if (fromCache) {
             final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(unit, CoreASTProvider.WAIT_YES,
                     monitor);
-            if (astRoot != null) {
+            if (astRoot != null && (!forDiscovery || !hasUnsupportedPreviewProblem(astRoot))) {
                 return astRoot;
             }
         }
@@ -685,6 +763,42 @@ public class TestSearchUtils {
         parser.setFocalPosition(0);
         parser.setResolveBindings(true);
         parser.setIgnoreMethodBodies(true);
+        if (forDiscovery && requiresPreviewFallback(unit.getJavaProject())) {
+            // Older Java preview modes cannot be parsed by the current JDT; only relax discovery's AST.
+            final Map<String, String> discoveryOptions = new HashMap<>(unit.getJavaProject().getOptions(true));
+            discoveryOptions.put(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.DISABLED);
+            parser.setCompilerOptions(discoveryOptions);
+        }
         return parser.createAST(monitor);
+    }
+
+    private static boolean requiresPreviewFallback(IJavaProject project) {
+        return JavaCore.ENABLED.equals(project.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true)) &&
+                !JavaCore.latestSupportedJavaVersion().equals(project.getOption(JavaCore.COMPILER_SOURCE, true));
+    }
+
+    private static void throwIfUnsupportedPreview(ICompilationUnit unit, CompilationUnit root) throws CoreException {
+        if (!requiresPreviewFallback(unit.getJavaProject())) {
+            return;
+        }
+        for (final IProblem problem : root.getProblems()) {
+            if (problem.isError()) {
+                throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
+                        "Cannot discover tests in " + unit.getElementName() + " with the project's preview settings: " +
+                                problem.getMessage()));
+            }
+        }
+        throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
+                "Cannot discover tests in " + unit.getElementName() +
+                        ": JDT cannot resolve test bindings with the project's preview settings."));
+    }
+
+    private static boolean hasUnsupportedPreviewProblem(CompilationUnit root) {
+        for (final IProblem problem : root.getProblems()) {
+            if (problem.getID() == IProblem.PreviewFeaturesNotAllowed) {
+                return true;
+            }
+        }
+        return false;
     }
 }
