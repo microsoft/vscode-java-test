@@ -51,6 +51,7 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
 
         final ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
         parser.setSource(unit);
+        parser.setCompilerOptions(javaProject.getOptions(true));
         parser.setResolveBindings(true);
         final CompilationUnit invalid = (CompilationUnit) parser.createAST(new NullProgressMonitor());
         assertTrue(Arrays.stream(invalid.getProblems())
