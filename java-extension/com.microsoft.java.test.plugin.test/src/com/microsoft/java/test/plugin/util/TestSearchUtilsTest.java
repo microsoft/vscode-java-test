@@ -58,7 +58,7 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 .anyMatch(problem -> problem.getID() == IProblem.PreviewFeaturesNotAllowed));
         assertNull(((TypeDeclaration) invalid.types().get(0)).resolveBinding());
 
-        final CompilationUnit recovered = (CompilationUnit) TestSearchUtils.parseToAst(
+        final CompilationUnit recovered = (CompilationUnit) TestSearchUtils.parseToDiscoveryAst(
                 unit, false, new NullProgressMonitor());
         assertFalse(Arrays.stream(recovered.getProblems())
                 .anyMatch(problem -> problem.getID() == IProblem.PreviewFeaturesNotAllowed));
@@ -67,8 +67,11 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
 
         final List<JavaTestItem> fileTests = TestSearchUtils.findTestTypesAndMethods(
                 Arrays.asList(unit.getResource().getLocationURI().toString()), new NullProgressMonitor());
-        assertEquals(1, fileTests.size());
+        assertEquals(2, fileTests.size());
+        assertEquals("MiniTest", fileTests.get(0).getLabel());
         assertEquals(2, fileTests.get(0).getChildren().size());
+        assertEquals("SiblingTest", fileTests.get(1).getLabel());
+        assertEquals(1, fileTests.get(1).getChildren().size());
 
         final ICompilationUnit helper = javaProject.findType("example.Helper").getCompilationUnit();
         assertTrue(TestSearchUtils.findTestTypesAndMethods(
@@ -82,13 +85,18 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         final List<JavaTestItem> packages = TestSearchUtils.findTestPackagesAndTypes(
                 Arrays.asList(javaProject.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals(1, packages.size());
-        assertEquals(2, packages.get(0).getChildren().size());
+        assertEquals(3, packages.get(0).getChildren().size());
         assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
+        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
         assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
 
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(type.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals(2, methods.size());
+        final IType siblingType = javaProject.findType("example.SiblingTest");
+        final List<JavaTestItem> siblingMethods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(siblingType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, siblingMethods.size());
         final List<JavaTestItem> nestedChildren = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(nestedType.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals("Child", nestedChildren.get(0).getLabel());

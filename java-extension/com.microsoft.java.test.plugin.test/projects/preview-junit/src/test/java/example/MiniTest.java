@@ -11,3 +11,9 @@ public class MiniTest {
     void second() {
     }
 }
+
+class SiblingTest {
+    @Test
+    void siblingTest() {
+    }
+}

@@ -406,12 +406,12 @@ public class TestSearchUtils {
 
     private static List<JavaTestItem> findTestTypesAndMethods(ICompilationUnit unit, IProgressMonitor monitor)
             throws CoreException {
-        final IType primaryType = unit.findPrimaryType();
-        if (primaryType == null) {
+        final IType[] topLevelTypes = unit.getTypes();
+        if (topLevelTypes.length == 0) {
             return Collections.emptyList();
         }
 
-        final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
+        final CompilationUnit root = (CompilationUnit) parseToDiscoveryAst(unit, true /* fromCache */, monitor);
         if (root == null) {
             return Collections.emptyList();
         }
@@ -429,20 +429,22 @@ public class TestSearchUtils {
             return Collections.emptyList();
         }
 
-        final TypeDeclaration typeDeclaration = ASTNodeSearchUtil.getTypeDeclarationNode(primaryType, root);
-        if (typeDeclaration == null) {
-            throwIfUnsupportedPreview(unit, root);
-            return Collections.emptyList();
-        }
-
-        final ITypeBinding binding = typeDeclaration.resolveBinding();
-        if (binding == null) {
-            throwIfUnsupportedPreview(unit, root);
-            return Collections.emptyList();
-        }
-
         final JavaTestItem fakeRoot = new JavaTestItem();
-        findTestItemsInTypeBinding(binding, fakeRoot, searchers, monitor);
+        for (final IType type : topLevelTypes) {
+            final TypeDeclaration typeDeclaration = ASTNodeSearchUtil.getTypeDeclarationNode(type, root);
+            if (typeDeclaration == null) {
+                throwIfUnsupportedPreview(unit, root);
+                continue;
+            }
+
+            final ITypeBinding binding = typeDeclaration.resolveBinding();
+            if (binding == null) {
+                throwIfUnsupportedPreview(unit, root);
+                continue;
+            }
+
+            findTestItemsInTypeBinding(binding, fakeRoot, searchers, monitor);
+        }
         return fakeRoot.getChildren() == null ? Collections.emptyList() : fakeRoot.getChildren();
     }
 
@@ -732,10 +734,20 @@ public class TestSearchUtils {
 
     public static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
             final IProgressMonitor monitor) {
+        return parseToAst(unit, fromCache, monitor, false);
+    }
+
+    static ASTNode parseToDiscoveryAst(final ICompilationUnit unit, final boolean fromCache,
+            final IProgressMonitor monitor) {
+        return parseToAst(unit, fromCache, monitor, true);
+    }
+
+    private static ASTNode parseToAst(final ICompilationUnit unit, final boolean fromCache,
+            final IProgressMonitor monitor, final boolean forDiscovery) {
         if (fromCache) {
             final CompilationUnit astRoot = CoreASTProvider.getInstance().getAST(unit, CoreASTProvider.WAIT_YES,
                     monitor);
-            if (astRoot != null && !hasUnsupportedPreviewProblem(astRoot)) {
+            if (astRoot != null && (!forDiscovery || !hasUnsupportedPreviewProblem(astRoot))) {
                 return astRoot;
             }
         }
@@ -749,10 +761,9 @@ public class TestSearchUtils {
         parser.setFocalPosition(0);
         parser.setResolveBindings(true);
         parser.setIgnoreMethodBodies(true);
-        final Map<String, String> options = unit.getJavaProject().getOptions(true);
-        if (requiresPreviewFallback(unit.getJavaProject())) {
+        if (forDiscovery && requiresPreviewFallback(unit.getJavaProject())) {
             // Older Java preview modes cannot be parsed by the current JDT; only relax discovery's AST.
-            final Map<String, String> discoveryOptions = new HashMap<>(options);
+            final Map<String, String> discoveryOptions = new HashMap<>(unit.getJavaProject().getOptions(true));
             discoveryOptions.put(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.DISABLED);
             parser.setCompilerOptions(discoveryOptions);
         }
