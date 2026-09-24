@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -46,7 +47,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.manipulation.CoreASTProvider;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -173,8 +173,8 @@ public class TestSearchUtils {
                     } catch (CoreException e) {
                         JUnitPlugin.logException("failed to search tests in: " + root.getElementName(), e);
                     }
-                    if ((kind == TestKind.JUnit5 || kind == TestKind.JUnit6)
-                            && requiresPreviewFallback(javaProject) && root.getKind() == IPackageFragmentRoot.K_SOURCE) {
+                    if ((kind == TestKind.JUnit5 || kind == TestKind.JUnit6) &&
+                            requiresPreviewFallback(javaProject) && root.getKind() == IPackageFragmentRoot.K_SOURCE) {
                         for (final IJavaElement child : root.getChildren()) {
                             if (!(child instanceof IPackageFragment)) {
                                 continue;
@@ -521,8 +521,8 @@ public class TestSearchUtils {
             }
         }
 
-        final JavaTestItem nestedParent = classItem == null && requiresPreviewFallback(type.getJavaProject())
-                ? new JavaTestItem() : classItem;
+        final JavaTestItem nestedParent = classItem == null && requiresPreviewFallback(type.getJavaProject()) ?
+                new JavaTestItem() : classItem;
         for (final ITypeBinding childTypeBinding : typeBinding.getDeclaredTypes()) {
             findTestItemsInTypeBinding(childTypeBinding, nestedParent, searchers, monitor);
         }
@@ -760,8 +760,8 @@ public class TestSearchUtils {
     }
 
     private static boolean requiresPreviewFallback(IJavaProject project) {
-        return JavaCore.ENABLED.equals(project.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true))
-                && !JavaCore.latestSupportedJavaVersion().equals(project.getOption(JavaCore.COMPILER_SOURCE, true));
+        return JavaCore.ENABLED.equals(project.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true)) &&
+                !JavaCore.latestSupportedJavaVersion().equals(project.getOption(JavaCore.COMPILER_SOURCE, true));
     }
 
     private static void throwIfUnsupportedPreview(ICompilationUnit unit, CompilationUnit root) throws CoreException {
@@ -771,13 +771,13 @@ public class TestSearchUtils {
         for (final IProblem problem : root.getProblems()) {
             if (problem.isError()) {
                 throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
-                        "Cannot discover tests in " + unit.getElementName() + " with the project's preview settings: "
-                                + problem.getMessage()));
+                        "Cannot discover tests in " + unit.getElementName() + " with the project's preview settings: " +
+                                problem.getMessage()));
             }
         }
         throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
-                "Cannot discover tests in " + unit.getElementName()
-                        + ": JDT cannot resolve test bindings with the project's preview settings."));
+                "Cannot discover tests in " + unit.getElementName() +
+                        ": JDT cannot resolve test bindings with the project's preview settings."));
     }
 
     private static boolean hasUnsupportedPreviewProblem(CompilationUnit root) {
