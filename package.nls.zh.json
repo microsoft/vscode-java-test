@@ -1,4 +1,5 @@
 {
+    "configuration.java.test.additionalTestSourcePaths.description": "用于搜索 Java 测试的其他源路径。",
     "description": "运行并调试 JUnit 或 TestNG 测试用例",
     "contributes.commands.java.test.editor.run.title": "运行测试用例",
     "contributes.commands.java.test.editor.debug.title": "调试测试用例",
