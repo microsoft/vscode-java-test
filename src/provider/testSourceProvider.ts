@@ -31,6 +31,12 @@ class TestSourcePathProvider {
             .map((s: ITestSourcePath) => s.testSourcePath);
     }
 
+    public getAdditionalTestSourcePaths(workspaceFolder: WorkspaceFolder): string[] {
+        const configuredPaths: string[] = workspace.getConfiguration('java.test', workspaceFolder.uri)
+            .get<string[]>('additionalTestSourcePaths', []);
+        return resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths);
+    }
+
     public async isOnTestSourcePath(uri: Uri): Promise<boolean> {
         const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(uri);
         if (!workspaceFolder) {
@@ -61,8 +67,61 @@ class TestSourcePathProvider {
             testPaths = await getTestSourcePaths([workspaceFolder.uri.toString()]);
             this.testSourceMapping.set(workspaceFolder.uri, testPaths);
         }
-        return testPaths;
+
+        return mergeTestSourcePaths(testPaths, this.getAdditionalTestSourcePaths(workspaceFolder));
     }
+}
+
+export function mergeTestSourcePaths(testPaths: ITestSourcePath[], additionalPaths: string[]): ITestSourcePath[] {
+    const mergedPaths: ITestSourcePath[] = [];
+    const pathIndexes: Map<string, number> = new Map();
+    for (const testPath of testPaths) {
+        const key: string = getPathKey(testPath.testSourcePath);
+        const existingIndex: number | undefined = pathIndexes.get(key);
+        if (existingIndex !== undefined) {
+            mergedPaths[existingIndex].isStrict ||= testPath.isStrict;
+            continue;
+        }
+
+        pathIndexes.set(key, mergedPaths.length);
+        mergedPaths.push({ ...testPath });
+    }
+
+    for (const additionalPath of additionalPaths) {
+        const key: string = getPathKey(additionalPath);
+        const existingIndex: number | undefined = pathIndexes.get(key);
+        if (existingIndex !== undefined) {
+            mergedPaths[existingIndex].isStrict = true;
+            continue;
+        }
+
+        pathIndexes.set(key, mergedPaths.length);
+        mergedPaths.push({ testSourcePath: additionalPath, isStrict: true });
+    }
+    return mergedPaths;
+}
+
+export function resolveAdditionalTestSourcePaths(workspacePath: string, configuredPaths: string[]): string[] {
+    const paths: string[] = [];
+    const pathKeys: Set<string> = new Set();
+    for (const configuredPath of configuredPaths) {
+        if (!configuredPath.trim()) {
+            continue;
+        }
+
+        const resolvedPath: string = path.resolve(workspacePath, configuredPath.trim());
+        const key: string = getPathKey(resolvedPath);
+        if (!pathKeys.has(key)) {
+            paths.push(resolvedPath);
+            pathKeys.add(key);
+        }
+    }
+    return paths;
+}
+
+function getPathKey(sourcePath: string): string {
+    const normalizedPath: string = path.normalize(sourcePath);
+    return process.platform === 'win32' ? normalizedPath.toLowerCase() : normalizedPath;
 }
 
 async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
@@ -70,7 +129,7 @@ async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
         JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
 }
 
-interface ITestSourcePath {
+export interface ITestSourcePath {
     testSourcePath: string;
     /**
      * All the source paths from eclipse and invisible project will be treated as test source

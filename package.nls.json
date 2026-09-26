@@ -7,6 +7,7 @@
     "contributes.commands.java.test.goToTest.title": "Go to Test",
     "contributes.commands.java.test.goToTestSubject.title": "Go to Test Subject",
     "configuration.java.test.defaultConfig.description": "Specify the name of the default test configuration.",
+    "configuration.java.test.additionalTestSourcePaths.description": "Additional source paths to scan for Java tests.",
     "configuration.java.test.config.description": "Specify the configurations for running the tests.",
     "configuration.java.test.config.item.description": "Specify the configuration item for running the tests.",
     "configuration.java.test.config.name.description": "Specify the name of the configuration item.",

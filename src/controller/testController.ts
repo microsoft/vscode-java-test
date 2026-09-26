@@ -17,7 +17,7 @@ import { IJavaTestItem } from '../types';
 import { loadRunConfig } from '../utils/configUtils';
 import { resolveLaunchConfigurationForRunner } from '../utils/launchUtils';
 import { dataCache, getResolutionVersion, invalidateResolutionVersion, ITestItemData } from './testItemDataCache';
-import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, removeOutdatedTestItemsForDocument, resolvePath, synchronizeItemsRecursively, updateItemForDocumentWithDebounce } from './utils';
+import { createTestItem, findDirectTestChildrenForClass, findTestPackagesAndTypes, findTestTypesAndMethods, loadJavaProjects, removeOutdatedTestItemsForDocument, resolvePath, synchronizeItemsRecursively, updateItemForDocument, updateItemForDocumentWithDebounce } from './utils';
 import { JavaTestCoverageProvider } from '../provider/JavaTestCoverageProvider';
 import { testRunnerService } from './testRunnerService';
 import { IRunTestContext, TestRunner, TestFinishEvent, TestItemStatusChangeEvent, TestKind, TestLevel, TestResultState, TestIdParts } from '../java-test-runner.api';
@@ -206,6 +206,29 @@ async function startWatchingWorkspace(): Promise<void> {
                     }
                 }),
             );
+        }
+
+        const scannedFiles: Set<string> = new Set();
+        for (const sourcePath of testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder)) {
+            let javaFiles: Uri[];
+            try {
+                javaFiles = await workspace.findFiles(new RelativePattern(Uri.file(sourcePath), '**/*.java'));
+            } catch {
+                continue;
+            }
+
+            for (const javaFile of javaFiles) {
+                const fileKey: string = process.platform === 'win32' ? javaFile.fsPath.toLowerCase() : javaFile.fsPath;
+                if (scannedFiles.has(fileKey)) {
+                    continue;
+                }
+                scannedFiles.add(fileKey);
+
+                const testTypes: IJavaTestItem[] = await findTestTypesAndMethods(javaFile.toString());
+                if (testTypes.length > 0) {
+                    await updateItemForDocument(javaFile, testTypes);
+                }
+            }
         }
     }
 }
