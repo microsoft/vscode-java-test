@@ -126,6 +126,52 @@ limitation when these cannot be established. Broader App access, a related searc
 result, or an existing wiki citation does not authorize private-source retrieval
 or disclosure.
 
+## Workflow queue and setup
+
+The [source workflow](../workflows/team-memory-post-merge.yml) only dispatches
+requests to the [Java Pack coordinator](https://github.com/microsoft/vscode-java-pack/blob/main/.github/workflows/team-memory-coordinator.yml)
+on `main`, independently of the source branch. Preserve the source workflow path:
+the coordinator verifies it when validating the source run. Only normal pushes to
+this repository's default branch qualify; created, deleted, or forced pushes and
+workflow/head SHA mismatches are rejected. The source performs no checkout,
+artifact preparation, Azure login, agent invocation, or wiki write.
+
+The existing source variable `ISSUELENS_TEAM_MEMORY_ENABLED` remains the opt-in.
+Merging this migration while it is `true` switches subsequent eligible pushes to
+queue dispatch; configure the new caller credentials before merging. No new
+opt-in is introduced, and this migration does not change live settings.
+
+| Source configuration | Purpose |
+| --- | --- |
+| Variable `ISSUELENS_DISPATCH_APP_CLIENT_ID` | Client ID of a dedicated dispatch App installed on `microsoft/vscode-java-pack`, with Contents read and Actions write. |
+| Secret `ISSUELENS_DISPATCH_APP_PRIVATE_KEY` | Private key of that dedicated dispatch App. |
+
+These are proposed caller setup names, not existing IssueLens-required names.
+The workflow requests an installation token scoped only to `vscode-java-pack`
+and those two permissions. The source `GITHUB_TOKEN` cannot dispatch to another
+repository. Do not reuse the hosted IssueLens App key, Azure credentials, or the
+coordinator's separate source-read App credentials for dispatch.
+
+External maintenance also requires the Java Pack coordinator's separate secrets
+`ISSUELENS_SOURCE_READ_APP_CLIENT_ID` and `ISSUELENS_SOURCE_READ_APP_PRIVATE_KEY`.
+That App needs Actions, Contents, and Pull requests read on the allowlisted source
+repositories, including `microsoft/vscode-java-test`. The coordinator owns source
+validation, the shared wiki queue, invocation, and final receipt validation.
+A successful own-repository coordinator run does not verify external-source
+authentication; both caller dispatch and central source-read setup are rollout
+prerequisites.
+
+The dispatch action attempts one bounded POST with no automatic retry. Source
+success means only that GitHub accepted the dispatch, not that maintenance
+completed. Inspect the central run for the final result; after an ambiguous
+dispatch failure, inspect target runs before retrying.
+
+For manual merged-PR maintenance, use **Run workflow** on Java Pack's
+`team-memory-coordinator.yml` at `main`, set `source_repository` to
+`microsoft/vscode-java-test` and `pull_request_number` to the merged source PR,
+and leave the automatic run/attempt/before/after inputs empty. There is no local
+manual team-memory invocation path bypassing the queue. Issue triage is unchanged.
+
 ## Maintenance and provenance
 
 Only a separately authorized team-memory task may update knowledge. Preserve
@@ -135,12 +181,18 @@ fresh snapshot, and reassess the authorized update rather than forcing an
 overwrite or carrying prepared edits to another wiki. Do not fall back to a
 different destination.
 
-Team-memory workflow concurrency is per source repository and push, or per PR for
-manual dispatch, not a cross-repository wiki lock. Other Java tooling repositories
-may update the same wiki concurrently;
-retain the runtime's optimistic-concurrency checks and reassess conflicts. Never
-force a write, delete unrelated pages, perform destination-wide cleanup, or
-replace shared navigation, assets, human content, or other repositories' citations.
+Source workflow concurrency is per repository and push, not a cross-repository
+wiki lock. Java Pack's coordinator serializes queued maintenance for the shared
+wiki; retain the runtime's optimistic-concurrency checks and reassess conflicts
+with any writers outside that queue. Never force a write, delete unrelated pages,
+perform destination-wide cleanup, or replace shared navigation, assets, human
+content, or other repositories' citations.
+
+Automatic requests contain five string fields: `source_repository`,
+`source_run_id`, `source_run_attempt`, `push_before`, and `push_after`. The
+coordinator verifies the source run and its `push_after` head SHA. `push_before`
+requests reconciliation from an authorized ancestor; it is not attested
+original-event provenance or proof of the original push boundary.
 
 For merged-PR tasks, use the verified merge/default-branch evidence and full
 source SHA for the authorized PR in `microsoft/vscode-java-test`, not a PR in the
