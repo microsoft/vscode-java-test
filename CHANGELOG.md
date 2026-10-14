@@ -4,8 +4,15 @@ All notable changes to the "vscode-java-test" extension will be documented in th
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-* Fix JUnit test discovery for projects using preview features from an older Java release.
+## 0.47.0
+## What's Changed
+* feat - Show test program and debug output in Test Results without raw JUnit/TestNG protocol noise in https://github.com/microsoft/vscode-java-test/pull/1887
+* perf - Avoid repeated test discovery for resolved test items on subsequent runs in https://github.com/microsoft/vscode-java-test/pull/1916
+* fix - Remove redundant container rows and raw codicon markup from Test Results while preserving container failures and errors in https://github.com/microsoft/vscode-java-test/pull/1888
+* fix - Generate module opens for all selected JUnit test classes in https://github.com/microsoft/vscode-java-test/pull/1885
+* fix - Discover package-private, non-static JUnit 6 nested test classes in https://github.com/microsoft/vscode-java-test/pull/1910
+* fix - Discover JUnit tests in projects using preview settings from an older Java release in https://github.com/microsoft/vscode-java-test/pull/1938
+* fix - Align JUnit runtime dependencies with newer Java language tooling and update JaCoCo to 0.8.15 and ASM to 9.10.1 in https://github.com/microsoft/vscode-java-test/pull/1882
 
 ## 0.46.0
 ## What's Changed
