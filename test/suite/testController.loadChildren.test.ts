@@ -3,12 +3,14 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, TestController, TestItem, tests, Uri } from 'vscode';
-import { loadChildren } from '../../src/controller/testController';
+import { CancellationTokenSource, TestController, TestItem, tests, Uri, workspace } from 'vscode';
+import { discoverAdditionalTestTypes, loadChildren, refreshTestSourcePaths } from '../../src/controller/testController';
 import { dataCache, invalidateResolutionVersion } from '../../src/controller/testItemDataCache';
 import * as controllerUtils from '../../src/controller/utils';
+import * as testExplorerCommands from '../../src/commands/testExplorerCommands';
 import { TestKind, TestLevel } from '../../src/java-test-runner.api';
 import { IJavaTestItem } from '../../src/types';
+import { testSourceProvider } from '../../src/provider/testSourceProvider';
 import { setupTestEnv } from './utils';
 
 function createTestItem(testController: TestController, id: string, testLevel: TestLevel,
@@ -41,6 +43,89 @@ suite('testController - loadChildren', () => {
     teardown(() => {
         sinon.restore();
         testController.dispose();
+    });
+
+    test('refreshes test source paths after clearing cached discovery paths', async () => {
+        const clearPathsStub = sinon.stub(testSourceProvider, 'clear');
+        const refreshExplorerStub = sinon.stub(testExplorerCommands, 'refreshExplorer').resolves();
+        const watcherPatternsStub = sinon.stub(testSourceProvider, 'getTestSourcePattern').resolves([]);
+        const additionalPathsStub = sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').resolves([]);
+
+        await refreshTestSourcePaths();
+
+        sinon.assert.callOrder(clearPathsStub, refreshExplorerStub, watcherPatternsStub, additionalPathsStub);
+    });
+
+    test('serializes overlapping source-path refresh requests', async () => {
+        let releaseFirstRefresh!: () => void;
+        let signalFirstRefreshStarted!: () => void;
+        const firstRefreshStarted: Promise<void> = new Promise((resolve) => {
+            signalFirstRefreshStarted = resolve;
+        });
+        const firstRefreshGate: Promise<void> = new Promise((resolve) => {
+            releaseFirstRefresh = resolve;
+        });
+        const clearPathsStub = sinon.stub(testSourceProvider, 'clear');
+        const refreshExplorerStub = sinon.stub(testExplorerCommands, 'refreshExplorer').callsFake(async () => {
+            if (refreshExplorerStub.callCount === 1) {
+                signalFirstRefreshStarted();
+                await firstRefreshGate;
+            }
+        });
+        const watcherPatternsStub = sinon.stub(testSourceProvider, 'getTestSourcePattern').resolves([]);
+        const additionalPathsStub = sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').resolves([]);
+
+        const firstRefresh: Promise<void> = refreshTestSourcePaths();
+        await firstRefreshStarted;
+        const overlappingRefresh: Promise<void> = refreshTestSourcePaths();
+        releaseFirstRefresh();
+        await Promise.all([firstRefresh, overlappingRefresh]);
+
+        assert.strictEqual(clearPathsStub.callCount, 2);
+        assert.strictEqual(refreshExplorerStub.callCount, 2);
+        assert.strictEqual(watcherPatternsStub.callCount, 2);
+        assert.strictEqual(additionalPathsStub.callCount, 2);
+    });
+
+    test('scans Java files found under configured additional source roots', async () => {
+        const javaFile: Uri = Uri.file('/workspace/additional/src/MainSourceTest.java');
+        const refreshExplorerStub = sinon.stub(testExplorerCommands, 'refreshExplorer').resolves();
+        const watcherPatternsStub = sinon.stub(testSourceProvider, 'getTestSourcePattern').resolves([]);
+        const additionalPathsStub = sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths')
+            .resolves(['/workspace/additional/src']);
+        const findFilesStub = sinon.stub(workspace, 'findFiles').resolves([javaFile]);
+        const findTestsStub = sinon.stub(controllerUtils, 'findTestTypesAndMethods').resolves([]);
+
+        await refreshTestSourcePaths();
+
+        assert.ok(refreshExplorerStub.calledOnce);
+        assert.ok(watcherPatternsStub.calledOnce);
+        assert.ok(additionalPathsStub.calledOnce);
+        assert.ok(findFilesStub.calledOnce);
+        sinon.assert.calledOnceWithExactly(findTestsStub, javaFile.toString());
+    });
+
+    test('bounds concurrent additional-source discovery and preserves result order', async () => {
+        let activeRequests: number = 0;
+        let maximumActiveRequests: number = 0;
+        const findTestsStub = sinon.stub(controllerUtils, 'findTestTypesAndMethods').callsFake(async () => {
+            activeRequests++;
+            maximumActiveRequests = Math.max(maximumActiveRequests, activeRequests);
+            await new Promise<void>((resolve) => setTimeout(resolve, 5));
+            activeRequests--;
+            return [];
+        });
+        const javaFiles: Uri[] = [];
+        for (let index: number = 0; index < 10; index++) {
+            javaFiles.push(Uri.file(`/workspace/src/Test${index}.java`));
+        }
+
+        const discoveries = await discoverAdditionalTestTypes(javaFiles);
+
+        assert.strictEqual(findTestsStub.callCount, javaFiles.length);
+        assert.strictEqual(maximumActiveRequests, 4);
+        assert.deepStrictEqual(discoveries.map((discovery) => discovery.uri.toString()),
+            javaFiles.map((javaFile: Uri) => javaFile.toString()));
     });
 
     test('should reuse resolved project children until a forced refresh', async () => {
