@@ -19,6 +19,9 @@ extends:
     pool:
       name: VSEng-MicroBuildVSStable
       os: windows
+    sdl:
+      sourceAnalysisVariablesToReset:
+        - npm_config_registry
     stages:
       - stage: Build
         jobs:
