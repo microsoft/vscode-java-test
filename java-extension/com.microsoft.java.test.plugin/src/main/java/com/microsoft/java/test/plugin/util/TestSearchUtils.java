@@ -63,10 +63,12 @@ import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.handlers.DocumentLifeCycleHandler;
 import org.eclipse.lsp4j.Location;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -144,7 +146,7 @@ public class TestSearchUtils {
      * Package B
      *    ├── ...
      *
-     * @param arguments argument list which contains the JDT handler ID of a Java project
+     * @param arguments argument list which contains the JDT handler ID and optional selected source-root paths
      * @param monitor monitor
      * @throws CoreException
      */
@@ -159,36 +161,40 @@ public class TestSearchUtils {
         final IJavaProject javaProject = (IJavaProject) element;
         final Map<String, JavaTestItem> testItemMapping = new HashMap<>();
         final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(javaProject);
+        final Set<IPackageFragmentRoot> rootsToSearch = new LinkedHashSet<>();
+        for (final IClasspathEntry entry : ProjectTestUtils.getTestEntries(javaProject)) {
+            rootsToSearch.addAll(Arrays.asList(javaProject.findPackageFragmentRoots(entry)));
+        }
+        rootsToSearch.addAll(getAdditionalSourceRoots(javaProject, arguments, monitor));
         for (final TestKind kind : testKinds) {
             if (monitor != null && monitor.isCanceled()) {
                 return Collections.emptyList();
             }
             final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
             final Set<IType> testTypes = new HashSet<>();
-            final List<IClasspathEntry> testEntries = ProjectTestUtils.getTestEntries(javaProject);
-            for (final IClasspathEntry entry : testEntries) {
-                final IPackageFragmentRoot[] packageRoots = javaProject.findPackageFragmentRoots(entry);
-                for (final IPackageFragmentRoot root : packageRoots) {
-                    try {
-                        testTypes.addAll(searcher.findTestItemsInContainer(root, monitor));
-                    } catch (CoreException e) {
-                        JUnitPlugin.logException("failed to search tests in: " + root.getElementName(), e);
-                    }
-                    if ((kind == TestKind.JUnit5 || kind == TestKind.JUnit6) &&
-                            requiresPreviewFallback(javaProject) && root.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                        for (final IJavaElement child : root.getChildren()) {
-                            if (!(child instanceof IPackageFragment)) {
-                                continue;
+            for (final IPackageFragmentRoot root : rootsToSearch) {
+                if (monitor != null && monitor.isCanceled()) {
+                    return Collections.emptyList();
+                }
+                try {
+                    testTypes.addAll(searcher.findTestItemsInContainer(root, monitor));
+                } catch (CoreException e) {
+                    JUnitPlugin.logException("failed to search tests in: " + root.getElementName(), e);
+                }
+                if ((kind == TestKind.JUnit5 || kind == TestKind.JUnit6) &&
+                        requiresPreviewFallback(javaProject) && root.getKind() == IPackageFragmentRoot.K_SOURCE) {
+                    for (final IJavaElement child : root.getChildren()) {
+                        if (!(child instanceof IPackageFragment)) {
+                            continue;
+                        }
+                        for (final ICompilationUnit unit : ((IPackageFragment) child).getCompilationUnits()) {
+                            if (monitor != null && monitor.isCanceled()) {
+                                return Collections.emptyList();
                             }
-                            for (final ICompilationUnit unit : ((IPackageFragment) child).getCompilationUnits()) {
-                                if (monitor != null && monitor.isCanceled()) {
-                                    return Collections.emptyList();
-                                }
-                                for (final JavaTestItem item : findTestTypesAndMethods(unit, monitor)) {
-                                    final IJavaElement testType = JavaCore.create(item.getJdtHandler());
-                                    if (testType instanceof IType && item.getTestKind() == kind) {
-                                        testTypes.add((IType) testType);
-                                    }
+                            for (final JavaTestItem item : findTestTypesAndMethods(unit, monitor)) {
+                                final IJavaElement testType = JavaCore.create(item.getJdtHandler());
+                                if (testType instanceof IType && item.getTestKind() == kind) {
+                                    testTypes.add((IType) testType);
                                 }
                             }
                         }
@@ -267,6 +273,24 @@ public class TestSearchUtils {
         }
 
         return new LinkedList<>(mergedPackages.values());
+    }
+
+    private static Set<IPackageFragmentRoot> getAdditionalSourceRoots(IJavaProject javaProject,
+            List<Object> arguments, IProgressMonitor monitor) throws JavaModelException {
+        if (arguments == null || arguments.size() < 2 || !(arguments.get(1) instanceof List<?>)) {
+            return Collections.emptySet();
+        }
+
+        final Set<String> requestedPaths = new HashSet<>();
+        for (final Object value : (List<?>) arguments.get(1)) {
+            if (monitor != null && monitor.isCanceled()) {
+                return Collections.emptySet();
+            }
+            if (value instanceof String) {
+                requestedPaths.add((String) value);
+            }
+        }
+        return ProjectTestUtils.getSourceRoots(javaProject, requestedPaths, monitor);
     }
 
     /**

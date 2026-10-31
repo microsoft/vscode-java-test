@@ -16,7 +16,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -81,7 +84,27 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
         assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
         assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
+        assertTrue(packages.get(0).getChildren().stream()
+                .noneMatch(item -> "AdditionalMainSourceTest".equals(item.getLabel())));
 
+        final String mainSourcePath = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"))
+                .getResource().getLocation().toOSString();
+        final List<JavaTestItem> packagesWithAdditionalSource = TestSearchUtils.findTestPackagesAndTypes(
+                Arrays.<Object>asList(javaProject.getHandleIdentifier(), Collections.singletonList(mainSourcePath)),
+                new NullProgressMonitor());
+        assertTrue(packagesWithAdditionalSource.get(0).getChildren().stream()
+                .anyMatch(item -> "AdditionalMainSourceTest".equals(item.getLabel())));
+        assertTrue(packagesWithAdditionalSource.get(0).getChildren().stream()
+                .anyMatch(item -> "MiniTest".equals(item.getLabel())));
+
+        final String additionalTestUri = javaProject.findType("example.AdditionalMainSource")
+                .getResource().getLocationURI().toString();
+        final Object defaultNavigation = TestNavigationUtils.findTestOrTarget(
+                Arrays.asList(additionalTestUri, true), new NullProgressMonitor());
+        assertTrue(getNavigationItems(defaultNavigation).isEmpty());
+        final Object navigationWithAdditionalSource = TestNavigationUtils.findTestOrTarget(Arrays.<Object>asList(
+                additionalTestUri, true, Collections.singletonList(mainSourcePath)), new NullProgressMonitor());
+        assertEquals(1, getNavigationItems(navigationWithAdditionalSource).size());
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(type.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals(2, methods.size());
@@ -93,5 +116,11 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 Arrays.asList(nestedType.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals("Child", nestedChildren.get(0).getLabel());
         assertEquals(JavaCore.ENABLED, javaProject.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true));
+    }
+
+    private static Collection<?> getNavigationItems(Object navigationResult) throws Exception {
+        final Field itemsField = navigationResult.getClass().getField("items");
+        itemsField.setAccessible(true);
+        return (Collection<?>) itemsField.get(navigationResult);
     }
 }

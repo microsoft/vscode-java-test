@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import * as fse from 'fs-extra';
-import { glob, hasMagic } from 'glob';
+import * as minimatch from 'minimatch';
+import { hasMagic } from 'glob';
 import { OutputChannel, RelativePattern, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
@@ -40,7 +40,11 @@ class TestSourcePathProvider {
         const workspaceKey: string = workspaceFolder.uri.toString();
         let resolvedPaths: Promise<string[]> | undefined = this.additionalTestSourceMapping.get(workspaceKey);
         if (!resolvedPaths) {
-            resolvedPaths = resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths);
+            resolvedPaths = configuredPaths.length > 0
+                ? getSourcePaths([workspaceFolder.uri.toString()]).then((sourcePaths: ITestSourcePath[]) =>
+                    resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths,
+                        sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)))
+                : Promise.resolve([]);
             this.additionalTestSourceMapping.set(workspaceKey, resolvedPaths);
         }
         return resolvedPaths;
@@ -65,12 +69,6 @@ class TestSourcePathProvider {
     public clear(): void {
         this.testSourceMapping.clear();
         this.additionalTestSourceMapping.clear();
-    }
-
-    public delete(workspaceUri: Uri): boolean {
-        const workspaceKey: string = workspaceUri.toString();
-        this.additionalTestSourceMapping.delete(workspaceKey);
-        return this.testSourceMapping.delete(workspaceKey);
     }
 
     public dispose(): void {
@@ -122,9 +120,15 @@ export function mergeTestSourcePaths(testPaths: ITestSourcePath[], additionalPat
     return mergedPaths;
 }
 
-export async function resolveAdditionalTestSourcePaths(workspacePath: string, configuredPaths: string[]): Promise<string[]> {
+export async function resolveAdditionalTestSourcePaths(
+    workspacePath: string, configuredPaths: string[], importedSourcePaths: string[]): Promise<string[]> {
     const paths: string[] = [];
     const pathKeys: Set<string> = new Set();
+    const sourcePathByKey: Map<string, string> = new Map();
+    for (const sourcePath of importedSourcePaths) {
+        sourcePathByKey.set(getPathKey(sourcePath), sourcePath);
+    }
+
     for (const configuredPath of configuredPaths) {
         if (!configuredPath.trim()) {
             continue;
@@ -133,34 +137,37 @@ export async function resolveAdditionalTestSourcePaths(workspacePath: string, co
         const normalizedPattern: string = configuredPath.trim().replace(/\\/g, '/');
         const resolvedPattern: string = path.resolve(workspacePath, normalizedPattern);
         if (!hasMagic(normalizedPattern)) {
-            try {
-                const stats: fse.Stats = await fse.stat(resolvedPattern);
-                if (stats.isDirectory()) {
-                    addUniquePath(paths, pathKeys, resolvedPattern);
-                }
-            } catch {
-                // Ignore missing or inaccessible literal paths.
+            const sourcePath: string | undefined = sourcePathByKey.get(getPathKey(resolvedPattern));
+            if (sourcePath) {
+                addUniquePath(paths, pathKeys, sourcePath);
             }
             continue;
         }
 
         try {
-            const matches: { isDirectory(): boolean; fullpath(): string }[] =
-                await glob(resolvedPattern.replace(/\\/g, '/'), { withFileTypes: true });
-            for (const match of matches) {
-                if (match.isDirectory()) {
-                    addUniquePath(paths, pathKeys, match.fullpath());
+            const matcher: minimatch.Minimatch = new minimatch.Minimatch(
+                path.isAbsolute(normalizedPattern)
+                    ? normalizedPattern
+                    : normalizedPattern.replace(/^\.\//, ''),
+                { nocase: process.platform === 'win32' });
+            for (const sourcePath of sourcePathByKey.values()) {
+                const matchPath: string = path.isAbsolute(normalizedPattern)
+                    ? sourcePath.replace(/\\/g, '/')
+                    : path.relative(workspacePath, sourcePath).replace(/\\/g, '/');
+                if (matchPath !== '..' && !matchPath.startsWith('../') && !path.isAbsolute(matchPath) &&
+                        matcher.match(matchPath)) {
+                    addUniquePath(paths, pathKeys, sourcePath);
                 }
             }
         } catch (error) {
             const message: string = error instanceof Error ? error.message : String(error);
-            logAdditionalTestSourceMessage(`Failed to expand additional test source pattern "${configuredPath}": ${message}`);
+            logAdditionalTestSourceMessage(`Failed to match additional test source pattern "${configuredPath}": ${message}`);
         }
     }
 
     if (paths.length > LARGE_ADDITIONAL_TEST_SOURCE_COUNT) {
         logAdditionalTestSourceMessage(
-            `Additional test source patterns matched ${paths.length} directories. Broad patterns may slow discovery.`);
+            `Additional test source patterns matched ${paths.length} imported source roots. Broad patterns may slow discovery.`);
     }
     return paths;
 }
@@ -186,6 +193,11 @@ function getPathKey(sourcePath: string): string {
 async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
     return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
         JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
+}
+
+async function getSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
+    return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
+        JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, uri) || [];
 }
 
 export interface ITestSourcePath {
