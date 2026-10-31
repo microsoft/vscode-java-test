@@ -47,6 +47,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.manipulation.CoreASTProvider;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -360,6 +361,8 @@ public class TestSearchUtils {
                     }
                 }
             }
+
+            addInheritedTestMethodsForKinds(binding, type, testKinds, result);
         }
 
         return result;
@@ -496,6 +499,8 @@ public class TestSearchUtils {
             }
         }
 
+        addInheritedTestMethods(typeBinding, type, searchers, testMethods);
+
         JavaTestItem classItem = null;
         if (testMethods.size() > 0) {
             classItem = new JavaTestItemBuilder().setJavaElement(type)
@@ -541,6 +546,122 @@ public class TestSearchUtils {
         if (classItem != null && parentItem != null) {
             parentItem.addChild(classItem);
         }
+    }
+
+    /**
+     * Collect test methods inherited from superclasses and append them to {@code accumulator}.
+     * Test frameworks (JUnit, TestNG) execute inherited {@code @Test} methods when running a
+     * child class, so discovery must list them under the child. Override handling follows each
+     * framework's behavior; non-inheritable superclass methods are skipped.
+     */
+    private static void addInheritedTestMethodsForKinds(ITypeBinding classBinding, IType childType,
+            List<TestKind> testKinds, List<JavaTestItem> accumulator) throws JavaModelException {
+        final List<TestFrameworkSearcher> searchers = new LinkedList<>();
+        for (final TestKind kind : testKinds) {
+            final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
+            if (searcher != null) {
+                searchers.add(searcher);
+            }
+        }
+        addInheritedTestMethods(classBinding, childType, searchers, accumulator);
+    }
+
+    private static void addInheritedTestMethods(ITypeBinding classBinding, IType childType,
+            List<TestFrameworkSearcher> searchers, List<JavaTestItem> accumulator) throws JavaModelException {
+        if (classBinding == null || childType == null || searchers.isEmpty()) {
+            return;
+        }
+
+        final List<IMethodBinding> moreSpecificMethods = new LinkedList<>();
+        for (final IMethodBinding declared : classBinding.getDeclaredMethods()) {
+            moreSpecificMethods.add(declared);
+        }
+
+        final Set<String> inheritedTestSignatures = new HashSet<>();
+        ITypeBinding superClass = classBinding.getSuperclass();
+        while (superClass != null && !"java.lang.Object".equals(superClass.getBinaryName())) {
+            for (final IMethodBinding methodBinding : superClass.getDeclaredMethods()) {
+                if (!isInheritedBy(methodBinding, classBinding)) {
+                    continue;
+                }
+                final String key = getMethodSignatureKey(methodBinding);
+                if (inheritedTestSignatures.contains(key)) {
+                    continue;
+                }
+                IMethodBinding overridingMethod = null;
+                for (final IMethodBinding moreSpecificMethod : moreSpecificMethods) {
+                    if (moreSpecificMethod.overrides(methodBinding)) {
+                        overridingMethod = moreSpecificMethod;
+                        break;
+                    }
+                }
+                for (final TestFrameworkSearcher searcher : searchers) {
+                    if (!searcher.isTestMethod(methodBinding)) {
+                        continue;
+                    }
+                    if (overridingMethod != null &&
+                            (searcher.getTestKind() != TestKind.JUnit || searcher.isTestMethod(overridingMethod))) {
+                        break;
+                    }
+                    final IJavaElement element = methodBinding.getJavaElement();
+                    if (element == null) {
+                        break;
+                    }
+                    final JavaTestItem methodItem = new JavaTestItemBuilder().setJavaElement(element)
+                            .setLevel(TestLevel.METHOD)
+                            .setKind(searcher.getTestKind())
+                            .build();
+                    rebaseMethodItemToChild(methodItem, childType);
+                    accumulator.add(methodItem);
+                    inheritedTestSignatures.add(key);
+                    break;
+                }
+            }
+            Collections.addAll(moreSpecificMethods, superClass.getDeclaredMethods());
+            superClass = superClass.getSuperclass();
+        }
+    }
+
+    private static boolean isInheritedBy(IMethodBinding methodBinding, ITypeBinding childBinding) {
+        final int modifiers = methodBinding.getModifiers();
+        if (Modifier.isPrivate(modifiers)) {
+            return false;
+        }
+        if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)) {
+            return true;
+        }
+        return methodBinding.getDeclaringClass().getPackage() != null &&
+                childBinding.getPackage() != null &&
+                methodBinding.getDeclaringClass().getPackage().getName().equals(childBinding.getPackage().getName());
+    }
+
+    private static String getMethodSignatureKey(IMethodBinding methodBinding) {
+        final StringBuilder key = new StringBuilder(methodBinding.getName()).append('(');
+        for (final ITypeBinding param : methodBinding.getParameterTypes()) {
+            final ITypeBinding erasure = param.getErasure() != null ? param.getErasure() : param;
+            key.append(erasure.getQualifiedName()).append(',');
+        }
+        return key.append(')').toString();
+    }
+
+    /**
+     * Rewrite an inherited method item so its full name and id are anchored at the child class
+     * (e.g. {@code Child#test}) instead of the declaring parent class. The display label, source
+     * range, and JDT handler still point at the parent declaration.
+     */
+    private static void rebaseMethodItemToChild(JavaTestItem methodItem, IType childType)
+            throws JavaModelException {
+        final String fullName = methodItem.getFullName();
+        final int separator = fullName != null ? fullName.indexOf('#') : -1;
+        if (separator < 0) {
+            return;
+        }
+        final String childFullName = childType.getFullyQualifiedName() + fullName.substring(separator);
+        methodItem.setFullName(childFullName);
+        final String childProjectName = childType.getJavaProject().getProject().getName();
+        methodItem.setProjectName(childProjectName);
+        methodItem.setId(childProjectName + "@" + childFullName);
+        methodItem.setExecutionClassName(childType.getFullyQualifiedName());
     }
 
     /**

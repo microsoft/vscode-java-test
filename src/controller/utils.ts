@@ -143,6 +143,7 @@ function updateTestItem(testItem: TestItem, metaInfo: IJavaTestItem): void {
     testItem.label = metaInfo.label;
     dataCache.set(testItem, {
         jdtHandler: metaInfo.jdtHandler,
+        executionClassName: metaInfo.executionClassName,
         fullName: metaInfo.fullName,
         projectName: metaInfo.projectName,
         testLevel: metaInfo.testLevel,
@@ -173,6 +174,7 @@ export function createTestItem(metaInfo: IJavaTestItem, parent?: TestItem): Test
     item.tags = [runnableTag];
     dataCache.set(item, {
         jdtHandler: metaInfo.jdtHandler,
+        executionClassName: metaInfo.executionClassName,
         fullName: metaInfo.fullName,
         projectName: metaInfo.projectName,
         testLevel: metaInfo.testLevel,
