@@ -442,7 +442,9 @@ suite('testController - loadChildren', () => {
         });
         const cancellation: CancellationTokenSource = new CancellationTokenSource();
         sinon.stub(workspace, 'getWorkspaceFolder').returns(workspaceFolder);
-        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').callsFake(() => {
+        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').callsFake((folder, token) => {
+            assert.strictEqual(folder, workspaceFolder);
+            assert.strictEqual(token, cancellation.token);
             signalSourcePathsRequested();
             return sourcePaths;
         });

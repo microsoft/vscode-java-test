@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as minimatch from 'minimatch';
 import { hasMagic } from 'glob';
-import { OutputChannel, RelativePattern, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { CancellationToken, OutputChannel, RelativePattern, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 
@@ -34,17 +34,29 @@ class TestSourcePathProvider {
             .map((s: ITestSourcePath) => s.testSourcePath);
     }
 
-    public getAdditionalTestSourcePaths(workspaceFolder: WorkspaceFolder): Promise<string[]> {
+    public getAdditionalTestSourcePaths(workspaceFolder: WorkspaceFolder, token?: CancellationToken): Promise<string[]> {
         const configuredPaths: string[] = workspace.getConfiguration('java.test', workspaceFolder.uri)
             .get<string[]>('additionalTestSourcePaths', []);
+        if (configuredPaths.length === 0) {
+            return Promise.resolve([]);
+        }
+        if (token) {
+            if (token.isCancellationRequested) {
+                return Promise.resolve([]);
+            }
+            return getSourcePaths([workspaceFolder.uri.toString()], token).then((sourcePaths: ITestSourcePath[]) =>
+                token.isCancellationRequested
+                    ? []
+                    : resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths,
+                        sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)));
+        }
+
         const workspaceKey: string = workspaceFolder.uri.toString();
         let resolvedPaths: Promise<string[]> | undefined = this.additionalTestSourceMapping.get(workspaceKey);
         if (!resolvedPaths) {
-            resolvedPaths = configuredPaths.length > 0
-                ? getSourcePaths([workspaceFolder.uri.toString()]).then((sourcePaths: ITestSourcePath[]) =>
-                    resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths,
-                        sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)))
-                : Promise.resolve([]);
+            resolvedPaths = getSourcePaths([workspaceFolder.uri.toString()]).then((sourcePaths: ITestSourcePath[]) =>
+                resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths,
+                    sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)));
             this.additionalTestSourceMapping.set(workspaceKey, resolvedPaths);
             resolvedPaths.catch(() => {
                 if (this.additionalTestSourceMapping.get(workspaceKey) === resolvedPaths) {
@@ -205,7 +217,11 @@ async function getTestSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
         JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, uri) || [];
 }
 
-async function getSourcePaths(uri: string[]): Promise<ITestSourcePath[]> {
+async function getSourcePaths(uri: string[], token?: CancellationToken): Promise<ITestSourcePath[]> {
+    if (token) {
+        return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
+            JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, uri, token) || [];
+    }
     return await executeJavaLanguageServerCommand<ITestSourcePath[]>(
         JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, uri) || [];
 }

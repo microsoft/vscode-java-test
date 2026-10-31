@@ -134,7 +134,7 @@ async function resolveTestItemChildren(item: TestItem, data: ITestItemData, reso
         let additionalSourcePaths: string[] = [];
         if (workspaceFolder) {
             const sourcePathsPromise: Promise<string[]> =
-                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder);
+                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, token);
             if (token) {
                 const resolvedSourcePaths: string[] | undefined =
                     await awaitWithCancellation(sourcePathsPromise, token);

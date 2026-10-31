@@ -6,7 +6,7 @@ import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { RelativePattern, Uri, WorkspaceConfiguration, WorkspaceFolder, workspace } from 'vscode';
+import { CancellationTokenSource, RelativePattern, Uri, WorkspaceConfiguration, WorkspaceFolder, workspace } from 'vscode';
 import * as commandUtils from '../../src/utils/commandUtils';
 import { JavaTestRunnerDelegateCommands } from '../../src/constants';
 import { ITestSourcePath, mergeTestSourcePaths, resolveAdditionalTestSourcePaths, testSourceProvider } from '../../src/provider/testSourceProvider';
@@ -163,6 +163,36 @@ suite('testSourceProvider', () => {
             assert.deepStrictEqual(await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder), [sourceRoot]);
             assert.strictEqual(commandStub.callCount, 2);
         } finally {
+            testSourceProvider.clear();
+            sinon.restore();
+            fse.removeSync(workspacePath);
+        }
+    });
+
+    test('passes cancellation tokens to uncached Java source-root lookups', async () => {
+        const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
+        const sourceRoot: string = path.join(workspacePath, 'src', 'main', 'java');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file(workspacePath),
+            name: 'additional-source-paths-test',
+            index: 0,
+        };
+        const configuration: WorkspaceConfiguration = {
+            get: () => ['src/main/java'],
+        } as unknown as WorkspaceConfiguration;
+        const cancellation: CancellationTokenSource = new CancellationTokenSource();
+
+        testSourceProvider.clear();
+        sinon.stub(workspace, 'getConfiguration').returns(configuration);
+        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand')
+            .resolves([{ testSourcePath: sourceRoot, isStrict: false }]);
+        try {
+            assert.deepStrictEqual(
+                await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, cancellation.token), [sourceRoot]);
+            sinon.assert.calledOnceWithExactly(commandStub,
+                JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, [workspaceFolder.uri.toString()], cancellation.token);
+        } finally {
+            cancellation.dispose();
             testSourceProvider.clear();
             sinon.restore();
             fse.removeSync(workspacePath);
