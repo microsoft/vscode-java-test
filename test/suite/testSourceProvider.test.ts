@@ -140,6 +140,64 @@ suite('testSourceProvider', () => {
         }
     });
 
+    test('retries additional source-root lookup after a command failure', async () => {
+        const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
+        const sourceRoot: string = path.join(workspacePath, 'src', 'main', 'java');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file(workspacePath),
+            name: 'additional-source-paths-test',
+            index: 0,
+        };
+        const configuration: WorkspaceConfiguration = {
+            get: () => ['src/main/java'],
+        } as unknown as WorkspaceConfiguration;
+
+        testSourceProvider.clear();
+        sinon.stub(workspace, 'getConfiguration').returns(configuration);
+        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand');
+        commandStub.onFirstCall().rejects(new Error('Temporary Java Language Server failure'));
+        commandStub.onSecondCall().resolves([{ testSourcePath: sourceRoot, isStrict: false }]);
+        try {
+            await assert.rejects(testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder),
+                /Temporary Java Language Server failure/);
+            assert.deepStrictEqual(await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder), [sourceRoot]);
+            assert.strictEqual(commandStub.callCount, 2);
+        } finally {
+            testSourceProvider.clear();
+            sinon.restore();
+            fse.removeSync(workspacePath);
+        }
+    });
+
+    test('deduplicates concurrent test source path lookups', async () => {
+        const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
+        const sourceRoot: string = path.join(workspacePath, 'src', 'test', 'java');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file(workspacePath),
+            name: 'test-source-paths-test',
+            index: 0,
+        };
+
+        testSourceProvider.clear();
+        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').resolves([]);
+        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand')
+            .resolves([{ testSourcePath: sourceRoot, isStrict: true }]);
+        try {
+            const results: string[][] = await Promise.all([
+                testSourceProvider.getTestSourcePath(workspaceFolder),
+                testSourceProvider.getTestSourcePath(workspaceFolder),
+            ]);
+
+            assert.deepStrictEqual(results, [[sourceRoot], [sourceRoot]]);
+            sinon.assert.calledOnceWithExactly(commandStub,
+                JavaTestRunnerDelegateCommands.GET_TEST_SOURCE_PATH, [workspaceFolder.uri.toString()]);
+        } finally {
+            testSourceProvider.clear();
+            sinon.restore();
+            fse.removeSync(workspacePath);
+        }
+    });
+
     test('recomputes additional source roots after cached paths are cleared', async () => {
         const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
         const sourceRoots: string[] = [

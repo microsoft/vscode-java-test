@@ -9,7 +9,7 @@ import { JavaTestRunnerDelegateCommands } from '../constants';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
 
 class TestSourcePathProvider {
-    private testSourceMapping: Map<string, ITestSourcePath[]> = new Map();
+    private testSourceMapping: Map<string, Promise<ITestSourcePath[]>> = new Map();
     private additionalTestSourceMapping: Map<string, Promise<string[]>> = new Map();
 
     public async getTestSourcePattern(workspaceFolder: WorkspaceFolder, containsGeneral: boolean = true): Promise<RelativePattern[]> {
@@ -46,6 +46,11 @@ class TestSourcePathProvider {
                         sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)))
                 : Promise.resolve([]);
             this.additionalTestSourceMapping.set(workspaceKey, resolvedPaths);
+            resolvedPaths.catch(() => {
+                if (this.additionalTestSourceMapping.get(workspaceKey) === resolvedPaths) {
+                    this.additionalTestSourceMapping.delete(workspaceKey);
+                }
+            });
         }
         return resolvedPaths;
     }
@@ -78,13 +83,18 @@ class TestSourcePathProvider {
 
     private async getTestPaths(workspaceFolder: WorkspaceFolder): Promise<ITestSourcePath[]> {
         const workspaceKey: string = workspaceFolder.uri.toString();
-        let testPaths: ITestSourcePath[] | undefined = this.testSourceMapping.get(workspaceKey);
+        let testPaths: Promise<ITestSourcePath[]> | undefined = this.testSourceMapping.get(workspaceKey);
         if (!testPaths) {
-            testPaths = await getTestSourcePaths([workspaceFolder.uri.toString()]);
+            testPaths = getTestSourcePaths([workspaceFolder.uri.toString()]);
             this.testSourceMapping.set(workspaceKey, testPaths);
+            testPaths.catch(() => {
+                if (this.testSourceMapping.get(workspaceKey) === testPaths) {
+                    this.testSourceMapping.delete(workspaceKey);
+                }
+            });
         }
 
-        return mergeTestSourcePaths(testPaths, await this.getAdditionalTestSourcePaths(workspaceFolder));
+        return mergeTestSourcePaths(await testPaths, await this.getAdditionalTestSourcePaths(workspaceFolder));
     }
 }
 

@@ -131,9 +131,21 @@ async function resolveTestItemChildren(item: TestItem, data: ITestItemData, reso
         const workspaceFolder: WorkspaceFolder | undefined = item.uri
             ? workspace.getWorkspaceFolder(item.uri)
             : undefined;
-        const additionalSourcePaths: string[] = workspaceFolder
-            ? await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder)
-            : [];
+        let additionalSourcePaths: string[] = [];
+        if (workspaceFolder) {
+            const sourcePathsPromise: Promise<string[]> =
+                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder);
+            if (token) {
+                const resolvedSourcePaths: string[] | undefined =
+                    await awaitWithCancellation(sourcePathsPromise, token);
+                if (token.isCancellationRequested) {
+                    return;
+                }
+                additionalSourcePaths = resolvedSourcePaths ?? [];
+            } else {
+                additionalSourcePaths = await sourcePathsPromise;
+            }
+        }
         if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
             return;
         }
@@ -161,6 +173,25 @@ async function resolveTestItemChildren(item: TestItem, data: ITestItemData, reso
         return;
     }
     item.canResolveChildren = false;
+}
+
+function awaitWithCancellation<T>(promise: Promise<T>, token?: CancellationToken): Promise<T | undefined> {
+    if (!token) {
+        return promise;
+    }
+    if (token.isCancellationRequested) {
+        return Promise.resolve(undefined);
+    }
+
+    let cancellation: Disposable | undefined;
+    const cancellationPromise: Promise<undefined> = new Promise((resolve: (value: undefined) => void) => {
+        cancellation = token.onCancellationRequested(() => resolve(undefined));
+    });
+    if (token.isCancellationRequested) {
+        cancellation?.dispose();
+        return Promise.resolve(undefined);
+    }
+    return Promise.race([promise, cancellationPromise]).finally(() => cancellation?.dispose());
 }
 
 function invalidateTestItemResolution(item: TestItem): void {

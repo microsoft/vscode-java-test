@@ -451,8 +451,8 @@ suite('testController - loadChildren', () => {
         const resolution: Promise<void> = loadChildren(project, cancellation.token);
         await sourcePathsRequested;
         cancellation.cancel();
-        releaseSourcePaths(['/workspace/module/src/main/java']);
         await resolution;
+        releaseSourcePaths(['/workspace/module/src/main/java']);
 
         assert.ok(findPackagesStub.notCalled);
         assert.strictEqual(project.canResolveChildren, true);
