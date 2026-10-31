@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
@@ -25,11 +26,17 @@ import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager;
 
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -64,6 +71,78 @@ public final class ProjectTestUtils {
             }
         }
         return resultList;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<TestSourcePath> listSourcePaths(List<Object> arguments, IProgressMonitor monitor)
+            throws JavaModelException {
+        if (arguments == null || arguments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final ArrayList<String> uriArray = (ArrayList<String>) arguments.get(0);
+        final Map<String, TestSourcePath> sourcePaths = new LinkedHashMap<>();
+        for (final String uri : uriArray) {
+            if (monitor != null && monitor.isCanceled()) {
+                return Collections.emptyList();
+            }
+            for (final IJavaProject project : parseProjects(uri)) {
+                for (final IPackageFragmentRoot root : getSourceRoots(project)) {
+                    if (monitor != null && monitor.isCanceled()) {
+                        return Collections.emptyList();
+                    }
+                    if (root.getResource() != null && root.getResource().getLocation() != null) {
+                        final String path = root.getResource().getLocation().toOSString();
+                        sourcePaths.putIfAbsent(path, new TestSourcePath(path, false));
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(sourcePaths.values());
+    }
+
+    public static List<IPackageFragmentRoot> getSourceRoots(IJavaProject project) throws JavaModelException {
+        if (ProjectsManager.DEFAULT_PROJECT_NAME.equals(project.getProject().getName())) {
+            return Collections.emptyList();
+        }
+
+        final List<IPackageFragmentRoot> roots = new LinkedList<>();
+        for (final IClasspathEntry entry : project.getRawClasspath()) {
+            if (entry.getEntryKind() == ClasspathEntry.CPE_SOURCE) {
+                roots.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
+            }
+        }
+        return roots;
+    }
+
+    public static Set<IPackageFragmentRoot> getSourceRoots(IJavaProject project, Collection<String> selectedPaths,
+            IProgressMonitor monitor) throws JavaModelException {
+        final Set<String> requestedPaths = new HashSet<>();
+        for (final String selectedPath : selectedPaths) {
+            if (monitor != null && monitor.isCanceled()) {
+                return Collections.emptySet();
+            }
+            requestedPaths.add(normalizeSourcePath(selectedPath));
+        }
+        if (requestedPaths.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        final Set<IPackageFragmentRoot> matchingRoots = new LinkedHashSet<>();
+        for (final IPackageFragmentRoot root : getSourceRoots(project)) {
+            if (monitor != null && monitor.isCanceled()) {
+                return Collections.emptySet();
+            }
+            if (root.getResource() != null && root.getResource().getLocation() != null &&
+                    requestedPaths.contains(normalizeSourcePath(root.getResource().getLocation().toOSString()))) {
+                matchingRoots.add(root);
+            }
+        }
+        return matchingRoots;
+    }
+
+    private static String normalizeSourcePath(String sourcePath) {
+        return Paths.get(sourcePath).toAbsolutePath().normalize().toString();
     }
 
     public static List<IClasspathEntry> getTestEntries(IJavaProject project) throws JavaModelException {

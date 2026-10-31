@@ -72,8 +72,16 @@ public class TestNavigationUtils {
         }
         final SearchEngine searchEngine = new SearchEngine();
         final boolean goToTest = (boolean) arguments.get(1);
+        final List<String> additionalSourcePaths = new LinkedList<>();
+        if (arguments.size() > 2 && arguments.get(2) instanceof List<?>) {
+            for (final Object value : (List<?>) arguments.get(2)) {
+                if (value instanceof String) {
+                    additionalSourcePaths.add((String) value);
+                }
+            }
+        }
         final String nameToSearch = goToTest ? typeName : guessTestSubjectName(typeName);
-        final IJavaSearchScope scope = getSearchScope(goToTest);
+        final IJavaSearchScope scope = getSearchScope(goToTest, additionalSourcePaths, monitor);
         final IJavaProject javaProject = unit.getJavaProject();
         final Set<TestNavigationItem> items = new HashSet<>();
         searchEngine.searchAllTypeNames(
@@ -96,7 +104,8 @@ public class TestNavigationUtils {
      * @param isTest Whether containing test source or not
      * @throws JavaModelException
      */
-    private static IJavaSearchScope getSearchScope(boolean isTest) throws JavaModelException {
+    private static IJavaSearchScope getSearchScope(boolean isTest, List<String> additionalSourcePaths,
+            IProgressMonitor monitor) throws JavaModelException {
         final List<IJavaElement> javaElements = new LinkedList<>();
         final IJavaProject[] javaProjects = ProjectUtils.getJavaProjects();
         for (final IJavaProject project : javaProjects) {
@@ -104,6 +113,9 @@ public class TestNavigationUtils {
                     ProjectTestUtils.getSourceEntries(project);
             for (final IClasspathEntry entry : testEntries) {
                 javaElements.addAll(Arrays.asList(project.findPackageFragmentRoots(entry)));
+            }
+            if (isTest && !additionalSourcePaths.isEmpty()) {
+                javaElements.addAll(ProjectTestUtils.getSourceRoots(project, additionalSourcePaths, monitor));
             }
         }
 

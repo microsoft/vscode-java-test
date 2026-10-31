@@ -367,9 +367,10 @@ export async function getJavaProjects(workspaceFolder: WorkspaceFolder, token?: 
         JavaTestRunnerDelegateCommands.FIND_JAVA_PROJECTS, workspaceFolder.uri.toString(), token) || [];
 }
 
-export async function findTestPackagesAndTypes(handlerId: string, token?: CancellationToken): Promise<IJavaTestItem[]> {
+export async function findTestPackagesAndTypes(handlerId: string, token?: CancellationToken,
+    additionalSourcePaths: string[] = []): Promise<IJavaTestItem[]> {
     return await executeJavaLanguageServerCommand<IJavaTestItem[]>(
-        JavaTestRunnerDelegateCommands.FIND_TEST_PACKAGES_AND_TYPES, handlerId, token) || [];
+        JavaTestRunnerDelegateCommands.FIND_TEST_PACKAGES_AND_TYPES, handlerId, additionalSourcePaths, token) || [];
 }
 
 export async function findDirectTestChildrenForClass(handlerId: string, token?: CancellationToken): Promise<IJavaTestItem[]> {

@@ -8,6 +8,7 @@ export namespace JavaLanguageServerCommands {
 
 export namespace JavaTestRunnerDelegateCommands {
     export const GET_TEST_SOURCE_PATH: string = 'vscode.java.test.get.testpath';
+    export const GET_SOURCE_PATH: string = 'vscode.java.test.get.sourcepath';
     export const RESOLVE_JUNIT_ARGUMENT: string = 'vscode.java.test.junit.argument';
     export const GENERATE_TESTS: string = 'vscode.java.test.generateTests';
     export const FIND_JAVA_PROJECTS: string = 'vscode.java.test.findJavaProjects';
