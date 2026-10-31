@@ -77,12 +77,15 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
 
         final List<JavaTestItem> packages = TestSearchUtils.findTestPackagesAndTypes(
                 Arrays.asList(javaProject.getHandleIdentifier()), new NullProgressMonitor());
-        assertEquals(1, packages.size());
-        assertEquals(7, packages.get(0).getChildren().size());
-        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
-        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
-        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
-        assertTrue(packages.get(0).getChildren().stream()
+        final JavaTestItem examplePackage = packages.stream()
+                .filter(item -> "example".equals(item.getLabel()))
+                .findFirst().orElse(null);
+        assertNotNull(examplePackage);
+        assertEquals(7, examplePackage.getChildren().size());
+        assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
                 .anyMatch(item -> "InheritanceChildTest".equals(item.getLabel())));
 
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
@@ -173,6 +176,18 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
     public void testJUnit5UnannotatedOverrideSuppressesInheritedTest() throws Exception {
         final IProject project = importProjects("preview-junit").get(0);
         final IType childType = JavaCore.create(project).findType("example.InheritanceUnannotatedOverrideTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertTrue(methods.isEmpty());
+    }
+
+    @Test
+    public void testPackagePrivateTestMethodIsNotInheritedAcrossPackages() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IType childType = JavaCore.create(project)
+                .findType("example.child.CrossPackageSameSignatureTest");
         assertNotNull(childType);
 
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(

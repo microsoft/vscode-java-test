@@ -551,8 +551,8 @@ public class TestSearchUtils {
     /**
      * Collect test methods inherited from superclasses and append them to {@code accumulator}.
      * Test frameworks (JUnit, TestNG) execute inherited {@code @Test} methods when running a
-     * child class, so discovery must list them under the child. Methods overridden by the child
-     * and non-inheritable (private) superclass methods are skipped.
+     * child class, so discovery must list them under the child. Override handling follows each
+     * framework's behavior; non-inheritable superclass methods are skipped.
      */
     private static void addInheritedTestMethodsForKinds(ITypeBinding classBinding, IType childType,
             List<TestKind> testKinds, List<JavaTestItem> accumulator) throws JavaModelException {
@@ -572,23 +572,29 @@ public class TestSearchUtils {
             return;
         }
 
-        final Map<String, IMethodBinding> moreSpecificMethods = new HashMap<>();
+        final List<IMethodBinding> moreSpecificMethods = new LinkedList<>();
         for (final IMethodBinding declared : classBinding.getDeclaredMethods()) {
-            moreSpecificMethods.put(getMethodSignatureKey(declared), declared);
+            moreSpecificMethods.add(declared);
         }
 
         final Set<String> inheritedTestSignatures = new HashSet<>();
         ITypeBinding superClass = classBinding.getSuperclass();
         while (superClass != null && !"java.lang.Object".equals(superClass.getBinaryName())) {
             for (final IMethodBinding methodBinding : superClass.getDeclaredMethods()) {
-                if (Modifier.isPrivate(methodBinding.getModifiers())) {
+                if (!isInheritedBy(methodBinding, classBinding)) {
                     continue;
                 }
                 final String key = getMethodSignatureKey(methodBinding);
                 if (inheritedTestSignatures.contains(key)) {
                     continue;
                 }
-                final IMethodBinding overridingMethod = moreSpecificMethods.get(key);
+                IMethodBinding overridingMethod = null;
+                for (final IMethodBinding moreSpecificMethod : moreSpecificMethods) {
+                    if (moreSpecificMethod.overrides(methodBinding)) {
+                        overridingMethod = moreSpecificMethod;
+                        break;
+                    }
+                }
                 for (final TestFrameworkSearcher searcher : searchers) {
                     if (!searcher.isTestMethod(methodBinding)) {
                         continue;
@@ -610,12 +616,23 @@ public class TestSearchUtils {
                     inheritedTestSignatures.add(key);
                     break;
                 }
-                if (overridingMethod == null) {
-                    moreSpecificMethods.put(key, methodBinding);
-                }
             }
+            Collections.addAll(moreSpecificMethods, superClass.getDeclaredMethods());
             superClass = superClass.getSuperclass();
         }
+    }
+
+    private static boolean isInheritedBy(IMethodBinding methodBinding, ITypeBinding childBinding) {
+        final int modifiers = methodBinding.getModifiers();
+        if (Modifier.isPrivate(modifiers)) {
+            return false;
+        }
+        if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)) {
+            return true;
+        }
+        return methodBinding.getDeclaringClass().getPackage() != null &&
+                childBinding.getPackage() != null &&
+                methodBinding.getDeclaringClass().getPackage().getName().equals(childBinding.getPackage().getName());
     }
 
     private static String getMethodSignatureKey(IMethodBinding methodBinding) {
