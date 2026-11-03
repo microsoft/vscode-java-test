@@ -581,7 +581,7 @@
         "vscode-tas-client": "^0.3.1"
     },
     "overrides": {
-        "serialize-javascript": ">=7.0.5",
+        "serialize-javascript": ">=7.1.4",
         "mocha": {
             "glob": ">=10.5.0"
         }
