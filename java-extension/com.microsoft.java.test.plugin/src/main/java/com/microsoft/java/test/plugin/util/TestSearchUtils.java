@@ -45,6 +45,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -125,8 +126,10 @@ public class TestSearchUtils {
                         .setLevel(TestLevel.PROJECT)
                         .setKind(testKind)
                         .build();
-                item.setNatureIds(project.getProject().getDescription().getNatureIds());
-                resultList.add(item);
+                if (item != null) {
+                    item.setNatureIds(project.getProject().getDescription().getNatureIds());
+                    resultList.add(item);
+                }
             } catch (CoreException e) {
                 JUnitPlugin.logError("Failed to parse project item: " + project.getElementName());
             }
@@ -195,7 +198,6 @@ public class TestSearchUtils {
                     }
                 }
             }
-
             for (final IType type : testTypes) {
                 JavaTestItem classItem = testItemMapping.get(type.getHandleIdentifier());
                 if (classItem == null) {
@@ -203,7 +205,9 @@ public class TestSearchUtils {
                             .setLevel(TestLevel.CLASS)
                             .setKind(kind)
                             .build();
-                    testItemMapping.put(classItem.getJdtHandler(), classItem);
+                    if (classItem != null) {
+                        testItemMapping.put(classItem.getJdtHandler(), classItem);
+                    }
                 } else {
                     // 1. We suppose a class can only use one test framework
                     // 2. If more accurate kind is available, use it.
@@ -212,7 +216,6 @@ public class TestSearchUtils {
                         classItem.setTestKind(TestKind.JUnit);
                     }
                 }
-
                 final IType declaringType = type.getDeclaringType();
                 if (declaringType == null) {
                     // it's a root type, we find its declaring package
@@ -224,7 +227,9 @@ public class TestSearchUtils {
                                 .setLevel(TestLevel.PACKAGE)
                                 .setKind(TestKind.None)
                                 .build();
-                        testItemMapping.put(packageIdentifier, packageItem);
+                        if (packageItem != null) {
+                            testItemMapping.put(packageIdentifier, packageItem);
+                        }
                     }
                     if (packageItem.getChildren() == null || !packageItem.getChildren().contains(classItem)) {
                         packageItem.addChild(classItem);
@@ -237,7 +242,9 @@ public class TestSearchUtils {
                                 .setLevel(TestLevel.CLASS)
                                 .setKind(kind)
                                 .build();
-                        testItemMapping.put(declaringTypeIdentifier, declaringTypeItem);
+                        if (declaringTypeItem != null) {
+                            testItemMapping.put(declaringTypeIdentifier, declaringTypeItem);
+                        }
                     }
                     if (declaringTypeItem.getChildren() == null ||
                             !declaringTypeItem.getChildren().contains(classItem)) {
@@ -291,8 +298,43 @@ public class TestSearchUtils {
         }
 
         final ICompilationUnit unit = testType.getCompilationUnit();
+        final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(testType.getJavaProject());
         if (unit == null) {
-            return Collections.emptyList();
+            final List<JavaTestItem> result = new LinkedList<>();
+            for (final TestKind kind : testKinds) {
+                final Set<IType> testTypes = new HashSet<>();
+                final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
+                if (searcher == null) {
+                    continue;
+                }
+                try {
+                    testTypes.addAll(searcher.findTestItemsInContainer(testType, monitor));
+                } catch (CoreException e) {
+                    JavaLanguageServerPlugin.logException(e);
+                }
+                for (final IType type : testTypes) {
+                    final ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
+                    parser.setProject(type.getJavaProject());
+                    parser.setResolveBindings(true);
+                    parser.setIgnoreMethodBodies(true);
+                    final IBinding[] bindings = parser.createBindings(new IJavaElement[] { type }, null);
+                    if (bindings != null && bindings.length > 0 && bindings[0] instanceof ITypeBinding) {
+                        for (final IMethodBinding methodBinding : ((ITypeBinding) bindings[0]).getDeclaredMethods()) {
+                            if (searcher.isTestMethod(methodBinding)) {
+                                final String displayName = searcher.getDisplayName(methodBinding);
+                                final JavaTestItem item = new JavaTestItemBuilder()
+                                        .setJavaElement(methodBinding.getJavaElement()).setLevel(TestLevel.METHOD)
+                                        .setDisplayName(displayName)
+                                        .setKind(kind).build();
+                                if (item != null) {
+                                    result.add(item);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
         }
         if (requiresPreviewFallback(unit.getJavaProject())) {
             for (final JavaTestItem item : findTestTypesAndMethods(unit, monitor)) {
@@ -303,8 +345,6 @@ public class TestSearchUtils {
             }
             return Collections.emptyList();
         }
-        final List<TestKind> testKinds = TestKindProvider.getTestKindsFromCache(unit.getJavaProject());
-
         final List<JavaTestItem> result = new LinkedList<>();
         final CompilationUnit root = (CompilationUnit) parseToAst(unit, true /* fromCache */, monitor);
         if (root == null) {
@@ -314,7 +354,6 @@ public class TestSearchUtils {
             if (monitor != null && monitor.isCanceled()) {
                 return result;
             }
-
             final IType declaringType = type.getDeclaringType();
             if (declaringType != null &&
                     declaringType.getFullyQualifiedName().equals(testType.getFullyQualifiedName())) {
@@ -325,13 +364,14 @@ public class TestSearchUtils {
                                 .setLevel(TestLevel.CLASS)
                                 .setKind(kind)
                                 .build();
-                        result.add(typeItem);
+                        if (typeItem != null) {
+                            result.add(typeItem);
+                        }
                         break;
                     }
                 }
                 continue;
             }
-
             if (!type.getFullyQualifiedName().equals(testType.getFullyQualifiedName())) {
                 continue;
             }
@@ -346,7 +386,6 @@ public class TestSearchUtils {
                 continue;
             }
 
-            
             for (final IMethodBinding methodBinding : binding.getDeclaredMethods()) {
                 for (final TestKind kind: testKinds) {
                     final TestFrameworkSearcher searcher = TestFrameworkUtils.getSearcherByTestKind(kind);
@@ -356,12 +395,13 @@ public class TestSearchUtils {
                             .setLevel(TestLevel.METHOD)
                             .setKind(kind)
                             .build();
-                        result.add(item);
+                        if (item != null) {
+                            result.add(item);
+                        }
                     }
                 }
             }
         }
-
         return result;
     }
 
@@ -490,7 +530,9 @@ public class TestSearchUtils {
                             .setLevel(TestLevel.METHOD)
                             .setKind(searcher.getTestKind())
                             .build();
-                    testMethods.add(methodItem);
+                    if (methodItem != null) {
+                        testMethods.add(methodItem);
+                    }
                     break;
                 }
             }
@@ -575,7 +617,9 @@ public class TestSearchUtils {
                     .setLevel(TestLevel.PROJECT)
                     .setKind(testKind)
                     .build();
-            result.add(projectItem);
+            if (projectItem != null) {
+                result.add(projectItem);
+            }
 
             final IPackageFragment packageFragment = (IPackageFragment) unit.getParent();
             if (packageFragment == null || !(packageFragment instanceof IPackageFragment)) {
@@ -585,9 +629,10 @@ public class TestSearchUtils {
                     .setLevel(TestLevel.PACKAGE)
                     .setKind(testKind)
                     .build();
-            result.add(packageItem);
+            if (packageItem != null) {
+                result.add(packageItem);
+            }
         }
-
         return result;
     }
 
@@ -694,7 +739,6 @@ public class TestSearchUtils {
         } catch (JavaModelException e) {
             JUnitPlugin.log(e);
         }
-        
         return result[0];
     }
 
