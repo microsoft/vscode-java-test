@@ -39,6 +39,7 @@ export function invalidateResolutionVersion(item: TestItem): void {
 
 export interface ITestItemData {
     jdtHandler: string;
+    executionClassName?: string;
     fullName: string;
     projectName: string;
     testLevel: TestLevel;
