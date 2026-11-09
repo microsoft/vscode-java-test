@@ -42,6 +42,7 @@ import org.jacoco.core.tools.ExecFileLoader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -52,16 +53,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CoverageHandler {
 
     private IJavaProject javaProject;
     private Path reportBasePath;
-
-    /**
-     * The Jacoco data file name
-     */
-    private static final String JACOCO_EXEC = "jacoco.exec";
 
     public CoverageHandler(IJavaProject javaProject, String basePath) {
         this.javaProject = javaProject;
@@ -77,9 +75,19 @@ public class CoverageHandler {
         javaProjects.addAll(getAllJavaProjects(javaProject));
         final Map<IPath, List<IPath>> outputToSourcePaths = getOutputToSourcePathsMapping(javaProjects);
 
-        final File executionDataFile = reportBasePath.resolve(JACOCO_EXEC).toFile();
+        final List<File> executionDataFiles = findExecutionDataFiles(reportBasePath);
+        if (executionDataFiles.isEmpty()) {
+            // Analyzing nothing yields a report where every line is uncovered, which is
+            // indistinguishable from tests that genuinely covered nothing. Fail loudly
+            // instead, so a run that never attached the agent cannot be read as 0%.
+            throw new IllegalStateException("No JaCoCo execution data (*.exec) was found under " +
+                    reportBasePath + ". The tests may not have started, or the test runner may " +
+                    "not have attached the coverage agent.");
+        }
         final ExecFileLoader execFileLoader = new ExecFileLoader();
-        execFileLoader.load(executionDataFile);
+        for (final File executionDataFile : executionDataFiles) {
+            execFileLoader.load(executionDataFile);
+        }
         for (final Map.Entry<IPath, List<IPath>> entry : outputToSourcePaths.entrySet()) {
             final CoverageBuilder coverageBuilder = new CoverageBuilder();
             final Analyzer analyzer = new Analyzer(
@@ -116,6 +124,24 @@ public class CoverageHandler {
             }
         }
         return coverage;
+    }
+
+    /**
+     * Recursively collect all JaCoCo execution data (<code>*.exec</code>) files under the
+     * given base path. A single delegated coverage run can produce multiple execution data
+     * files (for example one per Gradle project or per test task), all of which are merged.
+     */
+    private static List<File> findExecutionDataFiles(Path basePath) throws IOException {
+        if (!basePath.toFile().exists()) {
+            return Collections.emptyList();
+        }
+        try (Stream<Path> stream = Files.walk(basePath)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".exec"))
+                    .map(Path::toFile)
+                    .collect(Collectors.toList());
+        }
     }
 
     private Map<IPath, List<IPath>> getOutputToSourcePathsMapping(List<IJavaProject> javaProjects)
