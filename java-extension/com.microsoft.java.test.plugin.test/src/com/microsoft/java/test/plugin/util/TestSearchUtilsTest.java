@@ -16,6 +16,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -81,12 +82,14 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 .filter(item -> "example".equals(item.getLabel()))
                 .findFirst().orElse(null);
         assertNotNull(examplePackage);
-        assertEquals(7, examplePackage.getChildren().size());
+        assertEquals(9, examplePackage.getChildren().size());
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream()
                 .anyMatch(item -> "InheritanceChildTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
+                .anyMatch(item -> "GenericInheritanceChildTest".equals(item.getLabel())));
 
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(type.getHandleIdentifier()), new NullProgressMonitor());
@@ -156,6 +159,8 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         assertEquals(childProject.getName() + "@example.InheritanceChildTest#base()", inherited.getId());
         assertEquals("example.InheritanceChildTest", inherited.getExecutionClassName());
         assertEquals(parentType.getMethod("base", new String[0]).getHandleIdentifier(), inherited.getJdtHandler());
+        assertEquals(childType.getResource().getLocationURI(), URI.create(inherited.getUri()));
+        assertNull(inherited.getRange());
     }
 
     @Test
@@ -184,7 +189,7 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
     }
 
     @Test
-    public void testPackagePrivateTestMethodIsNotInheritedAcrossPackages() throws Exception {
+    public void testPackagePrivateTestMethodIsInheritedAcrossPackages() throws Exception {
         final IProject project = importProjects("preview-junit").get(0);
         final IType childType = JavaCore.create(project)
                 .findType("example.child.CrossPackageSameSignatureTest");
@@ -192,6 +197,20 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
 
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
-        assertTrue(methods.isEmpty());
+        assertEquals(1, methods.size());
+        assertEquals("example.child.CrossPackageSameSignatureTest#packagePrivateTest()",
+                methods.get(0).getFullName());
+    }
+
+    @Test
+    public void testDiscoverGenericInheritedMethod() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IType childType = JavaCore.create(project).findType("example.GenericInheritanceChildTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, methods.size());
+        assertEquals("example.GenericInheritanceChildTest", methods.get(0).getExecutionClassName());
     }
 }

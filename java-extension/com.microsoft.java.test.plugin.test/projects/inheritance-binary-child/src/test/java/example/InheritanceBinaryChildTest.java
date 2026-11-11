@@ -1,4 +1,6 @@
 package example;
 
-public class InheritanceBinaryChildTest extends InheritanceBinaryBaseTest {
+import org.junit.jupiter.api.TestInfo;
+
+public class InheritanceBinaryChildTest extends InheritanceBinaryBaseTest<TestInfo> {
 }

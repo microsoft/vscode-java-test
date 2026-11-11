@@ -16,7 +16,6 @@ import com.microsoft.java.test.plugin.model.Response;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
-import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
@@ -27,7 +26,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
@@ -36,13 +34,9 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.internal.corext.refactoring.structure.ASTNodeSearchUtil;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 import java.io.BufferedWriter;
@@ -211,42 +205,15 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
         String testName = method.getElementName();
         if ((this.args.testKind == TestKind.JUnit5 || this.args.testKind == TestKind.JUnit6) &&
                 method.getParameters().length > 0) {
-            final ICompilationUnit unit = method.getCompilationUnit();
-            if (unit == null) {
-                final ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
-                parser.setProject(method.getJavaProject());
-                final IBinding[] bindings = parser.createBindings(new IJavaElement[] { method },
-                        new NullProgressMonitor());
-                if (bindings.length != 1 || !(bindings[0] instanceof IMethodBinding)) {
-                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            "Cannot resolve binary method " + method.getElementName(), null)); //$NON-NLS-1$
-                }
-                testName += formatParameterTypes((IMethodBinding) bindings[0]);
-            } else {
-                final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
-                        false /*fromCache*/, new NullProgressMonitor());
-                final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method, root);
-                if (methodDeclaration == null) {
-                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                            "Cannot get method declaration of method" + method.getElementName(), null)); //$NON-NLS-1$
-                }
-
-                final List<String> parameters = new LinkedList<>();
-                for (final Object obj : methodDeclaration.parameters()) {
-                    if (obj instanceof SingleVariableDeclaration) {
-                        final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj)
-                                .getType().resolveBinding();
-                        if (paramTypeBinding == null) {
-                            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
-                                    "Cannot set argument for method" + methodDeclaration.toString(), null));
-                        }
-                        parameters.add(formatParameterType(paramTypeBinding));
-                    }
-                }
-                if (!parameters.isEmpty()) {
-                    testName += "(" + String.join(",", parameters) + ")";
-                }
+            final ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
+            parser.setProject(method.getJavaProject());
+            final IBinding[] bindings = parser.createBindings(new IJavaElement[] { method },
+                    new NullProgressMonitor());
+            if (bindings.length != 1 || !(bindings[0] instanceof IMethodBinding)) {
+                throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                        "Cannot resolve method " + method.getElementName(), null)); //$NON-NLS-1$
             }
+            testName += formatParameterTypes((IMethodBinding) bindings[0]);
         }
         final String className = StringUtils.isNotBlank(executionClassName) ? executionClassName :
                 method.getDeclaringType().getFullyQualifiedName();
@@ -262,7 +229,9 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
     }
 
     private String formatParameterType(ITypeBinding parameterType) {
-        return parameterType.isPrimitive() ? parameterType.getQualifiedName() : parameterType.getBinaryName();
+        final ITypeBinding erasedType = parameterType.getErasure();
+        final ITypeBinding type = erasedType != null ? erasedType : parameterType;
+        return type.isPrimitive() ? type.getQualifiedName() : type.getBinaryName();
     }
 
     private String getExecutionClassName(int index) {

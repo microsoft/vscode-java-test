@@ -13,8 +13,10 @@ package com.microsoft.java.test.plugin.launchers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -137,6 +139,32 @@ public class JUnitLaunchConfigurationDelegateTest extends AbstractProjectsManage
     }
 
     @Test
+    public void testGenericSourceMethodLaunchesWithErasedParameterType() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IJavaProject javaProject = JavaCore.create(project);
+        final IType parentType = javaProject.findType("example.GenericInheritanceBaseTest");
+        assertNotNull(parentType);
+        final IMethod genericMethod = Arrays.stream(parentType.getMethods())
+                .filter(method -> "generic".equals(method.getElementName()))
+                .findFirst().orElse(null);
+        assertNotNull(genericMethod);
+
+        final Map<String, Object> request = new LinkedHashMap<>();
+        request.put("projectName", javaProject.getElementName());
+        request.put("testLevel", 6);
+        request.put("testKind", 0);
+        request.put("testNames", Arrays.asList(genericMethod.getHandleIdentifier()));
+        request.put("executionClassNames", Arrays.asList("example.GenericInheritanceChildTest"));
+
+        final Response<JUnitLaunchArguments> response = JUnitLaunchUtils.resolveLaunchArgument(
+                Arrays.asList(new Gson().toJson(request)), new NullProgressMonitor());
+
+        assertEquals(0, response.getStatus());
+        assertTrue(Arrays.asList(response.getBody().programArguments)
+                .contains("example.GenericInheritanceChildTest:generic(org.junit.jupiter.api.TestInfo)"));
+    }
+
+    @Test
     public void testInheritedBinaryMethodWithParametersLaunchesAgainstChildClass() throws Exception {
         importProjects(Arrays.asList("inheritance-binary-parent", "inheritance-binary-child"));
         final IJavaProject javaProject = JavaCore.create(WorkspaceHelper.getProject("inheritance-binary-child"));
@@ -149,6 +177,8 @@ public class JUnitLaunchConfigurationDelegateTest extends AbstractProjectsManage
                 .filter(item -> item.getFullName().contains("#base"))
                 .findFirst().orElse(null);
         assertNotNull(inherited);
+        assertEquals(childType.getResource().getLocationURI(), URI.create(inherited.getUri()));
+        assertNull(inherited.getRange());
         final IMethod binaryMethod = (IMethod)
                 JavaCore.create(inherited.getJdtHandler());
         assertTrue(binaryMethod.getCompilationUnit() == null);

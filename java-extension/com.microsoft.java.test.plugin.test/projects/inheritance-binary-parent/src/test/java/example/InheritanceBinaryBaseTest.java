@@ -3,8 +3,8 @@ package example;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
-public class InheritanceBinaryBaseTest {
+public class InheritanceBinaryBaseTest<T extends TestInfo> {
     @Test
-    void base(TestInfo info) {
+    void base(T info) {
     }
 }

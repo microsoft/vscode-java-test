@@ -573,39 +573,27 @@ public class TestSearchUtils {
         }
 
         final List<IMethodBinding> moreSpecificMethods = new LinkedList<>();
-        for (final IMethodBinding declared : classBinding.getDeclaredMethods()) {
-            moreSpecificMethods.add(declared);
-        }
-
-        final Set<String> inheritedTestSignatures = new HashSet<>();
+        Collections.addAll(moreSpecificMethods, classBinding.getDeclaredMethods());
         ITypeBinding superClass = classBinding.getSuperclass();
         while (superClass != null && !"java.lang.Object".equals(superClass.getBinaryName())) {
             for (final IMethodBinding methodBinding : superClass.getDeclaredMethods()) {
-                if (!isInheritedBy(methodBinding, classBinding)) {
+                if (Modifier.isPrivate(methodBinding.getModifiers())) {
                     continue;
-                }
-                final String key = getMethodSignatureKey(methodBinding);
-                if (inheritedTestSignatures.contains(key)) {
-                    continue;
-                }
-                IMethodBinding overridingMethod = null;
-                for (final IMethodBinding moreSpecificMethod : moreSpecificMethods) {
-                    if (moreSpecificMethod.overrides(methodBinding)) {
-                        overridingMethod = moreSpecificMethod;
-                        break;
-                    }
                 }
                 for (final TestFrameworkSearcher searcher : searchers) {
                     if (!searcher.isTestMethod(methodBinding)) {
                         continue;
                     }
-                    if (overridingMethod != null &&
-                            (searcher.getTestKind() != TestKind.JUnit || searcher.isTestMethod(overridingMethod))) {
+                    final boolean overriddenBySubclass = moreSpecificMethods.stream()
+                            .filter(candidate -> candidate.overrides(methodBinding))
+                            .anyMatch(candidate -> searcher.getTestKind() != TestKind.JUnit ||
+                                    searcher.isTestMethod(candidate));
+                    if (overriddenBySubclass) {
                         break;
                     }
                     final IJavaElement element = methodBinding.getJavaElement();
                     if (element == null) {
-                        break;
+                        continue;
                     }
                     final JavaTestItem methodItem = new JavaTestItemBuilder().setJavaElement(element)
                             .setLevel(TestLevel.METHOD)
@@ -613,35 +601,12 @@ public class TestSearchUtils {
                             .build();
                     rebaseMethodItemToChild(methodItem, childType);
                     accumulator.add(methodItem);
-                    inheritedTestSignatures.add(key);
                     break;
                 }
             }
             Collections.addAll(moreSpecificMethods, superClass.getDeclaredMethods());
             superClass = superClass.getSuperclass();
         }
-    }
-
-    private static boolean isInheritedBy(IMethodBinding methodBinding, ITypeBinding childBinding) {
-        final int modifiers = methodBinding.getModifiers();
-        if (Modifier.isPrivate(modifiers)) {
-            return false;
-        }
-        if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)) {
-            return true;
-        }
-        return methodBinding.getDeclaringClass().getPackage() != null &&
-                childBinding.getPackage() != null &&
-                methodBinding.getDeclaringClass().getPackage().getName().equals(childBinding.getPackage().getName());
-    }
-
-    private static String getMethodSignatureKey(IMethodBinding methodBinding) {
-        final StringBuilder key = new StringBuilder(methodBinding.getName()).append('(');
-        for (final ITypeBinding param : methodBinding.getParameterTypes()) {
-            final ITypeBinding erasure = param.getErasure() != null ? param.getErasure() : param;
-            key.append(erasure.getQualifiedName()).append(',');
-        }
-        return key.append(')').toString();
     }
 
     /**
@@ -662,6 +627,10 @@ public class TestSearchUtils {
         methodItem.setProjectName(childProjectName);
         methodItem.setId(childProjectName + "@" + childFullName);
         methodItem.setExecutionClassName(childType.getFullyQualifiedName());
+        if (childType.getResource() != null) {
+            methodItem.setUri(JDTUtils.getFileURI(childType.getResource()));
+        }
+        methodItem.setRange(null);
     }
 
     /**
