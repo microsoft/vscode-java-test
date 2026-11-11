@@ -165,6 +165,32 @@ public class JUnitLaunchConfigurationDelegateTest extends AbstractProjectsManage
     }
 
     @Test
+    public void testUnboundedGenericSourceMethodLaunchesWithObjectParameterType() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IJavaProject javaProject = JavaCore.create(project);
+        final IType parentType = javaProject.findType("example.UnboundedGenericInheritanceBaseTest");
+        assertNotNull(parentType);
+        final IMethod genericMethod = Arrays.stream(parentType.getMethods())
+                .filter(method -> "generic".equals(method.getElementName()))
+                .findFirst().orElse(null);
+        assertNotNull(genericMethod);
+
+        final Map<String, Object> request = new LinkedHashMap<>();
+        request.put("projectName", javaProject.getElementName());
+        request.put("testLevel", 6);
+        request.put("testKind", 0);
+        request.put("testNames", Arrays.asList(genericMethod.getHandleIdentifier()));
+        request.put("executionClassNames", Arrays.asList("example.UnboundedGenericInheritanceChildTest"));
+
+        final Response<JUnitLaunchArguments> response = JUnitLaunchUtils.resolveLaunchArgument(
+                Arrays.asList(new Gson().toJson(request)), new NullProgressMonitor());
+
+        assertEquals(0, response.getStatus());
+        assertTrue(Arrays.asList(response.getBody().programArguments)
+                .contains("example.UnboundedGenericInheritanceChildTest:generic(java.lang.Object)"));
+    }
+
+    @Test
     public void testInheritedBinaryMethodWithParametersLaunchesAgainstChildClass() throws Exception {
         importProjects(Arrays.asList("inheritance-binary-parent", "inheritance-binary-child"));
         final IJavaProject javaProject = JavaCore.create(WorkspaceHelper.getProject("inheritance-binary-child"));

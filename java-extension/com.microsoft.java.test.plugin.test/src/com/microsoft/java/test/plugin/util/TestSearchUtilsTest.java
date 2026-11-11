@@ -82,7 +82,7 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 .filter(item -> "example".equals(item.getLabel()))
                 .findFirst().orElse(null);
         assertNotNull(examplePackage);
-        assertEquals(9, examplePackage.getChildren().size());
+        assertEquals(11, examplePackage.getChildren().size());
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
@@ -90,6 +90,8 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 .anyMatch(item -> "InheritanceChildTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream()
                 .anyMatch(item -> "GenericInheritanceChildTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
+                .anyMatch(item -> "UnboundedGenericInheritanceChildTest".equals(item.getLabel())));
 
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(type.getHandleIdentifier()), new NullProgressMonitor());
@@ -175,6 +177,21 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         assertEquals(1, methods.size());
         assertEquals("example.JUnit4ChildTest#inherited", methods.get(0).getFullName());
         assertEquals("example.JUnit4ChildTest", methods.get(0).getExecutionClassName());
+    }
+
+    @Test
+    public void testJUnit4AnnotatedChildOverrideSurvivesUnannotatedMiddleOverride() throws Exception {
+        importProjects("inheritance-junit4");
+        final IJavaProject javaProject = JavaCore.create(WorkspaceHelper.getProject("inheritance-junit4"));
+        final IType childType = javaProject.findType("example.JUnit4ReannotatedChildTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, methods.size());
+        assertEquals("example.JUnit4ReannotatedChildTest#reannotated", methods.get(0).getFullName());
+        assertEquals(childType.getMethod("reannotated", new String[0]).getHandleIdentifier(),
+                methods.get(0).getJdtHandler());
     }
 
     @Test
