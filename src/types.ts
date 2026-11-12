@@ -9,6 +9,7 @@ export interface IJavaTestItem {
     uri: string | undefined;
     range: Range | undefined;
     jdtHandler: string;
+    executionClassName?: string;
     fullName: string;
     label: string;
     id: string;

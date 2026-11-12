@@ -17,6 +17,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Collection;
@@ -37,6 +38,7 @@ import org.junit.Test;
 
 import com.microsoft.java.test.plugin.AbstractProjectsManagerBasedTest;
 import com.microsoft.java.test.plugin.model.JavaTestItem;
+import com.microsoft.java.test.plugin.WorkspaceHelper;
 
 public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
 
@@ -79,13 +81,21 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
 
         final List<JavaTestItem> packages = TestSearchUtils.findTestPackagesAndTypes(
                 Arrays.asList(javaProject.getHandleIdentifier()), new NullProgressMonitor());
-        assertEquals(1, packages.size());
-        assertEquals(3, packages.get(0).getChildren().size());
-        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
-        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
-        assertTrue(packages.get(0).getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
-        assertTrue(packages.get(0).getChildren().stream()
+        final JavaTestItem examplePackage = packages.stream()
+                .filter(item -> "example".equals(item.getLabel()))
+                .findFirst().orElse(null);
+        assertNotNull(examplePackage);
+        assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
                 .noneMatch(item -> "AdditionalMainSourceTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
+                .anyMatch(item -> "InheritanceChildTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
+                .anyMatch(item -> "GenericInheritanceChildTest".equals(item.getLabel())));
+        assertTrue(examplePackage.getChildren().stream()
+                .anyMatch(item -> "UnboundedGenericInheritanceChildTest".equals(item.getLabel())));
 
         final String mainSourcePath = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"))
                 .getResource().getLocation().toOSString();
@@ -122,5 +132,130 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         final Field itemsField = navigationResult.getClass().getField("items");
         itemsField.setAccessible(true);
         return (Collection<?>) itemsField.get(navigationResult);
+    }
+
+    @Test
+    public void testDiscoverInheritedTestMethods() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IJavaProject javaProject = JavaCore.create(project);
+        final IType childType = javaProject.findType("example.InheritanceChildTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> childMethods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(2, childMethods.size());
+        assertTrue(childMethods.stream().anyMatch(
+                item -> "example.InheritanceChildTest#child()".equals(item.getFullName())));
+        assertTrue(childMethods.stream().anyMatch(
+                item -> "example.InheritanceChildTest#base()".equals(item.getFullName())));
+        for (final JavaTestItem item : childMethods) {
+            assertTrue(item.getId().startsWith(item.getProjectName() + "@example.InheritanceChildTest#"));
+        }
+
+        final IType baseType = javaProject.findType("example.InheritanceBaseTest");
+        final List<JavaTestItem> baseMethods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(baseType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, baseMethods.size());
+        assertEquals("example.InheritanceBaseTest#base()", baseMethods.get(0).getFullName());
+
+        final IType overrideType = javaProject.findType("example.InheritanceOverrideTest");
+        final List<JavaTestItem> overrideMethods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(overrideType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(2, overrideMethods.size());
+        assertTrue(overrideMethods.stream().anyMatch(
+                item -> "example.InheritanceOverrideTest#base()".equals(item.getFullName())));
+        assertTrue(overrideMethods.stream().anyMatch(
+                item -> "example.InheritanceOverrideTest#extra()".equals(item.getFullName())));
+    }
+
+    @Test
+    public void testInheritedMethodUsesChildProjectAndExecutionClass() throws Exception {
+        importProjects(Arrays.asList("inheritance-parent", "inheritance-child"));
+        final IProject childProject = WorkspaceHelper.getProject("inheritance-child");
+        final IJavaProject javaProject = JavaCore.create(childProject);
+        final IType childType = javaProject.findType("example.InheritanceChildTest");
+        final IType parentType = JavaCore.create(WorkspaceHelper.getProject("inheritance-parent"))
+                .findType("example.InheritanceBaseTest");
+        assertNotNull(childType);
+        assertNotNull(parentType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        final JavaTestItem inherited = methods.stream()
+                .filter(item -> item.getFullName().endsWith("#base()"))
+                .findFirst().orElse(null);
+        assertNotNull(inherited);
+        assertEquals(childProject.getName(), inherited.getProjectName());
+        assertEquals(childProject.getName() + "@example.InheritanceChildTest#base()", inherited.getId());
+        assertEquals("example.InheritanceChildTest", inherited.getExecutionClassName());
+        assertEquals(parentType.getMethod("base", new String[0]).getHandleIdentifier(), inherited.getJdtHandler());
+        assertEquals(childType.getResource().getLocationURI(), URI.create(inherited.getUri()));
+        assertNull(inherited.getRange());
+    }
+
+    @Test
+    public void testJUnit4TestSurvivesUnannotatedOverride() throws Exception {
+        importProjects("inheritance-junit4");
+        final IJavaProject javaProject = JavaCore.create(WorkspaceHelper.getProject("inheritance-junit4"));
+        final IType childType = javaProject.findType("example.JUnit4ChildTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, methods.size());
+        assertEquals("example.JUnit4ChildTest#inherited", methods.get(0).getFullName());
+        assertEquals("example.JUnit4ChildTest", methods.get(0).getExecutionClassName());
+    }
+
+    @Test
+    public void testJUnit4AnnotatedChildOverrideSurvivesUnannotatedMiddleOverride() throws Exception {
+        importProjects("inheritance-junit4");
+        final IJavaProject javaProject = JavaCore.create(WorkspaceHelper.getProject("inheritance-junit4"));
+        final IType childType = javaProject.findType("example.JUnit4ReannotatedChildTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, methods.size());
+        assertEquals("example.JUnit4ReannotatedChildTest#reannotated", methods.get(0).getFullName());
+        assertEquals(childType.getMethod("reannotated", new String[0]).getHandleIdentifier(),
+                methods.get(0).getJdtHandler());
+    }
+
+    @Test
+    public void testJUnit5UnannotatedOverrideSuppressesInheritedTest() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IType childType = JavaCore.create(project).findType("example.InheritanceUnannotatedOverrideTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertTrue(methods.isEmpty());
+    }
+
+    @Test
+    public void testPackagePrivateTestMethodIsInheritedAcrossPackages() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IType childType = JavaCore.create(project)
+                .findType("example.child.CrossPackageSameSignatureTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, methods.size());
+        assertEquals("example.child.CrossPackageSameSignatureTest#packagePrivateTest()",
+                methods.get(0).getFullName());
+    }
+
+    @Test
+    public void testDiscoverGenericInheritedMethod() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IType childType = JavaCore.create(project).findType("example.GenericInheritanceChildTest");
+        assertNotNull(childType);
+
+        final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
+                Arrays.asList(childType.getHandleIdentifier()), new NullProgressMonitor());
+        assertEquals(1, methods.size());
+        assertEquals("example.GenericInheritanceChildTest", methods.get(0).getExecutionClassName());
     }
 }

@@ -97,6 +97,7 @@ async function getLaunchArguments(testContext: IRunTestContext): Promise<IJUnitL
         testContext.kind,
         getTestNames(testContext),
         getTestHandles(testContext),
+        getExecutionClassNames(testContext),
         uniqueId
     );
 }
@@ -136,8 +137,13 @@ function getTestHandles(testContext: IRunTestContext): string[] {
     return handles as string[];
 }
 
+function getExecutionClassNames(testContext: IRunTestContext): (string | undefined)[] {
+    return testContext.testItems.map((item: TestItem) => dataCache.get(item)?.executionClassName);
+}
+
 async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestLevel, testKind: TestKind,
-    testNames: string[], testHandles: string[], uniqueId: string | undefined): Promise<IJUnitLaunchArguments> {
+    testNames: string[], testHandles: string[], executionClassNames: (string | undefined)[],
+    uniqueId: string | undefined): Promise<IJUnitLaunchArguments> {
     const argument: Response<IJUnitLaunchArguments> | undefined = await executeJavaLanguageServerCommand<Response<IJUnitLaunchArguments>>(
         JavaTestRunnerDelegateCommands.RESOLVE_JUNIT_ARGUMENT, JSON.stringify({
             projectName,
@@ -145,6 +151,7 @@ async function resolveJUnitLaunchArguments(projectName: string, testLevel: TestL
             testKind,
             testNames,
             testHandles,
+            executionClassNames,
             uniqueId
         }),
     );
