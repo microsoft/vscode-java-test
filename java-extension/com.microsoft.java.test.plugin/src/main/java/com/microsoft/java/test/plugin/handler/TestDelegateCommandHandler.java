@@ -31,6 +31,7 @@ import java.util.List;
 public class TestDelegateCommandHandler implements IDelegateCommandHandler {
 
     private static final String GET_TEST_SOURCE_PATH = "vscode.java.test.get.testpath";
+    private static final String GET_SOURCE_PATH = "vscode.java.test.get.sourcepath";
     private static final String RESOLVE_JUNIT_ARGUMENT = "vscode.java.test.junit.argument";
     private static final String GENERATE_TESTS = "vscode.java.test.generateTests";
     private static final String FIND_JAVA_PROJECT = "vscode.java.test.findJavaProjects";
@@ -51,6 +52,8 @@ public class TestDelegateCommandHandler implements IDelegateCommandHandler {
         switch (commandId) {
             case GET_TEST_SOURCE_PATH:
                 return ProjectTestUtils.listTestSourcePaths(arguments, monitor);
+            case GET_SOURCE_PATH:
+                return ProjectTestUtils.listSourcePaths(arguments, monitor);
             case RESOLVE_JUNIT_ARGUMENT:
                 return JUnitLaunchUtils.resolveLaunchArgument(arguments, monitor);
             case GENERATE_TESTS:

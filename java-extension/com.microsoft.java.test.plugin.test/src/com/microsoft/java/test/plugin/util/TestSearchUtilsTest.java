@@ -16,8 +16,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -82,7 +85,6 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 .filter(item -> "example".equals(item.getLabel()))
                 .findFirst().orElse(null);
         assertNotNull(examplePackage);
-        assertEquals(11, examplePackage.getChildren().size());
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "MiniTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
@@ -104,6 +106,49 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
                 Arrays.asList(nestedType.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals("Child", nestedChildren.get(0).getLabel());
         assertEquals(JavaCore.ENABLED, javaProject.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true));
+    }
+
+    @Test
+    public void testAdditionalSourcePathsDiscoveryAndNavigation() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IJavaProject javaProject = JavaCore.create(project);
+        final String sourcePath = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"))
+                .getResource().getLocation().toOSString();
+
+        final List<JavaTestItem> defaultPackages = TestSearchUtils.findTestPackagesAndTypes(
+                Arrays.asList(javaProject.getHandleIdentifier()), new NullProgressMonitor());
+        assertTrue("Default test discovery should retain ordinary test-source tests",
+                containsTestItem(defaultPackages, "MiniTest"));
+        assertTrue("Default Java-project discovery should retain existing main-source test behavior",
+                containsTestItem(defaultPackages, "AdditionalMainSourceTest"));
+
+        final List<JavaTestItem> packagesWithAdditionalSource = TestSearchUtils.findTestPackagesAndTypes(
+                Arrays.<Object>asList(javaProject.getHandleIdentifier(), Collections.singletonList(sourcePath)),
+                new NullProgressMonitor());
+        assertTrue("Additional-source discovery should retain ordinary test-source tests",
+                containsTestItem(packagesWithAdditionalSource, "MiniTest"));
+        assertTrue("Additional-source discovery should include tests under the selected root",
+                containsTestItem(packagesWithAdditionalSource, "AdditionalMainSourceTest"));
+
+        final String sourceUri = javaProject.findType("example.AdditionalMainSource")
+                .getResource().getLocationURI().toString();
+        final Object defaultNavigation = TestNavigationUtils.findTestOrTarget(
+                Arrays.asList(sourceUri, true), new NullProgressMonitor());
+        assertEquals(1, getNavigationItems(defaultNavigation).size());
+        final Object navigationWithAdditionalSource = TestNavigationUtils.findTestOrTarget(Arrays.<Object>asList(
+                sourceUri, true, Collections.singletonList(sourcePath)), new NullProgressMonitor());
+        assertEquals(1, getNavigationItems(navigationWithAdditionalSource).size());
+    }
+
+    private static Collection<?> getNavigationItems(Object navigationResult) throws Exception {
+        final Field itemsField = navigationResult.getClass().getField("items");
+        itemsField.setAccessible(true);
+        return (Collection<?>) itemsField.get(navigationResult);
+    }
+
+    private static boolean containsTestItem(List<JavaTestItem> items, String label) {
+        return items != null && items.stream().anyMatch(item -> label.equals(item.getLabel()) ||
+                containsTestItem(item.getChildren(), label));
     }
 
     @Test

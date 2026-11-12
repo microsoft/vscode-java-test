@@ -41,15 +41,33 @@ export function createTestController(): void {
     testController.createRunProfile('Debug Tests', TestRunProfileKind.Debug, runHandler, true, runnableTag);
     testController.createRunProfile('Run Tests with Coverage', TestRunProfileKind.Coverage, runHandler, true, runnableTag);
 
-    testController.refreshHandler = () => {
-        refreshExplorer();
-    }
+    testController.refreshHandler = () => refreshTestSourcePaths();
 
     startWatchingWorkspace();
 }
 
 export function creatTestProfile(name: string, kind: TestRunProfileKind): void {
     testController?.createRunProfile(name, kind, runHandler, false, runnableTag);
+}
+
+let refreshTestSourcePathsPromise: Promise<void> | undefined;
+let refreshTestSourcePathsRequested: boolean = false;
+
+export function refreshTestSourcePaths(): Promise<void> {
+    refreshTestSourcePathsRequested = true;
+    if (!refreshTestSourcePathsPromise) {
+        refreshTestSourcePathsPromise = (async () => {
+            while (refreshTestSourcePathsRequested) {
+                refreshTestSourcePathsRequested = false;
+                testSourceProvider.clear();
+                await refreshExplorer();
+                await startWatchingWorkspace();
+            }
+        })().finally(() => {
+            refreshTestSourcePathsPromise = undefined;
+        });
+    }
+    return refreshTestSourcePathsPromise;
 }
 
 export const loadChildren: (item: TestItem, token?: CancellationToken, force?: boolean) => Promise<void> = instrumentOperation('java.test.explorer.loadChildren', async (_operationId: string, item: TestItem, token?: CancellationToken, force: boolean = false) => {
@@ -110,7 +128,29 @@ export const loadChildren: (item: TestItem, token?: CancellationToken, force?: b
 async function resolveTestItemChildren(item: TestItem, data: ITestItemData, resolutionVersion: number,
     token?: CancellationToken): Promise<void> {
     if (data.testLevel === TestLevel.Project) {
-        const packageAndTypes: IJavaTestItem[] = await findTestPackagesAndTypes(data.jdtHandler, token);
+        const workspaceFolder: WorkspaceFolder | undefined = item.uri
+            ? workspace.getWorkspaceFolder(item.uri)
+            : undefined;
+        let additionalSourcePaths: string[] = [];
+        if (workspaceFolder) {
+            const sourcePathsPromise: Promise<string[]> =
+                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, token);
+            if (token) {
+                const resolvedSourcePaths: string[] | undefined =
+                    await awaitWithCancellation(sourcePathsPromise, token);
+                if (token.isCancellationRequested) {
+                    return;
+                }
+                additionalSourcePaths = resolvedSourcePaths ?? [];
+            } else {
+                additionalSourcePaths = await sourcePathsPromise;
+            }
+        }
+        if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
+            return;
+        }
+        const packageAndTypes: IJavaTestItem[] = await findTestPackagesAndTypes(
+            data.jdtHandler, token, additionalSourcePaths);
         if (token?.isCancellationRequested || resolutionVersion !== getResolutionVersion(item)) {
             return;
         }
@@ -135,6 +175,25 @@ async function resolveTestItemChildren(item: TestItem, data: ITestItemData, reso
     item.canResolveChildren = false;
 }
 
+function awaitWithCancellation<T>(promise: Promise<T>, token?: CancellationToken): Promise<T | undefined> {
+    if (!token) {
+        return promise;
+    }
+    if (token.isCancellationRequested) {
+        return Promise.resolve(undefined);
+    }
+
+    let cancellation: Disposable | undefined;
+    const cancellationPromise: Promise<undefined> = new Promise((resolve: (value: undefined) => void) => {
+        cancellation = token.onCancellationRequested(() => resolve(undefined));
+    });
+    if (token.isCancellationRequested) {
+        cancellation?.dispose();
+        return Promise.resolve(undefined);
+    }
+    return Promise.race([promise, cancellationPromise]).finally(() => cancellation?.dispose());
+}
+
 function invalidateTestItemResolution(item: TestItem): void {
     const testLevel: TestLevel | undefined = dataCache.get(item)?.testLevel;
     if (testLevel === TestLevel.Project || testLevel === TestLevel.Class) {
@@ -153,7 +212,8 @@ async function startWatchingWorkspace(): Promise<void> {
         return;
     }
 
-    for (const disposable of watchers) {
+    // Remove disposed handles so repeated refreshes do not retain stale watchers.
+    for (const disposable of watchers.splice(0)) {
         disposable.dispose();
     }
 
@@ -207,6 +267,7 @@ async function startWatchingWorkspace(): Promise<void> {
                 }),
             );
         }
+
     }
 }
 

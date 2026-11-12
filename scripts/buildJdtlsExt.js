@@ -80,7 +80,6 @@ function updateVersion() {
         }
     }
     
-    // Sort for consistent ordering
     newJavaExtensions.sort();
     
     packageJsonData.contributes.javaExtensions = newJavaExtensions;

@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import * as path from 'path';
-import { commands, Extension, extensions, Location, Range, Uri, window } from 'vscode';
+import { commands, Extension, extensions, Location, Range, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerCommands, JavaTestRunnerDelegateCommands, VSCodeCommands } from '../../constants';
+import { testSourceProvider } from '../../provider/testSourceProvider';
 import { SymbolTree } from '../../references-view';
 import { executeJavaLanguageServerCommand } from '../../utils/commandUtils';
 import { IOption } from '../askForOptionCommands';
@@ -19,7 +20,12 @@ export async function navigateToTestOrTarget(gotoTest: boolean): Promise<void> {
         return;
     }
     const uri: Uri = window.activeTextEditor.document.uri;
-    const result: ITestNavigationResult | undefined = await searchTestOrTarget(uri.toString(), gotoTest);
+    const workspaceFolder: WorkspaceFolder | undefined = workspace.getWorkspaceFolder(uri);
+    const additionalSourcePaths: string[] = gotoTest && workspaceFolder
+        ? await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder)
+        : [];
+    const result: ITestNavigationResult | undefined = await searchTestOrTarget(
+        uri.toString(), gotoTest, additionalSourcePaths);
     if (!result?.items?.length) {
         const items: string[] = [SEARCH_FILES];
         if (gotoTest) {
@@ -96,9 +102,10 @@ async function fallbackForNavigation(results: ITestNavigationItem[]): Promise<vo
     }
 }
 
-async function searchTestOrTarget(uri: string, gotoTest: boolean): Promise<ITestNavigationResult | undefined> {
+async function searchTestOrTarget(
+    uri: string, gotoTest: boolean, additionalSourcePaths: string[]): Promise<ITestNavigationResult | undefined> {
     return await executeJavaLanguageServerCommand<ITestNavigationResult | undefined>(
-        JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri, gotoTest);
+        JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri, gotoTest, additionalSourcePaths);
 }
 
 export interface ITestNavigationResult {

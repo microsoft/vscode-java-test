@@ -5,10 +5,13 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { Location, Uri, window } from 'vscode';
-import { ITestNavigationResult } from '../../src/commands/navigation/navigationCommands';
+import * as sinon from 'sinon';
+import { Location, Range, Uri, window } from 'vscode';
+import { ITestNavigationResult, navigateToTestOrTarget } from '../../src/commands/navigation/navigationCommands';
 import { JavaTestRunnerDelegateCommands } from '../../src/constants';
+import { testSourceProvider } from '../../src/provider/testSourceProvider';
 import { findTestLocation } from '../../src/runners/utils';
+import * as commandUtils from '../../src/utils/commandUtils';
 import { executeJavaLanguageServerCommand } from '../../src/utils/commandUtils';
 import { setupTestEnv } from "./utils";
 
@@ -41,6 +44,32 @@ suite('Test Navigation Tests', () => {
         assert.strictEqual(searchResult?.items.length, 1);
         assert.strictEqual(searchResult?.items[0].simpleName, 'App');
         assert.strictEqual(searchResult?.items[0].fullyQualifiedName, 'junit.App');
+    });
+
+    test('passes selected source roots to Go to Test navigation', async () => {
+        const filePath: string = path.join(PROJECT_PATH, 'src', 'main', 'java', 'junit', 'App.java');
+        await window.showTextDocument(Uri.file(filePath));
+        const uri: Uri = window.activeTextEditor!.document.uri;
+        const additionalSourcePaths: string[] = [path.join(PROJECT_PATH, 'src', 'main', 'java')];
+        const result: ITestNavigationResult = {
+            items: [{
+                simpleName: 'AppTest',
+                fullyQualifiedName: 'junit5.AppTest',
+                uri: uri.toString(),
+                relevance: 0,
+                outOfBelongingProject: false,
+            }],
+            location: new Location(uri, new Range(0, 0, 0, 0)),
+        };
+        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').resolves(additionalSourcePaths);
+        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand').resolves(result);
+        try {
+            await navigateToTestOrTarget(true);
+            sinon.assert.calledOnceWithExactly(commandStub,
+                JavaTestRunnerDelegateCommands.NAVIGATE_TO_TEST_OR_TARGET, uri.toString(), true, additionalSourcePaths);
+        } finally {
+            sinon.restore();
+        }
     });
 
     test('test find inherited test method location', async () => {

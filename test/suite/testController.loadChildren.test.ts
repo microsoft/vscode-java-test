@@ -3,12 +3,14 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, TestController, TestItem, tests, Uri } from 'vscode';
-import { loadChildren } from '../../src/controller/testController';
+import { CancellationTokenSource, TestController, TestItem, tests, Uri, workspace, WorkspaceFolder } from 'vscode';
+import { loadChildren, refreshTestSourcePaths } from '../../src/controller/testController';
 import { dataCache, invalidateResolutionVersion } from '../../src/controller/testItemDataCache';
 import * as controllerUtils from '../../src/controller/utils';
+import * as testExplorerCommands from '../../src/commands/testExplorerCommands';
 import { TestKind, TestLevel } from '../../src/java-test-runner.api';
 import { IJavaTestItem } from '../../src/types';
+import { testSourceProvider } from '../../src/provider/testSourceProvider';
 import { setupTestEnv } from './utils';
 
 function createTestItem(testController: TestController, id: string, testLevel: TestLevel,
@@ -41,6 +43,85 @@ suite('testController - loadChildren', () => {
     teardown(() => {
         sinon.restore();
         testController.dispose();
+    });
+
+    test('refreshes test source paths after clearing cached discovery paths', async () => {
+        const clearPathsStub = sinon.stub(testSourceProvider, 'clear');
+        const refreshExplorerStub = sinon.stub(testExplorerCommands, 'refreshExplorer').resolves();
+        const watcherPatternsStub = sinon.stub(testSourceProvider, 'getTestSourcePattern').resolves([]);
+
+        await refreshTestSourcePaths();
+
+        sinon.assert.callOrder(clearPathsStub, refreshExplorerStub, watcherPatternsStub);
+    });
+
+    test('serializes overlapping source-path refresh requests', async () => {
+        let releaseFirstRefresh!: () => void;
+        let signalFirstRefreshStarted!: () => void;
+        const firstRefreshStarted: Promise<void> = new Promise((resolve) => {
+            signalFirstRefreshStarted = resolve;
+        });
+        const firstRefreshGate: Promise<void> = new Promise((resolve) => {
+            releaseFirstRefresh = resolve;
+        });
+        const clearPathsStub = sinon.stub(testSourceProvider, 'clear');
+        const refreshExplorerStub = sinon.stub(testExplorerCommands, 'refreshExplorer').callsFake(async () => {
+            if (refreshExplorerStub.callCount === 1) {
+                signalFirstRefreshStarted();
+                await firstRefreshGate;
+            }
+        });
+        const watcherPatternsStub = sinon.stub(testSourceProvider, 'getTestSourcePattern').resolves([]);
+
+        const firstRefresh: Promise<void> = refreshTestSourcePaths();
+        await firstRefreshStarted;
+        const overlappingRefresh: Promise<void> = refreshTestSourcePaths();
+        releaseFirstRefresh();
+        await Promise.all([firstRefresh, overlappingRefresh]);
+
+        assert.strictEqual(clearPathsStub.callCount, 2);
+        assert.strictEqual(refreshExplorerStub.callCount, 2);
+        assert.strictEqual(watcherPatternsStub.callCount, 2);
+    });
+
+    test('passes configured imported source roots to backend project discovery', async () => {
+        const projectUri: Uri = Uri.file('/workspace/module');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('/workspace'),
+            name: 'workspace',
+            index: 0,
+        };
+        const additionalSourcePath: string = '/workspace/module/src/main/java';
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project, undefined, projectUri);
+        sinon.stub(workspace, 'getWorkspaceFolder').returns(workspaceFolder);
+        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').resolves([additionalSourcePath]);
+        const findPackagesStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes').resolves([]);
+
+        await loadChildren(project);
+
+        sinon.assert.calledOnceWithExactly(findPackagesStub, 'project-handler', undefined, [additionalSourcePath]);
+    });
+
+    test('removes additional-root tests when a refresh no longer selects their source root', async () => {
+        const projectUri: Uri = Uri.file('/workspace/module');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('/workspace'),
+            name: 'workspace',
+            index: 0,
+        };
+        const project: TestItem = createTestItem(testController, 'project', TestLevel.Project, undefined, projectUri);
+        const testPackage: TestItem = createTestItem(testController, 'project@example', TestLevel.Package, project);
+        createTestItem(testController, 'project@example.AdditionalTest', TestLevel.Class, testPackage,
+            Uri.file('/workspace/module/src/main/java/example/AdditionalTest.java'));
+        sinon.stub(workspace, 'getWorkspaceFolder').returns(workspaceFolder);
+        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').resolves([]);
+        const findPackagesStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes');
+        findPackagesStub.resolves([]);
+
+        await loadChildren(project, undefined, true);
+
+        assert.strictEqual(project.children.size, 0);
+        sinon.assert.calledOnceWithExactly(findPackagesStub, 'project-handler', undefined, []);
     });
 
     test('should reuse resolved project children until a forced refresh', async () => {
@@ -341,5 +422,42 @@ suite('testController - loadChildren', () => {
         assert.ok(findTestsStub.notCalled);
         assert.strictEqual(project.canResolveChildren, true);
         source.dispose();
+    });
+
+    test('does not start backend discovery when cancellation occurs during source-root resolution', async () => {
+        const project: TestItem = createTestItem(
+            testController, 'project', TestLevel.Project, undefined, Uri.file('/workspace/module'));
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('/workspace'),
+            name: 'workspace',
+            index: 0,
+        };
+        let releaseSourcePaths!: (sourcePaths: string[]) => void;
+        let signalSourcePathsRequested!: () => void;
+        const sourcePathsRequested: Promise<void> = new Promise((resolve) => {
+            signalSourcePathsRequested = resolve;
+        });
+        const sourcePaths: Promise<string[]> = new Promise((resolve) => {
+            releaseSourcePaths = resolve;
+        });
+        const cancellation: CancellationTokenSource = new CancellationTokenSource();
+        sinon.stub(workspace, 'getWorkspaceFolder').returns(workspaceFolder);
+        sinon.stub(testSourceProvider, 'getAdditionalTestSourcePaths').callsFake((folder, token) => {
+            assert.strictEqual(folder, workspaceFolder);
+            assert.strictEqual(token, cancellation.token);
+            signalSourcePathsRequested();
+            return sourcePaths;
+        });
+        const findPackagesStub = sinon.stub(controllerUtils, 'findTestPackagesAndTypes').resolves([]);
+
+        const resolution: Promise<void> = loadChildren(project, cancellation.token);
+        await sourcePathsRequested;
+        cancellation.cancel();
+        await resolution;
+        releaseSourcePaths(['/workspace/module/src/main/java']);
+
+        assert.ok(findPackagesStub.notCalled);
+        assert.strictEqual(project.canResolveChildren, true);
+        cancellation.dispose();
     });
 });
