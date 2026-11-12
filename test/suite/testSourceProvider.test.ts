@@ -75,6 +75,21 @@ suite('testSourceProvider', () => {
         }
     });
 
+    test('matches absolute source-root patterns', async () => {
+        const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
+        const sourceRoot: string = path.join(workspacePath, 'modules', 'app', 'src', 'main', 'java');
+        fse.ensureDirSync(sourceRoot);
+
+        try {
+            const paths: string[] = await resolveAdditionalTestSourcePaths(
+                workspacePath, [path.join(workspacePath, 'modules', '*', 'src', 'main', 'java')], [sourceRoot]);
+
+            assert.deepStrictEqual(paths, [sourceRoot]);
+        } finally {
+            fse.removeSync(workspacePath);
+        }
+    });
+
     test('includes additional source roots in file watcher patterns', async () => {
         const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
         const sourceRoots: string[] = [
@@ -169,7 +184,43 @@ suite('testSourceProvider', () => {
         }
     });
 
-    test('passes cancellation tokens to uncached Java source-root lookups', async () => {
+    test('reuses cached additional source-root lookups when cancellation tokens are provided', async () => {
+        const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
+        const sourceRoot: string = path.join(workspacePath, 'src', 'main', 'java');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file(workspacePath),
+            name: 'additional-source-paths-test',
+            index: 0,
+        };
+        const configuration: WorkspaceConfiguration = {
+            get: () => ['src/main/java'],
+        } as unknown as WorkspaceConfiguration;
+        const firstCancellation: CancellationTokenSource = new CancellationTokenSource();
+        const secondCancellation: CancellationTokenSource = new CancellationTokenSource();
+
+        testSourceProvider.clear();
+        sinon.stub(workspace, 'getConfiguration').returns(configuration);
+        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand')
+            .resolves([{ testSourcePath: sourceRoot, isStrict: false }]);
+        try {
+            const results: string[][] = await Promise.all([
+                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, firstCancellation.token),
+                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, secondCancellation.token),
+            ]);
+
+            assert.deepStrictEqual(results, [[sourceRoot], [sourceRoot]]);
+            sinon.assert.calledOnceWithExactly(commandStub,
+                JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, [workspaceFolder.uri.toString()], firstCancellation.token);
+        } finally {
+            firstCancellation.dispose();
+            secondCancellation.dispose();
+            testSourceProvider.clear();
+            sinon.restore();
+            fse.removeSync(workspacePath);
+        }
+    });
+
+    test('evicts a cancelled additional source-root lookup before retrying', async () => {
         const workspacePath: string = fse.mkdtempSync(path.join(os.tmpdir(), 'java-test-source-paths-'));
         const sourceRoot: string = path.join(workspacePath, 'src', 'main', 'java');
         const workspaceFolder: WorkspaceFolder = {
@@ -181,16 +232,24 @@ suite('testSourceProvider', () => {
             get: () => ['src/main/java'],
         } as unknown as WorkspaceConfiguration;
         const cancellation: CancellationTokenSource = new CancellationTokenSource();
+        let completeFirstLookup: ((paths: ITestSourcePath[]) => void) | undefined;
 
         testSourceProvider.clear();
         sinon.stub(workspace, 'getConfiguration').returns(configuration);
-        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand')
-            .resolves([{ testSourcePath: sourceRoot, isStrict: false }]);
+        const commandStub = sinon.stub(commandUtils, 'executeJavaLanguageServerCommand');
+        commandStub.onFirstCall().returns(new Promise<ITestSourcePath[]>((resolve) => {
+            completeFirstLookup = resolve;
+        }));
+        commandStub.onSecondCall().resolves([{ testSourcePath: sourceRoot, isStrict: false }]);
         try {
-            assert.deepStrictEqual(
-                await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, cancellation.token), [sourceRoot]);
-            sinon.assert.calledOnceWithExactly(commandStub,
-                JavaTestRunnerDelegateCommands.GET_SOURCE_PATH, [workspaceFolder.uri.toString()], cancellation.token);
+            const cancelledLookup: Promise<string[]> =
+                testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder, cancellation.token);
+            cancellation.cancel();
+            completeFirstLookup!([{ testSourcePath: sourceRoot, isStrict: false }]);
+
+            assert.deepStrictEqual(await cancelledLookup, []);
+            assert.deepStrictEqual(await testSourceProvider.getAdditionalTestSourcePaths(workspaceFolder), [sourceRoot]);
+            assert.strictEqual(commandStub.callCount, 2);
         } finally {
             cancellation.dispose();
             testSourceProvider.clear();

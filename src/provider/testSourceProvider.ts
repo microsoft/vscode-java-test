@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import * as minimatch from 'minimatch';
-import { hasMagic } from 'glob';
 import { CancellationToken, OutputChannel, RelativePattern, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { JavaTestRunnerDelegateCommands } from '../constants';
 import { executeJavaLanguageServerCommand } from '../utils/commandUtils';
@@ -34,27 +33,17 @@ class TestSourcePathProvider {
             .map((s: ITestSourcePath) => s.testSourcePath);
     }
 
-    public getAdditionalTestSourcePaths(workspaceFolder: WorkspaceFolder, token?: CancellationToken): Promise<string[]> {
+    public async getAdditionalTestSourcePaths(workspaceFolder: WorkspaceFolder, token?: CancellationToken): Promise<string[]> {
         const configuredPaths: string[] = workspace.getConfiguration('java.test', workspaceFolder.uri)
             .get<string[]>('additionalTestSourcePaths', []);
-        if (configuredPaths.length === 0) {
-            return Promise.resolve([]);
-        }
-        if (token) {
-            if (token.isCancellationRequested) {
-                return Promise.resolve([]);
-            }
-            return getSourcePaths([workspaceFolder.uri.toString()], token).then((sourcePaths: ITestSourcePath[]) =>
-                token.isCancellationRequested
-                    ? []
-                    : resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths,
-                        sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)));
+        if (configuredPaths.length === 0 || token?.isCancellationRequested) {
+            return [];
         }
 
         const workspaceKey: string = workspaceFolder.uri.toString();
         let resolvedPaths: Promise<string[]> | undefined = this.additionalTestSourceMapping.get(workspaceKey);
         if (!resolvedPaths) {
-            resolvedPaths = getSourcePaths([workspaceFolder.uri.toString()]).then((sourcePaths: ITestSourcePath[]) =>
+            resolvedPaths = getSourcePaths([workspaceFolder.uri.toString()], token).then((sourcePaths: ITestSourcePath[]) =>
                 resolveAdditionalTestSourcePaths(workspaceFolder.uri.fsPath, configuredPaths,
                     sourcePaths.map((sourcePath: ITestSourcePath) => sourcePath.testSourcePath)));
             this.additionalTestSourceMapping.set(workspaceKey, resolvedPaths);
@@ -64,7 +53,22 @@ class TestSourcePathProvider {
                 }
             });
         }
-        return resolvedPaths;
+
+        try {
+            const paths: string[] = await resolvedPaths;
+            if (token?.isCancellationRequested) {
+                if (this.additionalTestSourceMapping.get(workspaceKey) === resolvedPaths) {
+                    this.additionalTestSourceMapping.delete(workspaceKey);
+                }
+                return [];
+            }
+            return paths;
+        } catch (error) {
+            if (this.additionalTestSourceMapping.get(workspaceKey) === resolvedPaths) {
+                this.additionalTestSourceMapping.delete(workspaceKey);
+            }
+            throw error;
+        }
     }
 
     public async isOnTestSourcePath(uri: Uri): Promise<boolean> {
@@ -158,26 +162,26 @@ export async function resolveAdditionalTestSourcePaths(
 
         const normalizedPattern: string = configuredPath.trim().replace(/\\/g, '/');
         const resolvedPattern: string = path.resolve(workspacePath, normalizedPattern);
-        if (!hasMagic(normalizedPattern)) {
-            const sourcePath: string | undefined = sourcePathByKey.get(getPathKey(resolvedPattern));
-            if (sourcePath) {
-                addUniquePath(paths, pathKeys, sourcePath);
-            }
-            continue;
-        }
-
+        const isAbsolutePattern: boolean = path.isAbsolute(normalizedPattern);
         try {
             const matcher: minimatch.Minimatch = new minimatch.Minimatch(
-                path.isAbsolute(normalizedPattern)
-                    ? normalizedPattern
-                    : normalizedPattern.replace(/^\.\//, ''),
+                isAbsolutePattern ? normalizedPattern : normalizedPattern.replace(/^\.\//, ''),
                 { nocase: process.platform === 'win32' });
+            if (!matcher.hasMagic()) {
+                const sourcePath: string | undefined = sourcePathByKey.get(getPathKey(resolvedPattern));
+                if (sourcePath) {
+                    addUniquePath(paths, pathKeys, sourcePath);
+                }
+                continue;
+            }
+
             for (const sourcePath of sourcePathByKey.values()) {
-                const matchPath: string = path.isAbsolute(normalizedPattern)
+                const matchPath: string = isAbsolutePattern
                     ? sourcePath.replace(/\\/g, '/')
                     : path.relative(workspacePath, sourcePath).replace(/\\/g, '/');
-                if (matchPath !== '..' && !matchPath.startsWith('../') && !path.isAbsolute(matchPath) &&
-                        matcher.match(matchPath)) {
+                const isWithinWorkspace: boolean = isAbsolutePattern ||
+                    (matchPath !== '..' && !matchPath.startsWith('../') && !path.isAbsolute(matchPath));
+                if (isWithinWorkspace && matcher.match(matchPath)) {
                     addUniquePath(paths, pathKeys, sourcePath);
                 }
             }

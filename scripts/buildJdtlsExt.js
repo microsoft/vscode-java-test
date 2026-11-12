@@ -9,7 +9,7 @@ const fse = require('fs-extra');
 
 fse.removeSync('server');
 const serverDir = path.resolve('java-extension');
-// Bundle prefixes to copy from the p2 repository, in dependency load order.
+// Bundle prefixes to copy from the p2 repository.
 // Each prefix may match multiple versions (e.g., junit-jupiter-api_5.x and junit-jupiter-api_6.x)
 // to support both JUnit 5 and JUnit 6.
 const bundleList = [
@@ -30,10 +30,10 @@ const bundleList = [
     'junit-platform-suite-commons_',
     'junit-platform-suite-engine_',
     'org.apiguardian.api_',
-    // JDT LS provides core ASM; load the support bundles before JaCoCo imports them.
+    'org.jacoco.core_',
+    'org.objectweb.asm_',
     'org.objectweb.asm.commons_',
-    'org.objectweb.asm.tree_',
-    'org.jacoco.core_'
+    'org.objectweb.asm.tree_'
 ];
 // Set MAVEN_OPTS to disable XML entity size limits for JDK XML parser
 const env = { ...process.env };
@@ -80,11 +80,7 @@ function updateVersion() {
         }
     }
     
-    const bundleOrder = (extensionPath) => {
-        const index = bundleList.findIndex(prefix => path.basename(extensionPath).startsWith(prefix));
-        return index === -1 ? bundleList.length : index;
-    };
-    newJavaExtensions.sort((a, b) => bundleOrder(a) - bundleOrder(b) || a.localeCompare(b));
+    newJavaExtensions.sort();
     
     packageJsonData.contributes.javaExtensions = newJavaExtensions;
 

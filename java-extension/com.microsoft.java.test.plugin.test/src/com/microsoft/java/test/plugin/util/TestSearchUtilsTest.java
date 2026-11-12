@@ -89,32 +89,12 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "SiblingTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream().anyMatch(item -> "NestedOnlyTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream()
-                .noneMatch(item -> "AdditionalMainSourceTest".equals(item.getLabel())));
-        assertTrue(examplePackage.getChildren().stream()
                 .anyMatch(item -> "InheritanceChildTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream()
                 .anyMatch(item -> "GenericInheritanceChildTest".equals(item.getLabel())));
         assertTrue(examplePackage.getChildren().stream()
                 .anyMatch(item -> "UnboundedGenericInheritanceChildTest".equals(item.getLabel())));
 
-        final String mainSourcePath = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"))
-                .getResource().getLocation().toOSString();
-        final List<JavaTestItem> packagesWithAdditionalSource = TestSearchUtils.findTestPackagesAndTypes(
-                Arrays.<Object>asList(javaProject.getHandleIdentifier(), Collections.singletonList(mainSourcePath)),
-                new NullProgressMonitor());
-        assertTrue(packagesWithAdditionalSource.get(0).getChildren().stream()
-                .anyMatch(item -> "AdditionalMainSourceTest".equals(item.getLabel())));
-        assertTrue(packagesWithAdditionalSource.get(0).getChildren().stream()
-                .anyMatch(item -> "MiniTest".equals(item.getLabel())));
-
-        final String additionalTestUri = javaProject.findType("example.AdditionalMainSource")
-                .getResource().getLocationURI().toString();
-        final Object defaultNavigation = TestNavigationUtils.findTestOrTarget(
-                Arrays.asList(additionalTestUri, true), new NullProgressMonitor());
-        assertTrue(getNavigationItems(defaultNavigation).isEmpty());
-        final Object navigationWithAdditionalSource = TestNavigationUtils.findTestOrTarget(Arrays.<Object>asList(
-                additionalTestUri, true, Collections.singletonList(mainSourcePath)), new NullProgressMonitor());
-        assertEquals(1, getNavigationItems(navigationWithAdditionalSource).size());
         final List<JavaTestItem> methods = TestSearchUtils.findDirectTestChildrenForClass(
                 Arrays.asList(type.getHandleIdentifier()), new NullProgressMonitor());
         assertEquals(2, methods.size());
@@ -128,10 +108,47 @@ public class TestSearchUtilsTest extends AbstractProjectsManagerBasedTest {
         assertEquals(JavaCore.ENABLED, javaProject.getOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, true));
     }
 
+    @Test
+    public void testAdditionalSourcePathsDiscoveryAndNavigation() throws Exception {
+        final IProject project = importProjects("preview-junit").get(0);
+        final IJavaProject javaProject = JavaCore.create(project);
+        final String sourcePath = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"))
+                .getResource().getLocation().toOSString();
+
+        final List<JavaTestItem> defaultPackages = TestSearchUtils.findTestPackagesAndTypes(
+                Arrays.asList(javaProject.getHandleIdentifier()), new NullProgressMonitor());
+        assertTrue("Default test discovery should retain ordinary test-source tests",
+                containsTestItem(defaultPackages, "MiniTest"));
+        assertTrue("Default Java-project discovery should retain existing main-source test behavior",
+                containsTestItem(defaultPackages, "AdditionalMainSourceTest"));
+
+        final List<JavaTestItem> packagesWithAdditionalSource = TestSearchUtils.findTestPackagesAndTypes(
+                Arrays.<Object>asList(javaProject.getHandleIdentifier(), Collections.singletonList(sourcePath)),
+                new NullProgressMonitor());
+        assertTrue("Additional-source discovery should retain ordinary test-source tests",
+                containsTestItem(packagesWithAdditionalSource, "MiniTest"));
+        assertTrue("Additional-source discovery should include tests under the selected root",
+                containsTestItem(packagesWithAdditionalSource, "AdditionalMainSourceTest"));
+
+        final String sourceUri = javaProject.findType("example.AdditionalMainSource")
+                .getResource().getLocationURI().toString();
+        final Object defaultNavigation = TestNavigationUtils.findTestOrTarget(
+                Arrays.asList(sourceUri, true), new NullProgressMonitor());
+        assertEquals(1, getNavigationItems(defaultNavigation).size());
+        final Object navigationWithAdditionalSource = TestNavigationUtils.findTestOrTarget(Arrays.<Object>asList(
+                sourceUri, true, Collections.singletonList(sourcePath)), new NullProgressMonitor());
+        assertEquals(1, getNavigationItems(navigationWithAdditionalSource).size());
+    }
+
     private static Collection<?> getNavigationItems(Object navigationResult) throws Exception {
         final Field itemsField = navigationResult.getClass().getField("items");
         itemsField.setAccessible(true);
         return (Collection<?>) itemsField.get(navigationResult);
+    }
+
+    private static boolean containsTestItem(List<JavaTestItem> items, String label) {
+        return items != null && items.stream().anyMatch(item -> label.equals(item.getLabel()) ||
+                containsTestItem(item.getChildren(), label));
     }
 
     @Test
