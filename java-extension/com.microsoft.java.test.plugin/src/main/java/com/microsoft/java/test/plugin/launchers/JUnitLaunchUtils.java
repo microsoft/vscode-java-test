@@ -18,6 +18,7 @@ import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -120,8 +121,13 @@ public class JUnitLaunchUtils {
                 if (args.testLevel == TestLevel.CLASS) {
                     info.mainType = args.testNames[0].substring(args.testNames[0].indexOf("@") + 1);
                 } else if (args.testLevel == TestLevel.METHOD) {
-                    final IMethod method = (IMethod) JavaCore.create(args.testNames[0]);
-                    info.mainType = method.getDeclaringType().getFullyQualifiedName();
+                    if (ArrayUtils.isNotEmpty(args.executionClassNames) &&
+                            StringUtils.isNotBlank(args.executionClassNames[0])) {
+                        info.mainType = args.executionClassNames[0];
+                    } else {
+                        final IMethod method = (IMethod) JavaCore.create(args.testNames[0]);
+                        info.mainType = method.getDeclaringType().getFullyQualifiedName();
+                    }
                 }
             }
         }
@@ -259,6 +265,7 @@ public class JUnitLaunchUtils {
         public TestKind testKind;
         public String[] testNames;
         public String[] testHandles;
+        public String[] executionClassNames;
         public String uniqueId;
     }
 }
