@@ -611,8 +611,9 @@ public class TestSearchUtils {
 
     /**
      * Rewrite an inherited method item so its full name and id are anchored at the child class
-     * (e.g. {@code Child#test}) instead of the declaring parent class. The display label, source
-     * range, and JDT handler still point at the parent declaration.
+     * (e.g. {@code Child#test}) instead of the declaring parent class. The display label and JDT
+     * handler still point at the parent declaration; the URI points to the child type, and the
+     * range is cleared because the parent declaration's range must not be used in the child.
      */
     private static void rebaseMethodItemToChild(JavaTestItem methodItem, IType childType)
             throws JavaModelException {
