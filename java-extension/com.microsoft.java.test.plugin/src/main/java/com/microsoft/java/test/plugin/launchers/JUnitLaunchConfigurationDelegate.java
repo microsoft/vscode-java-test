@@ -16,6 +16,7 @@ import com.microsoft.java.test.plugin.model.Response;
 import com.microsoft.java.test.plugin.model.TestKind;
 import com.microsoft.java.test.plugin.model.TestLevel;
 import com.microsoft.java.test.plugin.util.JUnitPlugin;
+import com.microsoft.java.test.plugin.util.TestSearchUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
@@ -26,6 +27,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
@@ -34,9 +36,13 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.internal.corext.refactoring.structure.ASTNodeSearchUtil;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 import java.io.BufferedWriter;
@@ -191,7 +197,54 @@ public class JUnitLaunchConfigurationDelegate extends org.eclipse.jdt.junit.laun
             } else {
                 arguments.add("-test");
                 arguments.add(resolveMethodTestName(this.args.testNames[0], getExecutionClassName(0)));
+                if (StringUtils.isNotBlank(this.args.uniqueId)) {
+                    arguments.add("-uniqueId");
+                    arguments.add(this.args.uniqueId);
+                }
+                arguments.add("-test");
+                final IMethod method = (IMethod) JavaCore.create(this.args.testNames[0]);
+                String testName = method.getElementName();
+                if ((this.args.testKind == TestKind.JUnit5 || this.args.testKind == TestKind.JUnit6) &&
+                        method.getParameters().length > 0) {
+                    final ICompilationUnit unit = method.getCompilationUnit();
+                    if (unit == null) {
+                        // binary method
+                        if (method.getDeclaringType() == null) {
+                            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                                "Cannot get compilation unit of method" + method.getElementName(), null));
+                        }
+                    } else {
+                        final CompilationUnit root = (CompilationUnit) TestSearchUtils.parseToAst(unit,
+                                false /* fromCache */, new NullProgressMonitor());
+                        final MethodDeclaration methodDeclaration = ASTNodeSearchUtil.getMethodDeclarationNode(method,
+                                root);
+                        if (methodDeclaration == null) {
+                            throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID, IStatus.ERROR,
+                                "Cannot get method declaration of method" + method.getElementName(), null));
+                        }
 
+                        final List<String> parameters = new LinkedList<>();
+                        for (final Object obj : methodDeclaration.parameters()) {
+                            if (obj instanceof SingleVariableDeclaration) {
+                                final ITypeBinding paramTypeBinding = ((SingleVariableDeclaration) obj).getType()
+                                        .resolveBinding();
+                                if (paramTypeBinding == null) {
+                                    throw new CoreException(new Status(IStatus.ERROR, JUnitPlugin.PLUGIN_ID,
+                                        IStatus.ERROR,
+                                        "Cannot set set argument for method" + methodDeclaration.toString(), null));
+                                } else if (paramTypeBinding.isPrimitive()) {
+                                    parameters.add(paramTypeBinding.getQualifiedName());
+                                } else {
+                                    parameters.add(paramTypeBinding.getBinaryName());
+                                }
+                            }
+                        }
+                        if (parameters.size() > 0) {
+                            testName += "(" + String.join(",", parameters) + ")";
+                        }
+                    }
+                }
+                arguments.add(method.getDeclaringType().getFullyQualifiedName() + ':' + testName);
                 if (StringUtils.isNotBlank(this.args.uniqueId)) {
                     arguments.add("-uniqueId");
                     arguments.add(this.args.uniqueId);
