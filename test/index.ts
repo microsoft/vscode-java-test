@@ -31,6 +31,7 @@ async function main(): Promise<void> {
         await fse.ensureDir(path.join(userDataDir, 'User'));
         await fse.writeJson(path.join(userDataDir, 'User', 'settings.json'), {
             'chat.disableAIFeatures': true,
+            'java.import.maven.projectNameTemplate': '[artifactId]',
             ...(process.env.JAVA_HOME && { 'java.jdt.ls.java.home': process.env.JAVA_HOME }),
         });
 
